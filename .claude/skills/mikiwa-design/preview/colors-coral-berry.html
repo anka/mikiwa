@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;padding:0;background:var(--bg-app);}
+  body{padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px;}
+  .group{display:flex;flex-direction:column;gap:8px;}
+  .row{display:flex;gap:6px;}
+  .label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--fg-3);}
+  .sw{width:54px;height:48px;border-radius:8px;border:1px solid var(--border-subtle);display:flex;align-items:flex-end;padding:6px;box-sizing:border-box;font-family:var(--font-mono);font-size:9px;font-weight:700;color:var(--fg-1);}
+  .sw.dark{color:var(--warm-50);}
+</style>
+</head>
+<body>
+<div class="group">
+  <div class="label">Wärmender Korall · attention</div>
+  <div class="row">
+    <div class="sw" style="background:var(--coral-50)">50</div>
+    <div class="sw" style="background:var(--coral-100)">100</div>
+    <div class="sw" style="background:var(--coral-200)">200</div>
+    <div class="sw" style="background:var(--coral-300)">300</div>
+    <div class="sw" style="background:var(--coral-400)">400</div>
+    <div class="sw" style="background:var(--coral-500);outline:2px solid var(--fg-1);outline-offset:2px">500</div>
+    <div class="sw dark" style="background:var(--coral-600)">600</div>
+    <div class="sw dark" style="background:var(--coral-700)">700</div>
+    <div class="sw dark" style="background:var(--coral-800)">800</div>
+    <div class="sw dark" style="background:var(--coral-900)">900</div>
+  </div>
+</div>
+<div class="group">
+  <div class="label">Beerenrot · destructive only</div>
+  <div class="row">
+    <div class="sw" style="background:var(--berry-50)">50</div>
+    <div class="sw" style="background:var(--berry-100)">100</div>
+    <div class="sw" style="background:var(--berry-200)">200</div>
+    <div class="sw" style="background:var(--berry-300)">300</div>
+    <div class="sw" style="background:var(--berry-400)">400</div>
+    <div class="sw" style="background:var(--berry-500)">500</div>
+    <div class="sw dark" style="background:var(--berry-600);outline:2px solid var(--fg-1);outline-offset:2px">600</div>
+    <div class="sw dark" style="background:var(--berry-700)">700</div>
+    <div class="sw dark" style="background:var(--berry-800)">800</div>
+    <div class="sw dark" style="background:var(--berry-900)">900</div>
+  </div>
+</div>
+</body>
+</html>

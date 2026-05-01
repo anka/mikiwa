@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240" width="400" height="240" role="img" aria-label="Empty state — children playing under sun">
+  
+  <rect width="400" height="240" fill="none"></rect>
+  
+  <circle cx="320" cy="60" r="28" fill="#F4C95D"></circle>
+  <g stroke="#F4C95D" stroke-width="3" stroke-linecap="round">
+    <line x1="320" y1="18" x2="320" y2="8"></line>
+    <line x1="320" y1="112" x2="320" y2="102"></line>
+    <line x1="278" y1="60" x2="268" y2="60"></line>
+    <line x1="372" y1="60" x2="362" y2="60"></line>
+    <line x1="290" y1="30" x2="283" y2="23"></line>
+    <line x1="350" y1="30" x2="357" y2="23"></line>
+    <line x1="290" y1="90" x2="283" y2="97"></line>
+    <line x1="350" y1="90" x2="357" y2="97"></line>
+  </g>
+  
+  <path d="M0 200 Q 200 150 400 200 L 400 240 L 0 240 Z" fill="#A9D08E"></path>
+  
+  <g>
+    <circle cx="80" cy="180" r="6" fill="#E8A87C"></circle>
+    <line x1="80" y1="186" x2="80" y2="200" stroke="#7A9B5A" stroke-width="2"></line>
+    <circle cx="140" cy="170" r="6" fill="#8FBFE0"></circle>
+    <line x1="140" y1="176" x2="140" y2="195" stroke="#7A9B5A" stroke-width="2"></line>
+    <circle cx="260" cy="172" r="6" fill="#F4C95D"></circle>
+    <line x1="260" y1="178" x2="260" y2="198" stroke="#7A9B5A" stroke-width="2"></line>
+  </g>
+  
+  <g transform="translate(170 130)">
+    <circle cx="0" cy="0" r="14" fill="#E8A87C"></circle>
+    <rect x="-12" y="14" width="24" height="36" rx="6" fill="#8FBFE0"></rect>
+    <rect x="-10" y="50" width="6" height="14" fill="#7A4A20"></rect>
+    <rect x="4" y="50" width="6" height="14" fill="#7A4A20"></rect>
+  </g>
+  <g transform="translate(220 138)">
+    <circle cx="0" cy="0" r="13" fill="#F4C95D"></circle>
+    <rect x="-11" y="13" width="22" height="32" rx="6" fill="#E8A87C"></rect>
+    <rect x="-9" y="45" width="6" height="14" fill="#7A4A20"></rect>
+    <rect x="3" y="45" width="6" height="14" fill="#7A4A20"></rect>
+  </g>
+</svg>

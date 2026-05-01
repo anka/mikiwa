@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;padding:0;background:var(--bg-app);}
+  body{padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;}
+  .row{display:flex;gap:8px;align-items:flex-end;}
+  .swatch{width:60px;height:72px;border-radius:10px;border:1px solid var(--border-subtle);display:flex;align-items:flex-end;padding:8px;box-sizing:border-box;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--fg-1);}
+  .swatch.dark{color:var(--warm-50);}
+  .label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--fg-3);}
+</style>
+</head>
+<body>
+<div class="label">Sonnengelb · primary brand</div>
+<div class="row">
+  <div class="swatch" style="background:var(--sun-50)">50</div>
+  <div class="swatch" style="background:var(--sun-100)">100</div>
+  <div class="swatch" style="background:var(--sun-200)">200</div>
+  <div class="swatch" style="background:var(--sun-300)">300</div>
+  <div class="swatch" style="background:var(--sun-400)">400</div>
+  <div class="swatch" style="background:var(--sun-500);outline:2px solid var(--fg-1);outline-offset:2px">500</div>
+  <div class="swatch dark" style="background:var(--sun-600)">600</div>
+  <div class="swatch dark" style="background:var(--sun-700)">700</div>
+  <div class="swatch dark" style="background:var(--sun-800)">800</div>
+  <div class="swatch dark" style="background:var(--sun-900)">900</div>
+</div>
+</body>
+</html>

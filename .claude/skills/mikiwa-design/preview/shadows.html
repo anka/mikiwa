@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;padding:0;background:var(--bg-app);}
+  body{padding:32px;box-sizing:border-box;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;}
+  .item{display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .box{width:120px;height:80px;background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border-subtle);}
+  .xs{box-shadow:var(--shadow-xs);}
+  .sm{box-shadow:var(--shadow-sm);}
+  .md{box-shadow:var(--shadow-md);}
+  .lg{box-shadow:var(--shadow-lg);}
+  .focus{box-shadow:var(--shadow-focus);}
+  .name{font-family:var(--font-mono);font-size:11px;color:var(--fg-3);}
+</style>
+</head>
+<body>
+<div class="item"><div class="box xs"></div><div class="name">shadow-xs</div></div>
+<div class="item"><div class="box sm"></div><div class="name">shadow-sm</div></div>
+<div class="item"><div class="box md"></div><div class="name">shadow-md</div></div>
+<div class="item"><div class="box lg"></div><div class="name">shadow-lg</div></div>
+<div class="item"><div class="box focus" style="border-color:var(--accent)"></div><div class="name">shadow-focus</div></div>
+</body>
+</html>

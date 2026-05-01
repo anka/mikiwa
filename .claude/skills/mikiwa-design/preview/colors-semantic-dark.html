@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;padding:0;background:var(--bg-app);}
+  body{padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;font-size:13px;font-weight:600;border:1px solid var(--border-subtle);}
+  .dot{width:10px;height:10px;border-radius:999px;}
+  .name{font-family:var(--font-mono);font-size:10px;color:var(--fg-4);}
+  .pair{display:flex;flex-direction:column;gap:4px;align-items:flex-start;flex:1;min-width:140px;}
+  .label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--fg-3);}
+</style>
+</head>
+<body>
+<div class="label">Dark mode · same tokens, retuned</div>
+<div class="row">
+  <div class="pair"><span class="chip" style="background:var(--accent);color:var(--accent-on)"><span class="dot" style="background:var(--accent-on)"></span>accent</span><span class="name">--accent</span></div>
+  <div class="pair"><span class="chip" style="background:var(--accent-soft);color:var(--fg-1)"><span class="dot" style="background:var(--accent)"></span>accent-soft</span><span class="name">--accent-soft</span></div>
+  <div class="pair"><span class="chip" style="background:var(--success);color:var(--warm-950)"><span class="dot" style="background:var(--warm-950)"></span>success</span><span class="name">--success</span></div>
+  <div class="pair"><span class="chip" style="background:var(--danger);color:var(--warm-950)"><span class="dot" style="background:var(--warm-950)"></span>danger</span><span class="name">--danger</span></div>
+</div>
+<div class="row">
+  <div class="pair"><span class="chip" style="background:var(--surface);color:var(--fg-1)"><span class="dot" style="background:var(--fg-1)"></span>surface</span><span class="name">--surface</span></div>
+  <div class="pair"><span class="chip" style="background:var(--surface-sunken);color:var(--fg-2)"><span class="dot" style="background:var(--fg-2)"></span>surface-sunken</span><span class="name">--surface-sunken</span></div>
+  <div class="pair"><span class="chip" style="background:var(--bg-app);color:var(--fg-2);border-color:var(--border-default)"><span class="dot" style="background:var(--fg-2)"></span>bg-app</span><span class="name">--bg-app</span></div>
+</div>
+</body>
+</html>

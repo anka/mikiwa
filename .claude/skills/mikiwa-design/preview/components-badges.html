@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;padding:0;background:var(--bg-app);}
+  body{padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--fg-3);width:90px;}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;}
+  .b-success{background:var(--success-soft);color:var(--success);}
+  .b-info{background:var(--info-soft);color:var(--info);}
+  .b-warning{background:var(--warning-soft);color:var(--coral-700);}
+  .b-danger{background:var(--danger-soft);color:var(--danger);}
+  .b-neutral{background:var(--surface-sunken);color:var(--fg-2);border:1px solid var(--border-subtle);}
+  .b-accent{background:var(--accent-soft);color:var(--sun-800);}
+  .dot{width:6px;height:6px;border-radius:999px;background:currentColor;}
+  .avatar{width:36px;height:36px;border-radius:999px;background:var(--leaf-200);color:var(--leaf-800);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;border:2px solid var(--surface);}
+  .avatar.b{background:var(--sky-200);color:var(--sky-800);}
+  .avatar.c{background:var(--coral-200);color:var(--coral-700);}
+  .avatar.d{background:var(--sun-200);color:var(--sun-800);}
+  .stack{display:inline-flex;}
+  .stack .avatar{margin-left:-10px;}
+  .stack .avatar:first-child{margin-left:0;}
+</style>
+</head>
+<body>
+<div class="row">
+  <span class="label">Status</span>
+  <span class="badge b-success"><span class="dot"></span>anwesend</span>
+  <span class="badge b-warning"><span class="dot"></span>verspätet</span>
+  <span class="badge b-danger"><span class="dot"></span>abwesend</span>
+  <span class="badge b-info"><span class="dot"></span>krankgemeldet</span>
+  <span class="badge b-neutral"><span class="dot"></span>nicht eingetragen</span>
+  <span class="badge b-accent">heute</span>
+</div>
+<div class="row">
+  <span class="label">Avatare</span>
+  <span class="avatar">LH</span>
+  <span class="avatar b">MS</span>
+  <span class="avatar c">TK</span>
+  <span class="avatar d">EW</span>
+  <span class="stack" style="margin-left:8px">
+    <span class="avatar">LH</span>
+    <span class="avatar b">MS</span>
+    <span class="avatar c">TK</span>
+    <span class="avatar d">+4</span>
+  </span>
+</div>
+</body>
+</html>

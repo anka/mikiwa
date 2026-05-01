@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;padding:0;background:var(--bg-app);}
+  body{padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;}
+  .row{display:flex;align-items:center;gap:14px;}
+  .label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--fg-3);width:90px;}
+  .scale{display:flex;gap:8px;align-items:flex-end;}
+  .box{background:var(--accent-soft);border:1px solid var(--accent);}
+  .name{font-family:var(--font-mono);font-size:10px;color:var(--fg-4);text-align:center;margin-top:4px;}
+  .item{display:flex;flex-direction:column;align-items:center;}
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="label">Spacing</div>
+  <div class="scale">
+    <div class="item"><div class="box" style="width:4px;height:24px"></div><div class="name">1·4</div></div>
+    <div class="item"><div class="box" style="width:8px;height:24px"></div><div class="name">2·8</div></div>
+    <div class="item"><div class="box" style="width:12px;height:24px"></div><div class="name">3·12</div></div>
+    <div class="item"><div class="box" style="width:16px;height:24px"></div><div class="name">4·16</div></div>
+    <div class="item"><div class="box" style="width:20px;height:24px"></div><div class="name">5·20</div></div>
+    <div class="item"><div class="box" style="width:24px;height:24px"></div><div class="name">6·24</div></div>
+    <div class="item"><div class="box" style="width:32px;height:24px"></div><div class="name">8·32</div></div>
+    <div class="item"><div class="box" style="width:40px;height:24px"></div><div class="name">10·40</div></div>
+    <div class="item"><div class="box" style="width:48px;height:24px"></div><div class="name">12·48</div></div>
+    <div class="item"><div class="box" style="width:64px;height:24px"></div><div class="name">16·64</div></div>
+  </div>
+</div>
+<div class="row">
+  <div class="label">Radii</div>
+  <div class="scale">
+    <div class="item"><div style="width:48px;height:48px;background:var(--accent-soft);border:1px solid var(--border-default);border-radius:var(--radius-sm)"></div><div class="name">sm·6</div></div>
+    <div class="item"><div style="width:48px;height:48px;background:var(--accent-soft);border:1px solid var(--border-default);border-radius:var(--radius-md)"></div><div class="name">md·10</div></div>
+    <div class="item"><div style="width:48px;height:48px;background:var(--accent-soft);border:1px solid var(--border-default);border-radius:var(--radius-lg)"></div><div class="name">lg·16</div></div>
+    <div class="item"><div style="width:48px;height:48px;background:var(--accent-soft);border:1px solid var(--border-default);border-radius:var(--radius-xl)"></div><div class="name">xl·24</div></div>
+    <div class="item"><div style="width:48px;height:48px;background:var(--accent-soft);border:1px solid var(--border-default);border-radius:var(--radius-pill)"></div><div class="name">pill</div></div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="240" height="80" role="img" aria-label="Mikiwa logo">
+  <defs>
+    <g id="petal-w">
+      <path d="M0 -22 C 6 -21, 9 -13, 5 -6 C 2 -2, -2 -2, -5 -6 C -9 -13, -6 -21, 0 -22 Z"></path>
+    </g>
+  </defs>
+  <g transform="translate(36 40)">
+    <use href="#petal-w" fill="#F4C95D" transform="rotate(0)"></use>
+    <use href="#petal-w" fill="#A9D08E" transform="rotate(45)"></use>
+    <use href="#petal-w" fill="#8FBFE0" transform="rotate(90)"></use>
+    <use href="#petal-w" fill="#E8A87C" transform="rotate(135)"></use>
+    <use href="#petal-w" fill="#F4C95D" transform="rotate(180)"></use>
+    <use href="#petal-w" fill="#A9D08E" transform="rotate(225)"></use>
+    <use href="#petal-w" fill="#8FBFE0" transform="rotate(270)"></use>
+    <use href="#petal-w" fill="#E8A87C" transform="rotate(315)"></use>
+    <circle r="9" fill="#7A4A20"></circle>
+  </g>
+  <text x="78" y="48" font-family="Nunito, system-ui, sans-serif" font-size="32" font-weight="800" fill="#2A1F12" letter-spacing="-0.02em">mikiwa</text>
+</svg>

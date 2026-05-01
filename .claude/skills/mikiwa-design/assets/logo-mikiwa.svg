@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Mikiwa">
+  
+  <defs>
+    <g id="petal">
+      <path d="M0 -36 C 10 -34, 14 -22, 8 -10 C 4 -4, -4 -4, -8 -10 C -14 -22, -10 -34, 0 -36 Z"></path>
+    </g>
+  </defs>
+  <g transform="translate(60 60)">
+    
+    <use href="#petal" fill="#F4C95D" transform="rotate(0)"></use>
+    <use href="#petal" fill="#A9D08E" transform="rotate(45)"></use>
+    <use href="#petal" fill="#8FBFE0" transform="rotate(90)"></use>
+    <use href="#petal" fill="#E8A87C" transform="rotate(135)"></use>
+    <use href="#petal" fill="#F4C95D" transform="rotate(180)"></use>
+    <use href="#petal" fill="#A9D08E" transform="rotate(225)"></use>
+    <use href="#petal" fill="#8FBFE0" transform="rotate(270)"></use>
+    <use href="#petal" fill="#E8A87C" transform="rotate(315)"></use>
+    
+    <circle r="14" fill="#7A4A20"></circle>
+    <circle r="14" fill="none" stroke="#5A3815" stroke-width="1.5"></circle>
+    
+    <circle cx="-4" cy="-4" r="1.6" fill="#F4C95D" opacity=".9"></circle>
+    <circle cx="4" cy="-3" r="1.6" fill="#F4C95D" opacity=".9"></circle>
+    <circle cx="0" cy="3" r="1.6" fill="#F4C95D" opacity=".9"></circle>
+    <circle cx="-4" cy="5" r="1.6" fill="#F4C95D" opacity=".9"></circle>
+    <circle cx="5" cy="4" r="1.6" fill="#F4C95D" opacity=".9"></circle>
+  </g>
+</svg>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;padding:0;background:var(--bg-app);}
+  body{padding:24px;box-sizing:border-box;}
+  .logos{display:flex;gap:32px;align-items:center;flex-wrap:wrap;}
+  .item{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .frame{padding:14px 16px;background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);}
+  .frame.dark{background:var(--warm-900);border-color:var(--warm-800);}
+  .name{font-family:var(--font-mono);font-size:11px;color:var(--fg-4);}
+</style>
+</head>
+<body>
+<div class="logos">
+  <div class="item">
+    <div class="frame"><img src="../assets/logo-mikiwa.svg" width="80" height="80" alt="Mikiwa Mark"/></div>
+    <span class="name">mark</span>
+  </div>
+  <div class="item">
+    <div class="frame"><img src="../assets/logo-mikiwa-wordmark.svg" width="200" height="60" alt="Mikiwa Wordmark"/></div>
+    <span class="name">wordmark</span>
+  </div>
+  <div class="item">
+    <div class="frame dark"><img src="../assets/logo-mikiwa-wordmark.svg" width="200" height="60" alt="Mikiwa Wordmark on dark" style="filter:invert(1) hue-rotate(180deg) saturate(0) brightness(1.4)"/></div>
+    <span class="name">on dark *</span>
+  </div>
+</div>
+</body>
+</html>

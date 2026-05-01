@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;padding:0;background:var(--bg-app);}
+  body{padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--fg-3);width:90px;}
+  button{font-family:var(--font-body);font-weight:600;font-size:14px;border-radius:var(--radius-pill);padding:10px 18px;border:1px solid transparent;cursor:pointer;transition:background var(--dur-micro),color var(--dur-micro),transform 80ms;}
+  button:active{transform:scale(.98);}
+  .primary{background:var(--accent);color:var(--accent-on);}
+  .primary:hover{background:var(--accent-hover);}
+  .secondary{background:var(--surface);color:var(--fg-1);border-color:var(--border-default);}
+  .secondary:hover{background:var(--surface-hover);}
+  .ghost{background:transparent;color:var(--fg-1);}
+  .ghost:hover{background:var(--surface-hover);}
+  .danger{background:var(--danger);color:#fff;}
+  .danger:hover{filter:brightness(.95);}
+  .small{padding:6px 12px;font-size:13px;}
+  .large{padding:14px 24px;font-size:16px;}
+  .disabled{opacity:.5;cursor:not-allowed;}
+</style>
+</head>
+<body>
+<div class="row">
+  <span class="label">Primary</span>
+  <button class="primary small">Speichern</button>
+  <button class="primary">Anwesenheit eintragen</button>
+  <button class="primary large">Kind anmelden</button>
+  <button class="primary disabled">Speichern</button>
+</div>
+<div class="row">
+  <span class="label">Sekundär</span>
+  <button class="secondary small">Abbrechen</button>
+  <button class="secondary">Filter</button>
+  <button class="ghost">Mehr anzeigen</button>
+  <button class="danger">Löschen</button>
+</div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<title>Card</title>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html, body { margin: 0; padding: 0; background: var(--bg-app); }
+  body { padding: 20px; box-sizing: border-box; }
+  .card-stage { width: 100%; box-sizing: border-box; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .col { display: flex; flex-direction: column; gap: 8px; }
+  .swatch { width: 64px; height: 64px; border-radius: 12px; border: 1px solid var(--border-subtle); display: flex; align-items: flex-end; justify-content: flex-start; padding: 6px; box-sizing: border-box; }
+  .swatch .lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; }
+  .stack { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+  .meta { font-size: 11px; color: var(--fg-4); font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+<div class="card-stage" id="root"></div>
+</body>
+</html>
