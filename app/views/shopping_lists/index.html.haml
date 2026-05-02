@@ -1,0 +1,48 @@
+- content_for :title, "Einkaufslisten · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Einkaufslisten
+  - if current_user.staff?
+    = link_to new_shopping_list_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+      = lucide_icon "plus", size: 16
+      Neue Liste
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+- if @lists.any?
+  .mw-card{ style: "margin-top: 1.5rem;" }
+    %table.mw-table{ style: "width: 100%;" }
+      %thead
+        %tr
+          %th Titel
+          %th Gruppe
+          %th Datum
+          %th Einträge
+          %th{ style: "text-align: right;" } Aktionen
+      %tbody
+        - @lists.each do |list|
+          - total  = list.shopping_items.size
+          - done   = list.shopping_items.count(&:done?)
+          %tr
+            %td= link_to list.title, shopping_list_path(list), class: "mw-link"
+            %td= list.group.name
+            %td= l(list.event_date, format: :long)
+            %td
+              %span{ style: done == total && total > 0 ? "color: var(--success);" : nil }
+                = "#{done}/#{total} erledigt"
+            %td{ style: "text-align: right;" }
+              .mw-actions
+                = link_to shopping_list_path(list), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+                  Öffnen
+                - if current_user.staff?
+                  = button_to shopping_list_path(list), method: :delete,
+                      class: "mw-btn mw-btn--danger mw-btn--sm",
+                      data: { turbo_confirm: "Liste \"#{list.title}\" wirklich löschen?" } do
+                    = lucide_icon "trash-2", size: 14
+- else
+  .mw-empty-state{ style: "margin-top: 2rem;" }
+    %p.mw-text-muted Keine Einkaufslisten vorhanden.
+    - if current_user.staff?
+      = link_to "Erste Liste anlegen", new_shopping_list_path, class: "mw-btn mw-btn--primary mw-btn--sm"

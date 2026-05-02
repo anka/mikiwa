@@ -1697,3 +1697,66 @@ a:hover { color: var(--fg-link-hover); border-bottom-color: currentColor; }
 .mw-prose { font-size: var(--fs-14); line-height: 1.6; color: var(--fg-1); }
 .mw-prose p { margin-bottom: var(--space-3); }
 .mw-prose p:last-child { margin-bottom: 0; }
+
+/* ==========================================================================
+   SHOPPING LIST (mobile-optimiert)
+   ========================================================================== */
+
+.mw-shopping-list { display: flex; flex-direction: column; gap: var(--space-1); }
+.mw-shopping-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: opacity 150ms;
+}
+.mw-shopping-item--done { opacity: 0.55; }
+.mw-shopping-item__check { flex-shrink: 0; padding-top: 2px; }
+.mw-shopping-item__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  color: var(--fg-3);
+  border-radius: var(--radius-pill);
+}
+.mw-shopping-item__btn:hover { background: var(--surface-hover); }
+.mw-shopping-item__btn--done { color: var(--success); }
+.mw-shopping-item__circle {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-strong);
+  border-radius: 50%;
+}
+.mw-shopping-item__body { flex: 1; min-width: 0; }
+.mw-shopping-item__name { font-size: var(--fs-16); font-weight: var(--fw-semibold); color: var(--fg-1); }
+.mw-shopping-item__name--done { text-decoration: line-through; color: var(--fg-3); }
+.mw-shopping-item__qty { font-size: var(--fs-13); color: var(--fg-2); margin-top: 2px; }
+.mw-shopping-item__note { font-size: var(--fs-12); color: var(--fg-3); font-style: italic; margin-top: 2px; }
+.mw-shopping-item__meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-11);
+  color: var(--fg-3);
+  margin-top: var(--space-1);
+}
+
+/* Shopping form rows */
+.mw-shopping-form-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-bottom: var(--space-2);
+  flex-wrap: wrap;
+}
+.mw-input--sm { padding: var(--space-2) var(--space-3); font-size: var(--fs-13); }

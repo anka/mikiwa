@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_02_100003) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_02_100004) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -180,6 +180,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_100003) do
     t.string "user_agent"
     t.string "user_id", limit: 36, null: false
     t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
+  create_table "shopping_items", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "completed_at"
+    t.string "completed_by_id", limit: 36
+    t.datetime "created_at", null: false
+    t.boolean "done", default: false, null: false
+    t.string "name", null: false
+    t.text "note"
+    t.integer "position", default: 0, null: false
+    t.string "quantity"
+    t.string "shopping_list_id", limit: 36, null: false
+    t.datetime "updated_at", null: false
+    t.index ["shopping_list_id", "position"], name: "index_shopping_items_on_shopping_list_id_and_position"
+    t.index ["shopping_list_id"], name: "index_shopping_items_on_shopping_list_id"
+  end
+
+  create_table "shopping_lists", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "created_by_id", limit: 36, null: false
+    t.text "description"
+    t.date "event_date", null: false
+    t.string "event_id", limit: 36
+    t.string "group_id", limit: 36, null: false
+    t.string "kindergarten_year_id", limit: 36, null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["group_id"], name: "index_shopping_lists_on_group_id"
+    t.index ["kindergarten_year_id"], name: "index_shopping_lists_on_kindergarten_year_id"
   end
 
   create_table "users", id: { type: :string, limit: 36 }, force: :cascade do |t|

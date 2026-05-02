@@ -39,6 +39,14 @@ Rails.application.routes.draw do
   end
 
   resources :calendar_events
+  resources :shopping_lists do
+    resources :shopping_items, only: [] do
+      member do
+        patch :complete
+        patch :uncomplete
+      end
+    end
+  end
   resources :attendance_lists do
     member do
       get :export

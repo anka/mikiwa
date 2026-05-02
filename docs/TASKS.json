@@ -933,7 +933,7 @@
       "id": "F9",
       "name": "Einkaufslisten",
       "phase": 3,
-      "status": "open",
+      "status": "done",
       "short_description": "Einkaufslisten für Veranstaltungen mit Erledigt-Status pro Eintrag, mobile-optimierter Ansicht für aktive Verwendung beim Einkaufen.",
       "description": "Betreuer legen Einkaufslisten an. Eine Liste hat: Titel, fixes Datum (Bezugstag der Veranstaltung), optionale Beschreibung, n Positions-Einträge (Bezeichnung, optionale Menge, optionale Bemerkung). Eltern und Betreuer können einzelne Einträge als 'erledigt' markieren. Der Erledigt-Status wird mit Zeitstempel und Person persistent gespeichert und ist für alle Beteiligten sichtbar. Die Ansicht ist für die mobile Verwendung während des Einkaufens optimiert (große Touch-Targets, Filter 'nur offen'). Erledigt-Status kann wieder aufgehoben werden.",
       "acceptance_criteria": [

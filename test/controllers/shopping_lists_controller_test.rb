@@ -1,0 +1,91 @@
+require "test_helper"
+
+class ShoppingListsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    @caretaker = User.create!(email: "betreuer_slc@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
+    @parent    = User.create!(email: "eltern_slc@mikiwa.at",   password: SecureRandom.hex(20),   role: "parent")
+    @year      = KindergartenYear.create!(
+      label: "KGJ 2025/26", start_date: Date.new(2025, 9, 1),
+      end_date: Date.new(2026, 7, 31), active: true
+    )
+    @group_baeren = Group.create!(name: "Shop-Bären")
+    @group_loewen = Group.create!(name: "Shop-Löwen")
+
+    @child = Child.create!(
+      first_name: "Jonas", last_name: "Bauer",
+      date_of_birth: Date.new(2021, 9, 1),
+      group: @group_baeren, kindergarten_year: @year, photo_consent: true
+    )
+    ParentChild.create!(user: @parent, child: @child)
+
+    @list = ShoppingList.create!(
+      title: "Waldtag-Einkauf", event_date: Date.new(2026, 6, 20),
+      group: @group_baeren, kindergarten_year: @year, created_by: @caretaker
+    )
+    @item = @list.shopping_items.create!(name: "2 kg Mehl")
+
+    @other_list = ShoppingList.create!(
+      title: "Löwen-Einkauf", event_date: Date.new(2026, 6, 21),
+      group: @group_loewen, kindergarten_year: @year, created_by: @caretaker
+    )
+  end
+
+  test "parent sees only own group lists" do
+    sign_in_as(@parent)
+    get shopping_lists_path
+    assert_response :success
+    assert_match "Waldtag-Einkauf", response.body
+    assert_no_match "Löwen-Einkauf", response.body
+  end
+
+  test "caretaker can create shopping list" do
+    sign_in_as(@caretaker)
+    assert_difference "ShoppingList.count", 1 do
+      post shopping_lists_path, params: {
+        shopping_list: {
+          title: "Sommerfest-Einkauf",
+          event_date: "2026-07-10",
+          group_id: @group_baeren.id,
+          kindergarten_year_id: @year.id,
+          shopping_items_attributes: {
+            "0" => { name: "Wasser", quantity: "5 l" },
+            "1" => { name: "Äpfel", quantity: "3 kg" }
+          }
+        }
+      }
+    end
+  end
+
+  test "parent cannot create list (403)" do
+    sign_in_as(@parent)
+    post shopping_lists_path, params: {
+      shopping_list: { title: "X", event_date: "2026-07-10", group_id: @group_baeren.id }
+    }
+    assert_response :forbidden
+  end
+
+  test "parent can mark item as done (Erledigt markieren)" do
+    sign_in_as(@parent)
+    patch complete_shopping_list_shopping_item_path(@list, @item)
+    assert_redirected_to shopping_list_path(@list)
+    @item.reload
+    assert @item.done?
+    assert_equal @parent.id, @item.completed_by_id
+  end
+
+  test "done status is visible to all participants" do
+    @item.complete!(@caretaker)
+    sign_in_as(@parent)
+    get shopping_list_path(@list)
+    assert_response :success
+    assert_match @caretaker.full_name.presence || @caretaker.email, response.body
+  end
+
+  test "parent can undo done status (Erledigt rückgängig)" do
+    @item.complete!(@parent)
+    sign_in_as(@parent)
+    patch uncomplete_shopping_list_shopping_item_path(@list, @item)
+    assert_redirected_to shopping_list_path(@list)
+    assert_not @item.reload.done?
+  end
+end
