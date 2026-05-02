@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_02_191621) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_02_192027) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -120,6 +120,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_191621) do
     t.string "last_name", null: false
     t.string "nickname"
     t.boolean "photo_consent", null: false
+    t.datetime "photo_consent_updated_at"
     t.datetime "updated_at", null: false
     t.index ["group_id"], name: "index_children_on_group_id"
     t.index ["kindergarten_year_id"], name: "index_children_on_kindergarten_year_id"

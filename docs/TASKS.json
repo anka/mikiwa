@@ -1215,7 +1215,7 @@
       "id": "F15",
       "name": "Foto-Einwilligungsverwaltung",
       "phase": 3,
-      "status": "open",
+      "status": "done",
       "short_description": "Boolean-Flag 'Foto-Einwilligung' pro Kind mit Zeitstempel, pflegbar von Eltern und Betreuern, automatische Übernahme beim Jahreswechsel.",
       "description": "Pro Kind wird dokumentiert, ob eine Foto-Einwilligung erteilt wurde (ja/nein). Das Flag wird mit Zeitstempel der letzten Änderung versehen. Pflegbar von Eltern (nur eigene Kinder) und Betreuern (alle Kinder). Beim Anlegen einer Galerie oder beim Hochladen von Bildern zeigt das System als Hinweis eine Liste der Kinder der betroffenen Gruppe, die keine Einwilligung haben – keine automatische Sperre. Die Verantwortung für die korrekte Bildauswahl liegt beim Betreuer. Das Flag wird beim Jahresübergang automatisch kopiert.",
       "acceptance_criteria": [

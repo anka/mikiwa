@@ -22,8 +22,18 @@ class Child < ApplicationRecord
   validates :kindergarten_year, presence: true
   validates :photo_consent, inclusion: { in: PHOTO_CONSENT_OPTIONS, message: "muss angegeben werden" }
 
+  before_save :touch_photo_consent_timestamp, if: :photo_consent_changed?
+
   scope :active, -> { where(active: true) }
   scope :inactive, -> { where(active: false) }
+
+  private
+
+  def touch_photo_consent_timestamp
+    self.photo_consent_updated_at = Time.current
+  end
+
+  public
 
   def display_name
     nickname.presence || first_name
@@ -31,6 +41,10 @@ class Child < ApplicationRecord
 
   def full_name
     "#{first_name} #{last_name}"
+  end
+
+  def update_consent!(value)
+    update!(photo_consent: value)
   end
 
   def deactivate!

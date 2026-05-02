@@ -29,6 +29,36 @@
     - else
       %p.mw-text-muted{ style: "margin: 0;" } Keine Versicherungsdaten hinterlegt.
 
+/ Foto-Einwilligung
+.mw-detail-section
+  .mw-detail-section__header
+    %span.mw-detail-section__title Foto-Einwilligung
+  .mw-card{ style: "padding: 16px 20px;" }
+    .mw-detail-list-row
+      .mw-detail-list-row__label Status
+      .mw-detail-list-row__value
+        - if @child.photo_consent
+          %span.mw-badge.mw-badge--success Erteilt
+        - else
+          %span.mw-badge.mw-badge--danger Nicht erteilt
+    - if @child.photo_consent_updated_at.present?
+      .mw-detail-list-row
+        .mw-detail-list-row__label Zuletzt geändert
+        .mw-detail-list-row__value= l(@child.photo_consent_updated_at, format: :long)
+    - if current_user.staff? || current_user.children.exists?(@child.id)
+      .mw-form__actions{ style: "margin-top: 0.75rem;" }
+        - if @child.photo_consent
+          = button_to update_consent_child_path(@child), method: :patch,
+              params: { child: { photo_consent: false } },
+              class: "mw-btn mw-btn--secondary mw-btn--sm",
+              data: { turbo_confirm: "Foto-Einwilligung widerrufen?" } do
+            Einwilligung widerrufen
+        - else
+          = button_to update_consent_child_path(@child), method: :patch,
+              params: { child: { photo_consent: true } },
+              class: "mw-btn mw-btn--primary mw-btn--sm" do
+            Einwilligung erteilen
+
 / Notfallkontakte
 .mw-detail-section
   .mw-detail-section__header

@@ -1,5 +1,5 @@
 class ChildrenController < ApplicationController
-  before_action :set_child, only: %i[show edit update deactivate]
+  before_action :set_child, only: %i[show edit update deactivate update_consent]
   before_action :require_staff_for_mutations!, only: %i[new create edit update deactivate]
 
   def index
@@ -37,6 +37,16 @@ class ChildrenController < ApplicationController
   def deactivate
     @child.deactivate!
     redirect_to children_path, notice: "#{@child.full_name} wurde deaktiviert."
+  end
+
+  def update_consent
+    unless current_user.staff? || current_user.children.exists?(@child.id)
+      render plain: "Zugriff verweigert", status: :forbidden
+      return
+    end
+    consent = ActiveModel::Type::Boolean.new.cast(params.dig(:child, :photo_consent))
+    @child.update_consent!(consent)
+    redirect_to child_path(@child), notice: "Foto-Einwilligung wurde aktualisiert."
   end
 
   private

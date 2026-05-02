@@ -19,6 +19,7 @@ Rails.application.routes.draw do
   resources :children, only: %i[index new create edit update show] do
     member do
       patch :deactivate
+      patch :update_consent
     end
     resources :emergency_contacts, only: %i[new create edit update destroy]
     resources :medical_notes, only: %i[new create edit update destroy]
