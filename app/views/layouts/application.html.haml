@@ -50,6 +50,9 @@
                 = link_to abstimmungen_path, class: "mw-nav-link #{nav_active?('/abstimmungen')}" do
                   = lucide_icon "bar-chart-2", size: 20
                   %span Abstimmungen
+                = link_to galleries_path, class: "mw-nav-link #{nav_active?('/galleries')}" do
+                  = lucide_icon "image", size: 20
+                  %span Bildergalerien
                 = link_to groups_path, class: "mw-nav-link #{nav_active?('/groups')}" do
                   = lucide_icon "layout-grid", size: 20
                   %span Gruppen

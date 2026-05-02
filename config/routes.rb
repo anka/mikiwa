@@ -38,6 +38,13 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :galleries, only: %i[index show new create edit update destroy] do
+    member do
+      delete :remove_photo
+      get    :download
+    end
+  end
+
   resources :abstimmungen, only: %i[index show new create edit update destroy] do
     member do
       post  :vote

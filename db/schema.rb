@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_02_100005) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_02_100006) do
   create_table "abstimmung_optionen", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.string "abstimmung_id", limit: 36, null: false
     t.datetime "created_at", null: false
@@ -164,6 +164,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_100005) do
     t.index ["child_id"], name: "index_emergency_contacts_on_child_id"
   end
 
+  create_table "galleries", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "created_by_id", limit: 36, null: false
+    t.text "description"
+    t.date "event_date"
+    t.string "event_id", limit: 36
+    t.string "kindergarten_year_id", limit: 36, null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_galleries_on_created_by_id"
+    t.index ["event_id"], name: "index_galleries_on_event_id"
+    t.index ["kindergarten_year_id"], name: "index_galleries_on_kindergarten_year_id"
+  end
+
+  create_table "gallery_groups", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "gallery_id", limit: 36, null: false
+    t.string "group_id", limit: 36, null: false
+    t.datetime "updated_at", null: false
+    t.index ["gallery_id", "group_id"], name: "index_gallery_groups_on_gallery_id_and_group_id", unique: true
+    t.index ["gallery_id"], name: "index_gallery_groups_on_gallery_id"
+    t.index ["group_id"], name: "index_gallery_groups_on_group_id"
+  end
+
   create_table "groups", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.string "color"
     t.datetime "created_at", null: false
@@ -274,6 +298,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_100005) do
   add_foreign_key "abstimmungen", "users", column: "created_by_id"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "galleries", "kindergarten_years"
+  add_foreign_key "galleries", "users", column: "created_by_id"
+  add_foreign_key "gallery_groups", "galleries"
+  add_foreign_key "gallery_groups", "groups"
   add_foreign_key "sessions", "users"
   add_foreign_key "stimmen", "abstimmung_optionen"
   add_foreign_key "stimmen", "users"

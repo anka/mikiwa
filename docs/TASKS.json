@@ -1027,7 +1027,7 @@
       "id": "F11",
       "name": "Bildergalerien",
       "phase": 3,
-      "status": "open",
+      "status": "done",
       "short_description": "Galerien zur Dokumentation des Alltags mit Mehrfach-Upload, Grid-Lightbox-Ansicht, Einwilligungs-Hinweis und Download via signierter URL.",
       "description": "Betreuer legen Bildergalerien an. Eine Galerie hat: Titel, Beschreibung, zugeordnete Gruppe(n), Datum/Zeitraum, optionale Verknüpfung zu einer Veranstaltung. Hochladen: Mehrfach-Upload mit Drag & Drop und Fortschrittsanzeige. Bildoptimierung erfolgt automatisch (T6). Anzeige als Grid-Galerie mit Lightbox. Eltern der zugeordneten Gruppen sehen alle Bilder. Beim Anlegen/Hochladen erscheint ein Hinweis mit den Namen der Kinder in der Gruppe, die keine Foto-Einwilligung haben (keine automatische Sperre – Betreuer ist verantwortlich). Bilder können von Eltern und Betreuern in voller Auflösung heruntergeladen werden (signierte URL). Betreuer können einzelne Bilder nachträglich entfernen.",
       "acceptance_criteria": [

@@ -1,0 +1,93 @@
+- content_for :title, "#{@gallery.title} · Galerie · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title= @gallery.title
+    %p.mw-page-header__lede
+      = @gallery.groups.map(&:name).join(", ")
+      - if @gallery.event_date.present?
+        ·
+        = l(@gallery.event_date, format: :long)
+      ·
+      = @photos.count
+      = @photos.count == 1 ? "Bild" : "Bilder"
+  .mw-page-header__actions
+    - if current_user.staff?
+      = link_to edit_gallery_path(@gallery), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+        = lucide_icon "pencil", size: 14
+        Bearbeiten
+    = link_to galleries_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
+      Zurück
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+-# Einwilligungs-Hinweis
+- if @consent_warnings.any?
+  .mw-flash.mw-flash--warning{ style: "margin-top: 1rem;" }
+    %strong Hinweis: Kein Einverständnis zur Foto-Verwendung für:
+    %ul{ style: "margin: 0.5rem 0 0 1.25rem;" }
+      - @consent_warnings.each do |child|
+        %li= child.full_name
+
+- if @gallery.description.present?
+  .mw-card{ style: "margin-top: 1rem; padding: 1rem 1.25rem;" }
+    %p.mw-prose= @gallery.description
+
+-# Upload-Formular für Betreuer
+- if current_user.staff?
+  .mw-card{ style: "margin-top: 1.5rem;" }
+    %h2{ style: "padding: 1rem 1.25rem 0; font-size: var(--fs-14); font-weight: var(--fw-bold); color: var(--fg-2);" }
+      Fotos hochladen
+    = form_with url: gallery_path(@gallery), method: :patch,
+        multipart: true, style: "padding: 1rem 1.25rem;" do |f|
+      .mw-gallery-dropzone{ data: { controller: "gallery-upload" } }
+        = file_field_tag "gallery[photos][]", multiple: true,
+            accept: "image/jpeg,image/png,image/webp,image/heic",
+            class: "mw-gallery-dropzone__input",
+            data: { gallery_upload_target: "input", action: "change->gallery-upload#preview" }
+        .mw-gallery-dropzone__hint
+          = lucide_icon "image", size: 24
+          %span Dateien auswählen oder hierher ziehen
+          %small JPEG, PNG, HEIC, WebP · max. 15 MB pro Bild
+        .mw-gallery-dropzone__preview{ data: { gallery_upload_target: "preview" } }
+      .mw-form__actions{ style: "margin-top: 0.75rem;" }
+        = f.submit "Fotos hinzufügen", class: "mw-btn mw-btn--primary"
+
+-# Foto-Grid mit Lightbox
+.mw-page-header{ style: "margin-top: 2rem;" }
+  %h2{ style: "font-size: var(--fs-18); font-weight: var(--fw-bold);" } Fotos
+
+- if @photos.any?
+  .mw-photo-grid{ data: { controller: "lightbox" } }
+    - @photos.each_with_index do |photo, idx|
+      .mw-photo-grid__item
+        %button.mw-photo-grid__thumb{ type: "button",
+            data: { action: "click->lightbox#open", lightbox_index_param: idx } }
+          = image_tag photo.variant(:thumb), loading: "lazy", alt: "", class: "mw-photo-grid__img"
+        .mw-photo-grid__actions
+          = link_to download_gallery_path(@gallery, photo_id: photo.id),
+              class: "mw-btn mw-btn--ghost mw-btn--sm", title: "Herunterladen" do
+            = lucide_icon "download", size: 14
+          - if current_user.staff?
+            = button_to remove_photo_gallery_path(@gallery, photo_id: photo.id), method: :delete,
+                class: "mw-btn mw-btn--ghost mw-btn--sm", title: "Entfernen",
+                data: { turbo_confirm: "Bild entfernen?" } do
+              = lucide_icon "trash-2", size: 14
+
+  -# Lightbox-Dialog
+  %dialog.mw-lightbox{ data: { lightbox_target: "dialog" } }
+    %button.mw-lightbox__close{ type: "button", data: { action: "click->lightbox#close" } }
+      = lucide_icon "x", size: 24
+    %button.mw-lightbox__prev{ type: "button", data: { action: "click->lightbox#prev" } }
+      = lucide_icon "chevron-left", size: 32
+    .mw-lightbox__image-wrap
+      %img.mw-lightbox__img{ src: "", alt: "", data: { lightbox_target: "image" } }/
+    %button.mw-lightbox__next{ type: "button", data: { action: "click->lightbox#next" } }
+      = lucide_icon "chevron-right", size: 32
+    -# Bild-URLs als Data-Attribute für Stimulus
+    - @photos.each do |photo|
+      %span{ style: "display:none", data: { lightbox_src: url_for(photo.variant(:display)) } }
+
+- else
+  %p.mw-text-muted{ style: "padding: 1rem 0;" } Noch keine Fotos in dieser Galerie.

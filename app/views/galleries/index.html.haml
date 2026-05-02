@@ -1,0 +1,44 @@
+- content_for :title, "Bildergalerien · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Bildergalerien
+  - if current_user.staff?
+    = link_to new_gallery_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+      = lucide_icon "plus", size: 16
+      Neue Galerie
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+- if @galleries.any?
+  .mw-gallery-grid{ style: "margin-top: 1.5rem;" }
+    - @galleries.each do |gallery|
+      .mw-gallery-card
+        .mw-gallery-card__cover
+          - if gallery.photos.attached?
+            = image_tag gallery.photos.first.variant(:thumb),
+                loading: "lazy", alt: "", class: "mw-gallery-card__img"
+          - else
+            .mw-gallery-card__placeholder
+              = lucide_icon "image", size: 32
+        .mw-gallery-card__body
+          %h2.mw-gallery-card__title= link_to gallery.title, gallery_path(gallery), class: "mw-link mw-link--unstyled"
+          %p.mw-gallery-card__meta
+            = gallery.groups.map(&:name).join(", ")
+            ·
+            = gallery.photos.count
+            = gallery.photos.count == 1 ? "Bild" : "Bilder"
+          .mw-gallery-card__actions
+            = link_to gallery_path(gallery), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+              Öffnen
+            - if current_user.staff?
+              = button_to gallery_path(gallery), method: :delete,
+                  class: "mw-btn mw-btn--danger mw-btn--sm",
+                  data: { turbo_confirm: "Galerie \"#{gallery.title}\" wirklich löschen?" } do
+                = lucide_icon "trash-2", size: 14
+- else
+  .mw-empty-state{ style: "margin-top: 2rem;" }
+    %p.mw-text-muted Noch keine Bildergalerien angelegt.
+    - if current_user.staff?
+      = link_to "Erste Galerie anlegen", new_gallery_path, class: "mw-btn mw-btn--primary mw-btn--sm"

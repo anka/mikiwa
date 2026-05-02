@@ -1,0 +1,7 @@
+- content_for :title, "#{@gallery.title} bearbeiten · Mikiwa"
+
+.mw-page-header
+  %h1.mw-page-header__title Galerie bearbeiten
+
+= render "form", gallery: @gallery, groups: @groups,
+    kindergarten_years: @kindergarten_years, events: @events
