@@ -79,4 +79,3 @@ gem "rails-i18n", "~> 8.0"
 
 # Brute-force protection and rate limiting
 gem "rack-attack"
-

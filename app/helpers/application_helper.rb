@@ -13,7 +13,7 @@ module ApplicationHelper
 
     stroke_width ||= size >= 20 ? 1.75 : 1.5
 
-    css_class = ["mw-icon", opts.delete(:class)].compact.join(" ")
+    css_class = [ "mw-icon", opts.delete(:class) ].compact.join(" ")
 
     content_tag(
       :svg,
