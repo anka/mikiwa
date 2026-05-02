@@ -1,0 +1,33 @@
+- content_for :title, "Elternteil einladen · Mikiwa"
+
+.mw-page-header
+  %h1.mw-page-header__title Elternteil einladen
+  %p.mw-page-header__lede Eine Einladungs-E-Mail mit Anmeldelink wird automatisch versandt.
+
+.mw-card{ style: "margin-top: 1.5rem; max-width: 480px;" }
+  = form_with model: @user, url: parents_path, class: "mw-form" do |form|
+    - if @user.errors.any?
+      .mw-flash.mw-flash--error
+        %ul{ style: "margin: 0; padding-left: 1.25rem;" }
+          - @user.errors.full_messages.each do |msg|
+            %li= msg
+
+    .mw-field
+      = form.label :email, "E-Mail-Adresse", class: "mw-field__label"
+      = form.email_field :email, required: true, autofocus: true, class: "mw-input", placeholder: "name@example.at"
+
+    .mw-field
+      = form.label :first_name, "Vorname", class: "mw-field__label"
+      = form.text_field :first_name, class: "mw-input"
+
+    .mw-field
+      = form.label :last_name, "Nachname", class: "mw-field__label"
+      = form.text_field :last_name, class: "mw-input"
+
+    .mw-field
+      = form.label :phone, "Telefonnummer (optional)", class: "mw-field__label"
+      = form.telephone_field :phone, class: "mw-input", placeholder: "0664 123 456"
+
+    .mw-form__actions
+      = form.submit "Einladung senden", class: "mw-btn mw-btn--primary"
+      = link_to "Abbrechen", parents_path, class: "mw-btn mw-btn--ghost"

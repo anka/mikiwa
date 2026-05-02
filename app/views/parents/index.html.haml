@@ -1,0 +1,40 @@
+- content_for :title, "Eltern-Accounts · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Eltern-Accounts
+    %p.mw-page-header__lede Eltern anlegen, einladen und verwalten.
+  = link_to "Elternteil einladen", new_parent_path, class: "mw-btn mw-btn--primary mw-btn--sm"
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+.mw-card{ style: "margin-top: 1.5rem;" }
+  %table.mw-table{ style: "width: 100%;" }
+    %thead
+      %tr
+        %th Name
+        %th E-Mail
+        %th Telefon
+        %th Status
+        %th{ style: "text-align: right;" } Aktionen
+    %tbody
+      - @parents.each do |parent|
+        %tr
+          %td= parent.full_name.presence || "–"
+          %td= parent.email
+          %td= parent.phone.presence || "–"
+          %td
+            - if parent.locked?
+              %span.mw-badge.mw-badge--danger Deaktiviert
+            - elsif parent.invitation_sent_at.present? && parent.magic_link_token_version.zero?
+              %span.mw-badge.mw-badge--warning Eingeladen
+            - else
+              %span.mw-badge.mw-badge--success Aktiv
+          %td{ style: "text-align: right;" }
+            .mw-actions
+              = button_to "Re-Einladen", reinvite_parent_path(parent), method: :post, class: "mw-btn mw-btn--secondary mw-btn--sm"
+              - if parent.locked?
+                = button_to "Reaktivieren", unlock_parent_path(parent), method: :patch, class: "mw-btn mw-btn--secondary mw-btn--sm"
+              - else
+                = button_to "Deaktivieren", lock_parent_path(parent), method: :patch, class: "mw-btn mw-btn--secondary mw-btn--sm", data: { turbo_confirm: "Account von #{parent.full_name.presence || parent.email} deaktivieren?" }

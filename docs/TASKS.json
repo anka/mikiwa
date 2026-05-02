@@ -706,7 +706,7 @@
       "id": "F4",
       "name": "Eltern-Account-Verwaltung & Onboarding",
       "phase": 2,
-      "status": "open",
+      "status": "done",
       "short_description": "Betreuer legen Eltern-Accounts an, versenden Magic-Link-Einladungen, und können Accounts deaktivieren oder Re-Einladungen senden.",
       "description": "Eltern werden ausschließlich von Betreuern angelegt und per E-Mail eingeladen – kein Selbst-Registrierungs-Flow. Beim Anlegen: E-Mail (Pflicht), Vorname, Nachname, Telefonnummer (optional). Nach dem Speichern wird automatisch eine initiale Magic-Link-Einladungs-E-Mail versendet. Der Einladungslink aktiviert den Account und leitet zur Profil-Vervollständigung. Ein Eltern-Account kann mehreren Kindern zugeordnet werden. Eltern können ihr eigenes Profil bearbeiten (Name, Telefon, E-Mail), aber nicht ihre Kind-Zuordnung ändern. Betreuer können Accounts deaktivieren und eine neue Einladungs-E-Mail versenden.",
       "acceptance_criteria": [
