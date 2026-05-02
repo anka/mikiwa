@@ -257,7 +257,7 @@
       "id": "T4",
       "name": "Privacy & DSGVO-Grundlagen",
       "phase": 1,
-      "status": "open",
+      "status": "done",
       "short_description": "DSGVO-konforme Datensicherung: TLS/HSTS, at-rest-Verschlüsselung sensibler Felder, PII-Filterung in Logs, signierte Storage-URLs.",
       "description": "Datenschutz ist ein Querschnittsthema und wird technisch verankert. HTTPS wird über HSTS erzwungen. Sensible Felder (Notfallkontakte, medizinische Hinweise, Versicherungsnummern) werden mit ActiveRecord::Encryption at-rest verschlüsselt. In Log-Ausgaben werden E-Mail-Adressen, Tokens und Passwörter über Rails filter_parameters gefiltert. ActiveStorage-URLs werden ausschließlich als signierte, kurzlebige URLs ausgeliefert – kein direkter Public-Read-Zugriff auf Dateien. Tägliche, verschlüsselte Datenbank-Dumps und Storage-Backups werden automatisch rotiert (14 Tage). Keine externen Analytics- oder Tracking-Dienste. Cookie-Banner nicht erforderlich (nur technisch notwendige Cookies).",
       "acceptance_criteria": [

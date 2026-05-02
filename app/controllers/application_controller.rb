@@ -3,6 +3,8 @@ class ApplicationController < ActionController::Base
   allow_browser versions: :modern
   stale_when_importmap_changes
 
+  before_action :set_security_headers
+
   rescue_from ApplicationPolicy::NotAuthorizedError, with: :render_forbidden
 
   private
@@ -23,6 +25,12 @@ class ApplicationController < ActionController::Base
     klass = policy_scope_class || "#{scope}Policy::Scope".safe_constantize
     return scope.all if klass.nil?
     klass.new(current_user, scope).resolve
+  end
+
+  def set_security_headers
+    response.set_header("X-Robots-Tag", "noindex, nofollow")
+    response.set_header("X-Content-Type-Options", "nosniff")
+    response.set_header("X-Frame-Options", "DENY")
   end
 
   def render_forbidden
