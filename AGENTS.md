@@ -45,6 +45,7 @@ Standard Rails layout. Key entry points:
 
 1. Prefer re-using existing UI components from Tailwindcss and additions that are specific for this app, keep styles in CSS files and avoid direct style annotations (e.g. 'semibold', 'text-sm') in the view's code
 2. Follow test decisions:
+   - Use minitest!
    - Prioritize system tests for critical user flows (golden paths).
    - Add focused tests for custom business logic (services/queries/forms), especially money, permissions, data integrity, and security behavior.
    - Avoid low-value tests that only re-test Rails defaults (basic validations/associations/CRUD wiring) or purely cosmetic UI details.
@@ -52,6 +53,11 @@ Standard Rails layout. Key entry points:
 3. Do not assume that smooth migration is absolutely required, ask for clarification in such situations
 4. This project builds upon the ideas, philosophy and functionality of the Ruby on Rails framework, stick to them and its best practices. 
 5. Prefer a "clear contract" where a component takes responsibility and others can rely on that (e.g. no need for read-time fallback handling if there's a component that validates input at write-time)
+6. For **ALL** frontend designs use the `mikiwa-design` skill!
+7. Use Stimulus controllers for interactive behavior
+8. Business logic goes in dedicated service objects
+9. Background jobs use Solid Queue (Rails 8's default job backend) and should be small and idempotent
+10. Use conventional commit messages with a brief title and a detailed body. The body can contain asciiart for architectual patterns or introduced design patterns. The body should describe the main changes in a summary easy to read and comprehend.
 
 
 ## STRICT Development/Architecting/Coding Guidelines
