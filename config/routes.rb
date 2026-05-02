@@ -16,12 +16,12 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   get "offline" => "pages#offline", as: :offline
 
-  resources :kinder, only: %i[index new create edit update show] do
+  resources :children, only: %i[index new create edit update show] do
     member do
-      patch :deaktivieren
+      patch :deactivate
     end
-    resources :notfallkontakte, only: %i[new create edit update destroy]
-    resources :medizinische_hinweise, only: %i[new create edit update destroy]
+    resources :emergency_contacts, only: %i[new create edit update destroy]
+    resources :medical_notes, only: %i[new create edit update destroy]
   end
 
   resources :parents, only: %i[index new create] do
@@ -32,14 +32,20 @@ Rails.application.routes.draw do
     end
   end
 
-  resource :profile, only: %i[show update], controller: "profile"
-
-  resources :gruppen
-  resources :kindergartenjahre do
+  resource :profile, only: %i[show update], controller: "profile" do
     member do
-      patch :aktiviere
-      get   :jahresubergang
-      post  :jahresubergang_durchfuehren
+      patch :rotate_ical_token
+    end
+  end
+
+  resources :calendar_events
+
+  resources :groups
+  resources :kindergarten_years do
+    member do
+      patch :activate
+      get   :rollover
+      post  :execute_rollover
     end
   end
 

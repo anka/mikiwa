@@ -1,8 +1,8 @@
 class User < ApplicationRecord
   has_secure_password
   has_many :sessions, dependent: :destroy
-  has_many :eltern_kinder, class_name: "ElternKind", foreign_key: "user_id", dependent: :destroy
-  has_many :kinder, through: :eltern_kinder, source: :kind
+  has_many :parent_children, class_name: "ParentChild", foreign_key: "user_id", dependent: :destroy
+  has_many :children, through: :parent_children, source: :child
   belongs_to :invited_by, class_name: "User", optional: true
 
   normalizes :email, with: ->(e) { e.strip.downcase }
@@ -18,6 +18,7 @@ class User < ApplicationRecord
   end
 
   scope :staff, -> { where(role: %w[admin caretaker]) }
+  scope :parents, -> { where(role: "parent") }
   scope :active, -> { where(locked_at: nil) }
   scope :locked, -> { where.not(locked_at: nil) }
 
@@ -43,5 +44,15 @@ class User < ApplicationRecord
 
   def invalidate_magic_link_token!
     increment!(:magic_link_token_version)
+  end
+
+  def rotate_ical_token!
+    update!(ical_token: SecureRandom.hex(24))
+    ical_token
+  end
+
+  def ensure_ical_token!
+    return if ical_token.present?
+    update!(ical_token: SecureRandom.hex(24))
   end
 end

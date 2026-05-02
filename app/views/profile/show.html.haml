@@ -32,3 +32,21 @@
 
     .mw-form__actions
       = form.submit "Profil speichern", class: "mw-btn mw-btn--primary"
+
+.mw-card{ style: "margin-top: 1.5rem; max-width: 480px;" }
+  %h2.mw-section-title{ style: "padding: 1rem 1.25rem 0; font-size: var(--fs-14); font-weight: var(--fw-bold); color: var(--fg-2);" } Kalender-Abonnement
+  .mw-detail-list
+    .mw-detail-row
+      .mw-detail-row__icon= lucide_icon "link", size: 18
+      .mw-detail-row__content
+        .mw-detail-row__label Persönlicher iCal-Feed
+        .mw-detail-row__value
+          - ical_url = "#{request.base_url}/calendar/#{current_user.ical_token}.ics"
+          %code.mw-mono{ style: "font-size: 12px; word-break: break-all; color: var(--fg-2);" }= ical_url
+          %p.mw-field__hint{ style: "margin-top: 0.5rem;" }
+            Abonnieren Sie diesen Link in Apple Kalender, Google Kalender oder Outlook, um Ihre Ereignisse zu synchronisieren.
+          = button_to rotate_ical_token_profile_path, method: :patch,
+              class: "mw-btn mw-btn--ghost mw-btn--sm", style: "margin-top: 0.5rem;",
+              data: { turbo_confirm: "Token zurücksetzen? Der alte Link wird danach ungültig." } do
+            = lucide_icon "x", size: 14
+            Token zurücksetzen

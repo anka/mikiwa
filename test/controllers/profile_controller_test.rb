@@ -35,4 +35,21 @@ class ProfileControllerTest < ActionDispatch::IntegrationTest
     patch profile_path, params: { user: { role: "admin" } }
     assert_equal "parent", @parent.reload.role
   end
+
+  test "Profil zeigt iCal-Abo-Link" do
+    sign_in_as(@parent)
+    get profile_path
+    assert_response :success
+    assert_match ".ics", response.body
+    assert @parent.reload.ical_token.present?
+  end
+
+  test "Token-Rotation erzeugt neuen Token" do
+    sign_in_as(@parent)
+    get profile_path
+    old_token = @parent.reload.ical_token
+    patch rotate_ical_token_profile_path
+    assert_redirected_to profile_path
+    assert_not_equal old_token, @parent.reload.ical_token
+  end
 end

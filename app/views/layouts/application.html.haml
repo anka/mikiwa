@@ -20,11 +20,66 @@
   %body
     .mw-app-shell
       %header.mw-app-topbar
-        = link_to "/", class: "mw-app-brand", "aria-label": "Mikiwa" do
+        = link_to root_path, class: "mw-app-brand", "aria-label": "Mikiwa" do
           = image_tag "mikiwa/logo-mikiwa.svg", class: "mw-app-brand__mark", alt: ""
           %span.mw-app-brand__wordmark mikiwa
         .mw-app-topbar__spacer
         - unless authenticated?
           = link_to "Anmelden", new_session_path, class: "mw-btn mw-btn--primary mw-btn--sm"
-      %main.mw-app-main
-        = yield
+
+      .mw-app-body
+        - if authenticated?
+          %nav.mw-sidebar{ "aria-label": "Hauptnavigation" }
+            .mw-sidebar__inner
+              .mw-nav-section
+                = link_to children_path, class: "mw-nav-link #{nav_active?('/children')}" do
+                  = lucide_icon "users", size: 20
+                  %span Kinder
+                = link_to calendar_events_path, class: "mw-nav-link #{nav_active?('/calendar_events')}" do
+                  = lucide_icon "calendar", size: 20
+                  %span Kalender
+                = link_to groups_path, class: "mw-nav-link #{nav_active?('/groups')}" do
+                  = lucide_icon "layout-grid", size: 20
+                  %span Gruppen
+                = link_to kindergarten_years_path, class: "mw-nav-link #{nav_active?('/kindergarten_years')}" do
+                  = lucide_icon "calendar-range", size: 20
+                  %span Kindergartenjahre
+                = link_to parents_path, class: "mw-nav-link #{nav_active?('/parents')}" do
+                  = lucide_icon "users-round", size: 20
+                  %span Eltern-Accounts
+                - if current_user.admin?
+                  = link_to admin_users_path, class: "mw-nav-link #{nav_active?('/admin')}" do
+                    = lucide_icon "shield-check", size: 20
+                    %span Administration
+              .mw-sidebar__footer
+                = link_to profile_path, class: "mw-nav-link #{nav_active?('/profile')}" do
+                  = lucide_icon "user", size: 20
+                  %span= truncate(current_user.full_name.presence || current_user.email, length: 24)
+                = button_to session_path, method: :delete, class: "mw-nav-link", form: { style: "display:contents" } do
+                  = lucide_icon "log-out", size: 20
+                  %span Abmelden
+
+        %main.mw-app-main{ id: "main-content" }
+          - if content_for?(:no_container)
+            = yield
+          - else
+            .mw-container
+              = yield
+
+      - if authenticated?
+        %nav.mw-mobile-nav{ "aria-label": "Mobile Navigation" }
+          = link_to children_path, class: "mw-mobile-nav__item #{nav_active?('/children')}" do
+            = lucide_icon "users", size: 22
+            %span Kinder
+          = link_to calendar_events_path, class: "mw-mobile-nav__item #{nav_active?('/calendar_events')}" do
+            = lucide_icon "calendar", size: 22
+            %span Kalender
+          = link_to groups_path, class: "mw-mobile-nav__item #{nav_active?('/groups')}" do
+            = lucide_icon "layout-grid", size: 22
+            %span Gruppen
+          = link_to parents_path, class: "mw-mobile-nav__item #{nav_active?('/parents')}" do
+            = lucide_icon "users-round", size: 22
+            %span Eltern
+          = link_to profile_path, class: "mw-mobile-nav__item #{nav_active?('/profile')}" do
+            = lucide_icon "user", size: 22
+            %span Profil

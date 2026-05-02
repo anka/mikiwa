@@ -1,0 +1,49 @@
+- content_for :title, "Kalender · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Kalender
+    - if @filter_year
+      %p.mw-page-header__lede= @filter_year.label
+  - if current_user.staff?
+    = link_to new_calendar_event_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+      = lucide_icon "plus", size: 16
+      Neues Ereignis
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+-# Filter-Leiste
+.mw-calendar-filters
+  = form_with url: calendar_events_path, method: :get, local: true, class: "mw-calendar-filters__form" do |f|
+    .mw-calendar-filters__row
+      .mw-field.mw-field--inline
+        = f.label :kindergarten_year_id, "Jahr", class: "mw-field__label"
+        = f.select :kindergarten_year_id,
+            options_from_collection_for_select(@kindergarten_years, :id, :label, @filter_year&.id),
+            { include_blank: "Alle Jahre" },
+            class: "mw-select mw-select--sm"
+
+      .mw-field.mw-field--inline
+        = f.label :group_id, "Gruppe", class: "mw-field__label"
+        = f.select :group_id,
+            options_from_collection_for_select(@groups, :id, :name, params[:group_id]),
+            { include_blank: "Alle Gruppen" },
+            class: "mw-select mw-select--sm"
+
+      .mw-calendar-filters__views
+        = link_to calendar_events_path(view: "month", kindergarten_year_id: @filter_year&.id, group_id: params[:group_id], month: params[:month]),
+            class: "mw-btn mw-btn--sm #{@view == 'month' ? 'mw-btn--primary' : 'mw-btn--secondary'}" do
+          = lucide_icon "calendar", size: 14
+          Monat
+        = link_to calendar_events_path(view: "list", kindergarten_year_id: @filter_year&.id, group_id: params[:group_id]),
+            class: "mw-btn mw-btn--sm #{@view == 'list' ? 'mw-btn--primary' : 'mw-btn--secondary'}" do
+          = lucide_icon "list", size: 14
+          Liste
+
+      = f.submit "Filtern", class: "mw-btn mw-btn--secondary mw-btn--sm"
+
+- if @view == "month"
+  = render "month_view"
+- else
+  = render "list_view"

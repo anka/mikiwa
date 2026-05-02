@@ -804,7 +804,7 @@
       "id": "F6",
       "name": "Kalender & Kalenderereignisse",
       "phase": 3,
-      "status": "open",
+      "status": "done",
       "short_description": "Kalenderansicht (Monat/Liste) mit Kalenderereignissen, Filterung nach Gruppe/Jahr und iCal-Abo-Link im Benutzerprofil.",
       "description": "Alle Benutzer sehen einen Kalender mit einfachen Ereignissen und Veranstaltungen (letztere optisch hervorgehoben). Ansichten: Monatsansicht und Listenansicht, filterbar nach Gruppe und Kindergartenjahr. Ein Kalenderereignis hat: Titel, Datum (ganztägig oder mit Uhrzeit), optionaler Ort, Beschreibung, betroffene Gruppen (1..n). Eltern sehen ausschließlich Ereignisse von Gruppen, in denen mindestens eines ihrer Kinder aktiv ist (im jeweiligen Jahr). Im Profil jedes Benutzers ist ein persönlicher iCal-Abo-Link verfügbar, der nur für den entsprechenden Benutzer sichtbare Ereignisse enthält.",
       "acceptance_criteria": [

@@ -1,0 +1,32 @@
+- prev_month = @month.prev_month
+- next_month = @month.next_month
+
+.mw-calendar-month
+  .mw-calendar-month__nav
+    = link_to calendar_events_path(view: "month", month: prev_month.strftime("%Y-%m"), kindergarten_year_id: @filter_year&.id, group_id: params[:group_id]),
+        class: "mw-btn mw-btn--ghost mw-btn--sm", "aria-label": "Vorheriger Monat" do
+      = lucide_icon "chevron-left", size: 18
+    %h2.mw-calendar-month__title= l(@month, format: "%B %Y")
+    = link_to calendar_events_path(view: "month", month: next_month.strftime("%Y-%m"), kindergarten_year_id: @filter_year&.id, group_id: params[:group_id]),
+        class: "mw-btn mw-btn--ghost mw-btn--sm", "aria-label": "Nächster Monat" do
+      = lucide_icon "chevron-right", size: 18
+
+  .mw-card{ style: "overflow: hidden; margin-top: 1rem;" }
+    .mw-cal-grid__header
+      - %w[Mo Di Mi Do Fr Sa So].each do |day|
+        %div= day
+
+    .mw-cal-grid
+      - @calendar_cells.each do |date|
+        - is_today = date == Date.today
+        - day_events = date ? (@events_by_date[date] || []) : []
+        .mw-cal-cell{ class: [is_today ? "mw-cal-cell--today" : nil, date.nil? ? "mw-cal-cell--empty" : nil].compact.join(" ") }
+          - if date
+            .mw-cal-cell__day{ class: is_today ? "mw-cal-cell__day--today" : nil }= date.day
+            .mw-cal-cell__events
+              - day_events.first(3).each do |event|
+                - tone = event.event_type == "veranstaltung" ? "accent" : "info"
+                .mw-cal-event{ class: "mw-cal-event--#{tone}", title: event.title }
+                  = link_to event.title.truncate(22), calendar_event_path(event), class: "mw-cal-event__link"
+              - if day_events.size > 3
+                .mw-cal-event__more= "+#{day_events.size - 3} weitere"

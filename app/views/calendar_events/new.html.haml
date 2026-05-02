@@ -1,0 +1,6 @@
+- content_for :title, "Neues Ereignis · Kalender · Mikiwa"
+
+.mw-page-header
+  %h1.mw-page-header__title Neues Ereignis
+
+= render "form", event: @event, groups: @groups, kindergarten_years: @kindergarten_years
