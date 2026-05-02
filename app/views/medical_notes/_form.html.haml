@@ -1,0 +1,25 @@
+= form_with model: [@child, medical_note],
+    url: medical_note.new_record? ? child_medical_notes_path(@child) : child_medical_note_path(@child, medical_note),
+    method: medical_note.new_record? ? :post : :patch,
+    class: "mw-form" do |form|
+  - if medical_note.errors.any?
+    .mw-flash.mw-flash--error
+      %ul{ style: "margin: 0; padding-left: 1.25rem;" }
+        - medical_note.errors.full_messages.each do |msg|
+          %li= msg
+
+  .mw-field
+    = form.label :note_type, "Art des Hinweises", class: "mw-field__label"
+    = form.select :note_type,
+        [["Allergie", "allergy"], ["Medikament", "medication"], ["Besonderheit", "special_note"]],
+        { prompt: "Bitte wählen …" },
+        required: true, class: "mw-input"
+
+  .mw-field
+    = form.label :content, "Beschreibung", class: "mw-field__label"
+    = form.text_area :content, required: true, rows: 3, class: "mw-input", style: "resize: vertical;"
+    %p.mw-field__hint Diese Information wird verschlüsselt gespeichert.
+
+  .mw-form__actions
+    = form.submit medical_note.new_record? ? "Hinweis hinzufügen" : "Änderungen speichern", class: "mw-btn mw-btn--primary"
+    = link_to "Abbrechen", child_path(@child), class: "mw-btn mw-btn--ghost"

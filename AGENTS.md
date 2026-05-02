@@ -58,7 +58,38 @@ Standard Rails layout. Key entry points:
 8. Business logic goes in dedicated service objects
 9. Background jobs use Solid Queue (Rails 8's default job backend) and should be small and idempotent
 10. Use conventional commit messages with a brief title and a detailed body. The body can contain asciiart for architectual patterns or introduced design patterns. The body should describe the main changes in a summary easy to read and comprehend.
-11. Die Sprache in der Entwicklung für alle Code-Artefakte (User), Tabellen (users), Assets (users_controller.js), etc. ist ENGLISCH.
+11. **ENTWICKLUNGSSPRACHE IST ENGLISCH – NICHT VERHANDELBAR.** Alle Code-Artefakte müssen englisch benannt sein: Modelle, Klassen, Controller, Actions, Methoden, Attribute, Datenbanktabellen, Spalten, Views, Routen, Services, Tests, Helpers, Konstanten, lokale Variablen in Templates. Die UI-Sprache (Labels, Flash-Messages, Platzhalter) bleibt Deutsch. Enum-/Typ-Werte die im Code und in der DB gespeichert werden (z.B. `note_type`) sind ebenfalls englisch.
+
+**Konkrete Mapping-Beispiele (Referenz für zukünftige Entwicklung):**
+
+| Deutsch (verboten) | Englisch (korrekt) |
+|---|---|
+| `Kind` / `kinder` | `Child` / `children` |
+| `Gruppe` / `gruppen` | `Group` / `groups` |
+| `Kindergartenjahr` | `KindergartenYear` / `kindergarten_years` |
+| `ElternKind` | `ParentChild` / `parent_children` |
+| `Notfallkontakt` | `EmergencyContact` / `emergency_contacts` |
+| `MedizinischerHinweis` | `MedicalNote` / `medical_notes` |
+| `vorname` / `nachname` | `first_name` / `last_name` |
+| `geburtsdatum` | `date_of_birth` |
+| `gruppe_id` | `group_id` |
+| `kindergartenjahr_id` | `kindergarten_year_id` |
+| `foto_einwilligung` | `photo_consent` |
+| `aktiv` | `active` |
+| `bezeichnung` | `label` |
+| `start_datum` / `end_datum` | `start_date` / `end_date` |
+| `beziehung` / `telefon` | `relationship` / `phone` |
+| `hinweis_typ` / `inhalt` | `note_type` / `content` |
+| `farbe` / `beschreibung` | `color` / `description` |
+| `allergie` / `medikament` | `allergy` / `medication` |
+| `vollstaendiger_name` | `full_name` |
+| `anzeigename` | `display_name` |
+| `deaktivieren!` | `deactivate!` |
+| `uebertragen_in` | `transfer_to` |
+| `jahresubergang` | `rollover` |
+| `durchfuehren` | `execute` |
+
+Verstöße gegen diese Regel sind als Bug zu behandeln und sofort zu korrigieren.
 
 ## STRICT Development/Architecting/Coding Guidelines
 
@@ -115,3 +146,14 @@ For multi-step tasks, state a brief plan:
 2. [Step] → verify: [check]
 3. [Step] → verify: [check]
 ```
+
+## Browser Automation
+
+Use `agent-browser` for web automation. Run `agent-browser --help` for all commands.
+
+Core workflow:
+
+1. `agent-browser open <url>` - Navigate to page
+2. `agent-browser snapshot -i` - Get interactive elements with refs (@e1, @e2)
+3. `agent-browser click @e1` / `fill @e2 "text"` - Interact using refs
+4. Re-snapshot after page changes

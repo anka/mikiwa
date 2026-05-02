@@ -1,0 +1,65 @@
+- content_for :title, "Abstimmungen · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Abstimmungen
+  - if current_user.staff?
+    = link_to new_poll_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+      = lucide_icon "plus", size: 16
+      Neue Abstimmung
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+- if @polls.any?
+  .mw-card{ style: "margin-top: 1.5rem;" }
+    %table.mw-table{ style: "width: 100%;" }
+      %thead
+        %tr
+          %th Titel
+          %th Gruppe
+          %th Typ
+          %th Stimmschluss
+          %th Status
+          %th Stimmen
+          %th{ style: "text-align: right;" } Aktionen
+      %tbody
+        - @polls.each do |poll|
+          %tr
+            %td= link_to poll.title, poll_path(poll), class: "mw-link"
+            %td= poll.group.name
+            %td
+              - if poll.poll_type == "multiple"
+                %span.mw-badge.mw-badge--info Mehrfachauswahl
+              - else
+                %span.mw-badge.mw-badge--neutral Einfachauswahl
+            %td
+              - if poll.deadline.present?
+                - if poll.open?
+                  = l(poll.deadline, format: :short)
+                - else
+                  %span.mw-text-danger= l(poll.deadline, format: :short)
+              - else
+                %span.mw-text-muted –
+            %td
+              - if poll.status == "open" && poll.open?
+                %span.mw-badge.mw-badge--success Offen
+              - elsif poll.status == "open" && !poll.open?
+                %span.mw-badge.mw-badge--warning Stimmschluss
+              - else
+                %span.mw-badge.mw-badge--neutral Geschlossen
+            %td= poll.votes.count
+            %td{ style: "text-align: right;" }
+              .mw-actions
+                = link_to poll_path(poll), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+                  Öffnen
+                - if current_user.staff?
+                  = button_to poll_path(poll), method: :delete,
+                      class: "mw-btn mw-btn--danger mw-btn--sm",
+                      data: { turbo_confirm: "Abstimmung \"#{poll.title}\" wirklich löschen?" } do
+                    = lucide_icon "trash-2", size: 14
+- else
+  .mw-empty-state{ style: "margin-top: 2rem;" }
+    %p.mw-text-muted Noch keine Abstimmungen angelegt.
+    - if current_user.staff?
+      = link_to "Erste Abstimmung anlegen", new_poll_path, class: "mw-btn mw-btn--primary mw-btn--sm"

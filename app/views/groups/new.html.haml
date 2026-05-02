@@ -1,0 +1,7 @@
+- content_for :title, "Neue Gruppe · Mikiwa"
+
+.mw-page-header
+  %h1.mw-page-header__title Neue Gruppe anlegen
+
+.mw-card{ style: "margin-top: 1.5rem; max-width: 520px;" }
+  = render "form", group: @group

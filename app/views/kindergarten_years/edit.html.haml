@@ -1,0 +1,7 @@
+- content_for :title, "#{@kindergarten_year.label} bearbeiten · Mikiwa"
+
+.mw-page-header
+  %h1.mw-page-header__title= "#{@kindergarten_year.label} bearbeiten"
+
+.mw-card{ style: "margin-top: 1.5rem; max-width: 560px;" }
+  = render "form", kindergarten_year: @kindergarten_year

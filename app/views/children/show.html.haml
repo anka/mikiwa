@@ -1,0 +1,78 @@
+- content_for :title, "#{@child.full_name} · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title= @child.full_name
+    %p.mw-page-header__lede
+      = @child.group.name
+      ·
+      = I18n.l(@child.date_of_birth, format: :short)
+  = link_to "Bearbeiten", edit_child_path(@child), class: "mw-btn mw-btn--secondary mw-btn--sm"
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+/ Versicherungsdaten
+.mw-detail-section
+  .mw-detail-section__header
+    %span.mw-detail-section__title Versicherung
+    - if current_user.staff? || current_user.children.exists?(@child.id)
+      = link_to "Bearbeiten", edit_child_path(@child), class: "mw-btn mw-btn--ghost mw-btn--sm"
+  .mw-card{ style: "padding: 16px 20px;" }
+    - if @child.health_insurer.present? || @child.insurance_number.present?
+      .mw-text-strong{ style: "margin-bottom: 4px;" }= @child.health_insurer.presence || "–"
+      %span.mw-text-muted Krankenkasse
+      - if @child.insurance_number.present?
+        %br
+        .mw-text-strong{ style: "margin-top: 8px; margin-bottom: 4px;" }= @child.insurance_number
+        %span.mw-text-muted Versicherungsnummer
+    - else
+      %p.mw-text-muted{ style: "margin: 0;" } Keine Versicherungsdaten hinterlegt.
+
+/ Notfallkontakte
+.mw-detail-section
+  .mw-detail-section__header
+    %span.mw-detail-section__title Notfallkontakte
+    = link_to "Hinzufügen", new_child_emergency_contact_path(@child), class: "mw-btn mw-btn--primary mw-btn--sm"
+  .mw-card
+    - if @child.emergency_contacts.any?
+      - @child.emergency_contacts.each do |ec|
+        .mw-nk-item
+          .mw-nk-item__icon= ec.position
+          .mw-nk-item__body
+            .mw-nk-item__name= ec.name
+            .mw-nk-item__meta
+              = ec.relationship
+              ·
+              = ec.phone
+          .mw-actions
+            = link_to "Bearbeiten", edit_child_emergency_contact_path(@child, ec), class: "mw-btn mw-btn--secondary mw-btn--sm"
+            = button_to "Löschen", child_emergency_contact_path(@child, ec), method: :delete,
+                class: "mw-btn mw-btn--secondary mw-btn--sm",
+                data: { turbo_confirm: "Notfallkontakt wirklich löschen?" }
+    - else
+      .mw-empty-state
+        %p.mw-text-muted Noch keine Notfallkontakte hinterlegt.
+
+/ Medizinische Hinweise
+.mw-detail-section
+  .mw-detail-section__header
+    %span.mw-detail-section__title Medizinische Hinweise
+    = link_to "Hinzufügen", new_child_medical_note_path(@child), class: "mw-btn mw-btn--primary mw-btn--sm"
+  .mw-card
+    - if @child.medical_notes.any?
+      - @child.medical_notes.each do |mn|
+        .mw-mh-item
+          %span.mw-badge{ class: "mw-badge--#{badge_tone_for(mn.note_type)}" }= note_type_label(mn.note_type)
+          .mw-mh-item__body
+            .mw-mh-item__inhalt= mn.content
+          .mw-actions
+            = link_to "Bearbeiten", edit_child_medical_note_path(@child, mn), class: "mw-btn mw-btn--secondary mw-btn--sm"
+            = button_to "Löschen", child_medical_note_path(@child, mn), method: :delete,
+                class: "mw-btn mw-btn--secondary mw-btn--sm",
+                data: { turbo_confirm: "Hinweis wirklich löschen?" }
+    - else
+      .mw-empty-state
+        %p.mw-text-muted Noch keine medizinischen Hinweise hinterlegt.
+
+= link_to "Zurück zur Übersicht", children_path, class: "mw-btn mw-btn--ghost mw-btn--sm", style: "margin-top: 1.5rem; display: inline-block;"

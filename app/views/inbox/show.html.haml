@@ -1,0 +1,23 @@
+- content_for :title, "#{@message.title} · Posteingang · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title= @message.title
+    %p.mw-page-header__lede
+      Von: #{@message.sent_by.full_name.presence || @message.sent_by.email}
+      ·
+      = l(@message.created_at, format: :long)
+  .mw-page-header__actions
+    = link_to inbox_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
+      Zurück
+
+.mw-card{ style: "margin-top: 1.5rem; padding: 1.5rem;" }
+  .mw-prose
+    = simple_format(@message.body)
+  - if @message.attachment.attached?
+    %hr{ style: "margin: 1rem 0; border-color: var(--border-subtle);" }
+    = link_to @message.attachment.filename.to_s,
+        rails_blob_url(@message.attachment, disposition: "attachment", expires_in: 1.hour),
+        class: "mw-btn mw-btn--secondary mw-btn--sm" do
+      = lucide_icon "paperclip", size: 14
+      = @message.attachment.filename

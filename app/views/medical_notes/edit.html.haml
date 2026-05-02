@@ -1,0 +1,10 @@
+- content_for :title, "Medizinischen Hinweis bearbeiten · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Medizinischen Hinweis bearbeiten
+    %p.mw-page-header__lede
+      = @child.full_name
+
+.mw-card{ style: "margin-top: 1.5rem; padding: 24px;" }
+  = render "form", medical_note: @medical_note

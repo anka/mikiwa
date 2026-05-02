@@ -1,0 +1,83 @@
+- content_for :title, "#{@poll.title} · Abstimmung · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title= @poll.title
+    %p.mw-page-header__lede
+      = @poll.group.name
+      ·
+      - if @poll.poll_type == "multiple"
+        Mehrfachauswahl
+      - else
+        Einfachauswahl
+      - if @poll.deadline.present?
+        ·
+        - if @poll.open?
+          Stimmschluss: #{l(@poll.deadline, format: :long)}
+        - else
+          %span.mw-text-danger Stimmschluss überschritten (#{l(@poll.deadline, format: :long)})
+  .mw-page-header__actions
+    - if current_user.staff?
+      = link_to export_poll_path(@poll, format: :csv), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+        = lucide_icon "list", size: 14
+        CSV-Export
+      - if @poll.open?
+        = button_to close_poll_path(@poll), method: :patch, class: "mw-btn mw-btn--secondary mw-btn--sm",
+            data: { turbo_confirm: "Abstimmung schließen?" } do
+          = lucide_icon "x", size: 14
+          Schließen
+      = link_to edit_poll_path(@poll), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+        = lucide_icon "pencil", size: 14
+        Bearbeiten
+    = link_to polls_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
+      Zurück
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+- if alert
+  .mw-flash.mw-flash--error= alert
+
+- if @poll.description.present?
+  .mw-card{ style: "margin-top: 1rem; padding: 1rem 1.25rem;" }
+    %p.mw-prose= @poll.description
+
+- if current_user.parent?
+  - if @poll.open?
+    .mw-card{ style: "margin-top: 1.5rem;" }
+      %h2{ style: "padding: 1rem 1.25rem 0; font-size: var(--fs-14); font-weight: var(--fw-bold); color: var(--fg-2);" }
+        Ihre Stimme
+      = form_with url: vote_poll_path(@poll), method: :post, style: "padding: 1rem 1.25rem;" do |f|
+        - @poll.poll_options.each do |opt|
+          .mw-checkbox-row{ style: "padding: 0.5rem 0;" }
+            - checked = @user_options.include?(opt.id)
+            - if @poll.poll_type == "multiple"
+              = check_box_tag "option_ids[]", opt.id, checked,
+                  id: "opt_#{opt.id}", class: "mw-checkbox"
+            - else
+              = radio_button_tag "option_ids[]", opt.id, checked,
+                  id: "opt_#{opt.id}", class: "mw-radio"
+            = label_tag "opt_#{opt.id}", opt.label, class: "mw-field__label mw-field__label--inline"
+        .mw-form__actions{ style: "margin-top: 0.75rem;" }
+          = f.submit "Stimme abgeben", class: "mw-btn mw-btn--primary"
+  - else
+    .mw-flash.mw-flash--warning{ style: "margin-top: 1rem;" }
+      Abstimmung ist geschlossen. Keine neuen Stimmen möglich.
+
+.mw-card{ style: "margin-top: 1.5rem;" }
+  %h2{ style: "padding: 1rem 1.25rem 0; font-size: var(--fs-14); font-weight: var(--fw-bold); color: var(--fg-2);" }
+    Ergebnis
+    %span.mw-text-muted{ style: "font-weight: normal; margin-left: 0.5rem;" }
+      = "(#{@poll.votes.count} Stimme#{@poll.votes.count == 1 ? '' : 'n'})"
+  - if @results.any? { |_, voters| voters.any? }
+    - @results.each do |option, voters|
+      .mw-detail-list-row{ style: "padding: 0.75rem 1.25rem; border-top: 1px solid var(--border-subtle);" }
+        .mw-detail-list-row__label
+          = option.label
+          %span.mw-badge.mw-badge--neutral{ style: "margin-left: 0.5rem;" }= voters.size
+        .mw-detail-list-row__value
+          - if voters.any?
+            = voters.map { |u| u.full_name.presence || u.email }.join(", ")
+          - else
+            %span.mw-text-muted –
+  - else
+    %p.mw-text-muted{ style: "padding: 1rem 1.25rem;" } Noch keine Stimmen abgegeben.

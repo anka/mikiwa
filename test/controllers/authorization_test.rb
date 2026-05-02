@@ -17,7 +17,7 @@ class AuthorizationTest < ActionDispatch::IntegrationTest
   end
 
   test "unauthentifizierter Zugriff redirectet zu Login (nicht 403)" do
-    get root_path
+    get children_path
     assert_redirected_to new_session_path
   end
 

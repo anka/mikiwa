@@ -1,0 +1,24 @@
+= form_with model: group, url: group.new_record? ? groups_path : group_path(group), class: "mw-form" do |form|
+  - if group.errors.any?
+    .mw-flash.mw-flash--error
+      %ul{ style: "margin: 0; padding-left: 1.25rem;" }
+        - group.errors.full_messages.each do |msg|
+          %li= msg
+
+  .mw-field
+    = form.label :name, "Name", class: "mw-field__label"
+    = form.text_field :name, required: true, autofocus: true, class: "mw-input", placeholder: "z.B. Schmetterlinge"
+
+  .mw-field
+    = form.label :color, "Akzentfarbe (optional)", class: "mw-field__label"
+    .mw-color-row
+      = form.color_field :color, class: "mw-color-picker"
+      %span.mw-field__hint Wird als Farbakzent in Listen und Ansichten verwendet.
+
+  .mw-field
+    = form.label :description, "Kurzbeschreibung (optional)", class: "mw-field__label"
+    = form.text_area :description, rows: 3, class: "mw-input", placeholder: "Altersgruppe, Besonderheiten, …"
+
+  .mw-form__actions
+    = form.submit group.new_record? ? "Gruppe anlegen" : "Änderungen speichern", class: "mw-btn mw-btn--primary"
+    = link_to "Abbrechen", groups_path, class: "mw-btn mw-btn--ghost"

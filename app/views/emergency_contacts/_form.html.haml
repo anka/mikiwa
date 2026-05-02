@@ -1,0 +1,30 @@
+= form_with model: [@child, emergency_contact],
+    url: emergency_contact.new_record? ? child_emergency_contacts_path(@child) : child_emergency_contact_path(@child, emergency_contact),
+    method: emergency_contact.new_record? ? :post : :patch,
+    class: "mw-form" do |form|
+  - if emergency_contact.errors.any?
+    .mw-flash.mw-flash--error
+      %ul{ style: "margin: 0; padding-left: 1.25rem;" }
+        - emergency_contact.errors.full_messages.each do |msg|
+          %li= msg
+
+  .mw-field-row
+    .mw-field
+      = form.label :name, "Name", class: "mw-field__label"
+      = form.text_field :name, required: true, autofocus: true, class: "mw-input"
+    .mw-field
+      = form.label :relationship, "Beziehung zum Kind", class: "mw-field__label"
+      = form.text_field :relationship, required: true, placeholder: "z.B. Mutter, Vater, Großmutter …", class: "mw-input"
+
+  .mw-field-row
+    .mw-field
+      = form.label :phone, "Telefonnummer", class: "mw-field__label"
+      = form.telephone_field :phone, required: true, class: "mw-input"
+    .mw-field
+      = form.label :position, "Reihenfolge", class: "mw-field__label"
+      = form.number_field :position, required: true, min: 1, class: "mw-input"
+      %p.mw-field__hint 1 = zuerst anrufen
+
+  .mw-form__actions
+    = form.submit emergency_contact.new_record? ? "Kontakt hinzufügen" : "Änderungen speichern", class: "mw-btn mw-btn--primary"
+    = link_to "Abbrechen", child_path(@child), class: "mw-btn mw-btn--ghost"

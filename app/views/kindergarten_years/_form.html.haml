@@ -1,0 +1,25 @@
+= form_with model: kindergarten_year,
+    url: kindergarten_year.new_record? ? kindergarten_years_path : kindergarten_year_path(kindergarten_year),
+    class: "mw-form" do |form|
+  - if kindergarten_year.errors.any?
+    .mw-flash.mw-flash--error
+      %ul{ style: "margin: 0; padding-left: 1.25rem;" }
+        - kindergarten_year.errors.full_messages.each do |msg|
+          %li= msg
+
+  .mw-field
+    = form.label :label, "Bezeichnung", class: "mw-field__label"
+    = form.text_field :label, required: true, autofocus: true, class: "mw-input", placeholder: "z.B. KGJ 2026/27"
+
+  .mw-field-row
+    .mw-field
+      = form.label :start_date, "Startdatum", class: "mw-field__label"
+      = form.date_field :start_date, required: true, class: "mw-input"
+
+    .mw-field
+      = form.label :end_date, "Enddatum", class: "mw-field__label"
+      = form.date_field :end_date, required: true, class: "mw-input"
+
+  .mw-form__actions
+    = form.submit kindergarten_year.new_record? ? "Jahr anlegen" : "Änderungen speichern", class: "mw-btn mw-btn--primary"
+    = link_to "Abbrechen", kindergarten_years_path, class: "mw-btn mw-btn--ghost"

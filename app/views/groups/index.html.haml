@@ -1,0 +1,39 @@
+- content_for :title, "Gruppen · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Gruppen
+    %p.mw-page-header__lede Bis zu 3 Gruppen für Ihre Einrichtung verwalten.
+  = link_to "Neue Gruppe", new_group_path, class: "mw-btn mw-btn--primary mw-btn--sm"
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+- if @groups.any?
+  .mw-card{ style: "margin-top: 1.5rem;" }
+    %table.mw-table{ style: "width: 100%;" }
+      %thead
+        %tr
+          %th Farbe
+          %th Name
+          %th Beschreibung
+          %th{ style: "text-align: right;" } Aktionen
+      %tbody
+        - @groups.each do |group|
+          %tr
+            %td
+              - if group.color.present?
+                %span{ style: "display:inline-block;width:20px;height:20px;border-radius:50%;background:#{group.color};border:1px solid var(--border-subtle);" }
+              - else
+                %span.mw-text-muted –
+            %td
+              %strong= group.name
+            %td= group.description.presence || "–"
+            %td{ style: "text-align: right;" }
+              .mw-actions
+                = link_to "Bearbeiten", edit_group_path(group), class: "mw-btn mw-btn--secondary mw-btn--sm"
+                = button_to "Löschen", group_path(group), method: :delete, class: "mw-btn mw-btn--danger mw-btn--sm", data: { turbo_confirm: "Gruppe \"#{group.name}\" wirklich löschen?" }
+- else
+  .mw-empty-state
+    %p.mw-text-muted Noch keine Gruppen angelegt.
+    = link_to "Erste Gruppe anlegen", new_group_path, class: "mw-btn mw-btn--primary mw-btn--sm"

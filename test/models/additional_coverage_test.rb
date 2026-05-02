@@ -1,29 +1,29 @@
 require "test_helper"
 
 class AdditionalCoverageTest < ActiveSupport::TestCase
-  # Gruppe model
-  test "Gruppe mit optionaler Farbe und Beschreibung" do
-    g = Gruppe.create!(name: "Schmetterlinge", farbe: "#FF6B6B", beschreibung: "Unsere kleinste Gruppe")
-    assert_equal "#FF6B6B", g.farbe
-    assert_equal "Unsere kleinste Gruppe", g.beschreibung
+  # Group model
+  test "group with optional color and description" do
+    g = Group.create!(name: "Schmetterlinge", color: "#FF6B6B", description: "Unsere kleinste Gruppe")
+    assert_equal "#FF6B6B", g.color
+    assert_equal "Unsere kleinste Gruppe", g.description
   end
 
-  # Kindergartenjahr model
-  test "Kindergartenjahr ohne aktiv=true ist nicht aktiv" do
-    kgj = Kindergartenjahr.create!(
-      bezeichnung: "KGJ 2024/25",
-      start_datum: Date.new(2024, 9, 1),
-      end_datum: Date.new(2025, 7, 31),
-      aktiv: false
+  # KindergartenYear model
+  test "kindergarten year without active=true is not active" do
+    year = KindergartenYear.create!(
+      label:      "KGJ 2024/25",
+      start_date: Date.new(2024, 9, 1),
+      end_date:   Date.new(2025, 7, 31),
+      active:     false
     )
-    assert_not kgj.aktiv?
+    assert_not year.active?
   end
 
   # User model role helpers
-  test "User admin? caretaker? parent? Hilfsmethoden" do
-    admin = User.create!(email: "a@t.com", password: "sicherespasswort1234", role: "admin")
+  test "User admin? caretaker? parent? helpers" do
+    admin    = User.create!(email: "a@t.com", password: "sicherespasswort1234", role: "admin")
     caretaker = User.create!(email: "b@t.com", password: "sicherespasswort1234", role: "caretaker")
-    parent = User.create!(email: "c@t.com", password: SecureRandom.hex(20), role: "parent")
+    parent   = User.create!(email: "c@t.com", password: SecureRandom.hex(20), role: "parent")
 
     assert admin.admin?
     assert_not admin.caretaker?
@@ -39,20 +39,20 @@ class AdditionalCoverageTest < ActiveSupport::TestCase
   end
 
   # User email_invalid flag
-  test "User email_invalid Standardwert ist false" do
+  test "User email_invalid default is false" do
     user = User.create!(email: "new@test.com", password: "sicherespasswort1234")
     assert_not user.email_invalid?
   end
 
   # ApplicationPolicy Scope
-  test "ApplicationPolicy::Scope wirft NotImplementedError" do
+  test "ApplicationPolicy::Scope raises NotImplementedError" do
     user = User.create!(email: "scope@test.com", password: "sicherespasswort1234")
     scope = ApplicationPolicy::Scope.new(user, User)
     assert_raises(NotImplementedError) { scope.resolve }
   end
 
   # MagicLink Mailer
-  test "MagicLinkMailer login hat beide Varianten" do
+  test "MagicLinkMailer login has both variants" do
     parent = User.create!(email: "ml@test.com", password: SecureRandom.hex(20), role: "parent")
     mail = MagicLinkMailer.login(parent)
     content_types = mail.parts.map { |p| p.content_type.split(";").first }
@@ -62,7 +62,7 @@ class AdditionalCoverageTest < ActiveSupport::TestCase
   end
 
   # User invalidate_magic_link_token!
-  test "invalidate_magic_link_token! erhöht Version" do
+  test "invalidate_magic_link_token! increments version" do
     user = User.create!(email: "inv@test.com", password: SecureRandom.hex(20), role: "parent")
     original_version = user.magic_link_token_version
     user.invalidate_magic_link_token!
@@ -70,7 +70,7 @@ class AdditionalCoverageTest < ActiveSupport::TestCase
   end
 
   # ImageAttachable VARIANT_CONFIGS
-  test "ImageAttachable hat alle drei Varianten konfiguriert" do
+  test "ImageAttachable has all three variants configured" do
     assert ImageAttachable::VARIANT_CONFIGS.key?(:thumb)
     assert ImageAttachable::VARIANT_CONFIGS.key?(:display)
     assert ImageAttachable::VARIANT_CONFIGS.key?(:original)

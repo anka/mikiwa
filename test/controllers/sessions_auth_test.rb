@@ -31,7 +31,7 @@ class SessionsAuthTest < ActionDispatch::IntegrationTest
   end
 
   test "unauthentifizierter Zugriff auf geschützte Seite redirectet zu Login" do
-    get root_path
+    get children_path
     assert_response :redirect
     assert_redirected_to new_session_path
   end

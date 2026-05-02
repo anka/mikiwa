@@ -10,34 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_02_100007) do
-  create_table "abstimmung_optionen", id: { type: :string, limit: 36 }, force: :cascade do |t|
-    t.string "abstimmung_id", limit: 36, null: false
-    t.datetime "created_at", null: false
-    t.string "label", null: false
-    t.integer "position", default: 0, null: false
-    t.datetime "updated_at", null: false
-    t.index ["abstimmung_id"], name: "index_abstimmung_optionen_on_abstimmung_id"
-  end
-
-  create_table "abstimmungen", id: { type: :string, limit: 36 }, force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "created_by_id", limit: 36, null: false
-    t.datetime "deadline"
-    t.text "description"
-    t.string "event_id", limit: 36
-    t.string "group_id", limit: 36, null: false
-    t.string "kindergarten_year_id", limit: 36, null: false
-    t.string "poll_type", default: "einfach", null: false
-    t.string "status", default: "offen", null: false
-    t.string "title", null: false
-    t.datetime "updated_at", null: false
-    t.index ["created_by_id"], name: "index_abstimmungen_on_created_by_id"
-    t.index ["event_id"], name: "index_abstimmungen_on_event_id"
-    t.index ["group_id"], name: "index_abstimmungen_on_group_id"
-    t.index ["kindergarten_year_id"], name: "index_abstimmungen_on_kindergarten_year_id"
-  end
-
+ActiveRecord::Schema[8.1].define(version: 2026_05_02_100008) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -196,6 +169,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_100007) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "inbox_entries", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "message_id", limit: 36, null: false
+    t.datetime "read_at"
+    t.datetime "updated_at", null: false
+    t.string "user_id", limit: 36, null: false
+    t.index ["message_id", "user_id"], name: "index_inbox_entries_on_message_id_and_user_id", unique: true
+    t.index ["message_id"], name: "index_inbox_entries_on_message_id"
+    t.index ["user_id"], name: "index_inbox_entries_on_user_id"
+  end
+
   create_table "kindergarten_years", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.boolean "active", default: false, null: false
     t.datetime "created_at", null: false
@@ -214,23 +198,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_100007) do
     t.index ["child_id"], name: "index_medical_notes_on_child_id"
   end
 
-  create_table "mitteilung_groups", id: { type: :string, limit: 36 }, force: :cascade do |t|
+  create_table "message_groups", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "group_id", limit: 36, null: false
-    t.string "mitteilung_id", limit: 36, null: false
+    t.string "message_id", limit: 36, null: false
     t.datetime "updated_at", null: false
-    t.index ["group_id"], name: "index_mitteilung_groups_on_group_id"
-    t.index ["mitteilung_id", "group_id"], name: "index_mitteilung_groups_on_mitteilung_id_and_group_id", unique: true
-    t.index ["mitteilung_id"], name: "index_mitteilung_groups_on_mitteilung_id"
+    t.index ["group_id"], name: "index_message_groups_on_group_id"
+    t.index ["message_id", "group_id"], name: "index_message_groups_on_message_id_and_group_id", unique: true
+    t.index ["message_id"], name: "index_message_groups_on_message_id"
   end
 
-  create_table "mitteilungen", id: { type: :string, limit: 36 }, force: :cascade do |t|
+  create_table "messages", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.text "body", null: false
     t.datetime "created_at", null: false
     t.string "sent_by_id", limit: 36, null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.index ["sent_by_id"], name: "index_mitteilungen_on_sent_by_id"
+    t.index ["sent_by_id"], name: "index_messages_on_sent_by_id"
   end
 
   create_table "parent_children", id: { type: :string, limit: 36 }, force: :cascade do |t|
@@ -243,15 +227,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_100007) do
     t.index ["user_id", "child_id"], name: "index_parent_children_on_user_id_and_child_id", unique: true
   end
 
-  create_table "posteingaenge", id: { type: :string, limit: 36 }, force: :cascade do |t|
+  create_table "poll_options", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.string "mitteilung_id", limit: 36, null: false
-    t.datetime "read_at"
+    t.string "label", null: false
+    t.string "poll_id", limit: 36, null: false
+    t.integer "position", default: 0, null: false
     t.datetime "updated_at", null: false
-    t.string "user_id", limit: 36, null: false
-    t.index ["mitteilung_id", "user_id"], name: "index_posteingaenge_on_mitteilung_id_and_user_id", unique: true
-    t.index ["mitteilung_id"], name: "index_posteingaenge_on_mitteilung_id"
-    t.index ["user_id"], name: "index_posteingaenge_on_user_id"
+    t.index ["poll_id"], name: "index_poll_options_on_poll_id"
+  end
+
+  create_table "polls", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "created_by_id", limit: 36, null: false
+    t.datetime "deadline"
+    t.text "description"
+    t.string "event_id", limit: 36
+    t.string "group_id", limit: 36, null: false
+    t.string "kindergarten_year_id", limit: 36, null: false
+    t.string "poll_type", default: "single", null: false
+    t.string "status", default: "open", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_polls_on_created_by_id"
+    t.index ["event_id"], name: "index_polls_on_event_id"
+    t.index ["group_id"], name: "index_polls_on_group_id"
+    t.index ["kindergarten_year_id"], name: "index_polls_on_kindergarten_year_id"
   end
 
   create_table "sessions", id: { type: :string, limit: 36 }, force: :cascade do |t|
@@ -292,16 +292,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_100007) do
     t.index ["kindergarten_year_id"], name: "index_shopping_lists_on_kindergarten_year_id"
   end
 
-  create_table "stimmen", id: { type: :string, limit: 36 }, force: :cascade do |t|
-    t.string "abstimmung_option_id", limit: 36, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "user_id", limit: 36, null: false
-    t.index ["abstimmung_option_id", "user_id"], name: "index_stimmen_on_abstimmung_option_id_and_user_id", unique: true
-    t.index ["abstimmung_option_id"], name: "index_stimmen_on_abstimmung_option_id"
-    t.index ["user_id"], name: "index_stimmen_on_user_id"
-  end
-
   create_table "users", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -322,22 +312,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_100007) do
     t.index ["invited_by_id"], name: "index_users_on_invited_by_id"
   end
 
-  add_foreign_key "abstimmung_optionen", "abstimmungen"
-  add_foreign_key "abstimmungen", "groups"
-  add_foreign_key "abstimmungen", "kindergarten_years"
-  add_foreign_key "abstimmungen", "users", column: "created_by_id"
+  create_table "votes", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "poll_option_id", limit: 36, null: false
+    t.datetime "updated_at", null: false
+    t.string "user_id", limit: 36, null: false
+    t.index ["poll_option_id", "user_id"], name: "index_votes_on_poll_option_id_and_user_id", unique: true
+    t.index ["poll_option_id"], name: "index_votes_on_poll_option_id"
+    t.index ["user_id"], name: "index_votes_on_user_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "galleries", "kindergarten_years"
   add_foreign_key "galleries", "users", column: "created_by_id"
   add_foreign_key "gallery_groups", "galleries"
   add_foreign_key "gallery_groups", "groups"
-  add_foreign_key "mitteilung_groups", "groups"
-  add_foreign_key "mitteilung_groups", "mitteilungen", column: "mitteilung_id"
-  add_foreign_key "mitteilungen", "users", column: "sent_by_id"
-  add_foreign_key "posteingaenge", "mitteilungen", column: "mitteilung_id"
-  add_foreign_key "posteingaenge", "users"
+  add_foreign_key "inbox_entries", "messages"
+  add_foreign_key "inbox_entries", "users"
+  add_foreign_key "message_groups", "groups"
+  add_foreign_key "message_groups", "messages"
+  add_foreign_key "messages", "users", column: "sent_by_id"
+  add_foreign_key "poll_options", "polls"
+  add_foreign_key "polls", "groups"
+  add_foreign_key "polls", "kindergarten_years"
+  add_foreign_key "polls", "users", column: "created_by_id"
   add_foreign_key "sessions", "users"
-  add_foreign_key "stimmen", "abstimmung_optionen"
-  add_foreign_key "stimmen", "users"
+  add_foreign_key "votes", "poll_options"
+  add_foreign_key "votes", "users"
 end

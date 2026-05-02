@@ -47,17 +47,17 @@
                 = link_to shopping_lists_path, class: "mw-nav-link #{nav_active?('/shopping_lists')}" do
                   = lucide_icon "shopping-cart", size: 20
                   %span Einkaufslisten
-                = link_to abstimmungen_path, class: "mw-nav-link #{nav_active?('/abstimmungen')}" do
+                = link_to polls_path, class: "mw-nav-link #{nav_active?('/polls')}" do
                   = lucide_icon "bar-chart-2", size: 20
                   %span Abstimmungen
                 = link_to galleries_path, class: "mw-nav-link #{nav_active?('/galleries')}" do
                   = lucide_icon "image", size: 20
                   %span Bildergalerien
-                = link_to posteingang_path, class: "mw-nav-link #{nav_active?('/posteingang')}" do
+                = link_to inbox_path, class: "mw-nav-link #{nav_active?('/inbox')}" do
                   = lucide_icon "inbox", size: 20
                   %span Posteingang
                 - if current_user.staff?
-                  = link_to mitteilungen_path, class: "mw-nav-link #{nav_active?('/mitteilungen')}" do
+                  = link_to messages_path, class: "mw-nav-link #{nav_active?('/messages')}" do
                     = lucide_icon "send", size: 20
                     %span Mitteilungen
                 = link_to groups_path, class: "mw-nav-link #{nav_active?('/groups')}" do
