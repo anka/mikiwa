@@ -1,0 +1,66 @@
+- content_for :title, "Speiseplan · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Speiseplan
+    %p.mw-page-header__lede
+      Woche #{l(@week_start, format: :short)} – #{l(@week_start + 4.days, format: :short)}
+  .mw-page-header__actions
+    = link_to meal_entries_path(week: (@week_start - 7).iso8601), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+      = lucide_icon "chevron-left", size: 14
+      Vorherige Woche
+    = link_to meal_entries_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
+      Heute
+    = link_to meal_entries_path(week: (@week_start + 7).iso8601), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+      Nächste Woche
+      = lucide_icon "chevron-right", size: 14
+    - if current_user.staff?
+      = link_to new_meal_entry_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+        = lucide_icon "plus", size: 16
+        Eintrag anlegen
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+- if @groups.any?
+  .mw-card{ style: "margin-top: 1.5rem; overflow-x: auto;" }
+    %table.mw-table{ style: "width: 100%; min-width: 600px;" }
+      %thead
+        %tr
+          %th{ style: "width: 140px;" } Gruppe
+          - @week_days.each do |day|
+            %th{ style: "text-align: center;" }
+              = I18n.l(day, format: "%a")
+              %br
+              %span{ style: "font-weight: normal; color: var(--fg-2);" }= l(day, format: :short)
+      %tbody
+        - @groups.each do |group|
+          %tr
+            %td
+              %strong= group.name
+            - @week_days.each do |day|
+              - entry = @entries_by_day_group[[day, group.id]]
+              %td{ style: "vertical-align: top; padding: 0.5rem;" }
+                - if entry
+                  .mw-meal-entry
+                    %div{ style: "font-size: var(--fs-14); font-weight: var(--fw-medium);" }= entry.meal
+                    - if entry.notes.present?
+                      %div{ style: "font-size: var(--fs-12); color: var(--fg-3); margin-top: 0.25rem;" }= entry.notes
+                    - if current_user.staff?
+                      .mw-actions{ style: "margin-top: 0.35rem; gap: 0.25rem;" }
+                        = link_to edit_meal_entry_path(entry), class: "mw-btn mw-btn--ghost mw-btn--xs" do
+                          = lucide_icon "pencil", size: 12
+                        = button_to meal_entry_path(entry), method: :delete,
+                            class: "mw-btn mw-btn--ghost mw-btn--xs",
+                            data: { turbo_confirm: "Eintrag löschen?" } do
+                          = lucide_icon "trash-2", size: 12
+                - elsif current_user.staff?
+                  = link_to new_meal_entry_path(date: day.iso8601, group_id: group.id),
+                      class: "mw-btn mw-btn--ghost mw-btn--xs",
+                      style: "color: var(--fg-3); width: 100%;" do
+                    = lucide_icon "plus", size: 12
+                - else
+                  %span{ style: "color: var(--fg-3); font-size: var(--fs-12);" } –
+- else
+  .mw-empty-state{ style: "margin-top: 2rem;" }
+    %p.mw-text-muted Keine Gruppen verfügbar.

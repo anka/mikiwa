@@ -57,6 +57,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :meal_entries, only: %i[index new create edit update destroy]
+
   resources :calendar_events
   resources :shopping_lists do
     resources :shopping_items, only: [] do

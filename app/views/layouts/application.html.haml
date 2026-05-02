@@ -47,6 +47,9 @@
                 = link_to shopping_lists_path, class: "mw-nav-link #{nav_active?('/shopping_lists')}" do
                   = lucide_icon "shopping-cart", size: 20
                   %span Einkaufslisten
+                = link_to meal_entries_path, class: "mw-nav-link #{nav_active?('/meal_entries')}" do
+                  = lucide_icon "utensils", size: 20
+                  %span Speiseplan
                 = link_to polls_path, class: "mw-nav-link #{nav_active?('/polls')}" do
                   = lucide_icon "bar-chart-2", size: 20
                   %span Abstimmungen

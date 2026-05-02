@@ -1,0 +1,38 @@
+= form_with model: meal_entry, url: meal_entry.new_record? ? meal_entries_path : meal_entry_path(meal_entry), class: "mw-form" do |f|
+  - if meal_entry.errors.any?
+    .mw-flash.mw-flash--error
+      %ul{ style: "margin: 0; padding-left: 1.25rem;" }
+        - meal_entry.errors.full_messages.each do |msg|
+          %li= msg
+
+  .mw-field-row
+    .mw-field
+      = f.label :date, "Datum", class: "mw-field__label"
+      = f.date_field :date, required: true, class: "mw-input"
+    .mw-field
+      = f.label :group_id, "Gruppe", class: "mw-field__label"
+      = f.select :group_id,
+          options_from_collection_for_select(groups, :id, :name, meal_entry.group_id),
+          { include_blank: "Bitte wählen" }, class: "mw-select", required: true
+
+  .mw-field
+    = f.label :kindergarten_year_id, "Kindergartenjahr", class: "mw-field__label"
+    = f.select :kindergarten_year_id,
+        options_from_collection_for_select(kindergarten_years, :id, :label, meal_entry.kindergarten_year_id),
+        { include_blank: "Bitte wählen" }, class: "mw-select", required: true
+
+  .mw-field
+    = f.label :meal, "Speise", class: "mw-field__label"
+    = f.text_field :meal, required: true, autofocus: true, class: "mw-input",
+        placeholder: "z. B. Nudeln mit Tomatensauce"
+
+  .mw-field
+    = f.label :notes, "Hinweise (optional)", class: "mw-field__label"
+    = f.text_area :notes, rows: 2, class: "mw-input",
+        placeholder: "z. B. enthält Gluten, laktosefrei"
+
+  .mw-form__actions
+    = f.submit meal_entry.new_record? ? "Eintrag speichern" : "Änderungen speichern", class: "mw-btn mw-btn--primary"
+    = link_to "Abbrechen",
+        meal_entry.new_record? ? meal_entries_path : meal_entries_path(week: meal_entry.date&.iso8601),
+        class: "mw-btn mw-btn--ghost"

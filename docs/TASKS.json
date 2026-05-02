@@ -1124,7 +1124,7 @@
       "id": "F13",
       "name": "Speiseplan",
       "phase": 3,
-      "status": "open",
+      "status": "done",
       "short_description": "Wochenweise Speiseplanung pro Gruppe; Betreuer planen Woche für Woche (meist die Vorwoche) als reine Leseübersicht für Eltern.",
       "description": "Betreuer pflegen einen optionalen Speiseplan pro Gruppe im wöchentlichen Rhythmus. Die Planung erfolgt immer für eine vollständige Woche (Mo–Fr), typischerweise die Woche zuvor. Ein Eintrag hat: Datum, Gruppe(n), Speise (Freitext), optionaler Allergie-/Hinweistext (z.B. 'enthält Gluten, Laktose'). Die Wochenansicht ist die einzige und primäre Darstellung – navigierbar (zurück / vor), Standard ist die aktuelle Woche. Betreuer können beliebige Wochen vorausplanen. Eltern sehen die Wochenansicht ihrer Kinder-Gruppe im Lesemodus. Der Speiseplan ist nicht an ein einzelnes Kind gebunden, sondern an die Gruppe. Beim Jahresübergang wird der Speiseplan nicht ins neue Jahr übernommen.",
       "acceptance_criteria": [
