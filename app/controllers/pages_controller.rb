@@ -1,5 +1,5 @@
 class PagesController < ApplicationController
-  allow_unauthenticated_access only: %i[home offline]
+  allow_unauthenticated_access only: :offline
 
   def home
   end

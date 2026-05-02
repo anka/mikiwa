@@ -1,0 +1,19 @@
+- content_for :title, "Anmeldelink anfordern · Mikiwa"
+
+%h1.mw-auth-card__title Anmeldelink anfordern
+%p.mw-auth-card__lede
+  Geben Sie Ihre E-Mail-Adresse ein. Sie erhalten einen Link, mit dem Sie sich anmelden können.
+
+= form_with url: magic_links_path, class: "mw-auth-form" do |form|
+  .mw-field
+    = form.label :email, "E-Mail-Adresse", class: "mw-field__label"
+    = form.email_field :email,
+        required: true,
+        autofocus: true,
+        autocomplete: "username",
+        placeholder: "name@example.at",
+        class: "mw-input"
+  = form.submit "Anmeldelink senden", class: "mw-btn mw-btn--primary mw-btn--block mw-btn--lg"
+
+%p.mw-auth-footer
+  = link_to "Anmelden mit Passwort", new_session_path

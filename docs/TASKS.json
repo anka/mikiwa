@@ -142,7 +142,7 @@
       "id": "T1",
       "name": "Authentifizierung & Session-Management",
       "phase": 1,
-      "status": "open",
+      "status": "done",
       "short_description": "Zwei Authentifizierungsverfahren: Passwort-basiert für Betreuer/Admins und Magic-Link-basiert für Eltern. Session-Lifetime 7 Tage.",
       "description": "Betreuer und Admins melden sich mit E-Mail und Passwort an. Mindestvorgabe: 16 Zeichen, kein Sonderzeichen-Zwang. Passwort-Reset über zeitlich begrenzten Token-Link. Eltern verfügen über kein Passwort – Anmeldung ausschließlich über Magic Link. Der Magic Link enthält einen signierten, einmaligen Token mit 30 Minuten Gültigkeit und öffnet nach Klick eine Session. Der initiale Einladungs-Link ist ein erweiterter Magic Link, der den Account aktiviert und das Profil zur Vervollständigung anbietet. Sessions haben eine Lifetime von 7 Tagen. Cookies sind httpOnly, Secure, SameSite=Lax. Logout ist für alle Rollen möglich. Brute-Force-Schutz via Rack::Attack (Rate-Limiting, Account-Lockout nach n Fehlversuchen). Passwörter werden mit bcrypt (has_secure_password) gespeichert. Login- und Magic-Link-Seiten dürfen nicht preisgeben, ob eine E-Mail-Adresse existiert (Anti-Enumeration).",
       "acceptance_criteria": [

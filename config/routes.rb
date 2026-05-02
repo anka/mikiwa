@@ -1,6 +1,11 @@
 Rails.application.routes.draw do
   resource :session
   resources :passwords, param: :token
+  resources :magic_links, only: %i[new create], param: :token do
+    collection do
+      get ":token", action: :show, as: :show
+    end
+  end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

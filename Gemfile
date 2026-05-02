@@ -75,3 +75,6 @@ gem "haml-rails"
 # German locale translations for ActiveRecord/ActiveModel
 gem "rails-i18n", "~> 8.0"
 
+# Brute-force protection and rate limiting
+gem "rack-attack"
+

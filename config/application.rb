@@ -19,5 +19,7 @@ module Mikiwa
     config.i18n.default_locale = :de
     config.i18n.available_locales = [ :de ]
     config.time_zone = "Vienna"
+
+    config.middleware.use Rack::Attack
   end
 end
