@@ -1,0 +1,6 @@
+- content_for :title, "#{@list.title} bearbeiten · Mikiwa"
+
+.mw-page-header
+  %h1.mw-page-header__title Liste bearbeiten
+
+= render "form", list: @list, groups: @groups, kindergarten_years: @kindergarten_years

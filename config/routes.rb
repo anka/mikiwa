@@ -39,6 +39,12 @@ Rails.application.routes.draw do
   end
 
   resources :calendar_events
+  resources :attendance_lists do
+    member do
+      get :export
+    end
+    resources :attendance_entries, only: %i[create destroy]
+  end
   resources :events, only: %i[index show new create edit update destroy] do
     member do
       patch :cancel

@@ -1,0 +1,91 @@
+- content_for :title, "#{@list.title} · Teilnahmeliste · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title= @list.title
+    %p.mw-page-header__lede
+      = @list.group.name
+      ·
+      - if @list.mode == "per_date"
+        Pro Datum
+      - else
+        Allgemein
+      - if @list.deadline.present?
+        ·
+        - if @list.deadline_passed?
+          %span.mw-text-danger Anmeldeschluss überschritten (#{l(@list.deadline, format: :long)})
+        - else
+          Anmeldeschluss: #{l(@list.deadline, format: :long)}
+  .mw-page-header__actions
+    - if current_user.staff?
+      = link_to export_attendance_list_path(@list, format: :csv), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+        = lucide_icon "list", size: 14
+        CSV-Export
+      = link_to edit_attendance_list_path(@list), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+        = lucide_icon "pencil", size: 14
+        Bearbeiten
+    = link_to attendance_lists_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
+      Zurück
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+- if alert
+  .mw-flash.mw-flash--error= alert
+
+- if @list.description.present?
+  .mw-card{ style: "margin-top: 1rem; padding: 1rem 1.25rem;" }
+    %p.mw-prose= @list.description
+
+-# Eintragungsformular für Eltern
+- if current_user.parent? && @list.open? && @user_children.any?
+  .mw-card{ style: "margin-top: 1.5rem;" }
+    %h2{ style: "padding: 1rem 1.25rem 0; font-size: var(--fs-14); font-weight: var(--fw-bold); color: var(--fg-2);" } Eintragen
+    .mw-form{ style: "padding: 1rem 1.25rem;" }
+      - entered_child_ids = @entries.map(&:child_id).to_set
+      - @user_children.each do |child|
+        - if entered_child_ids.include?(child.id)
+          - entry = @entries.find { |e| e.child_id == child.id }
+          .mw-checkbox-row{ style: "padding: 0.5rem 0;" }
+            %span.mw-badge.mw-badge--success= child.display_name
+            %span.mw-text-muted{ style: "margin-left: 0.5rem; font-size: 0.85em;" } eingetragen
+            = button_to attendance_list_attendance_entry_path(@list, entry), method: :delete,
+                class: "mw-btn mw-btn--ghost mw-btn--sm", style: "margin-left: 0.5rem;" do
+              Zurücknehmen
+        - else
+          = form_with url: attendance_list_attendance_entries_path(@list), method: :post do |f|
+            = hidden_field_tag "attendance_entry[child_id]", child.id
+            .mw-checkbox-row{ style: "padding: 0.5rem 0;" }
+              %span= child.display_name
+              = f.submit "Eintragen", class: "mw-btn mw-btn--primary mw-btn--sm", style: "margin-left: 0.75rem;"
+
+- if current_user.parent? && @list.deadline_passed?
+  .mw-flash.mw-flash--warning{ style: "margin-top: 1rem;" } Anmeldeschluss ist überschritten. Keine neuen Einträge möglich.
+
+-# Teilnehmerliste
+.mw-card{ style: "margin-top: 1.5rem;" }
+  %h2{ style: "padding: 1rem 1.25rem 0; font-size: var(--fs-14); font-weight: var(--fw-bold); color: var(--fg-2);" }
+    Teilnehmer
+    %span.mw-text-muted{ style: "font-weight: normal; margin-left: 0.5rem;" }= "(#{@entries.size})"
+
+  - if @entries.any?
+    %table.mw-table{ style: "width: 100%;" }
+      %thead
+        %tr
+          %th Kind
+          %th Eingetragen am
+          - if @list.mode == "per_date"
+            - @date_options.each do |opt|
+              %th= l(opt.date, format: :short)
+      %tbody
+        - @entries.each do |entry|
+          %tr
+            %td= entry.child.full_name
+            %td= l(entry.created_at, format: :short)
+            - if @list.mode == "per_date"
+              - selected_ids = entry.attendance_date_selections.map(&:attendance_date_option_id).to_set
+              - @date_options.each do |opt|
+                %td
+                  - if selected_ids.include?(opt.id)
+                    = lucide_icon "check", size: 16
+  - else
+    %p.mw-text-muted{ style: "padding: 1rem 1.25rem;" } Noch keine Einträge.

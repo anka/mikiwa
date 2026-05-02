@@ -885,7 +885,7 @@
       "id": "F8",
       "name": "Teilnahmelisten",
       "phase": 3,
-      "status": "open",
+      "status": "done",
       "short_description": "Einfache Listen, in die sich Eltern für ein oder mehrere Datum(s) eintragen können; mit Anmeldeschluss und CSV-Export für Betreuer.",
       "description": "Betreuer legen Teilnahmelisten an. Eine Liste hat: Titel, optionale Beschreibung, optionalen Anmeldeschluss, optionales fixes Datum ODER mehrere Datums-Optionen (Doodle-artig). Eintragsmodi: Allgemein (1 Spalte 'Ich/mein Kind kommt') oder Pro Datum (Häkchen pro Datum). Eltern können sich pro Kind eintragen (relevant bei Geschwistern in derselben Gruppe). Die Liste zeigt, wer sich wann eingetragen hat (sichtbar für Betreuer und alle Eltern der Gruppe). Eltern können ihren Eintrag zurücknehmen, solange der Anmeldeschluss nicht überschritten ist. Betreuer exportieren die Liste als CSV.",
       "acceptance_criteria": [

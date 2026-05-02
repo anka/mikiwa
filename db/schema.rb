@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_02_100002) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_02_100003) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -37,6 +37,48 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_100002) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "attendance_date_options", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.string "attendance_list_id", limit: 36, null: false
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.datetime "updated_at", null: false
+    t.index ["attendance_list_id"], name: "index_attendance_date_options_on_attendance_list_id"
+  end
+
+  create_table "attendance_date_selections", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.string "attendance_date_option_id", limit: 36, null: false
+    t.string "attendance_entry_id", limit: 36, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["attendance_entry_id", "attendance_date_option_id"], name: "idx_date_selections_unique", unique: true
+    t.index ["attendance_entry_id"], name: "index_attendance_date_selections_on_attendance_entry_id"
+  end
+
+  create_table "attendance_entries", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.string "attendance_list_id", limit: 36, null: false
+    t.string "child_id", limit: 36, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_id", limit: 36, null: false
+    t.index ["attendance_list_id", "child_id"], name: "idx_entries_unique", unique: true
+    t.index ["attendance_list_id"], name: "index_attendance_entries_on_attendance_list_id"
+  end
+
+  create_table "attendance_lists", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "created_by_id", limit: 36, null: false
+    t.datetime "deadline"
+    t.text "description"
+    t.string "event_id", limit: 36
+    t.string "group_id", limit: 36, null: false
+    t.string "kindergarten_year_id", limit: 36, null: false
+    t.string "mode", default: "general", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["group_id"], name: "index_attendance_lists_on_group_id"
+    t.index ["kindergarten_year_id"], name: "index_attendance_lists_on_kindergarten_year_id"
   end
 
   create_table "calendar_event_groups", id: { type: :string, limit: 36 }, force: :cascade do |t|
