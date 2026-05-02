@@ -1,0 +1,47 @@
+= form_with model: event, url: event.new_record? ? events_path : event_path(event), class: "mw-form" do |f|
+  - if event.errors.any?
+    .mw-flash.mw-flash--error
+      %ul{ style: "margin: 0; padding-left: 1.25rem;" }
+        - event.errors.full_messages.each do |msg|
+          %li= msg
+
+  .mw-field
+    = f.label :title, "Titel", class: "mw-field__label"
+    = f.text_field :title, required: true, autofocus: true, class: "mw-input", placeholder: "z.B. Sommerfest"
+
+  .mw-field-row
+    .mw-field
+      = f.label :start_date, "Datum", class: "mw-field__label"
+      = f.date_field :start_date, required: true, class: "mw-input"
+    .mw-field
+      = f.label :start_time, "Uhrzeit (HH:MM)", class: "mw-field__label"
+      = f.text_field :start_time, class: "mw-input", placeholder: "14:00", pattern: "\\d{2}:\\d{2}"
+
+  .mw-field
+    = f.label :location, "Ort (optional)", class: "mw-field__label"
+    = f.text_field :location, class: "mw-input", placeholder: "z.B. Garten, Turnsaal"
+
+  .mw-field
+    = f.label :kindergarten_year_id, "Kindergartenjahr", class: "mw-field__label"
+    = f.select :kindergarten_year_id,
+        options_from_collection_for_select(kindergarten_years, :id, :label, event.kindergarten_year_id),
+        {}, class: "mw-select"
+
+  .mw-field
+    = f.label :description, "Beschreibung (optional)", class: "mw-field__label"
+    = f.text_area :description, rows: 4, class: "mw-input"
+
+  .mw-field
+    %label.mw-field__label Gruppen
+    %span.mw-field__hint{ style: "display: block; margin-bottom: 0.5rem;" } Mindestens eine Gruppe muss zugeordnet werden.
+    .mw-checkbox-group
+      - groups.each do |group|
+        .mw-checkbox-row
+          = check_box_tag "event[group_ids][]", group.id,
+              event.groups.include?(group),
+              id: "event_group_#{group.id}", class: "mw-checkbox"
+          = label_tag "event_group_#{group.id}", group.name, class: "mw-field__label mw-field__label--inline"
+
+  .mw-form__actions
+    = f.submit event.new_record? ? "Veranstaltung anlegen" : "Änderungen speichern", class: "mw-btn mw-btn--primary"
+    = link_to "Abbrechen", event.new_record? ? events_path : event_path(event), class: "mw-btn mw-btn--ghost"

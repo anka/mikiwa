@@ -846,7 +846,7 @@
       "id": "F7",
       "name": "Veranstaltungen",
       "phase": 3,
-      "status": "open",
+      "status": "done",
       "short_description": "Erweiterte Kalenderereignisse mit verknüpfbaren Teilnahmelisten, Einkaufslisten, Bildergalerien und Abstimmungen; Detailseite für Eltern.",
       "description": "Eine Veranstaltung ist ein Kalenderereignis mit erweiterten Inhalten. Datenmodell: Titel, Datum/Uhrzeit, Ort, Beschreibung, zugeordnete Gruppen (1..n), optional verknüpfte Teilnahmeliste (max. 1), optionale Einkaufsliste (max. 1), optionale Bildergalerie (genau 1, wird typischerweise nach der Veranstaltung gefüllt), optionale Abstimmung (max. 1). Betreuer können Veranstaltungen anlegen, bearbeiten, absagen und löschen. Eltern sehen eine aufgeräumte Detailseite mit allen verknüpften Inhalten und können direkt zur Teilnahme, Liste oder Abstimmung springen. Die Kernfunktion (Veranstaltung anlegen/verwalten/absagen) ist unabhängig von den Modulen F8–F11 implementierbar; die Modulverknüpfungen werden schrittweise im Zuge der jeweiligen Feature-Implementierung ergänzt.",
       "acceptance_criteria": [

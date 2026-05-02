@@ -1,0 +1,81 @@
+- content_for :title, "Veranstaltungen · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Veranstaltungen
+    - if @filter_year
+      %p.mw-page-header__lede= @filter_year.label
+  - if current_user.staff?
+    = link_to new_event_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+      = lucide_icon "plus", size: 16
+      Neue Veranstaltung
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+.mw-calendar-filters
+  = form_with url: events_path, method: :get, local: true, class: "mw-calendar-filters__form" do |f|
+    .mw-calendar-filters__row
+      .mw-field.mw-field--inline
+        = f.label :kindergarten_year_id, "Jahr", class: "mw-field__label"
+        = f.select :kindergarten_year_id,
+            options_from_collection_for_select(@kindergarten_years, :id, :label, @filter_year&.id),
+            { include_blank: "Alle Jahre" }, class: "mw-select mw-select--sm"
+      .mw-field.mw-field--inline
+        = f.label :group_id, "Gruppe", class: "mw-field__label"
+        = f.select :group_id,
+            options_from_collection_for_select(@groups, :id, :name, params[:group_id]),
+            { include_blank: "Alle Gruppen" }, class: "mw-select mw-select--sm"
+      = f.submit "Filtern", class: "mw-btn mw-btn--secondary mw-btn--sm"
+
+- if @events.any?
+  .mw-card{ style: "margin-top: 1.5rem;" }
+    %table.mw-table{ style: "width: 100%;" }
+      %thead
+        %tr
+          %th Datum
+          %th Veranstaltung
+          %th Gruppen
+          %th Ort
+          %th Status
+          - if current_user.staff?
+            %th{ style: "text-align: right;" } Aktionen
+      %tbody
+        - @events.each do |event|
+          %tr{ class: event.cancelled? ? "mw-row--muted" : nil }
+            %td{ style: "white-space: nowrap;" }
+              = l(event.start_date, format: :long)
+              - unless event.all_day
+                %span.mw-text-muted{ style: "margin-left: 0.25rem; font-size: 0.85em;" }= event.start_time
+            %td
+              = link_to event.title, event_path(event), class: "mw-link"
+            %td
+              .mw-group-chips
+                - event.groups.each do |g|
+                  %span.mw-badge.mw-badge--neutral= g.name
+            %td= event.location.presence || "–"
+            %td
+              - if event.cancelled?
+                %span.mw-badge.mw-badge--danger Abgesagt
+              - else
+                %span.mw-badge.mw-badge--success Aktiv
+            - if current_user.staff?
+              %td{ style: "text-align: right;" }
+                .mw-actions
+                  = link_to edit_event_path(event), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+                    = lucide_icon "pencil", size: 14
+                  - unless event.cancelled?
+                    = button_to cancel_event_path(event), method: :patch,
+                        class: "mw-btn mw-btn--warning mw-btn--sm",
+                        data: { turbo_confirm: "Veranstaltung \"#{event.title}\" wirklich absagen?" } do
+                      = lucide_icon "x", size: 14
+                  = button_to event_path(event), method: :delete,
+                      class: "mw-btn mw-btn--danger mw-btn--sm",
+                      data: { turbo_confirm: "Veranstaltung \"#{event.title}\" wirklich löschen?" } do
+                    = lucide_icon "trash-2", size: 14
+- else
+  .mw-empty-state{ style: "margin-top: 2rem;" }
+    = image_tag "mikiwa/illustration-empty.svg", style: "width: 120px; opacity: 0.55;", alt: ""
+    %p.mw-text-muted Keine Veranstaltungen für diesen Zeitraum.
+    - if current_user.staff?
+      = link_to "Erste Veranstaltung anlegen", new_event_path, class: "mw-btn mw-btn--primary mw-btn--sm"

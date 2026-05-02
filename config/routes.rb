@@ -39,6 +39,11 @@ Rails.application.routes.draw do
   end
 
   resources :calendar_events
+  resources :events, only: %i[index show new create edit update destroy] do
+    member do
+      patch :cancel
+    end
+  end
 
   resources :groups
   resources :kindergarten_years do

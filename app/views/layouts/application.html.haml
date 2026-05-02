@@ -38,6 +38,9 @@
                 = link_to calendar_events_path, class: "mw-nav-link #{nav_active?('/calendar_events')}" do
                   = lucide_icon "calendar", size: 20
                   %span Kalender
+                = link_to events_path, class: "mw-nav-link #{nav_active?('/events')}" do
+                  = lucide_icon "calendar-days", size: 20
+                  %span Veranstaltungen
                 = link_to groups_path, class: "mw-nav-link #{nav_active?('/groups')}" do
                   = lucide_icon "layout-grid", size: 20
                   %span Gruppen
