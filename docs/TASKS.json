@@ -393,7 +393,7 @@
       "id": "T11",
       "name": "Sicherheits-Härtung & Anti-Leak-Maßnahmen",
       "phase": 1,
-      "status": "open",
+      "status": "done",
       "short_description": "Restriktive CSP, X-Robots-Tag: noindex für die gesamte App, CSRF-Schutz, keine CORS, kein E-Mail-Enumerationsvektor, Single-Use Magic-Link-Tokens.",
       "description": "Konkrete Maßnahmen, um sicherzustellen, dass niemals Daten an unbefugte Dritte gelangen. Die gesamte Anwendung wird mit X-Robots-Tag: noindex, nofollow ausgeliefert (außer Login- und statische Seiten). Content-Security-Policy ist restriktiv konfiguriert: nur eigene Origins, kein Inline-JS außer mit Nonces, kein externer Tracking-Code. CSRF-Schutz ist auf allen Formularen aktiv. CORS ist deaktiviert (keine externe API). Galerie- und Bild-URLs sind ausschließlich signiert und kurzlebig. iCal-Feed-Tokens sind vom Benutzer rotierbar. Login- und Magic-Link-Seiten geben keine Information preis, ob eine E-Mail-Adresse existiert. Magic-Link-Tokens werden nach Verbrauch unwiderruflich invalidiert.",
       "acceptance_criteria": [

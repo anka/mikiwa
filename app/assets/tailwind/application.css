@@ -1,4 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap");
+/* Fonts are self-hosted for DSGVO compliance – no external CDN.
+   Font files belong in public/fonts/. Until added, system fonts are used. */
 @import "tailwindcss";
 
 /* ==========================================================================
