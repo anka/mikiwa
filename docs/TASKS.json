@@ -344,7 +344,7 @@
       "id": "T6",
       "name": "Bild- und Datei-Pipeline",
       "phase": 1,
-      "status": "open",
+      "status": "done",
       "short_description": "ActiveStorage-basierte Bild-Pipeline mit automatischer Komprimierung via libvips, EXIF-Entfernung, drei Varianten (thumb/display/original) und signierten URLs.",
       "description": "Alle Bild-Uploads durchlaufen eine standardisierte Pipeline. Bilder werden mit libvips (image_processing Gem) beim Upload komprimiert. Drei Varianten werden automatisch erzeugt: thumb (300 px lange Kante, WebP), display (1600 px lange Kante, WebP, qualitätsoptimiert) und original (max. 4000 px, zum Download). EXIF-Daten werden beim Upload vollständig entfernt (kein GPS, keine Gerätedaten). Maximale Dateigröße pro Upload: 15 MB. Erlaubte Formate: JPEG, PNG, HEIC, WebP. Limit pro Galerie: 200 Bilder (konfigurierbar). Storage-Backend: lokales Volume auf dem Root-Server. Alle URLs sind signiert und kurzlebig.",
       "acceptance_criteria": [
