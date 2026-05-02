@@ -1,0 +1,1291 @@
+{
+  "version": "1.0",
+  "project": "MIKIWA",
+  "description": "Vollständige Feature-Spezifikation für die Entwicklungsabteilung. Jedes Feature beschreibt Was umzusetzen ist, Akzeptanzkriterien und Testszenarien. Die Reihenfolge gibt die empfohlene Implementierungsreihenfolge vor.",
+  "generated": "2026-05-02",
+  "implementation_phases": [
+    { "phase": 1, "name": "Technische Grundlage", "feature_ids": ["T3", "T5", "T7", "T1", "T2", "T4", "T9", "T6", "T11", "T10"] },
+    { "phase": 2, "name": "Kern-Datenverwaltung", "feature_ids": ["F1", "F2", "F3", "F4", "F5"] },
+    { "phase": 3, "name": "Inhaltliche Features", "feature_ids": ["F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16", "T8"] },
+    { "phase": 4, "name": "Dashboards", "feature_ids": ["F17", "F18"] }
+  ],
+  "features": [
+    {
+      "id": "T3",
+      "name": "Datenmodell-Grundgerüst & Mandantenkontext",
+      "phase": 1,
+      "status": "open",
+      "short_description": "SQLite-Datenmodell mit UUID-Primärschlüsseln, Gruppe als oberste Organisationseinheit und Kindergartenjahr als zeitliche Klammer.",
+      "description": "Legt die Datenbankstruktur fest, auf der alle inhaltlichen Entitäten aufbauen. Die Plattform ist Single-Tenant – ein Datenbankschema pro Installation. Gruppe ist die oberste organisatorische Einheit (z.B. 'Bären', 'Löwen'). Ein Kindergartenjahr hat ein frei wählbares Start- und Enddatum und klammert alle inhaltlichen Daten (Veranstaltungen, Galerien, Listen, Speiseplan, Mitteilungen). Zu jedem Zeitpunkt ist genau ein Kindergartenjahr als 'aktiv' markiert – das ist der Standard-Kontext für alle Benutzer. Alle benutzerexponierten Ressourcen erhalten UUIDs als Primärschlüssel, um ID-Enumeration in URLs zu verhindern. Jede Tabelle führt created_at und updated_at.",
+      "acceptance_criteria": [
+        "Alle benutzerexponierten Tabellen verwenden UUIDs als Primärschlüssel",
+        "Tabellen Gruppe, Kindergartenjahr, und zugehörige Verknüpfungstabellen sind migriert",
+        "Genau ein Kindergartenjahr kann gleichzeitig als 'aktiv' markiert sein (DB-Constraint oder Validierung)",
+        "Alle Tabellen besitzen created_at und updated_at Timestamps",
+        "Kindergartenjahr hat frei konfigurierbares Start- und Enddatum",
+        "Datenbankmigrationen sind idempotent und rückwärtskompatibel ausführbar"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "UUID-Primärschlüssel",
+          "given": "Eine neue Gruppe wird angelegt",
+          "when": "Das Objekt in der Datenbank wird abgefragt",
+          "then": "Die ID ist eine gültige UUID (nicht eine sequenzielle Integer-ID)"
+        },
+        {
+          "scenario": "Aktives Kindergartenjahr – Einzigartigkeit",
+          "given": "Ein Kindergartenjahr ist bereits als aktiv markiert",
+          "when": "Ein zweites Kindergartenjahr wird als aktiv gesetzt",
+          "then": "Das erste wird automatisch deaktiviert; es existiert weiterhin genau ein aktives Jahr"
+        },
+        {
+          "scenario": "Timestamps",
+          "given": "Eine Gruppe wird angelegt und anschließend bearbeitet",
+          "when": "created_at und updated_at abgefragt werden",
+          "then": "created_at bleibt unverändert, updated_at zeigt die letzte Änderungszeit"
+        }
+      ],
+      "success_criteria": [
+        "Alle Migrations laufen fehlerfrei durch (rails db:migrate)",
+        "Schema-Dump stimmt mit Migrations überein",
+        "Model-Validierungen verhindern mehrere aktive Kindergartenjahre"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "T5",
+      "name": "PWA & Mobile-first UX-Foundation",
+      "phase": 1,
+      "status": "open",
+      "short_description": "Progressive Web App mit installierbarem Manifest, Service Worker, responsivem Tailwind-Layout und Hotwire (Turbo + Stimulus).",
+      "description": "Die App wird primär auf Smartphones genutzt. Das Fundament umfasst: ein Web App Manifest mit App-Name, Icons in verschiedenen Größen, Theme-Color und Start-URL; einen Service Worker, der eine Offline-Fallback-Seite ausliefert (kein Offline-Inhalt in v1); responsive Layouts mit Tailwind CSS nach Mobile-first-Ansatz; Touch-Targets von mindestens 44 px; Hotwire (Turbo Drive, Turbo Frames, Turbo Streams, Stimulus) als reaktive UI-Schicht ohne SPA-Komplexität. Sämtliche Designtokens, Farben und Komponenten stammen aus dem mikiwa-design-Skill.",
+      "acceptance_criteria": [
+        "Web App Manifest ist unter /manifest.json erreichbar und enthält name, icons (mind. 192x192 und 512x512), theme_color, background_color, start_url, display: standalone",
+        "App ist auf iOS und Android zum Home-Screen hinzufügbar und startet im Standalone-Modus",
+        "Service Worker ist registriert; bei fehlender Netzwerkverbindung wird eine Offline-Fallback-Seite angezeigt",
+        "Alle interaktiven Elemente haben Touch-Targets von mindestens 44 × 44 px",
+        "Layout funktioniert korrekt auf 375px (iPhone SE), 390px (iPhone 14) und 768px (Tablet)",
+        "Turbo Drive ist aktiv; Seitennavigation erfolgt ohne Full-Page-Reload",
+        "Design-Tokens (Farben, Typografie, Spacing) aus dem mikiwa-design-Skill sind als Tailwind-Config integriert"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "PWA-Installation",
+          "given": "Ein Nutzer öffnet die App auf einem iOS-Gerät in Safari",
+          "when": "Er tippt auf 'Zum Home-Bildschirm hinzufügen'",
+          "then": "Die App erscheint mit korrektem Icon und Namen auf dem Home-Bildschirm und startet ohne Browser-Chrome"
+        },
+        {
+          "scenario": "Offline-Fallback",
+          "given": "Der Service Worker ist registriert",
+          "when": "Das Gerät geht offline und der Nutzer navigiert zu einer neuen Seite",
+          "then": "Eine Offline-Seite mit informativer Meldung wird angezeigt statt eines Browser-Fehlers"
+        },
+        {
+          "scenario": "Turbo Navigation",
+          "given": "Der Nutzer befindet sich auf der Startseite",
+          "when": "Er klickt auf einen Navigationslink",
+          "then": "Die Seite wechselt ohne vollständigen Reload (kein Flackern, kein weißes Blinken)"
+        }
+      ],
+      "success_criteria": [
+        "Lighthouse PWA-Score ≥ 90",
+        "Lighthouse Performance-Score ≥ 80 auf Mobile",
+        "Alle Touch-Targets bestehen die 44px-Mindestgröße-Prüfung"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "T7",
+      "name": "Mailer & E-Mail-Pipeline",
+      "phase": 1,
+      "status": "open",
+      "short_description": "Transaktionale und Massen-E-Mails über einen DSGVO-konformen EU-Provider, parallelisiert über ActiveJob/Solid Queue, mit HTML- und Text-Varianten.",
+      "description": "MIKIWA versendet E-Mails für Magic Links, Passwort-Resets, Eltern-Einladungen und Mitteilungs-Benachrichtigungen. Die E-Mail-Infrastruktur muss zuverlässig, datenschutzkonform und ausfallsicher sein. Anforderungen: Anbindung eines EU-ansässigen SMTP/API-Providers (Mailjet); jede Mailer-Klasse liefert HTML- und Plaintext-Variante; Massen-E-Mails werden über ActiveJob / Solid Queue parallelisiert mit Retry-Strategie versandt; Bounce- und Complaint-Webhooks deaktivieren nicht erreichbare Adressen und markieren den Eltern-Account als 'E-Mail ungültig'; im Development-Modus wird Letter Opener verwendet. Mailer-Layouts und -Templates verwenden das mikiwa-design-Branding.",
+      "acceptance_criteria": [
+        "Alle Mailer liefern HTML- und Plaintext-Variante",
+        "E-Mails werden in der Produktion über einen EU-SMTP-Provider versendet",
+        "Im Development-Modus öffnet Letter Opener E-Mails im Browser statt sie zu versenden",
+        "Massen-Versand (z.B. Mitteilung an alle Eltern einer Gruppe) wird als Background-Job ausgeführt",
+        "Fehlgeschlagene Jobs werden mindestens 3× automatisch wiederholt",
+        "Bounce-Webhook setzt ein Flag 'email_invalid' am Benutzer-Account",
+        "Mailer-Layouts enthalten korrektes Mikiwa-Branding"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Mailer-Delivery im Test",
+          "given": "ActionMailer::Base.delivery_method ist auf :test gesetzt",
+          "when": "Ein Magic-Link-Mailer aufgerufen wird",
+          "then": "Die E-Mail landet in ActionMailer::Base.deliveries ohne tatsächlich versendet zu werden"
+        },
+        {
+          "scenario": "HTML- und Textversion",
+          "given": "Ein Passwort-Reset-Mailer wird erzeugt",
+          "when": "Die Mail-Teile abgefragt werden",
+          "then": "Beide Teile – text/html und text/plain – sind vorhanden und nicht leer"
+        },
+        {
+          "scenario": "Bounce-Webhook",
+          "given": "Ein Provider-Bounce-Webhook für eine bekannte E-Mail-Adresse eingeht",
+          "when": "Der Webhook-Endpoint verarbeitet die Anfrage",
+          "then": "Der entsprechende User-Account erhält das Flag email_invalid: true"
+        }
+      ],
+      "success_criteria": [
+        "Alle Mailer-Tests grün",
+        "E-Mails landen zuverlässig in der Inbox (kein Spam-Klassifizierung bei bekannten Providern)",
+        "Massen-Versand von 60 E-Mails (3 Gruppen × 20 Kinder) läuft vollständig durch ohne Job-Fehler"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "T1",
+      "name": "Authentifizierung & Session-Management",
+      "phase": 1,
+      "status": "open",
+      "short_description": "Zwei Authentifizierungsverfahren: Passwort-basiert für Betreuer/Admins und Magic-Link-basiert für Eltern. Session-Lifetime 7 Tage.",
+      "description": "Betreuer und Admins melden sich mit E-Mail und Passwort an. Mindestvorgabe: 16 Zeichen, kein Sonderzeichen-Zwang. Passwort-Reset über zeitlich begrenzten Token-Link. Eltern verfügen über kein Passwort – Anmeldung ausschließlich über Magic Link. Der Magic Link enthält einen signierten, einmaligen Token mit 30 Minuten Gültigkeit und öffnet nach Klick eine Session. Der initiale Einladungs-Link ist ein erweiterter Magic Link, der den Account aktiviert und das Profil zur Vervollständigung anbietet. Sessions haben eine Lifetime von 7 Tagen. Cookies sind httpOnly, Secure, SameSite=Lax. Logout ist für alle Rollen möglich. Brute-Force-Schutz via Rack::Attack (Rate-Limiting, Account-Lockout nach n Fehlversuchen). Passwörter werden mit bcrypt (has_secure_password) gespeichert. Login- und Magic-Link-Seiten dürfen nicht preisgeben, ob eine E-Mail-Adresse existiert (Anti-Enumeration).",
+      "acceptance_criteria": [
+        "Betreuer/Admin können sich mit E-Mail + Passwort (mind. 16 Zeichen) anmelden",
+        "Passwort kürzer als 16 Zeichen wird beim Setzen abgelehnt",
+        "Passwort-Reset generiert einen Token-Link, der maximal 1 Stunde gültig ist und nur einmal verwendet werden kann",
+        "Eltern erhalten bei Eingabe ihrer E-Mail einen Magic-Link-Token per E-Mail (30 Min gültig)",
+        "Magic-Link-Token ist Single-Use: nach Aktivierung wird er invalidiert",
+        "Nach erfolgreichem Login besteht die Session für 7 Tage (persisted cookie)",
+        "Logout invalidiert die Session serverseitig",
+        "Session-Cookie ist httpOnly, Secure und SameSite=Lax",
+        "Rate-Limiting blockiert mehr als 5 fehlgeschlagene Login-Versuche pro IP in 10 Minuten",
+        "Die Login-Seite zeigt bei unbekannter E-Mail oder falschem Passwort dieselbe generische Fehlermeldung",
+        "Magic-Link-Anfrage zeigt keine Information, ob die E-Mail registriert ist"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Betreuer-Login erfolgreich",
+          "given": "Ein aktiver Betreuer-Account existiert",
+          "when": "E-Mail und korrektes Passwort eingegeben werden",
+          "then": "Der Betreuer wird eingeloggt und auf das Betreuer-Dashboard weitergeleitet"
+        },
+        {
+          "scenario": "Betreuer-Login fehlerhaft",
+          "given": "Ein aktiver Betreuer-Account existiert",
+          "when": "Ein falsches Passwort eingegeben wird",
+          "then": "Fehlermeldung erscheint ohne Hinweis auf Existenz der E-Mail-Adresse"
+        },
+        {
+          "scenario": "Magic Link für Eltern",
+          "given": "Ein aktiver Eltern-Account mit verifizierter E-Mail existiert",
+          "when": "Die Eltern-Mutter gibt ihre E-Mail im Magic-Link-Formular ein",
+          "then": "Eine E-Mail mit Magic-Link wird versendet; die Seite zeigt eine neutrale Bestätigungsmeldung"
+        },
+        {
+          "scenario": "Magic Link Einmalverwendung",
+          "given": "Ein Magic-Link-Token wurde bereits einmal verwendet",
+          "when": "Derselbe Link ein zweites Mal geöffnet wird",
+          "then": "Die Session wird nicht geöffnet; Fehlerseite oder Redirect zum Login"
+        },
+        {
+          "scenario": "Session nach 7 Tagen",
+          "given": "Ein Benutzer ist eingeloggt",
+          "when": "Der Session-Cookie abläuft (nach 7 Tagen)",
+          "then": "Der Benutzer wird beim nächsten Request auf die Login-Seite weitergeleitet"
+        },
+        {
+          "scenario": "Brute-Force-Schutz",
+          "given": "Eine IP-Adresse schickt 6 fehlgeschlagene Login-Versuche in 10 Minuten",
+          "when": "Ein weiterer Versuch erfolgt",
+          "then": "Der Request wird mit HTTP 429 abgewiesen"
+        }
+      ],
+      "success_criteria": [
+        "Alle Authentifizierungs-Tests grün",
+        "Penetrationstest bestätigt: kein E-Mail-Enumerationsvektor über Login/Magic-Link",
+        "Passwörter sind ausschließlich als bcrypt-Hash in der DB gespeichert",
+        "Session-Cookies haben alle drei Sicherheitsflags gesetzt"
+      ],
+      "dependencies": ["T7"]
+    },
+    {
+      "id": "T2",
+      "name": "Rollen- und Berechtigungssystem",
+      "phase": 1,
+      "status": "open",
+      "short_description": "Drei feste Rollen (admin, caretaker, parent) mit zentralisierten Policy-Objekten pro Ressource und serverseitigem Scoping für Eltern.",
+      "description": "Jeder Benutzer hat genau eine unveränderliche Rolle: admin, caretaker oder parent. Die Authorisierung erfolgt ausschließlich serverseitig über Policy-Objekte – einer pro Ressourcentyp. Eltern-Abfragen werden immer serverseitig auf die Kinder/Gruppen des eingeloggten Elternteils eingeschränkt (Scoping), niemals clientseitig gefiltert. Jede neue Controller-Action muss eine Policy aufrufen; dies wird durch einen RuboCop-Cop oder einen Test-Helper erzwungen. Eine nicht-authorisierte Action liefert HTTP 403. Rollen können nicht selbst geändert werden – nur Admins können Rollen verwalten.",
+      "acceptance_criteria": [
+        "Jeder Benutzer hat genau eine Rolle (admin, caretaker oder parent)",
+        "Eltern können ausschließlich Daten sehen, die zu ihren eigenen Kindern/Gruppen gehören",
+        "Betreuer können alle Kinder/Gruppen einsehen, aber keine Admin-Funktionen aufrufen",
+        "Admins haben vollen Zugriff auf alle Bereiche",
+        "Nicht-authorisierte Requests erhalten HTTP 403 (kein stilles Ignorieren)",
+        "Jede Controller-Action ist durch eine Policy abgedeckt (wird durch Test-Helper überprüft)",
+        "Eltern können ihre eigene Rolle nicht ändern"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Eltern-Scoping",
+          "given": "Zwei Elternteile mit unterschiedlichen Kindern sind in der DB",
+          "when": "Elternteil A die Kinderliste abfragt",
+          "then": "Ausschließlich die eigenen Kinder erscheinen – nicht die Kinder von Elternteil B"
+        },
+        {
+          "scenario": "Unbefugter Admin-Zugriff",
+          "given": "Ein eingeloggter Betreuer",
+          "when": "Der Betreuer versucht, eine Admin-Only-Seite aufzurufen",
+          "then": "HTTP 403 wird zurückgegeben"
+        },
+        {
+          "scenario": "Policy-Coverage",
+          "given": "Alle Controller-Actions der App",
+          "when": "Ein Test-Helper über alle Actions iteriert",
+          "then": "Keine Action ohne Policy-Aufruf existiert"
+        },
+        {
+          "scenario": "Unauthentifizierter Zugriff",
+          "given": "Kein Benutzer ist eingeloggt",
+          "when": "Eine geschützte Ressource aufgerufen wird",
+          "then": "Redirect zum Login (HTTP 302), keine Daten werden ausgegeben"
+        }
+      ],
+      "success_criteria": [
+        "Kein Elternteil kann Daten eines anderen Elternteils oder fremder Kinder sehen",
+        "Alle Autorisierungs-Tests grün",
+        "Brakeman meldet keine unbewachten Actions"
+      ],
+      "dependencies": ["T1"]
+    },
+    {
+      "id": "T4",
+      "name": "Privacy & DSGVO-Grundlagen",
+      "phase": 1,
+      "status": "open",
+      "short_description": "DSGVO-konforme Datensicherung: TLS/HSTS, at-rest-Verschlüsselung sensibler Felder, PII-Filterung in Logs, signierte Storage-URLs.",
+      "description": "Datenschutz ist ein Querschnittsthema und wird technisch verankert. HTTPS wird über HSTS erzwungen. Sensible Felder (Notfallkontakte, medizinische Hinweise, Versicherungsnummern) werden mit ActiveRecord::Encryption at-rest verschlüsselt. In Log-Ausgaben werden E-Mail-Adressen, Tokens und Passwörter über Rails filter_parameters gefiltert. ActiveStorage-URLs werden ausschließlich als signierte, kurzlebige URLs ausgeliefert – kein direkter Public-Read-Zugriff auf Dateien. Tägliche, verschlüsselte Datenbank-Dumps und Storage-Backups werden automatisch rotiert (14 Tage). Keine externen Analytics- oder Tracking-Dienste. Cookie-Banner nicht erforderlich (nur technisch notwendige Cookies).",
+      "acceptance_criteria": [
+        "HTTPS wird erzwungen; HTTP-Anfragen werden zu HTTPS umgeleitet",
+        "HSTS-Header (Strict-Transport-Security) wird bei jeder Response gesetzt",
+        "ActiveRecord::Encryption ist für definierte sensible Felder aktiv (Notfallkontakte, medizinische Hinweise, Versicherungsnummer)",
+        "E-Mail-Adressen, Passwörter und Tokens erscheinen nicht in Produktions-Logs",
+        "ActiveStorage-URLs sind signiert und haben eine Ablaufzeit (max. 1 Stunde)",
+        "Kein externer Tracking-Code (z.B. Google Analytics) ist in der App eingebunden",
+        "Backup-Skript läuft täglich, Backups sind verschlüsselt, Rotation nach 14 Tagen"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Sensibler Feldinhalt in DB",
+          "given": "Ein medizinischer Hinweis wird für ein Kind gespeichert",
+          "when": "Der rohe DB-Eintrag direkt in der Datenbank abgelesen wird (ohne ActiveRecord)",
+          "then": "Der Feldinhalt ist nicht im Klartext lesbar (verschlüsselt)"
+        },
+        {
+          "scenario": "PII in Logs",
+          "given": "Ein Benutzer loggt sich mit E-Mail und Passwort ein",
+          "when": "Die Rails-Logs nach dem Request überprüft werden",
+          "then": "Weder E-Mail noch Passwort erscheinen im Klartext in den Logs"
+        },
+        {
+          "scenario": "Signierte Storage-URL",
+          "given": "Ein Galerie-Bild ist hochgeladen",
+          "when": "Die URL des Bildes aufgerufen wird",
+          "then": "Die URL enthält ein Signatur-Token; ein direkter S3/Pfad-Zugriff ohne Token liefert 403"
+        }
+      ],
+      "success_criteria": [
+        "Brakeman-Scan ohne kritische Findings zu DSGVO-relevanten Bereichen",
+        "Alle sensiblen Felder sind mit korrektem ActiveRecord::Encryption-Setup verschlüsselt",
+        "Log-Review zeigt keine PII in Beispiel-Requests"
+      ],
+      "dependencies": ["T3"]
+    },
+    {
+      "id": "T9",
+      "name": "Hosting, Deployment & Operations",
+      "phase": 1,
+      "status": "open",
+      "short_description": "Self-hosted EU-Root-Server mit Kamal-Deployment, Docker, Solid Queue/Cache/Cable, nightly Backups und Health-Check-Endpoint.",
+      "description": "Die App läuft auf einem eigenen Root-Server in der EU (DE oder AT). Deployment erfolgt über Kamal mit Docker-Containern (Rails-App, SQLite, Caddy/Traefik als Reverse-Proxy mit automatischem Let's Encrypt). Background-Jobs laufen über Solid Queue (in v1 kein separater Worker-Server nötig). Caching und ActionCable verwenden Solid Cache bzw. Solid Cable. Nightly DB-Dumps und ActiveStorage-Volume-Snapshots werden verschlüsselt in einer zweiten EU-Region gesichert. Ein /up-Endpoint liefert HTTP 200 für Health-Checks. Secrets werden über Rails Encrypted Credentials verwaltet – kein Secret im Repository. Zero-Downtime-Deployment ist Standard.",
+      "acceptance_criteria": [
+        "Die App ist über HTTPS unter einer konfigurierten Domain erreichbar",
+        "GET /up liefert HTTP 200 wenn die App und DB erreichbar sind",
+        "Kamal deploy rollt Änderungen ohne Downtime aus",
+        "Solid Queue verarbeitet Hintergrund-Jobs (E-Mail-Versand, etc.)",
+        "Kein Secret (API-Key, DB-Passwort) ist im Git-Repository vorhanden",
+        "Let's Encrypt-Zertifikat wird automatisch erneuert",
+        "Backup-Script läuft täglich; Restore aus einem Backup ist dokumentiert und getestet"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Health Check",
+          "given": "Die App läuft produktiv",
+          "when": "GET /up aufgerufen wird",
+          "then": "HTTP 200 mit positiver Status-Meldung"
+        },
+        {
+          "scenario": "Zero-Downtime Deploy",
+          "given": "Die App läuft und bedient Requests",
+          "when": "kamal deploy ausgeführt wird",
+          "then": "Kein Request erhält während des Deployments HTTP 5xx (Rolling-Deploy mit Health-Check)"
+        },
+        {
+          "scenario": "Secret-Prüfung",
+          "given": "Das Git-Repository wird gescannt",
+          "when": "git-secrets oder Bundler-Audit ausgeführt wird",
+          "then": "Keine harcodierten Credentials oder API-Keys gefunden"
+        }
+      ],
+      "success_criteria": [
+        "Erfolgreicher Kamal-Deploy auf Produktionsserver",
+        "Health-Check-Endpoint antwortet in < 500ms",
+        "Backup-Restore erfolgreich getestet (Daten aus Backup wiederherstellbar)",
+        "Kein Credential-Leak im Repository (Bundler-Audit grün)"
+      ],
+      "dependencies": ["T4"]
+    },
+    {
+      "id": "T6",
+      "name": "Bild- und Datei-Pipeline",
+      "phase": 1,
+      "status": "open",
+      "short_description": "ActiveStorage-basierte Bild-Pipeline mit automatischer Komprimierung via libvips, EXIF-Entfernung, drei Varianten (thumb/display/original) und signierten URLs.",
+      "description": "Alle Bild-Uploads durchlaufen eine standardisierte Pipeline. Bilder werden mit libvips (image_processing Gem) beim Upload komprimiert. Drei Varianten werden automatisch erzeugt: thumb (300 px lange Kante, WebP), display (1600 px lange Kante, WebP, qualitätsoptimiert) und original (max. 4000 px, zum Download). EXIF-Daten werden beim Upload vollständig entfernt (kein GPS, keine Gerätedaten). Maximale Dateigröße pro Upload: 15 MB. Erlaubte Formate: JPEG, PNG, HEIC, WebP. Limit pro Galerie: 200 Bilder (konfigurierbar). Storage-Backend: lokales Volume auf dem Root-Server. Alle URLs sind signiert und kurzlebig.",
+      "acceptance_criteria": [
+        "Upload von JPEG, PNG, HEIC und WebP funktioniert; andere Formate werden abgelehnt",
+        "Uploads über 15 MB werden mit einer verständlichen Fehlermeldung abgelehnt",
+        "Nach dem Upload existieren drei Varianten: thumb, display, original",
+        "EXIF-Daten (GPS, Gerätedaten) sind in allen Varianten entfernt",
+        "Bild-URLs sind signiert und laufen ab (kein permanenter Public-Link)",
+        "Bilder werden im WebP-Format ausgeliefert (thumb und display)",
+        "Upload-Limit pro Galerie: 201. Bild wird abgelehnt mit Fehlermeldung"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "EXIF-Entfernung",
+          "given": "Ein JPEG mit GPS-EXIF-Daten wird hochgeladen",
+          "when": "Das verarbeitete Bild heruntergeladen wird",
+          "then": "EXIF-Daten sind vollständig entfernt (ExifTool oder ähnliches bestätigt: keine GPS-Daten)"
+        },
+        {
+          "scenario": "Variantengenerierung",
+          "given": "Ein valides Bild wird hochgeladen",
+          "when": "Die Varianten-Keys abgefragt werden",
+          "then": "thumb, display und original sind alle vorhanden und verarbeitbar"
+        },
+        {
+          "scenario": "Dateigrößen-Limit",
+          "given": "Ein 20-MB-JPEG wird hochgeladen",
+          "when": "Das Formular abgeschickt wird",
+          "then": "Upload wird abgelehnt; Fehlermeldung 'Datei zu groß' erscheint"
+        },
+        {
+          "scenario": "Ungültiges Format",
+          "given": "Eine .gif-Datei wird hochgeladen",
+          "when": "Das Formular abgeschickt wird",
+          "then": "Upload wird abgelehnt; Fehlermeldung zu ungültigem Format"
+        }
+      ],
+      "success_criteria": [
+        "Alle Bild-Varianten werden korrekt generiert",
+        "EXIF-Audit: keine GPS-Daten in verarbeiteten Bildern",
+        "Performance: Variantengenerierung dauert < 3 Sekunden für ein 10-MP-Foto"
+      ],
+      "dependencies": ["T4"]
+    },
+    {
+      "id": "T11",
+      "name": "Sicherheits-Härtung & Anti-Leak-Maßnahmen",
+      "phase": 1,
+      "status": "open",
+      "short_description": "Restriktive CSP, X-Robots-Tag: noindex für die gesamte App, CSRF-Schutz, keine CORS, kein E-Mail-Enumerationsvektor, Single-Use Magic-Link-Tokens.",
+      "description": "Konkrete Maßnahmen, um sicherzustellen, dass niemals Daten an unbefugte Dritte gelangen. Die gesamte Anwendung wird mit X-Robots-Tag: noindex, nofollow ausgeliefert (außer Login- und statische Seiten). Content-Security-Policy ist restriktiv konfiguriert: nur eigene Origins, kein Inline-JS außer mit Nonces, kein externer Tracking-Code. CSRF-Schutz ist auf allen Formularen aktiv. CORS ist deaktiviert (keine externe API). Galerie- und Bild-URLs sind ausschließlich signiert und kurzlebig. iCal-Feed-Tokens sind vom Benutzer rotierbar. Login- und Magic-Link-Seiten geben keine Information preis, ob eine E-Mail-Adresse existiert. Magic-Link-Tokens werden nach Verbrauch unwiderruflich invalidiert.",
+      "acceptance_criteria": [
+        "X-Robots-Tag: noindex, nofollow wird bei allen authentifizierungspflichtigen Seiten gesetzt",
+        "Content-Security-Policy-Header ist gesetzt und erlaubt keine externen Skript-Quellen",
+        "CSRF-Token ist in allen HTML-Formularen vorhanden; fehlendes Token liefert HTTP 422",
+        "CORS ist deaktiviert: preflight OPTIONS-Requests von fremden Origins werden abgewiesen",
+        "Magic-Link-Token ist nach einmaligem Gebrauch nicht mehr verwendbar",
+        "Login-Fehlermeldungen geben keinen Hinweis auf Existenz oder Nicht-Existenz einer E-Mail-Adresse",
+        "Kein externer Dienst (CDN, Font-Service, Analytics) wird von der App eingebunden"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Robots-Header",
+          "given": "Ein Betreuer ist eingeloggt und ruft das Dashboard auf",
+          "when": "Der Response-Header geprüft wird",
+          "then": "X-Robots-Tag: noindex, nofollow ist im Header enthalten"
+        },
+        {
+          "scenario": "CSP-Header",
+          "given": "Eine beliebige App-Seite wird aufgerufen",
+          "when": "Der Content-Security-Policy-Header analysiert wird",
+          "then": "Keine externen Script-Src-Domains außer der eigenen sind erlaubt"
+        },
+        {
+          "scenario": "CSRF-Schutz",
+          "given": "Ein POST-Request ohne CSRF-Token wird gesendet",
+          "when": "Der Server den Request empfängt",
+          "then": "HTTP 422 (Unprocessable Entity) wird zurückgegeben"
+        },
+        {
+          "scenario": "Magic-Link Wiederverwendung",
+          "given": "Ein Magic-Link wurde korrekt verwendet und eine Session geöffnet",
+          "when": "Derselbe Link erneut aufgerufen wird",
+          "then": "Keine Session wird geöffnet; Fehlermeldung 'Link ungültig oder abgelaufen'"
+        }
+      ],
+      "success_criteria": [
+        "Brakeman-Scan (im CI) meldet keine offenen Sicherheitsprobleme",
+        "Manueller Security-Review bestätigt alle Anti-Leak-Maßnahmen",
+        "SecurityHeaders.com oder ähnliches Tool bewertet Response-Headers mit Grade A"
+      ],
+      "dependencies": ["T1", "T2", "T4", "T5", "T6", "T7"]
+    },
+    {
+      "id": "T10",
+      "name": "Test-Foundation",
+      "phase": 1,
+      "status": "open",
+      "short_description": "Minitest Unit-Tests, Capybara System-Tests für kritische Flows, SimpleCov ≥ 85 % Coverage, CI mit RuboCop und Brakeman.",
+      "description": "Alle wesentlichen Features werden mit automatisierten Tests abgesichert. Unit-Tests (Minitest) für Models, Policies, Mailer und Services. System-Tests (Capybara + Selenium/Headless Chrome) für kritische End-to-End-Flows: Login (Passwort und Magic Link), Kind anlegen und Eltern einladen, Veranstaltung anlegen + Liste füllen + Galerie hochladen, Eltern-Posteingang + Liste eintragen + Galerie ansehen. SimpleCov misst Line Coverage, Ziel ≥ 85 % auf Application Code. CI-Pipeline (GitHub Actions oder selbst-gehosteter Runner) führt bei jedem Push Tests + RuboCop + Brakeman aus. Bundler-Audit prüft bekannte Vulnerabilities in Dependencies.",
+      "acceptance_criteria": [
+        "rails test läuft fehlerfrei durch",
+        "SimpleCov-Report zeigt ≥ 85 % Line Coverage",
+        "System-Tests existieren für: Passwort-Login, Magic-Link-Login, Kind anlegen, Eltern einladen, Veranstaltung anlegen",
+        "CI-Pipeline läuft bei jedem Push auf main und Pull Requests",
+        "RuboCop-Prüfung schlägt bei Stil-Verletzungen fehl",
+        "Brakeman-Prüfung schlägt bei kritischen Security-Findings fehl",
+        "Bundler-Audit meldet keine bekannten Vulnerabilities"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "CI-Pipeline grün",
+          "given": "Ein sauberer Commit wird auf den main-Branch gepusht",
+          "when": "Die CI-Pipeline gestartet wird",
+          "then": "Alle Jobs (Tests, RuboCop, Brakeman, Bundler-Audit) sind grün"
+        },
+        {
+          "scenario": "Coverage-Schwelle",
+          "given": "Die Test-Suite vollständig ausgeführt wurde",
+          "when": "SimpleCov den Report generiert",
+          "then": "Line Coverage ist ≥ 85 %"
+        }
+      ],
+      "success_criteria": [
+        "CI-Pipeline läuft stabil ohne Flaky Tests",
+        "Coverage ≥ 85 % dauerhaft eingehalten",
+        "Alle kritischen System-Tests sind vorhanden und grün"
+      ],
+      "dependencies": ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T9", "T11"]
+    },
+    {
+      "id": "F1",
+      "name": "Benutzer- und Systemverwaltung (Admin-Bereich)",
+      "phase": 2,
+      "status": "open",
+      "short_description": "Admin-Bereich zur Verwaltung aller Betreuer- und Admin-Accounts sowie globaler System-Konfiguration und statischer Seiten.",
+      "description": "Admins haben eine eigene Verwaltungsoberfläche für folgende Aufgaben: Übersicht aller Betreuer und Admins mit Status (aktiv/gesperrt); Anlegen neuer Betreuer/Admin-Accounts per E-Mail-Einladung (Empfänger setzt eigenes Passwort über Einladungslink); Sperren, Reaktivieren und Löschen von Betreuer- und Admin-Accounts; Sperren und Löschen von Eltern-Accounts; globale System-Konfiguration (Mailer-Einstellungen, Default-Texte wie Einladungstemplate); Pflege der statischen Seiten Impressum und Datenschutzerklärung (via Markdown-Dateien oder UI-Editor). Admins können sich nicht selbst sperren oder löschen.",
+      "acceptance_criteria": [
+        "Admin-Bereich ist ausschließlich für Benutzer mit Rolle 'admin' zugänglich",
+        "Liste aller Betreuer/Admins wird mit Status (aktiv/gesperrt) angezeigt",
+        "Admin kann neuen Betreuer/Admin per E-Mail einladen; Empfänger erhält Einladungslink",
+        "Betreuer/Admin kann gesperrt werden; gesperrter Account kann sich nicht mehr einloggen",
+        "Gesperrter Account kann reaktiviert werden",
+        "Account kann gelöscht werden (DSGVO-konformes Hard-Delete oder Anonymisierung)",
+        "Admin kann Eltern-Accounts sperren und löschen",
+        "Admin kann sich nicht selbst sperren oder löschen",
+        "System-Konfigurationsseite speichert Mailer-Einstellungen persistent",
+        "Impressum und Datenschutzerklärung sind als statische Seiten erreichbar und aktualisierbar"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Betreuer einladen",
+          "given": "Admin ist eingeloggt",
+          "when": "Admin gibt eine neue E-Mail-Adresse ein und klickt 'Einladen'",
+          "then": "Eine Einladungs-E-Mail wird versandt; ein neuer Betreuer-Account im Status 'eingeladen' erscheint in der Liste"
+        },
+        {
+          "scenario": "Account sperren",
+          "given": "Ein aktiver Betreuer-Account existiert",
+          "when": "Admin den Account sperrt",
+          "then": "Betreuer kann sich nicht mehr einloggen; Session wird invalidiert falls aktiv"
+        },
+        {
+          "scenario": "Selbst-Sperre verhindern",
+          "given": "Admin ist eingeloggt und betrachtet den eigenen Account",
+          "when": "Admin versucht, sich selbst zu sperren",
+          "then": "Aktion wird abgelehnt mit Fehlermeldung"
+        },
+        {
+          "scenario": "Unbefugter Zugriff auf Admin-Bereich",
+          "given": "Ein Betreuer (keine Admin-Rolle) ist eingeloggt",
+          "when": "Betreuer versucht, /admin aufzurufen",
+          "then": "HTTP 403 wird zurückgegeben"
+        }
+      ],
+      "success_criteria": [
+        "Alle Admin-CRUD-Operationen funktionieren fehlerfrei",
+        "Kein Betreuer oder Elternteil kann auf den Admin-Bereich zugreifen",
+        "Einladungs-E-Mail kommt an und Einladungslink funktioniert"
+      ],
+      "dependencies": ["T1", "T2"]
+    },
+    {
+      "id": "F2",
+      "name": "Gruppen- und Kindergartenjahr-Verwaltung",
+      "phase": 2,
+      "status": "open",
+      "short_description": "Verwaltung von 1–3 Gruppen, Kindergartenjahren mit Start-/Enddatum, aktivem Jahr und Jahresübergang mit Kinder-Übernahme.",
+      "description": "Betreuer und Admins können Gruppen anlegen (Name, optionale Akzentfarbe, optionale Kurzbeschreibung). Kindergartenjahre werden mit Bezeichnung (z.B. 'KGJ 2026/27') und frei wählbarem Start- und Enddatum angelegt. Genau ein Jahr ist gleichzeitig 'aktiv' und dient als Standard-Kontext. Der Jahresübergang erfolgt über einen gesteuerten Dialog: neues Jahr anlegen, Liste aller Kinder des Vorjahres mit Checkboxen, ausgewählte Kinder werden mit ihren Notfallkontakten, medizinischen Hinweisen und Foto-Einwilligungen ins neue Jahr kopiert. Inhalte wie Veranstaltungen, Listen, Galerien, Speiseplan und Mitteilungen werden nicht übernommen. Vergangene Jahre bleiben für Betreuer und Eltern sichtbar (Eltern nur die Jahre ihrer eigenen Kinder).",
+      "acceptance_criteria": [
+        "Gruppe kann angelegt werden mit Name (Pflicht), Farbe (optional) und Beschreibung (optional)",
+        "Kindergartenjahr kann angelegt werden mit Bezeichnung, Start- und Enddatum",
+        "Genau ein Kindergartenjahr ist immer als aktiv markiert; Wechsel deaktiviert das vorherige",
+        "Jahresübergang-Dialog zeigt alle Kinder des Vorjahres mit Checkboxen",
+        "Ausgewählte Kinder werden ins neue Jahr übernommen inkl. Notfallkontakten, medizinischen Hinweisen, Foto-Einwilligung",
+        "Inhalte (Veranstaltungen, Galerien, Listen, Speiseplan, Mitteilungen) werden NICHT übernommen",
+        "Betreuer sehen alle Kindergartenjahre",
+        "Eltern sehen nur die Jahre, in denen mindestens eines ihrer Kinder einer Gruppe zugeordnet war"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Neues Kindergartenjahr als aktiv setzen",
+          "given": "KGJ 2025/26 ist aktiv",
+          "when": "KGJ 2026/27 als aktiv gesetzt wird",
+          "then": "KGJ 2026/27 ist aktiv, KGJ 2025/26 ist nicht mehr aktiv; beide existieren weiterhin"
+        },
+        {
+          "scenario": "Jahresübergang – Inhalts-Isolation",
+          "given": "KGJ 2025/26 hat eine Galerie und 3 Kinder",
+          "when": "Alle 3 Kinder in das neue KGJ 2026/27 übernommen werden",
+          "then": "Die Kinder sind im neuen Jahr vorhanden; die Galerie von 2025/26 ist NICHT im neuen Jahr vorhanden"
+        },
+        {
+          "scenario": "Eltern-Sichtbarkeit vergangener Jahre",
+          "given": "Elternteil hat ein Kind im KGJ 2025/26 und KGJ 2026/27",
+          "when": "Elternteil die Jahresauswahl öffnet",
+          "then": "Beide Jahre sind sichtbar"
+        }
+      ],
+      "success_criteria": [
+        "Jahresübergang funktioniert vollständig ohne Datenverlust",
+        "Eltern sehen ausschließlich ihre eigenen Jahre",
+        "Gruppen-Farbcodes werden korrekt in der UI genutzt"
+      ],
+      "dependencies": ["T2", "T3"]
+    },
+    {
+      "id": "F3",
+      "name": "Kinder-Stammdaten",
+      "phase": 2,
+      "status": "open",
+      "short_description": "Pflege von Kinder-Profilen mit Pflichtfeldern, Gruppen-Zuordnung, Eltern-Verknüpfung und Deaktivierung.",
+      "description": "Betreuer legen Kinder an und verwalten ihre Stammdaten. Pflichtfelder: Vorname, Nachname, Geburtsdatum, zugeordnete Gruppe (im aktiven Kindergartenjahr), mindestens ein/e Erziehungsberechtigte/r, Foto-Einwilligung (ja/nein). Optionale Felder: Profilfoto (sichtbar für alle authentifizierten Benutzer der Plattform), Spitzname/Rufname. Ein Kind kann mehreren Eltern-Accounts zugeordnet werden (Geschwister-Logik: ein Elternteil kann Kinder aus verschiedenen Gruppen sehen). Pro Kind-Eltern-Zuordnung gibt es ein Freitext-Bemerkungsfeld. Kinder können deaktiviert werden ('verlassen'), aber nicht gelöscht. Beim Anlegen können bestehende Eltern-Accounts zugeordnet oder neue Eltern direkt mit angelegt und eingeladen werden.",
+      "acceptance_criteria": [
+        "Kind kann nur mit allen Pflichtfeldern angelegt werden; Formular-Validierung zeigt Fehler bei fehlenden Feldern",
+        "Foto-Einwilligung ist ein explizites Pflichtfeld (ja/nein); kein Standardwert",
+        "Kind kann einer Gruppe zugeordnet werden; Gruppe muss zum aktiven Kindergartenjahr gehören",
+        "Beim Anlegen kann ein bestehender Eltern-Account verknüpft oder ein neuer erstellt werden",
+        "Pro Kind-Eltern-Verknüpfung ist ein Freitext-Bemerkungsfeld vorhanden",
+        "Ein Elternteil kann mehreren Kindern zugeordnet sein",
+        "Kinder können deaktiviert werden; deaktivierte Kinder erscheinen nicht in aktiven Listen",
+        "Profilfoto ist nach Upload für alle eingeloggten Benutzer der Plattform sichtbar"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Kind ohne Pflichtfeld",
+          "given": "Betreuer ist auf der Kinder-Anlegen-Seite",
+          "when": "Formular ohne Geburtsdatum abgeschickt wird",
+          "then": "Formular zeigt Validierungsfehler; Kind wird nicht angelegt"
+        },
+        {
+          "scenario": "Geschwister-Logik",
+          "given": "Elternteil A ist mit Kind X (Gruppe Bären) und Kind Y (Gruppe Löwen) verknüpft",
+          "when": "Elternteil A sich einloggt",
+          "then": "Elternteil A sieht Inhalte beider Gruppen (Bären und Löwen)"
+        },
+        {
+          "scenario": "Kind deaktivieren",
+          "given": "Kind Z ist in der Gruppe Bären aktiv",
+          "when": "Betreuer Kind Z deaktiviert",
+          "then": "Kind Z erscheint nicht mehr in der aktiven Kinderliste; historische Daten bleiben erhalten"
+        }
+      ],
+      "success_criteria": [
+        "Alle Pflichtfeld-Validierungen funktionieren korrekt",
+        "Geschwister-Elternteil sieht Inhalte aller Gruppen seiner Kinder",
+        "Deaktivierte Kinder sind aus aktiven Listen ausgeblendet"
+      ],
+      "dependencies": ["T2", "T3", "F2", "F4"]
+    },
+    {
+      "id": "F4",
+      "name": "Eltern-Account-Verwaltung & Onboarding",
+      "phase": 2,
+      "status": "open",
+      "short_description": "Betreuer legen Eltern-Accounts an, versenden Magic-Link-Einladungen, und können Accounts deaktivieren oder Re-Einladungen senden.",
+      "description": "Eltern werden ausschließlich von Betreuern angelegt und per E-Mail eingeladen – kein Selbst-Registrierungs-Flow. Beim Anlegen: E-Mail (Pflicht), Vorname, Nachname, Telefonnummer (optional). Nach dem Speichern wird automatisch eine initiale Magic-Link-Einladungs-E-Mail versendet. Der Einladungslink aktiviert den Account und leitet zur Profil-Vervollständigung. Ein Eltern-Account kann mehreren Kindern zugeordnet werden. Eltern können ihr eigenes Profil bearbeiten (Name, Telefon, E-Mail), aber nicht ihre Kind-Zuordnung ändern. Betreuer können Accounts deaktivieren und eine neue Einladungs-E-Mail versenden.",
+      "acceptance_criteria": [
+        "Betreuer kann Eltern-Account anlegen mit E-Mail (Pflicht), Vorname, Nachname, Telefon (optional)",
+        "Nach dem Anlegen wird automatisch eine Einladungs-E-Mail mit Magic Link versendet",
+        "Einladungslink aktiviert den Account und öffnet eine Session für die Profil-Vervollständigung",
+        "Eltern können eigene Profildaten (Name, Telefon, E-Mail) bearbeiten",
+        "Eltern können ihre Kind-Zuordnung nicht selbst ändern",
+        "Betreuer können Eltern-Account deaktivieren; deaktivierter Account kann sich nicht mehr einloggen",
+        "Betreuer können eine neue Einladungs-E-Mail an bestehende Accounts senden",
+        "Wiederholte Einladungs-E-Mail invalidiert vorherige noch nicht verwendete Tokens"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Einladungs-Flow vollständig",
+          "given": "Betreuer legt neuen Eltern-Account mit E-Mail an",
+          "when": "Der Elternteil auf den Einladungslink in der E-Mail klickt",
+          "then": "Eine Session ist geöffnet; Elternteil wird zur Profil-Vervollständigung weitergeleitet"
+        },
+        {
+          "scenario": "Profil bearbeiten",
+          "given": "Elternteil ist eingeloggt",
+          "when": "Elternteil die Telefonnummer im Profil ändert",
+          "then": "Änderung wird gespeichert und ist beim nächsten Login sichtbar"
+        },
+        {
+          "scenario": "Kind-Zuordnung schützen",
+          "given": "Elternteil ist eingeloggt",
+          "when": "Elternteil versucht, die Kinder-Zuordnung über das Profil zu ändern",
+          "then": "Das Feld ist nicht editierbar (readonly oder nicht vorhanden im Eltern-Profil)"
+        }
+      ],
+      "success_criteria": [
+        "Einladungs-E-Mail wird zuverlässig versandt",
+        "Eltern können sich nach Klick auf Einladungslink einloggen",
+        "Kein Elternteil kann seine Kinder-Zuordnung selbst manipulieren"
+      ],
+      "dependencies": ["T1", "T2", "T7", "F3"]
+    },
+    {
+      "id": "F5",
+      "name": "Notfallkontakte & medizinische Hinweise",
+      "phase": 2,
+      "status": "open",
+      "short_description": "Pro Kind hinterlegte Notfallkontakte, medizinische Hinweise und Versicherungsdaten; verschlüsselt at-rest; pflegbar von Eltern und Betreuern.",
+      "description": "Pro Kind können mehrere Notfallkontakte (Name, Beziehung zum Kind, Telefon, Reihenfolge) sowie medizinische Hinweise (Allergien, Medikamente, Besonderheiten als Freitext-Einträge) und optionale Versicherungsdaten (Krankenkasse, Versicherungsnummer) hinterlegt werden. Eltern pflegen die Daten ihrer eigenen Kinder; Betreuer können alle Kinder einsehen und bearbeiten. Eltern haben keinen Zugriff auf Daten fremder Kinder. Alle medizinischen Felder und die Versicherungsnummer werden at-rest verschlüsselt gespeichert (ActiveRecord::Encryption). Beim Jahresübergang werden Notfallkontakte und medizinische Hinweise automatisch ins neue Jahr kopiert.",
+      "acceptance_criteria": [
+        "Pro Kind können beliebig viele Notfallkontakte mit Name, Beziehung, Telefon und Reihenfolge angelegt werden",
+        "Reihenfolge der Notfallkontakte ist durch den Benutzer sortierbar",
+        "Medizinische Hinweise können als mehrere Freitext-Einträge pro Kind gespeichert werden",
+        "Versicherungsdaten (Krankenkasse, Versicherungsnummer) können optional hinterlegt werden",
+        "Medizinische Felder und Versicherungsnummer sind at-rest verschlüsselt",
+        "Eltern sehen und bearbeiten nur Daten ihrer eigenen Kinder",
+        "Betreuer können Daten aller Kinder einsehen und bearbeiten",
+        "Kein Elternteil hat Lesezugriff auf Notfallkontakte eines fremden Kindes",
+        "Beim Jahresübergang werden Notfallkontakte und medizinische Hinweise in das neue Jahr kopiert"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Verschlüsselung",
+          "given": "Ein medizinischer Hinweis 'Erdnussallergie' wird für Kind A gespeichert",
+          "when": "Der Datenbankinhalt direkt ausgelesen wird",
+          "then": "Der Feldinhalt ist nicht im Klartext 'Erdnussallergie' lesbar"
+        },
+        {
+          "scenario": "Eltern-Datenisolation",
+          "given": "Elternteil A (Kind X) und Elternteil B (Kind Y) haben Notfallkontakte hinterlegt",
+          "when": "Elternteil A die Notfallkontakte aufruft",
+          "then": "Nur Notfallkontakte von Kind X sind sichtbar; Kind Y ist nicht erreichbar"
+        },
+        {
+          "scenario": "Jahresübergang",
+          "given": "Kind hat 2 Notfallkontakte im KGJ 2025/26",
+          "when": "Jahresübergang durchgeführt und Kind ins KGJ 2026/27 übernommen wird",
+          "then": "Beide Notfallkontakte sind im neuen Jahr kopiert und bearbeitbar"
+        }
+      ],
+      "success_criteria": [
+        "Alle medizinischen Felder sind verschlüsselt (DB-Audit)",
+        "Kein Cross-Account-Datenleck für Notfallkontakte (Integrations-Test)",
+        "Jahresübergang kopiert alle relevanten Daten korrekt"
+      ],
+      "dependencies": ["T2", "T4", "F3"]
+    },
+    {
+      "id": "F6",
+      "name": "Kalender & Kalenderereignisse",
+      "phase": 3,
+      "status": "open",
+      "short_description": "Kalenderansicht (Monat/Liste) mit Kalenderereignissen, Filterung nach Gruppe/Jahr und iCal-Abo-Link im Benutzerprofil.",
+      "description": "Alle Benutzer sehen einen Kalender mit einfachen Ereignissen und Veranstaltungen (letztere optisch hervorgehoben). Ansichten: Monatsansicht und Listenansicht, filterbar nach Gruppe und Kindergartenjahr. Ein Kalenderereignis hat: Titel, Datum (ganztägig oder mit Uhrzeit), optionaler Ort, Beschreibung, betroffene Gruppen (1..n). Eltern sehen ausschließlich Ereignisse von Gruppen, in denen mindestens eines ihrer Kinder aktiv ist (im jeweiligen Jahr). Im Profil jedes Benutzers ist ein persönlicher iCal-Abo-Link verfügbar, der nur für den entsprechenden Benutzer sichtbare Ereignisse enthält.",
+      "acceptance_criteria": [
+        "Kalender zeigt Monatsansicht und Listenansicht",
+        "Filterung nach Gruppe und Kindergartenjahr funktioniert",
+        "Betreuer können Kalenderereignisse anlegen, bearbeiten und löschen",
+        "Ereignis hat Pflichtfelder Titel und Datum; Gruppen-Zuordnung ist Pflicht",
+        "Ganztägige und zeitgenaue Ereignisse werden korrekt dargestellt",
+        "Veranstaltungen (F7) erscheinen ebenfalls im Kalender, optisch differenziert",
+        "Eltern sehen nur Ereignisse ihrer eigenen Gruppen",
+        "Im Profil jedes Benutzers ist ein iCal-Abo-Link sichtbar (Link auf T8-Feed)"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Eltern-Filterung",
+          "given": "Gruppe Bären hat Ereignis A, Gruppe Löwen hat Ereignis B; Elternteil hat Kind nur in Gruppe Bären",
+          "when": "Elternteil den Kalender öffnet",
+          "then": "Nur Ereignis A erscheint; Ereignis B ist nicht sichtbar"
+        },
+        {
+          "scenario": "Ereignis anlegen",
+          "given": "Betreuer ist eingeloggt",
+          "when": "Betreuer Ereignis 'Elternsprechtag' für Gruppe Bären am 15.06.2026 anlegt",
+          "then": "Ereignis erscheint im Kalender am 15. Juni für alle Benutzer der Gruppe Bären"
+        }
+      ],
+      "success_criteria": [
+        "Kalenderansichten zeigen korrekte Ereignisse für alle Rollen",
+        "Gruppen-Filterung funktioniert ohne Datenleck",
+        "iCal-Link ist im Profil sichtbar"
+      ],
+      "dependencies": ["T2", "T3", "F2"]
+    },
+    {
+      "id": "F7",
+      "name": "Veranstaltungen",
+      "phase": 3,
+      "status": "open",
+      "short_description": "Erweiterte Kalenderereignisse mit verknüpfbaren Teilnahmelisten, Einkaufslisten, Bildergalerien und Abstimmungen; Detailseite für Eltern.",
+      "description": "Eine Veranstaltung ist ein Kalenderereignis mit erweiterten Inhalten. Datenmodell: Titel, Datum/Uhrzeit, Ort, Beschreibung, zugeordnete Gruppen (1..n), optional verknüpfte Teilnahmeliste (max. 1), optionale Einkaufsliste (max. 1), optionale Bildergalerie (genau 1, wird typischerweise nach der Veranstaltung gefüllt), optionale Abstimmung (max. 1). Betreuer können Veranstaltungen anlegen, bearbeiten, absagen und löschen. Eltern sehen eine aufgeräumte Detailseite mit allen verknüpften Inhalten und können direkt zur Teilnahme, Liste oder Abstimmung springen. Die Kernfunktion (Veranstaltung anlegen/verwalten/absagen) ist unabhängig von den Modulen F8–F11 implementierbar; die Modulverknüpfungen werden schrittweise im Zuge der jeweiligen Feature-Implementierung ergänzt.",
+      "acceptance_criteria": [
+        "Veranstaltung kann angelegt werden mit Titel, Datum, Ort (optional), Beschreibung (optional), Gruppen",
+        "Optional kann eine Teilnahmeliste, eine Einkaufsliste, eine Galerie und eine Abstimmung verknüpft werden",
+        "Pro Veranstaltung maximal 1 Teilnahmeliste, 1 Einkaufsliste und 1 Abstimmung",
+        "Veranstaltungen erscheinen im Kalender (F6), optisch von einfachen Ereignissen unterschieden",
+        "Betreuer können eine Veranstaltung absagen (Status 'abgesagt' sichtbar) oder löschen",
+        "Eltern-Detailseite zeigt Veranstaltungsinfos und alle verknüpften Module (Liste, Galerie, Abstimmung)",
+        "Von der Detailseite kann direkt zu den verknüpften Modulen navigiert werden"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Veranstaltung mit Teilnahmeliste",
+          "given": "Betreuer legt Veranstaltung 'Sommerfest' an und verknüpft eine Teilnahmeliste",
+          "when": "Elternteil die Veranstaltungs-Detailseite öffnet",
+          "then": "Veranstaltungsdetails und Link zur Teilnahmeliste sind sichtbar; Klick navigiert zur Liste"
+        },
+        {
+          "scenario": "Veranstaltung absagen",
+          "given": "Veranstaltung 'Ausflug' ist angelegt",
+          "when": "Betreuer die Veranstaltung absagt",
+          "then": "Veranstaltung ist im Kalender als 'abgesagt' markiert; Eltern sehen den geänderten Status"
+        }
+      ],
+      "success_criteria": [
+        "Alle verknüpfbaren Module werden korrekt auf der Detailseite angezeigt",
+        "Navigation zwischen Veranstaltung und verknüpften Modulen ist intuitiv",
+        "Absagen/Löschen funktioniert ohne Datenverlust bei verknüpften Modulen"
+      ],
+      "dependencies": ["F6"]
+    },
+    {
+      "id": "F8",
+      "name": "Teilnahmelisten",
+      "phase": 3,
+      "status": "open",
+      "short_description": "Einfache Listen, in die sich Eltern für ein oder mehrere Datum(s) eintragen können; mit Anmeldeschluss und CSV-Export für Betreuer.",
+      "description": "Betreuer legen Teilnahmelisten an. Eine Liste hat: Titel, optionale Beschreibung, optionalen Anmeldeschluss, optionales fixes Datum ODER mehrere Datums-Optionen (Doodle-artig). Eintragsmodi: Allgemein (1 Spalte 'Ich/mein Kind kommt') oder Pro Datum (Häkchen pro Datum). Eltern können sich pro Kind eintragen (relevant bei Geschwistern in derselben Gruppe). Die Liste zeigt, wer sich wann eingetragen hat (sichtbar für Betreuer und alle Eltern der Gruppe). Eltern können ihren Eintrag zurücknehmen, solange der Anmeldeschluss nicht überschritten ist. Betreuer exportieren die Liste als CSV.",
+      "acceptance_criteria": [
+        "Liste kann im Modus 'Allgemein' und im Modus 'Pro Datum' angelegt werden",
+        "Im Modus 'Pro Datum' können mehrere Datums-Optionen hinzugefügt werden",
+        "Eltern können sich für jedes ihrer Kinder separat eintragen",
+        "Eingetragene Namen sind für alle Eltern der Gruppe sichtbar",
+        "Eintrag kann zurückgenommen werden, solange der Anmeldeschluss nicht abgelaufen ist",
+        "Nach Anmeldeschluss ist kein neuer Eintrag oder Rücknahme möglich",
+        "CSV-Export enthält Name, Datum des Eintrags und bei Pro-Datum-Modus die gewählten Optionen",
+        "Liste kann optional an eine Veranstaltung geknüpft werden"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Eintragen und Rücknahme",
+          "given": "Eine offene Teilnahmeliste existiert (kein Anmeldeschluss überschritten)",
+          "when": "Elternteil sich einträgt und dann den Eintrag zurücknimmt",
+          "then": "Name erscheint nach Eintrag in der Liste; nach Rücknahme verschwindet er"
+        },
+        {
+          "scenario": "Anmeldeschluss",
+          "given": "Anmeldeschluss ist gestern gewesen",
+          "when": "Elternteil versucht, sich einzutragen",
+          "then": "Formular ist deaktiviert mit Hinweis 'Anmeldeschluss überschritten'"
+        },
+        {
+          "scenario": "CSV-Export",
+          "given": "3 Elternteile haben sich eingetragen",
+          "when": "Betreuer den CSV-Export herunterlädt",
+          "then": "CSV enthält 3 Zeilen mit korrekten Namen und Eintrags-Daten"
+        }
+      ],
+      "success_criteria": [
+        "Listen funktionieren korrekt in beiden Modi",
+        "Anmeldeschluss wird serverseitig erzwungen (kein clientseitiger Bypass)",
+        "CSV-Export ist vollständig und korrekt formatiert"
+      ],
+      "dependencies": ["T2", "F2", "F3"]
+    },
+    {
+      "id": "F9",
+      "name": "Einkaufslisten",
+      "phase": 3,
+      "status": "open",
+      "short_description": "Einkaufslisten für Veranstaltungen mit Erledigt-Status pro Eintrag, mobile-optimierter Ansicht für aktive Verwendung beim Einkaufen.",
+      "description": "Betreuer legen Einkaufslisten an. Eine Liste hat: Titel, fixes Datum (Bezugstag der Veranstaltung), optionale Beschreibung, n Positions-Einträge (Bezeichnung, optionale Menge, optionale Bemerkung). Eltern und Betreuer können einzelne Einträge als 'erledigt' markieren. Der Erledigt-Status wird mit Zeitstempel und Person persistent gespeichert und ist für alle Beteiligten sichtbar. Die Ansicht ist für die mobile Verwendung während des Einkaufens optimiert (große Touch-Targets, Filter 'nur offen'). Erledigt-Status kann wieder aufgehoben werden.",
+      "acceptance_criteria": [
+        "Betreuer kann Einkaufsliste mit Titel, Datum und beliebig vielen Positions-Einträgen anlegen",
+        "Jeder Eintrag kann als 'erledigt' markiert werden; Erledigt-Status zeigt Person und Zeitstempel",
+        "Erledigt-Status ist für alle Beteiligten (Betreuer und Eltern der Gruppe) sichtbar",
+        "Erledigt-Status kann wieder aufgehoben werden",
+        "Filter 'nur offen' blendet erledigte Einträge aus",
+        "Mobile-Ansicht hat Touch-Targets ≥ 44px und gut lesbare Schriftgröße",
+        "Liste kann optional an eine Veranstaltung geknüpft werden"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Erledigt markieren",
+          "given": "Einkaufsliste mit Eintrag '2 kg Mehl' existiert",
+          "when": "Elternteil den Eintrag als erledigt markiert",
+          "then": "Eintrag zeigt Häkchen, Namen des Elternteils und Zeitstempel; für alle Beteiligten sichtbar"
+        },
+        {
+          "scenario": "Filter 'nur offen'",
+          "given": "Liste hat 3 Einträge; 2 davon sind erledigt",
+          "when": "Filter 'nur offen' aktiviert wird",
+          "then": "Nur der 1 offene Eintrag wird angezeigt"
+        },
+        {
+          "scenario": "Erledigt rückgängig",
+          "given": "Ein Eintrag ist als erledigt markiert",
+          "when": "Elternteil den Erledigt-Status aufhebt",
+          "then": "Eintrag erscheint wieder als offen ohne Häkchen"
+        }
+      ],
+      "success_criteria": [
+        "Erledigt-Status wird in Echtzeit (via Turbo Streams) für alle Beteiligten aktualisiert",
+        "Mobile-Ansicht ist auf 375px-Viewport gut bedienbar (Touch-Targets Audit)"
+      ],
+      "dependencies": ["T2", "T5", "F2"]
+    },
+    {
+      "id": "F10",
+      "name": "Abstimmungen",
+      "phase": 3,
+      "status": "open",
+      "short_description": "Namentliche Einfach- und Mehrfachauswahl-Abstimmungen mit optionalem Stimmschluss, CSV-Export und Stimmen-Änderungsmöglichkeit.",
+      "description": "Betreuer legen Abstimmungen an. Eine Abstimmung hat: Frage/Titel, Beschreibung, n Optionen, Typ (Einfachauswahl oder Mehrfachauswahl), optionalen Stimmschluss. Das Ergebnis zeigt namentlich, wer für welche Option gestimmt hat. Eltern können ihre Stimme solange die Abstimmung offen ist ändern. Betreuer können Abstimmungen schließen, archivieren und das Ergebnis als CSV exportieren. Abstimmungen können optional an eine Veranstaltung geknüpft werden.",
+      "acceptance_criteria": [
+        "Abstimmung kann als Einfachauswahl oder Mehrfachauswahl angelegt werden",
+        "Bei Einfachauswahl kann pro Elternteil nur eine Option gewählt werden",
+        "Bei Mehrfachauswahl können mehrere Optionen gewählt werden",
+        "Abstimmungsergebnis zeigt namentlich, wer welche Option gewählt hat",
+        "Eltern können ihre Stimme ändern, solange Abstimmung offen (kein Stimmschluss überschritten)",
+        "Nach Stimmschluss sind keine neuen Stimmen oder Änderungen möglich",
+        "Betreuer können Abstimmung manuell schließen",
+        "CSV-Export enthält alle Stimmen mit Namen und gewählten Optionen",
+        "Abstimmung kann optional an eine Veranstaltung geknüpft werden"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Stimme ändern",
+          "given": "Offene Abstimmung; Elternteil hat Option A gewählt",
+          "when": "Elternteil zu Option B wechselt",
+          "then": "Ergebnis zeigt Elternteil jetzt bei Option B; Option A ist für dieses Elternteil nicht mehr aktiv"
+        },
+        {
+          "scenario": "Stimmschluss",
+          "given": "Stimmschluss ist gestern gewesen",
+          "when": "Elternteil versucht zu stimmen",
+          "then": "Abstimmungs-Formular ist deaktiviert; Hinweis 'Abstimmung geschlossen'"
+        },
+        {
+          "scenario": "Namentliches Ergebnis",
+          "given": "3 Elternteile haben abgestimmt",
+          "when": "Ergebnis-Ansicht geöffnet wird",
+          "then": "Alle 3 Namen sind mit ihrer jeweiligen Wahl sichtbar (für Betreuer und alle Eltern der Gruppe)"
+        }
+      ],
+      "success_criteria": [
+        "Einfach- und Mehrfachauswahl funktionieren korrekt",
+        "Stimmschluss wird serverseitig erzwungen",
+        "CSV-Export korrekt und vollständig"
+      ],
+      "dependencies": ["T2", "F2"]
+    },
+    {
+      "id": "F11",
+      "name": "Bildergalerien",
+      "phase": 3,
+      "status": "open",
+      "short_description": "Galerien zur Dokumentation des Alltags mit Mehrfach-Upload, Grid-Lightbox-Ansicht, Einwilligungs-Hinweis und Download via signierter URL.",
+      "description": "Betreuer legen Bildergalerien an. Eine Galerie hat: Titel, Beschreibung, zugeordnete Gruppe(n), Datum/Zeitraum, optionale Verknüpfung zu einer Veranstaltung. Hochladen: Mehrfach-Upload mit Drag & Drop und Fortschrittsanzeige. Bildoptimierung erfolgt automatisch (T6). Anzeige als Grid-Galerie mit Lightbox. Eltern der zugeordneten Gruppen sehen alle Bilder. Beim Anlegen/Hochladen erscheint ein Hinweis mit den Namen der Kinder in der Gruppe, die keine Foto-Einwilligung haben (keine automatische Sperre – Betreuer ist verantwortlich). Bilder können von Eltern und Betreuern in voller Auflösung heruntergeladen werden (signierte URL). Betreuer können einzelne Bilder nachträglich entfernen.",
+      "acceptance_criteria": [
+        "Galerie kann mit Titel, Beschreibung, Gruppen und Zeitraum angelegt werden",
+        "Mehrfach-Upload und Drag & Drop funktionieren; Fortschrittsanzeige ist sichtbar",
+        "Beim Hochladen erscheint ein Hinweis-Banner mit Namen der Kinder ohne Foto-Einwilligung in der Gruppe",
+        "Grid-Ansicht zeigt alle Bilder der Galerie; Lightbox öffnet Vollbild-Ansicht",
+        "Eltern sehen nur Galerien von Gruppen ihrer eigenen Kinder",
+        "Download-Link für Originalbild (signierte URL, max. 1 Stunde gültig) ist für Eltern und Betreuer zugänglich",
+        "Betreuer können einzelne Bilder löschen",
+        "EXIF-Daten sind in allen heruntergeladenen Varianten entfernt (T6)",
+        "Galerie kann optional an eine Veranstaltung geknüpft werden"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Einwilligungs-Hinweis",
+          "given": "Gruppe Bären hat Kind X (keine Einwilligung) und Kind Y (Einwilligung erteilt)",
+          "when": "Betreuer für Gruppe Bären eine Galerie anlegt und Bilder hochlädt",
+          "then": "Hinweis erscheint: 'Kind X hat keine Foto-Einwilligung'"
+        },
+        {
+          "scenario": "Download-URL Ablauf",
+          "given": "Ein Bild wurde hochgeladen und ein Download-Link generiert",
+          "when": "Der Link mehr als 1 Stunde nach Generierung aufgerufen wird",
+          "then": "HTTP 403 oder 404; kein Zugriff auf das Bild"
+        },
+        {
+          "scenario": "Eltern-Sichtbarkeit",
+          "given": "Galerie ist der Gruppe Löwen zugeordnet; Elternteil hat Kind nur in Gruppe Bären",
+          "when": "Elternteil die Galerien-Übersicht öffnet",
+          "then": "Die Löwen-Galerie ist nicht sichtbar"
+        }
+      ],
+      "success_criteria": [
+        "Upload von 10 Bildern gleichzeitig funktioniert ohne Fehler",
+        "Einwilligungs-Hinweis erscheint korrekt bei betroffenen Gruppen",
+        "Signierte Download-URLs laufen korrekt ab"
+      ],
+      "dependencies": ["T2", "T6", "F2"]
+    },
+    {
+      "id": "F12",
+      "name": "Mitteilungen / digitaler Posteingang",
+      "phase": 3,
+      "status": "open",
+      "short_description": "Einseitige Kommunikation Betreuer → Eltern mit Rich-Text, E-Mail-Benachrichtigung und persistentem digitalem Posteingang.",
+      "description": "Betreuer verfassen Mitteilungen mit Titel, Rich-Text-Inhalt, Empfänger-Auswahl (Gruppe oder explizite Elternliste), optionalem Anhang (PDF). Beim Versenden wird die Mitteilung im digitalen Posteingang der Empfänger gespeichert und zusätzlich per E-Mail mit Tiefenlink in den Posteingang benachrichtigt. Eltern haben einen Posteingang mit gelesen/ungelesen-Status, Filter nach Datum und Gruppe sowie Detailansicht. Keine Antwortfunktion in v1. Betreuer haben einen 'Gesendet'-Bereich und können Mitteilungen archivieren.",
+      "acceptance_criteria": [
+        "Betreuer können Mitteilung mit Titel, Rich-Text und Empfänger-Auswahl (Gruppe oder Einzelpersonen) verfassen",
+        "Optionaler PDF-Anhang kann hochgeladen werden",
+        "Mitteilung erscheint nach Versenden im Posteingang aller Empfänger",
+        "Empfänger erhalten eine E-Mail-Benachrichtigung mit Mitteilungsinhalt und Tiefenlink",
+        "Posteingang zeigt gelesen/ungelesen-Status; beim Öffnen einer Mitteilung wird sie als gelesen markiert",
+        "Posteingang ist filterbar nach Datum und Gruppe",
+        "Keine Antwortfunktion für Eltern vorhanden",
+        "Betreuer sehen einen 'Gesendet'-Bereich mit allen gesendeten Mitteilungen",
+        "Betreuer können Mitteilungen in 'Gesendet' archivieren"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Mitteilung senden und empfangen",
+          "given": "Betreuer verfasst Mitteilung für Gruppe Bären",
+          "when": "Mitteilung abgeschickt wird",
+          "then": "Alle Eltern der Gruppe Bären haben die Mitteilung im Posteingang und erhalten eine E-Mail"
+        },
+        {
+          "scenario": "Gelesen-Status",
+          "given": "Elternteil hat ungelesene Mitteilung im Posteingang",
+          "when": "Elternteil die Mitteilung öffnet",
+          "then": "Mitteilung wird als gelesen markiert; Zähler für ungelesene Nachrichten wird aktualisiert"
+        },
+        {
+          "scenario": "Empfänger-Isolation",
+          "given": "Mitteilung wird nur an Gruppe Löwen gesendet",
+          "when": "Elternteil mit Kind nur in Gruppe Bären den Posteingang öffnet",
+          "then": "Die Mitteilung ist nicht im Posteingang sichtbar"
+        }
+      ],
+      "success_criteria": [
+        "E-Mail-Benachrichtigungen werden zuverlässig versandt",
+        "Kein Elternteil empfängt Mitteilungen, die nicht für seine Gruppen bestimmt sind",
+        "Massen-E-Mail an 60 Empfänger läuft vollständig durch"
+      ],
+      "dependencies": ["T2", "T7"]
+    },
+    {
+      "id": "F13",
+      "name": "Speiseplan",
+      "phase": 3,
+      "status": "open",
+      "short_description": "Wochenweise Speiseplanung pro Gruppe; Betreuer planen Woche für Woche (meist die Vorwoche) als reine Leseübersicht für Eltern.",
+      "description": "Betreuer pflegen einen optionalen Speiseplan pro Gruppe im wöchentlichen Rhythmus. Die Planung erfolgt immer für eine vollständige Woche (Mo–Fr), typischerweise die Woche zuvor. Ein Eintrag hat: Datum, Gruppe(n), Speise (Freitext), optionaler Allergie-/Hinweistext (z.B. 'enthält Gluten, Laktose'). Die Wochenansicht ist die einzige und primäre Darstellung – navigierbar (zurück / vor), Standard ist die aktuelle Woche. Betreuer können beliebige Wochen vorausplanen. Eltern sehen die Wochenansicht ihrer Kinder-Gruppe im Lesemodus. Der Speiseplan ist nicht an ein einzelnes Kind gebunden, sondern an die Gruppe. Beim Jahresübergang wird der Speiseplan nicht ins neue Jahr übernommen.",
+      "acceptance_criteria": [
+        "Betreuer können Speiseplan-Einträge für einzelne Tage einer Woche anlegen, bearbeiten und löschen",
+        "Eintrag hat Pflichtfelder Datum und Speise; Gruppe ist Pflicht; Hinweistext ist optional",
+        "Wochenansicht ist die primäre und einzige Ansicht: zeigt Mo–Fr der gewählten Woche mit allen Einträgen pro Gruppe",
+        "Navigation zwischen Wochen (zurück / vor) ist möglich; Standardansicht ist die aktuelle Woche",
+        "Betreuer können zukünftige Wochen vorausplanen (Einträge für beliebige Wochen anlegen)",
+        "Eltern sehen den Speiseplan ihrer Kinder-Gruppe im Lesemodus (keine Bearbeitung möglich)",
+        "Eltern sehen nur Speisepläne der Gruppen ihrer eigenen Kinder",
+        "Speiseplan wird beim Jahresübergang nicht ins neue Jahr kopiert"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Wochenplanung durch Betreuer",
+          "given": "Betreuer ist eingeloggt und navigiert zur nächsten Woche im Speiseplan",
+          "when": "Betreuer für jeden Wochentag einen Speiseeintrag anlegt",
+          "then": "Alle 5 Einträge sind in der Wochenansicht korrekt den Wochentagen (Mo–Fr) zugeordnet sichtbar"
+        },
+        {
+          "scenario": "Eltern-Leseansicht",
+          "given": "Betreuer hat die aktuelle Woche vollständig geplant",
+          "when": "Elternteil den Speiseplan öffnet",
+          "then": "Wochenansicht der aktuellen Woche mit allen Einträgen ist sichtbar; keine Bearbeitungsoption vorhanden"
+        },
+        {
+          "scenario": "Wochennavigation – leere Woche",
+          "given": "Aktuelle Woche hat Speiseplan-Einträge; Vorwoche hat keine",
+          "when": "Benutzer auf 'Zurück' navigiert",
+          "then": "Vorwoche wird angezeigt; leere Tage zeigen einen Platzhalter statt eines Fehlers"
+        },
+        {
+          "scenario": "Jahresübergang – kein Speiseplan",
+          "given": "Speiseplan-Einträge für KGJ 2025/26 existieren",
+          "when": "Jahresübergang zu KGJ 2026/27 durchgeführt wird",
+          "then": "KGJ 2026/27 hat keine Speiseplan-Einträge"
+        }
+      ],
+      "success_criteria": [
+        "Wochenansicht zeigt korrekte Daten für alle Rollen",
+        "Betreuer können problemlos die Vorwoche vorausplanen",
+        "Eltern sehen nur Speisepläne ihrer Gruppen im Lesemodus",
+        "Kein Speiseplan wird beim Jahresübergang kopiert"
+      ],
+      "dependencies": ["T2", "F2"]
+    },
+    {
+      "id": "F14",
+      "name": "Geburtstagsübersicht",
+      "phase": 3,
+      "status": "open",
+      "short_description": "Übersicht aller Kinder-Geburtstage pro Gruppe, sortierbar, mit Hervorhebung anstehender Geburtstage (nächste 14 Tage).",
+      "description": "Alle authentifizierten Benutzer können eine Geburtstagsübersicht der Gruppen einsehen, zu denen sie Zugang haben. Die Liste zeigt alle Kinder einer Gruppe mit ihrem Geburtstag, sortierbar nach Datum (Jahresansicht, Geburtstage des aktuellen Kalenderjahres in chronologischer Reihenfolge) oder nach Alter. Kinder mit Geburtstag in den nächsten 14 Tagen werden hervorgehoben.",
+      "acceptance_criteria": [
+        "Geburtstagsübersicht zeigt alle Kinder der zugänglichen Gruppen mit Geburtstag",
+        "Liste ist sortierbar nach Datum (Jahresansicht) und nach Alter",
+        "Kinder mit Geburtstag in den nächsten 14 Tagen sind visuell hervorgehoben",
+        "Eltern sehen nur Kinder ihrer eigenen Gruppen",
+        "Betreuer und Admins sehen alle Gruppen"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Hervorhebung anstehender Geburtstage",
+          "given": "Kind A hat Geburtstag in 7 Tagen; Kind B hat Geburtstag in 30 Tagen",
+          "when": "Geburtstagsübersicht geöffnet wird",
+          "then": "Kind A ist hervorgehoben; Kind B ist nicht hervorgehoben"
+        },
+        {
+          "scenario": "Eltern-Sichtbarkeit",
+          "given": "Elternteil hat Kind nur in Gruppe Bären",
+          "when": "Elternteil Geburtstagsübersicht öffnet",
+          "then": "Nur Kinder der Gruppe Bären sind sichtbar"
+        }
+      ],
+      "success_criteria": [
+        "Jahresansicht zeigt korrekte chronologische Reihenfolge",
+        "Hervorhebungs-Logik (14 Tage) funktioniert korrekt auch um Jahreswechsel"
+      ],
+      "dependencies": ["T2", "F3"]
+    },
+    {
+      "id": "F15",
+      "name": "Foto-Einwilligungsverwaltung",
+      "phase": 3,
+      "status": "open",
+      "short_description": "Boolean-Flag 'Foto-Einwilligung' pro Kind mit Zeitstempel, pflegbar von Eltern und Betreuern, automatische Übernahme beim Jahreswechsel.",
+      "description": "Pro Kind wird dokumentiert, ob eine Foto-Einwilligung erteilt wurde (ja/nein). Das Flag wird mit Zeitstempel der letzten Änderung versehen. Pflegbar von Eltern (nur eigene Kinder) und Betreuern (alle Kinder). Beim Anlegen einer Galerie oder beim Hochladen von Bildern zeigt das System als Hinweis eine Liste der Kinder der betroffenen Gruppe, die keine Einwilligung haben – keine automatische Sperre. Die Verantwortung für die korrekte Bildauswahl liegt beim Betreuer. Das Flag wird beim Jahresübergang automatisch kopiert.",
+      "acceptance_criteria": [
+        "Foto-Einwilligung ist als ja/nein-Flag am Kind-Profil hinterlegt",
+        "Zeitstempel der letzten Änderung wird gespeichert und angezeigt",
+        "Eltern können das Flag für eigene Kinder setzen",
+        "Betreuer können das Flag für alle Kinder setzen",
+        "Kein Elternteil kann das Flag für fremde Kinder ändern",
+        "Beim Galerie-Upload erscheint ein Hinweis mit Kindernamen ohne Einwilligung (keine Sperre)",
+        "Flag wird beim Jahresübergang in das neue Jahr kopiert"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Flag setzen und Zeitstempel",
+          "given": "Elternteil hat Kind X mit Einwilligung 'nein'",
+          "when": "Elternteil die Einwilligung auf 'ja' setzt",
+          "then": "Flag ist 'ja'; Zeitstempel zeigt aktuelles Datum/Uhrzeit"
+        },
+        {
+          "scenario": "Hinweis beim Galerie-Upload",
+          "given": "Kind A (keine Einwilligung) und Kind B (Einwilligung) sind in Gruppe Bären",
+          "when": "Betreuer eine Galerie für Gruppe Bären anlegt",
+          "then": "Hinweis erscheint: 'Kind A hat keine Foto-Einwilligung' – Upload wird nicht blockiert"
+        }
+      ],
+      "success_criteria": [
+        "Zeitstempel wird bei jeder Änderung korrekt gesetzt",
+        "Hinweis beim Upload korrekt für alle betroffenen Kinder",
+        "Jahresübergang kopiert Flag ohne Verlust"
+      ],
+      "dependencies": ["T2", "F3", "F11"]
+    },
+    {
+      "id": "F16",
+      "name": "WhatsApp-Share-Links",
+      "phase": 3,
+      "status": "open",
+      "short_description": "Share-Button auf Detailseiten von Veranstaltungen, Listen und Abstimmungen, der einen WhatsApp-Link mit vorgefertigtem Text öffnet.",
+      "description": "Auf den Detailseiten von Veranstaltungen, Teilnahmelisten und Abstimmungen gibt es einen 'Teilen'-Knopf. Dieser öffnet einen https://wa.me/?text=...-Link mit vorgefertigtem Text und der URL der Seite. Die geteilte URL ist die normale, authentifizierungspflichtige Detail-URL – Empfänger, die auf den Link klicken, müssen sich wie üblich bei MIKIWA anmelden. Keine WhatsApp-Business-API-Integration. Der Share-Button ist für Betreuer und Eltern sichtbar (Eltern nur für erlaubte Inhalte).",
+      "acceptance_criteria": [
+        "Share-Button ist auf Detailseiten von Veranstaltungen, Teilnahmelisten und Abstimmungen vorhanden",
+        "Klick auf Share-Button öffnet einen wa.me-Link mit vorgefertigtem Text und Seiten-URL",
+        "Der vorgefertigte Text enthält Titel und URL der Seite",
+        "Die geteilte URL erfordert Login; nicht eingeloggte Benutzer werden zur Login-Seite weitergeleitet",
+        "Share-Button ist auf Desktop und Mobile sichtbar (auf Mobile öffnet er direkt WhatsApp)"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Share-Link Inhalt",
+          "given": "Betreuer ist auf der Detailseite von Veranstaltung 'Sommerfest'",
+          "when": "Betreuer auf Share-Button klickt",
+          "then": "wa.me-Link enthält Titel 'Sommerfest' und die korrekte HTTPS-URL der Veranstaltung"
+        },
+        {
+          "scenario": "Shared URL erfordert Login",
+          "given": "Eine geteilte Veranstaltungs-URL wird in einem Browser ohne aktive Session geöffnet",
+          "when": "Die URL direkt im Browser aufgerufen wird",
+          "then": "Redirect zur Login-Seite; keine Inhalte ohne Authentifizierung sichtbar"
+        }
+      ],
+      "success_criteria": [
+        "wa.me-Links enthalten korrekte URL und Text",
+        "Keine sensiblen Daten in der geteilten URL enthalten",
+        "Geteilte URLs erfordern Authentifizierung"
+      ],
+      "dependencies": ["T11"]
+    },
+    {
+      "id": "T8",
+      "name": "iCal-Feed (Kalender-Abonnement)",
+      "phase": 3,
+      "status": "open",
+      "short_description": "Personalisierter .ics-Feed pro Benutzer mit signierten Token-URLs, HTTP-Caching und Kompatibilität mit Apple/Google/Outlook.",
+      "description": "Jeder Benutzer kann seinen persönlichen Kalender via iCal/.ics-Feed abonnieren. Die Feed-URL ist personalisiert und enthält einen signierten Token (/calendar/<token>.ics). Der Token kann vom Benutzer rotiert werden (bei Verlust der URL). Der Feed enthält alle Ereignisse und Veranstaltungen, die für den Benutzer sichtbar sind: Eltern sehen nur Inhalte der Gruppen ihrer Kinder; Betreuer und Admins sehen alle. HTTP-Caching mit Last-Modified/ETag ist implementiert. Der Feed ist nicht für Suchmaschinen indexierbar (X-Robots-Tag: noindex). Kompatibel mit Apple Kalender, Google Kalender und Outlook.",
+      "acceptance_criteria": [
+        "Jeder Benutzer hat eine eindeutige iCal-Feed-URL mit Token im Profil sichtbar",
+        "GET /calendar/<token>.ics liefert gültigen iCal-Content (Content-Type: text/calendar)",
+        "Feed enthält nur Ereignisse, die für den jeweiligen Benutzer sichtbar sind",
+        "Token kann im Profil rotiert werden; alter Token ist danach ungültig",
+        "Feed-URL enthält X-Robots-Tag: noindex im Response-Header",
+        "ETag und Last-Modified-Header sind gesetzt; 304 Not Modified bei unverändertem Feed",
+        "Feed ist kompatibel mit Apple Kalender, Google Kalender und Outlook (RFC 5545)"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Feed-Inhalt nach Rolle",
+          "given": "Elternteil mit Kind in Gruppe Bären; Gruppe Löwen hat ein eigenes Ereignis",
+          "when": "Elternteil den iCal-Feed herunterlädt",
+          "then": "Feed enthält nur Ereignisse der Gruppe Bären; Löwen-Ereignis ist nicht enthalten"
+        },
+        {
+          "scenario": "Token-Rotation",
+          "given": "Elternteil hat Token-URL T1",
+          "when": "Elternteil den Token rotiert und eine neue URL T2 erhält",
+          "then": "GET /calendar/T1.ics liefert 404 oder 401; GET /calendar/T2.ics liefert gültigen Feed"
+        },
+        {
+          "scenario": "HTTP-Caching",
+          "given": "Feed wurde bereits abgerufen",
+          "when": "Erneuter Request mit If-None-Match (ETag) und unverändertem Feed",
+          "then": "Server antwortet mit HTTP 304 Not Modified"
+        }
+      ],
+      "success_criteria": [
+        "Feed kann erfolgreich in Apple Kalender, Google Kalender und Outlook abonniert werden",
+        "Token-Rotation funktioniert; alter Token ungültig nach Rotation",
+        "Kein Datenleck: jeder Feed enthält ausschließlich benutzerrelevante Ereignisse"
+      ],
+      "dependencies": ["T1", "T11", "F6", "F7"]
+    },
+    {
+      "id": "F17",
+      "name": "Eltern-Dashboard (Startseite)",
+      "phase": 4,
+      "status": "open",
+      "short_description": "Personalisierte Eltern-Startseite mit Überblick über ungelesene Mitteilungen, anstehende Veranstaltungen, offene Listen/Abstimmungen, Geburtstage und Speiseplan.",
+      "description": "Das Eltern-Dashboard ist die Startseite nach dem Login und gibt in Sekunden einen Überblick über alle relevanten Inhalte. Sektionen: (1) Ungelesene Mitteilungen – nur angezeigt, wenn vorhanden; (2) Anstehende Veranstaltungen der eigenen Kinder (nächste 14 Tage); (3) Offene Listen/Abstimmungen, in denen noch kein Eintrag/keine Stimme abgegeben wurde; (4) Anstehende Geburtstage in den Gruppen der eigenen Kinder; (5) Heutiger und morgiger Speiseplan (falls vorhanden); Quick-Links zu Kalender, Galerien und Profil. Jede Karte zeigt maximal 1 Aktion, hat große Touch-Targets und nutzt Farbcodes aus dem Mikiwa-Designsystem. Alle Inhalte sind ausschließlich auf die eigenen Kinder und Gruppen eingeschränkt.",
+      "acceptance_criteria": [
+        "Dashboard zeigt alle 5 Sektionen sofern Daten vorhanden",
+        "Abschnitt 'Ungelesene Mitteilungen' erscheint nur, wenn ungelesene Mitteilungen vorhanden sind",
+        "Veranstaltungen der nächsten 14 Tage werden angezeigt",
+        "Offene Listen/Abstimmungen zeigen nur Einträge, bei denen der Elternteil noch nicht teilgenommen hat",
+        "Geburtstags-Sektion zeigt anstehende Geburtstage (nächste 14 Tage) in eigenen Gruppen",
+        "Speiseplan zeigt heutigen und morgigen Eintrag der eigenen Gruppen",
+        "Quick-Links zu Kalender, Galerien und Profil sind sichtbar",
+        "Alle Inhalte sind ausschließlich aus den Gruppen der eigenen Kinder",
+        "Dashboard ist auf Mobile optimiert (Karten-Layout, ≥44px Touch-Targets)"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Leeres Dashboard",
+          "given": "Neu eingeloggter Elternteil ohne relevante Ereignisse, Mitteilungen oder offene Listen",
+          "when": "Dashboard geöffnet wird",
+          "then": "Dashboard zeigt leere States mit erklärenden Hinweisen; kein Fehler"
+        },
+        {
+          "scenario": "Datenisolation",
+          "given": "Elternteil A und B haben Kinder in verschiedenen Gruppen; Betreuer sendet Mitteilung nur an Gruppe von A",
+          "when": "Elternteil B das Dashboard öffnet",
+          "then": "Mitteilung von Gruppe A ist nicht im Dashboard von Elternteil B sichtbar"
+        },
+        {
+          "scenario": "Offene Liste",
+          "given": "Eine Teilnahmeliste ist offen; Elternteil hat sich noch nicht eingetragen",
+          "when": "Dashboard geöffnet wird",
+          "then": "Liste erscheint in der Sektion 'Offene Listen'; nach Eintragen verschwindet sie"
+        }
+      ],
+      "success_criteria": [
+        "Dashboard lädt in < 1 Sekunde auf einem durchschnittlichen Smartphone",
+        "Alle Sektionen zeigen korrekte, rollengerechte Daten",
+        "Kein Datenleck zwischen Elternteilen verschiedener Gruppen"
+      ],
+      "dependencies": ["F6", "F8", "F10", "F12", "F13", "F14"]
+    },
+    {
+      "id": "F18",
+      "name": "Betreuer-Dashboard (Startseite)",
+      "phase": 4,
+      "status": "open",
+      "short_description": "Operative Betreuer-Startseite mit Tagesübersicht, offenen Aufgaben, Schnellaktionen und Gruppen-Statistiken.",
+      "description": "Das Betreuer-Dashboard ist die operative Startseite nach dem Login. Sektionen: (1) Heute – aktuelle Veranstaltungen, fälliger Speiseplan, anstehende Geburtstage in den Gruppen; (2) Offene Aufgaben – Listen mit zu wenigen Eintragungen, Abstimmungen vor Stimmschluss, fehlende Galerien zu vergangenen Veranstaltungen, Kinder ohne Foto-Einwilligungs-Antwort; (3) Schnellaktionen – neue Mitteilung, neue Veranstaltung, neues Kind anlegen; (4) Kleine Statistik – Anzahl Kinder pro Gruppe im aktiven Kindergartenjahr.",
+      "acceptance_criteria": [
+        "Dashboard zeigt alle 4 Sektionen",
+        "Sektion 'Heute' zeigt Veranstaltungen des heutigen Tages, Speiseplan und Geburtstage",
+        "Sektion 'Offene Aufgaben' zeigt: Listen mit 0 Eintragungen, Abstimmungen mit aktivem Stimmschluss in Zukunft, vergangene Veranstaltungen ohne Galerie, Kinder ohne gesetztes Foto-Einwilligungs-Flag",
+        "Schnellaktionen navigieren direkt zum Formular für neue Mitteilung, neue Veranstaltung und neues Kind",
+        "Statistik zeigt Kinder-Anzahl pro Gruppe korrekt für das aktive Kindergartenjahr",
+        "Dashboard ist auf Mobile optimiert"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Offene Aufgaben – fehlende Galerie",
+          "given": "Veranstaltung 'Ausflug' war gestern und hat keine Galerie",
+          "when": "Betreuer das Dashboard öffnet",
+          "then": "'Ausflug ohne Galerie' erscheint in der Sektion 'Offene Aufgaben'"
+        },
+        {
+          "scenario": "Schnellaktion neue Mitteilung",
+          "given": "Betreuer ist auf dem Dashboard",
+          "when": "Betreuer auf 'Neue Mitteilung' klickt",
+          "then": "Direkte Navigation zum Mitteilungs-Formular (kein Umweg über Menü)"
+        },
+        {
+          "scenario": "Statistik aktives Jahr",
+          "given": "Gruppe Bären hat 18 Kinder; Gruppe Löwen hat 15 Kinder im aktiven Jahr",
+          "when": "Betreuer das Dashboard öffnet",
+          "then": "Statistik zeigt: Bären 18, Löwen 15"
+        }
+      ],
+      "success_criteria": [
+        "Alle offenen Aufgaben werden korrekt identifiziert und angezeigt",
+        "Schnellaktionen navigieren korrekt",
+        "Statistiken zeigen stets den aktuellen Stand des aktiven Kindergartenjahres"
+      ],
+      "dependencies": ["F6", "F7", "F8", "F10", "F11", "F12", "F13", "F14", "F15"]
+    }
+  ]
+}
