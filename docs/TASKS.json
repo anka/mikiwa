@@ -300,7 +300,7 @@
       "id": "T9",
       "name": "Hosting, Deployment & Operations",
       "phase": 1,
-      "status": "open",
+      "status": "done",
       "short_description": "Self-hosted EU-Root-Server mit Kamal-Deployment, Docker, Solid Queue/Cache/Cable, nightly Backups und Health-Check-Endpoint.",
       "description": "Die App läuft auf einem eigenen Root-Server in der EU (DE oder AT). Deployment erfolgt über Kamal mit Docker-Containern (Rails-App, SQLite, Caddy/Traefik als Reverse-Proxy mit automatischem Let's Encrypt). Background-Jobs laufen über Solid Queue (in v1 kein separater Worker-Server nötig). Caching und ActionCable verwenden Solid Cache bzw. Solid Cable. Nightly DB-Dumps und ActiveStorage-Volume-Snapshots werden verschlüsselt in einer zweiten EU-Region gesichert. Ein /up-Endpoint liefert HTTP 200 für Health-Checks. Secrets werden über Rails Encrypted Credentials verwaltet – kein Secret im Repository. Zero-Downtime-Deployment ist Standard.",
       "acceptance_criteria": [
