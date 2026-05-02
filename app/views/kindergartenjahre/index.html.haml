@@ -1,0 +1,36 @@
+- content_for :title, "Kindergartenjahre · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Kindergartenjahre
+    %p.mw-page-header__lede Verwalten Sie Planung und Jahresübergang.
+  = link_to "Neues Jahr anlegen", new_kindergartenjahre_path, class: "mw-btn mw-btn--primary mw-btn--sm"
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+.mw-card{ style: "margin-top: 1.5rem;" }
+  %table.mw-table{ style: "width: 100%;" }
+    %thead
+      %tr
+        %th Bezeichnung
+        %th Zeitraum
+        %th Status
+        %th{ style: "text-align: right;" } Aktionen
+    %tbody
+      - @kindergartenjahre.each do |jahr|
+        %tr
+          %td
+            %strong= jahr.bezeichnung
+          %td= "#{I18n.l(jahr.start_datum, format: :short)} – #{I18n.l(jahr.end_datum, format: :short)}"
+          %td
+            - if jahr.aktiv?
+              %span.mw-badge.mw-badge--success Aktiv
+            - else
+              %span.mw-badge.mw-badge--neutral Abgeschlossen
+          %td{ style: "text-align: right;" }
+            .mw-actions
+              - unless jahr.aktiv?
+                = button_to "Aktivieren", aktiviere_kindergartenjahre_path(jahr), method: :patch, class: "mw-btn mw-btn--secondary mw-btn--sm"
+                = link_to "Jahresübergang", jahresubergang_kindergartenjahre_path(jahr), class: "mw-btn mw-btn--secondary mw-btn--sm"
+              = link_to "Bearbeiten", edit_kindergartenjahre_path(jahr), class: "mw-btn mw-btn--secondary mw-btn--sm"

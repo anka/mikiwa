@@ -16,6 +16,15 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   get "offline" => "pages#offline", as: :offline
 
+  resources :gruppen
+  resources :kindergartenjahre do
+    member do
+      patch :aktiviere
+      get   :jahresubergang
+      post  :jahresubergang_durchfuehren
+    end
+  end
+
   namespace :webhooks do
     post "bounce" => "bounces#create"
   end

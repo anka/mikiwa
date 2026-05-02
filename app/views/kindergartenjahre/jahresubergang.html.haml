@@ -1,0 +1,30 @@
+- content_for :title, "Jahresübergang nach #{@kindergartenjahr.bezeichnung} · Mikiwa"
+
+.mw-page-header
+  %h1.mw-page-header__title= "Jahresübergang nach #{@kindergartenjahr.bezeichnung}"
+  %p.mw-page-header__lede
+    Wählen Sie die Kinder aus, die in das neue Kindergartenjahr übernommen werden sollen.
+    Notfallkontakte und medizinische Hinweise werden automatisch mitübertragen.
+
+.mw-card{ style: "margin-top: 1.5rem;" }
+  - if @kinder.any?
+    = form_with url: jahresubergang_durchfuehren_kindergartenjahr_path(@kindergartenjahr), method: :post, class: "mw-form" do |form|
+      %p.mw-text-muted{ style: "margin-bottom: 1rem;" }
+        Kinder des aktuell aktiven Jahres:
+
+      .mw-kind-liste
+        - @kinder.each do |kind|
+          %label.mw-kind-check
+            %input{ type: "checkbox", name: "kind_ids[]", value: kind.id, checked: true }
+            %span.mw-kind-check__name= kind.anzeigename
+
+      .mw-form__actions{ style: "margin-top: 1.5rem;" }
+        = form.submit "Jahresübergang durchführen", class: "mw-btn mw-btn--primary"
+        = link_to "Abbrechen", kindergartenjahre_path, class: "mw-btn mw-btn--ghost"
+
+  - else
+    .mw-empty-state
+      %p.mw-text-muted
+        Im aktuell aktiven Kindergartenjahr sind noch keine Kinder eingetragen.
+        Legen Sie zuerst Kinder im aktiven Jahr an.
+      = link_to "Zur Kinderverwaltung", root_path, class: "mw-btn mw-btn--secondary mw-btn--sm"

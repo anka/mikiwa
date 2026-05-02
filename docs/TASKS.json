@@ -610,7 +610,7 @@
       "id": "F2",
       "name": "Gruppen- und Kindergartenjahr-Verwaltung",
       "phase": 2,
-      "status": "open",
+      "status": "done",
       "short_description": "Verwaltung von 1–3 Gruppen, Kindergartenjahren mit Start-/Enddatum, aktivem Jahr und Jahresübergang mit Kinder-Übernahme.",
       "description": "Betreuer und Admins können Gruppen anlegen (Name, optionale Akzentfarbe, optionale Kurzbeschreibung). Kindergartenjahre werden mit Bezeichnung (z.B. 'KGJ 2026/27') und frei wählbarem Start- und Enddatum angelegt. Genau ein Jahr ist gleichzeitig 'aktiv' und dient als Standard-Kontext. Der Jahresübergang erfolgt über einen gesteuerten Dialog: neues Jahr anlegen, Liste aller Kinder des Vorjahres mit Checkboxen, ausgewählte Kinder werden mit ihren Notfallkontakten, medizinischen Hinweisen und Foto-Einwilligungen ins neue Jahr kopiert. Inhalte wie Veranstaltungen, Listen, Galerien, Speiseplan und Mitteilungen werden nicht übernommen. Vergangene Jahre bleiben für Betreuer und Eltern sichtbar (Eltern nur die Jahre ihrer eigenen Kinder).",
       "acceptance_criteria": [
