@@ -56,7 +56,7 @@
       "id": "T5",
       "name": "PWA & Mobile-first UX-Foundation",
       "phase": 1,
-      "status": "open",
+      "status": "done",
       "short_description": "Progressive Web App mit installierbarem Manifest, Service Worker, responsivem Tailwind-Layout und Hotwire (Turbo + Stimulus).",
       "description": "Die App wird primär auf Smartphones genutzt. Das Fundament umfasst: ein Web App Manifest mit App-Name, Icons in verschiedenen Größen, Theme-Color und Start-URL; einen Service Worker, der eine Offline-Fallback-Seite ausliefert (kein Offline-Inhalt in v1); responsive Layouts mit Tailwind CSS nach Mobile-first-Ansatz; Touch-Targets von mindestens 44 px; Hotwire (Turbo Drive, Turbo Frames, Turbo Streams, Stimulus) als reaktive UI-Schicht ohne SPA-Komplexität. Sämtliche Designtokens, Farben und Komponenten stammen aus dem mikiwa-design-Skill.",
       "acceptance_criteria": [

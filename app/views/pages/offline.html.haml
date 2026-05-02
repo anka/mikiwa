@@ -1,0 +1,9 @@
+- content_for :title, "Offline – Mikiwa"
+.mw-container{ style: "display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:var(--space-6)" }
+  = image_tag "mikiwa/logo-mikiwa.svg", alt: "Mikiwa", style: "width:64px;height:64px;opacity:.5"
+  %h1{ style: "font-size:var(--fs-24);font-weight:var(--fw-bold);color:var(--fg-1)" }
+    Keine Verbindung
+  %p{ style: "color:var(--fg-3);max-width:320px" }
+    Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.
+  %button.mw-btn.mw-btn--primary{ onclick: "window.location.reload()", style: "min-height:44px" }
+    Erneut versuchen
