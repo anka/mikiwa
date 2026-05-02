@@ -12,6 +12,8 @@ Rails.application.routes.draw do
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
+  get "calendar/:token(.:format)", to: "ical_feeds#show", as: :ical_feed
+
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   get "offline" => "pages#offline", as: :offline

@@ -1293,7 +1293,7 @@
       "id": "T8",
       "name": "iCal-Feed (Kalender-Abonnement)",
       "phase": 3,
-      "status": "open",
+      "status": "done",
       "short_description": "Personalisierter .ics-Feed pro Benutzer mit signierten Token-URLs, HTTP-Caching und Kompatibilität mit Apple/Google/Outlook.",
       "description": "Jeder Benutzer kann seinen persönlichen Kalender via iCal/.ics-Feed abonnieren. Die Feed-URL ist personalisiert und enthält einen signierten Token (/calendar/<token>.ics). Der Token kann vom Benutzer rotiert werden (bei Verlust der URL). Der Feed enthält alle Ereignisse und Veranstaltungen, die für den Benutzer sichtbar sind: Eltern sehen nur Inhalte der Gruppen ihrer Kinder; Betreuer und Admins sehen alle. HTTP-Caching mit Last-Modified/ETag ist implementiert. Der Feed ist nicht für Suchmaschinen indexierbar (X-Robots-Tag: noindex). Kompatibel mit Apple Kalender, Google Kalender und Outlook.",
       "acceptance_criteria": [
