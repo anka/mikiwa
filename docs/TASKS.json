@@ -14,7 +14,7 @@
       "id": "T3",
       "name": "Datenmodell-Grundgerüst & Mandantenkontext",
       "phase": 1,
-      "status": "open",
+      "status": "done",
       "short_description": "SQLite-Datenmodell mit UUID-Primärschlüsseln, Gruppe als oberste Organisationseinheit und Kindergartenjahr als zeitliche Klammer.",
       "description": "Legt die Datenbankstruktur fest, auf der alle inhaltlichen Entitäten aufbauen. Die Plattform ist Single-Tenant – ein Datenbankschema pro Installation. Gruppe ist die oberste organisatorische Einheit (z.B. 'Bären', 'Löwen'). Ein Kindergartenjahr hat ein frei wählbares Start- und Enddatum und klammert alle inhaltlichen Daten (Veranstaltungen, Galerien, Listen, Speiseplan, Mitteilungen). Zu jedem Zeitpunkt ist genau ein Kindergartenjahr als 'aktiv' markiert – das ist der Standard-Kontext für alle Benutzer. Alle benutzerexponierten Ressourcen erhalten UUIDs als Primärschlüssel, um ID-Enumeration in URLs zu verhindern. Jede Tabelle führt created_at und updated_at.",
       "acceptance_criteria": [

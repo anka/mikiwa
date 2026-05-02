@@ -1,9 +1,11 @@
 <% password_digest = BCrypt::Password.create("password") %>
 
 one:
+  id: "00000000-0000-0000-0000-000000000001"
   email: one@example.com
   password_digest: <%= password_digest %>
 
 two:
+  id: "00000000-0000-0000-0000-000000000002"
   email: two@example.com
   password_digest: <%= password_digest %>
