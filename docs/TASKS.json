@@ -657,7 +657,7 @@
       "id": "F3",
       "name": "Kinder-Stammdaten",
       "phase": 2,
-      "status": "open",
+      "status": "done",
       "short_description": "Pflege von Kinder-Profilen mit Pflichtfeldern, Gruppen-Zuordnung, Eltern-Verknüpfung und Deaktivierung.",
       "description": "Betreuer legen Kinder an und verwalten ihre Stammdaten. Pflichtfelder: Vorname, Nachname, Geburtsdatum, zugeordnete Gruppe (im aktiven Kindergartenjahr), mindestens ein/e Erziehungsberechtigte/r, Foto-Einwilligung (ja/nein). Optionale Felder: Profilfoto (sichtbar für alle authentifizierten Benutzer der Plattform), Spitzname/Rufname. Ein Kind kann mehreren Eltern-Accounts zugeordnet werden (Geschwister-Logik: ein Elternteil kann Kinder aus verschiedenen Gruppen sehen). Pro Kind-Eltern-Zuordnung gibt es ein Freitext-Bemerkungsfeld. Kinder können deaktiviert werden ('verlassen'), aber nicht gelöscht. Beim Anlegen können bestehende Eltern-Accounts zugeordnet oder neue Eltern direkt mit angelegt und eingeladen werden.",
       "acceptance_criteria": [

@@ -1,0 +1,56 @@
+= form_with model: kind, url: kind.new_record? ? kinder_index_path : kinder_path(kind), method: kind.new_record? ? :post : :patch, class: "mw-form" do |form|
+  - if kind.errors.any?
+    .mw-flash.mw-flash--error
+      %ul{ style: "margin: 0; padding-left: 1.25rem;" }
+        - kind.errors.full_messages.each do |msg|
+          %li= msg
+
+  .mw-field-row
+    .mw-field
+      = form.label :vorname, "Vorname", class: "mw-field__label"
+      = form.text_field :vorname, required: true, autofocus: true, class: "mw-input"
+    .mw-field
+      = form.label :nachname, "Nachname", class: "mw-field__label"
+      = form.text_field :nachname, required: true, class: "mw-input"
+
+  .mw-field
+    = form.label :rufname, "Rufname / Spitzname (optional)", class: "mw-field__label"
+    = form.text_field :rufname, class: "mw-input"
+
+  .mw-field
+    = form.label :geburtsdatum, "Geburtsdatum", class: "mw-field__label"
+    = form.date_field :geburtsdatum, required: true, class: "mw-input"
+
+  .mw-field
+    = form.label :gruppe_id, "Gruppe", class: "mw-field__label"
+    = form.collection_select :gruppe_id, Gruppe.order(:name), :id, :name, { prompt: "Gruppe wählen …" }, class: "mw-input", required: true
+
+  .mw-field
+    = form.label :kindergartenjahr_id, "Kindergartenjahr", class: "mw-field__label"
+    = form.collection_select :kindergartenjahr_id, Kindergartenjahr.order(start_datum: :desc), :id, :bezeichnung, { prompt: "Jahr wählen …" }, class: "mw-input", required: true
+
+  .mw-field
+    %p.mw-field__label Foto-Einwilligung
+    .mw-radio-group
+      %label.mw-radio-option
+        = form.radio_button :foto_einwilligung, "1", required: true
+        %span Ja – Fotos des Kindes dürfen in der Plattform verwendet werden
+      %label.mw-radio-option
+        = form.radio_button :foto_einwilligung, "0", required: true
+        %span Nein – keine Fotos
+
+  .mw-field
+    = form.label :eltern_id, "Elternteil verknüpfen (optional)", class: "mw-field__label"
+    = form.select :eltern_id,
+        User.where(role: "parent").order(:last_name, :first_name).map { |u| ["#{u.full_name} (#{u.email})", u.id] },
+        { prompt: "Elternteil auswählen …" },
+        class: "mw-input",
+        name: "kind[eltern_id]"
+
+  .mw-field
+    = form.label :profilfoto, "Profilfoto (optional)", class: "mw-field__label"
+    = form.file_field :profilfoto, accept: ImageAttachable::ALLOWED_TYPES.join(","), class: "mw-input"
+
+  .mw-form__actions
+    = form.submit kind.new_record? ? "Kind anlegen" : "Änderungen speichern", class: "mw-btn mw-btn--primary"
+    = link_to "Abbrechen", kinder_index_path, class: "mw-btn mw-btn--ghost"

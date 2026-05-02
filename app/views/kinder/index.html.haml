@@ -1,0 +1,53 @@
+- content_for :title, "Kinder · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Kinder
+    %p.mw-page-header__lede Alle Kinder im aktiven Kindergartenjahr.
+  - if current_user.staff?
+    = link_to "Kind anlegen", new_kinder_path, class: "mw-btn mw-btn--primary mw-btn--sm"
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+- if @kinder.any?
+  .mw-card{ style: "margin-top: 1.5rem;" }
+    %table.mw-table{ style: "width: 100%;" }
+      %thead
+        %tr
+          %th Name
+          %th Geburtsdatum
+          %th Gruppe
+          %th Foto-Einw.
+          - if current_user.staff?
+            %th{ style: "text-align: right;" } Aktionen
+      %tbody
+        - @kinder.each do |kind|
+          %tr
+            %td
+              %strong= kind.vollstaendiger_name
+              - if kind.rufname.present?
+                %span.mw-text-muted{ style: "font-size: var(--fs-12); margin-left: 4px;" }= "(#{kind.rufname})"
+            %td= I18n.l(kind.geburtsdatum, format: :short)
+            %td
+              - if kind.gruppe&.farbe.present?
+                %span{ style: "display:inline-flex;align-items:center;gap:6px;" }
+                  %span{ style: "width:10px;height:10px;border-radius:50%;background:#{kind.gruppe.farbe};flex-shrink:0;" }
+                  = kind.gruppe.name
+              - else
+                = kind.gruppe&.name || "–"
+            %td
+              - if kind.foto_einwilligung
+                %span.mw-badge.mw-badge--success Ja
+              - else
+                %span.mw-badge.mw-badge--neutral Nein
+            - if current_user.staff?
+              %td{ style: "text-align: right;" }
+                .mw-actions
+                  = link_to "Bearbeiten", edit_kinder_path(kind), class: "mw-btn mw-btn--secondary mw-btn--sm"
+                  = button_to "Deaktivieren", deaktivieren_kinder_path(kind), method: :patch, class: "mw-btn mw-btn--secondary mw-btn--sm", data: { turbo_confirm: "#{kind.vollstaendiger_name} wirklich deaktivieren?" }
+- else
+  .mw-empty-state
+    %p.mw-text-muted Noch keine Kinder im aktiven Kindergartenjahr.
+    - if current_user.staff?
+      = link_to "Erstes Kind anlegen", new_kinder_path, class: "mw-btn mw-btn--primary mw-btn--sm"

@@ -1,0 +1,7 @@
+- content_for :title, "Kind anlegen · Mikiwa"
+
+.mw-page-header
+  %h1.mw-page-header__title Kind anlegen
+
+.mw-card{ style: "margin-top: 1.5rem; max-width: 620px;" }
+  = render "form", kind: @kind

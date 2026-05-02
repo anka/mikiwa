@@ -1,6 +1,8 @@
 class User < ApplicationRecord
   has_secure_password
   has_many :sessions, dependent: :destroy
+  has_many :eltern_kinder, class_name: "ElternKind", foreign_key: "user_id", dependent: :destroy
+  has_many :kinder, through: :eltern_kinder, source: :kind
   belongs_to :invited_by, class_name: "User", optional: true
 
   normalizes :email, with: ->(e) { e.strip.downcase }

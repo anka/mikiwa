@@ -1,6 +1,8 @@
 class Kindergartenjahr < ApplicationRecord
   self.table_name = "kindergartenjahre"
 
+  has_many :kinder, class_name: "Kind", dependent: :nullify
+
   validates :bezeichnung, presence: true
   validates :start_datum, presence: true
   validates :end_datum, presence: true

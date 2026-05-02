@@ -12,13 +12,18 @@ module ImageAttachable
 
   included do
     def self.validates_image_attachment(attribute)
-      validates attribute, content_type: {
-        in: ALLOWED_TYPES,
-        message: "muss JPEG, PNG, HEIC oder WebP sein"
-      }, size: {
-        less_than: MAX_SIZE_BYTES,
-        message: "darf maximal 15 MB groß sein"
-      }, if: -> { send(attribute).attached? }
+      validate do |record|
+        attachment = record.send(attribute)
+        next unless attachment.attached?
+
+        unless ALLOWED_TYPES.include?(attachment.content_type)
+          record.errors.add(attribute, "muss JPEG, PNG, HEIC oder WebP sein")
+        end
+
+        if attachment.byte_size > MAX_SIZE_BYTES
+          record.errors.add(attribute, "darf maximal 15 MB groß sein")
+        end
+      end
     end
   end
 end
