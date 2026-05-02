@@ -208,7 +208,7 @@
       "id": "T2",
       "name": "Rollen- und Berechtigungssystem",
       "phase": 1,
-      "status": "open",
+      "status": "done",
       "short_description": "Drei feste Rollen (admin, caretaker, parent) mit zentralisierten Policy-Objekten pro Ressource und serverseitigem Scoping für Eltern.",
       "description": "Jeder Benutzer hat genau eine unveränderliche Rolle: admin, caretaker oder parent. Die Authorisierung erfolgt ausschließlich serverseitig über Policy-Objekte – einer pro Ressourcentyp. Eltern-Abfragen werden immer serverseitig auf die Kinder/Gruppen des eingeloggten Elternteils eingeschränkt (Scoping), niemals clientseitig gefiltert. Jede neue Controller-Action muss eine Policy aufrufen; dies wird durch einen RuboCop-Cop oder einen Test-Helper erzwungen. Eine nicht-authorisierte Action liefert HTTP 403. Rollen können nicht selbst geändert werden – nur Admins können Rollen verwalten.",
       "acceptance_criteria": [
