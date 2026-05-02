@@ -38,6 +38,10 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :mitteilungen, only: %i[index new create destroy]
+  get  "posteingang",              to: "posteingang#index",  as: :posteingang
+  get  "posteingang/:id",          to: "posteingang#show",   as: :posteingang_mitteilung
+
   resources :galleries, only: %i[index show new create edit update destroy] do
     member do
       delete :remove_photo

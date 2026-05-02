@@ -1,0 +1,16 @@
+- content_for :title, "#{@mitteilung.title} · Posteingang · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title= @mitteilung.title
+    %p.mw-page-header__lede
+      Von: #{@mitteilung.sent_by.full_name.presence || @mitteilung.sent_by.email}
+      ·
+      = l(@mitteilung.created_at, format: :long)
+  .mw-page-header__actions
+    = link_to posteingang_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
+      Zurück
+
+.mw-card{ style: "margin-top: 1.5rem; padding: 1.5rem;" }
+  %div.mw-prose
+    = simple_format(@mitteilung.body)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_02_100006) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_02_100007) do
   create_table "abstimmung_optionen", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.string "abstimmung_id", limit: 36, null: false
     t.datetime "created_at", null: false
@@ -214,6 +214,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_100006) do
     t.index ["child_id"], name: "index_medical_notes_on_child_id"
   end
 
+  create_table "mitteilung_groups", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "group_id", limit: 36, null: false
+    t.string "mitteilung_id", limit: 36, null: false
+    t.datetime "updated_at", null: false
+    t.index ["group_id"], name: "index_mitteilung_groups_on_group_id"
+    t.index ["mitteilung_id", "group_id"], name: "index_mitteilung_groups_on_mitteilung_id_and_group_id", unique: true
+    t.index ["mitteilung_id"], name: "index_mitteilung_groups_on_mitteilung_id"
+  end
+
+  create_table "mitteilungen", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.string "sent_by_id", limit: 36, null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sent_by_id"], name: "index_mitteilungen_on_sent_by_id"
+  end
+
   create_table "parent_children", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.string "child_id", limit: 36, null: false
     t.datetime "created_at", null: false
@@ -222,6 +241,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_100006) do
     t.string "user_id", limit: 36, null: false
     t.index ["child_id"], name: "index_parent_children_on_child_id"
     t.index ["user_id", "child_id"], name: "index_parent_children_on_user_id_and_child_id", unique: true
+  end
+
+  create_table "posteingaenge", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "mitteilung_id", limit: 36, null: false
+    t.datetime "read_at"
+    t.datetime "updated_at", null: false
+    t.string "user_id", limit: 36, null: false
+    t.index ["mitteilung_id", "user_id"], name: "index_posteingaenge_on_mitteilung_id_and_user_id", unique: true
+    t.index ["mitteilung_id"], name: "index_posteingaenge_on_mitteilung_id"
+    t.index ["user_id"], name: "index_posteingaenge_on_user_id"
   end
 
   create_table "sessions", id: { type: :string, limit: 36 }, force: :cascade do |t|
@@ -302,6 +332,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_100006) do
   add_foreign_key "galleries", "users", column: "created_by_id"
   add_foreign_key "gallery_groups", "galleries"
   add_foreign_key "gallery_groups", "groups"
+  add_foreign_key "mitteilung_groups", "groups"
+  add_foreign_key "mitteilung_groups", "mitteilungen", column: "mitteilung_id"
+  add_foreign_key "mitteilungen", "users", column: "sent_by_id"
+  add_foreign_key "posteingaenge", "mitteilungen", column: "mitteilung_id"
+  add_foreign_key "posteingaenge", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "stimmen", "abstimmung_optionen"
   add_foreign_key "stimmen", "users"

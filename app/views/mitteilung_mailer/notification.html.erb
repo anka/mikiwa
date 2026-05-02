@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>Neue Mitteilung · Mikiwa</title>
+  <style>
+    body { font-family: Nunito, sans-serif; color: #3a2f28; background: #fdf9f5; margin: 0; padding: 0; }
+    .wrapper { max-width: 600px; margin: 0 auto; padding: 32px 16px; }
+    .card { background: #fff; border: 1px solid #e8dfd4; border-radius: 10px; padding: 24px; }
+    h1 { font-size: 20px; color: #1e170e; margin: 0 0 8px; }
+    p { font-size: 15px; line-height: 1.6; margin: 0 0 16px; }
+    .btn { display: inline-block; background: #c4971e; color: #fff; padding: 10px 20px; border-radius: 999px; text-decoration: none; font-weight: 700; font-size: 14px; }
+    .footer { font-size: 12px; color: #8a7a6a; margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <h1><%= @mitteilung.title %></h1>
+      <p><%= @mitteilung.body %></p>
+      <a href="<%= @url %>" class="btn">Mitteilung öffnen</a>
+    </div>
+    <p class="footer">Diese Nachricht wurde vom Mikiwa-Team versandt. Bitte nicht antworten.</p>
+  </div>
+</body>
+</html>

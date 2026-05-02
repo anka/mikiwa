@@ -1,0 +1,33 @@
+- content_for :title, "Posteingang · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Posteingang
+    - unread = @entries.count { |e| !e.read? }
+    - if unread > 0
+      %span.mw-badge.mw-badge--accent{ style: "margin-left: 0.5rem;" }= "#{unread} ungelesen"
+
+- if @entries.any?
+  .mw-card{ style: "margin-top: 1.5rem;" }
+    %table.mw-table{ style: "width: 100%;" }
+      %thead
+        %tr
+          %th Betreff
+          %th Gruppen
+          %th Datum
+          %th Status
+      %tbody
+        - @entries.each do |entry|
+          %tr{ class: entry.read? ? nil : "mw-table-row--unread" }
+            %td
+              = link_to entry.mitteilung.title, posteingang_mitteilung_path(entry.mitteilung), class: "mw-link"
+            %td= entry.mitteilung.groups.map(&:name).join(", ")
+            %td= l(entry.created_at, format: :short)
+            %td
+              - if entry.read?
+                %span.mw-badge.mw-badge--neutral Gelesen
+              - else
+                %span.mw-badge.mw-badge--accent Neu
+- else
+  .mw-empty-state{ style: "margin-top: 2rem;" }
+    %p.mw-text-muted Ihr Posteingang ist leer.

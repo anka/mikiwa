@@ -1076,7 +1076,7 @@
       "id": "F12",
       "name": "Mitteilungen / digitaler Posteingang",
       "phase": 3,
-      "status": "open",
+      "status": "done",
       "short_description": "Einseitige Kommunikation Betreuer → Eltern mit Rich-Text, E-Mail-Benachrichtigung und persistentem digitalem Posteingang.",
       "description": "Betreuer verfassen Mitteilungen mit Titel, Rich-Text-Inhalt, Empfänger-Auswahl (Gruppe oder explizite Elternliste), optionalem Anhang (PDF). Beim Versenden wird die Mitteilung im digitalen Posteingang der Empfänger gespeichert und zusätzlich per E-Mail mit Tiefenlink in den Posteingang benachrichtigt. Eltern haben einen Posteingang mit gelesen/ungelesen-Status, Filter nach Datum und Gruppe sowie Detailansicht. Keine Antwortfunktion in v1. Betreuer haben einen 'Gesendet'-Bereich und können Mitteilungen archivieren.",
       "acceptance_criteria": [

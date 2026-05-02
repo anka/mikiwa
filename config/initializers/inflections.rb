@@ -20,4 +20,7 @@ ActiveSupport::Inflector.inflections(:en) do |inflect|
   inflect.irregular "abstimmung", "abstimmungen"
   inflect.irregular "abstimmung_option", "abstimmung_optionen"
   inflect.irregular "stimme", "stimmen"
+  inflect.irregular "mitteilung", "mitteilungen"
+  inflect.irregular "mitteilung_group", "mitteilung_groups"
+  inflect.irregular "posteingang", "posteingaenge"
 end
