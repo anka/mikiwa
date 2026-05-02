@@ -979,7 +979,7 @@
       "id": "F10",
       "name": "Abstimmungen",
       "phase": 3,
-      "status": "open",
+      "status": "done",
       "short_description": "Namentliche Einfach- und Mehrfachauswahl-Abstimmungen mit optionalem Stimmschluss, CSV-Export und Stimmen-Änderungsmöglichkeit.",
       "description": "Betreuer legen Abstimmungen an. Eine Abstimmung hat: Frage/Titel, Beschreibung, n Optionen, Typ (Einfachauswahl oder Mehrfachauswahl), optionalen Stimmschluss. Das Ergebnis zeigt namentlich, wer für welche Option gestimmt hat. Eltern können ihre Stimme solange die Abstimmung offen ist ändern. Betreuer können Abstimmungen schließen, archivieren und das Ergebnis als CSV exportieren. Abstimmungen können optional an eine Veranstaltung geknüpft werden.",
       "acceptance_criteria": [

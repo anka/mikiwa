@@ -38,6 +38,14 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :abstimmungen, only: %i[index show new create edit update destroy] do
+    member do
+      post  :vote
+      patch :close
+      get   :export
+    end
+  end
+
   resources :calendar_events
   resources :shopping_lists do
     resources :shopping_items, only: [] do

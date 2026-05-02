@@ -3,6 +3,7 @@ class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
   has_many :parent_children, class_name: "ParentChild", foreign_key: "user_id", dependent: :destroy
   has_many :children, through: :parent_children, source: :child
+  has_many :stimmen, class_name: "Stimme", dependent: :destroy
   belongs_to :invited_by, class_name: "User", optional: true
 
   normalizes :email, with: ->(e) { e.strip.downcase }

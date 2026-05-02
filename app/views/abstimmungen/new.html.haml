@@ -1,0 +1,7 @@
+- content_for :title, "Neue Abstimmung · Mikiwa"
+
+.mw-page-header
+  %h1.mw-page-header__title Neue Abstimmung
+
+= render "form", poll: @poll, groups: @groups,
+    kindergarten_years: @kindergarten_years, events: @events

@@ -16,6 +16,8 @@
 # end
 
 ActiveSupport::Inflector.inflections(:en) do |inflect|
-  inflect.irregular "notfallkontakt", "notfallkontakte"
-  inflect.irregular "medizinischer_hinweis", "medizinische_hinweise"
+  # German compound nouns need explicit plural mappings
+  inflect.irregular "abstimmung", "abstimmungen"
+  inflect.irregular "abstimmung_option", "abstimmung_optionen"
+  inflect.irregular "stimme", "stimmen"
 end

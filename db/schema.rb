@@ -10,7 +10,34 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_02_100004) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_02_100005) do
+  create_table "abstimmung_optionen", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.string "abstimmung_id", limit: 36, null: false
+    t.datetime "created_at", null: false
+    t.string "label", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["abstimmung_id"], name: "index_abstimmung_optionen_on_abstimmung_id"
+  end
+
+  create_table "abstimmungen", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "created_by_id", limit: 36, null: false
+    t.datetime "deadline"
+    t.text "description"
+    t.string "event_id", limit: 36
+    t.string "group_id", limit: 36, null: false
+    t.string "kindergarten_year_id", limit: 36, null: false
+    t.string "poll_type", default: "einfach", null: false
+    t.string "status", default: "offen", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_abstimmungen_on_created_by_id"
+    t.index ["event_id"], name: "index_abstimmungen_on_event_id"
+    t.index ["group_id"], name: "index_abstimmungen_on_group_id"
+    t.index ["kindergarten_year_id"], name: "index_abstimmungen_on_kindergarten_year_id"
+  end
+
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -211,6 +238,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_100004) do
     t.index ["kindergarten_year_id"], name: "index_shopping_lists_on_kindergarten_year_id"
   end
 
+  create_table "stimmen", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.string "abstimmung_option_id", limit: 36, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_id", limit: 36, null: false
+    t.index ["abstimmung_option_id", "user_id"], name: "index_stimmen_on_abstimmung_option_id_and_user_id", unique: true
+    t.index ["abstimmung_option_id"], name: "index_stimmen_on_abstimmung_option_id"
+    t.index ["user_id"], name: "index_stimmen_on_user_id"
+  end
+
   create_table "users", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -231,7 +268,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_100004) do
     t.index ["invited_by_id"], name: "index_users_on_invited_by_id"
   end
 
+  add_foreign_key "abstimmung_optionen", "abstimmungen"
+  add_foreign_key "abstimmungen", "groups"
+  add_foreign_key "abstimmungen", "kindergarten_years"
+  add_foreign_key "abstimmungen", "users", column: "created_by_id"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "sessions", "users"
+  add_foreign_key "stimmen", "abstimmung_optionen"
+  add_foreign_key "stimmen", "users"
 end

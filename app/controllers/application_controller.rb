@@ -37,6 +37,7 @@ class ApplicationController < ActionController::Base
     respond_to do |format|
       format.html { render plain: "Zugriff verweigert", status: :forbidden }
       format.json { render json: { error: "Forbidden" }, status: :forbidden }
+      format.any  { render plain: "Zugriff verweigert", status: :forbidden }
     end
   end
 end
