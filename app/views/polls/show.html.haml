@@ -29,6 +29,10 @@
       = link_to edit_poll_path(@poll), class: "mw-btn mw-btn--secondary mw-btn--sm" do
         = lucide_icon "pencil", size: 14
         Bearbeiten
+    = link_to whatsapp_share_url(@poll.title, poll_url(@poll)),
+        target: "_blank", rel: "noopener", class: "mw-btn mw-btn--ghost mw-btn--sm" do
+      = lucide_icon "share-2", size: 14
+      Teilen
     = link_to polls_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
       Zurück
 

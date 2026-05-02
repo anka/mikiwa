@@ -1256,7 +1256,7 @@
       "id": "F16",
       "name": "WhatsApp-Share-Links",
       "phase": 3,
-      "status": "open",
+      "status": "done",
       "short_description": "Share-Button auf Detailseiten von Veranstaltungen, Listen und Abstimmungen, der einen WhatsApp-Link mit vorgefertigtem Text öffnet.",
       "description": "Auf den Detailseiten von Veranstaltungen, Teilnahmelisten und Abstimmungen gibt es einen 'Teilen'-Knopf. Dieser öffnet einen https://wa.me/?text=...-Link mit vorgefertigtem Text und der URL der Seite. Die geteilte URL ist die normale, authentifizierungspflichtige Detail-URL – Empfänger, die auf den Link klicken, müssen sich wie üblich bei MIKIWA anmelden. Keine WhatsApp-Business-API-Integration. Der Share-Button ist für Betreuer und Eltern sichtbar (Eltern nur für erlaubte Inhalte).",
       "acceptance_criteria": [

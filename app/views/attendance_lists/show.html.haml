@@ -24,6 +24,10 @@
       = link_to edit_attendance_list_path(@list), class: "mw-btn mw-btn--secondary mw-btn--sm" do
         = lucide_icon "pencil", size: 14
         Bearbeiten
+    = link_to whatsapp_share_url(@list.title, attendance_list_url(@list)),
+        target: "_blank", rel: "noopener", class: "mw-btn mw-btn--ghost mw-btn--sm" do
+      = lucide_icon "share-2", size: 14
+      Teilen
     = link_to attendance_lists_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
       Zurück
 

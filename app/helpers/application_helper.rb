@@ -35,6 +35,11 @@ module ApplicationHelper
     )
   end
 
+  def whatsapp_share_url(title, page_url)
+    text = "#{title} – #{page_url}"
+    "https://wa.me/?text=#{CGI.escape(text)}"
+  end
+
   def nav_active?(path_prefix)
     active = request.path == path_prefix || request.path.start_with?("#{path_prefix}/")
     active ? "mw-nav-link--active" : nil

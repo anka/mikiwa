@@ -16,6 +16,10 @@
       = link_to edit_event_path(@event), class: "mw-btn mw-btn--secondary mw-btn--sm" do
         = lucide_icon "pencil", size: 14
         Bearbeiten
+    = link_to whatsapp_share_url(@event.title, event_url(@event)),
+        target: "_blank", rel: "noopener", class: "mw-btn mw-btn--ghost mw-btn--sm" do
+      = lucide_icon "share-2", size: 14
+      Teilen
     = link_to events_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
       Zurück
 
