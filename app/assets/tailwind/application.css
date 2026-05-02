@@ -442,6 +442,12 @@ a:hover { color: var(--fg-link-hover); border-bottom-color: currentColor; }
   border-bottom: none;
 }
 
+.mw-nav-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: var(--space-2) var(--space-1);
+}
+
 /* ----- Mobile Bottom Navigation ----- */
 .mw-mobile-nav {
   display: none;

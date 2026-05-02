@@ -1,0 +1,94 @@
+%nav.mw-sidebar{ "aria-label": "Hauptnavigation" }
+  .mw-sidebar__inner
+    .mw-nav-section
+      - if current_user.parent?
+        = link_to inbox_path, class: "mw-nav-link #{nav_active?('/inbox')}" do
+          = lucide_icon "inbox", size: 20
+          %span Posteingang
+        = link_to events_path, class: "mw-nav-link #{nav_active?('/events')}" do
+          = lucide_icon "calendar-days", size: 20
+          %span Veranstaltungen
+        = link_to attendance_lists_path, class: "mw-nav-link #{nav_active?('/attendance_lists')}" do
+          = lucide_icon "clipboard-list", size: 20
+          %span Teilnahmelisten
+        = link_to polls_path, class: "mw-nav-link #{nav_active?('/polls')}" do
+          = lucide_icon "bar-chart-2", size: 20
+          %span Abstimmungen
+        = link_to calendar_events_path, class: "mw-nav-link #{nav_active?('/calendar_events')}" do
+          = lucide_icon "calendar", size: 20
+          %span Kalender
+        = link_to meal_entries_path, class: "mw-nav-link #{nav_active?('/meal_entries')}" do
+          = lucide_icon "utensils", size: 20
+          %span Speiseplan
+        = link_to galleries_path, class: "mw-nav-link #{nav_active?('/galleries')}" do
+          = lucide_icon "image", size: 20
+          %span Bildergalerien
+        = link_to shopping_lists_path, class: "mw-nav-link #{nav_active?('/shopping_lists')}" do
+          = lucide_icon "shopping-cart", size: 20
+          %span Einkaufslisten
+        = link_to children_path, class: "mw-nav-link #{nav_active?('/children')}" do
+          = lucide_icon "users", size: 20
+          %span Kinder
+        = link_to birthdays_path, class: "mw-nav-link #{nav_active?('/birthdays')}" do
+          = lucide_icon "cake", size: 20
+          %span Geburtstage
+
+      - else
+        -# Menschen & Gruppen
+        = link_to children_path, class: "mw-nav-link #{nav_active?('/children')}" do
+          = lucide_icon "users", size: 20
+          %span Kinder
+        = link_to birthdays_path, class: "mw-nav-link #{nav_active?('/birthdays')}" do
+          = lucide_icon "cake", size: 20
+          %span Geburtstage
+        = link_to groups_path, class: "mw-nav-link #{nav_active?('/groups')}" do
+          = lucide_icon "layout-grid", size: 20
+          %span Gruppen
+        = link_to parents_path, class: "mw-nav-link #{nav_active?('/parents')}" do
+          = lucide_icon "users-round", size: 20
+          %span Eltern-Accounts
+        .mw-nav-divider
+        -# Planung & Events
+        = link_to calendar_events_path, class: "mw-nav-link #{nav_active?('/calendar_events')}" do
+          = lucide_icon "calendar", size: 20
+          %span Kalender
+        = link_to events_path, class: "mw-nav-link #{nav_active?('/events')}" do
+          = lucide_icon "calendar-days", size: 20
+          %span Veranstaltungen
+        = link_to attendance_lists_path, class: "mw-nav-link #{nav_active?('/attendance_lists')}" do
+          = lucide_icon "clipboard-list", size: 20
+          %span Teilnahmelisten
+        = link_to polls_path, class: "mw-nav-link #{nav_active?('/polls')}" do
+          = lucide_icon "bar-chart-2", size: 20
+          %span Abstimmungen
+        = link_to shopping_lists_path, class: "mw-nav-link #{nav_active?('/shopping_lists')}" do
+          = lucide_icon "shopping-cart", size: 20
+          %span Einkaufslisten
+        .mw-nav-divider
+        -# Inhalte & Kommunikation
+        = link_to meal_entries_path, class: "mw-nav-link #{nav_active?('/meal_entries')}" do
+          = lucide_icon "utensils", size: 20
+          %span Speiseplan
+        = link_to galleries_path, class: "mw-nav-link #{nav_active?('/galleries')}" do
+          = lucide_icon "image", size: 20
+          %span Bildergalerien
+        = link_to messages_path, class: "mw-nav-link #{nav_active?('/messages')}" do
+          = lucide_icon "send", size: 20
+          %span Mitteilungen
+        .mw-nav-divider
+        -# Verwaltung
+        = link_to kindergarten_years_path, class: "mw-nav-link #{nav_active?('/kindergarten_years')}" do
+          = lucide_icon "calendar-range", size: 20
+          %span Kindergartenjahre
+        - if current_user.admin?
+          = link_to admin_users_path, class: "mw-nav-link #{nav_active?('/admin')}" do
+            = lucide_icon "shield-check", size: 20
+            %span Administration
+
+    .mw-sidebar__footer
+      = link_to profile_path, class: "mw-nav-link #{nav_active?('/profile')}" do
+        = lucide_icon "user", size: 20
+        %span= truncate(current_user.full_name.presence || current_user.email, length: 24)
+      = button_to session_path, method: :delete, class: "mw-nav-link", form: { style: "display:contents" } do
+        = lucide_icon "log-out", size: 20
+        %span Abmelden
