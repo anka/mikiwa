@@ -38,7 +38,8 @@ module Authentication
     end
 
     def after_authentication_url
-      session.delete(:return_to_after_authenticating) || children_url
+      session.delete(:return_to_after_authenticating) ||
+        (current_user.parent? ? parent_dashboard_url : staff_dashboard_url)
     end
 
     def start_new_session_for(user)

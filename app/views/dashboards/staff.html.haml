@@ -1,0 +1,126 @@
+- content_for :title, "Startseite · Mikiwa"
+
+.mw-dashboard
+  .mw-dashboard__greeting
+    %h1.mw-dashboard__title
+      Guten Morgen,
+      = current_user.first_name.presence || current_user.email
+    %p.mw-dashboard__date= l(Date.today, format: :long)
+
+  .mw-dashboard-section
+    .mw-dashboard-section__header
+      .mw-dashboard-section__icon
+        = lucide_icon "sun", size: 20
+      %h2.mw-dashboard-section__title Heute
+    .mw-dashboard-section__body
+      - if @today_events.any?
+        - @today_events.each do |event|
+          = link_to event_path(event), class: "mw-dashboard-item" do
+            .mw-dashboard-item__icon
+              = lucide_icon "calendar-days", size: 18
+            .mw-dashboard-item__body
+              %p.mw-dashboard-item__title= event.title
+              %p.mw-dashboard-item__meta
+                Veranstaltung
+                - unless event.all_day
+                  · #{event.start_time}
+            = lucide_icon "chevron-right", size: 16, class: "mw-dashboard-item__arrow"
+      - if @today_meals.any?
+        - @today_meals.each do |entry|
+          .mw-dashboard-item.mw-dashboard-item--static
+            .mw-dashboard-item__icon
+              = lucide_icon "utensils", size: 18
+            .mw-dashboard-item__body
+              %p.mw-dashboard-item__title= entry.meal
+              %p.mw-dashboard-item__meta Speiseplan · #{entry.group.name}
+      - if @today_birthdays.any?
+        - @today_birthdays.each do |child|
+          .mw-dashboard-item.mw-dashboard-item--static
+            .mw-dashboard-item__icon
+              = lucide_icon "cake", size: 18
+            .mw-dashboard-item__body
+              %p.mw-dashboard-item__title= child.full_name
+              %p.mw-dashboard-item__meta Geburtstag heute · #{child.group.name}
+      - if @today_events.empty? && @today_meals.empty? && @today_birthdays.empty?
+        .mw-placeholder-note Heute stehen keine Einträge an.
+
+  - open_tasks_count = @events_without_gallery.size + @open_polls.size + @lists_without_entries.size + @children_without_consent.size
+  .mw-dashboard-section.mw-dashboard-section--open-tasks
+    .mw-dashboard-section__header
+      .mw-dashboard-section__icon
+        = lucide_icon "check-square", size: 20
+      %h2.mw-dashboard-section__title Offene Aufgaben
+      - if open_tasks_count > 0
+        %span.mw-badge.mw-badge--warning= open_tasks_count
+    .mw-dashboard-section__body
+      - if @events_without_gallery.any?
+        - @events_without_gallery.each do |event|
+          = link_to new_gallery_path(event_id: event.id), class: "mw-dashboard-item" do
+            .mw-dashboard-item__icon
+              = lucide_icon "image-off", size: 18
+            .mw-dashboard-item__body
+              %p.mw-dashboard-item__title= event.title
+              %p.mw-dashboard-item__meta Vergangene Veranstaltung ohne Galerie · #{l(event.start_date, format: :short)}
+            = lucide_icon "chevron-right", size: 16, class: "mw-dashboard-item__arrow"
+      - if @lists_without_entries.any?
+        - @lists_without_entries.first(3).each do |list|
+          = link_to attendance_list_path(list), class: "mw-dashboard-item" do
+            .mw-dashboard-item__icon
+              = lucide_icon "clipboard-x", size: 18
+            .mw-dashboard-item__body
+              %p.mw-dashboard-item__title= list.title
+              %p.mw-dashboard-item__meta Teilnahmeliste ohne Eintragungen · #{list.group.name}
+            = lucide_icon "chevron-right", size: 16, class: "mw-dashboard-item__arrow"
+      - if @open_polls.any?
+        - @open_polls.first(3).each do |poll|
+          = link_to poll_path(poll), class: "mw-dashboard-item" do
+            .mw-dashboard-item__icon
+              = lucide_icon "bar-chart-2", size: 18
+            .mw-dashboard-item__body
+              %p.mw-dashboard-item__title= poll.title
+              %p.mw-dashboard-item__meta
+                Abstimmung läuft
+                - if poll.deadline
+                  · bis #{l(poll.deadline, format: :short)}
+            = lucide_icon "chevron-right", size: 16, class: "mw-dashboard-item__arrow"
+      - if @children_without_consent.any?
+        = link_to children_path, class: "mw-dashboard-item" do
+          .mw-dashboard-item__icon
+            = lucide_icon "alert-circle", size: 18
+          .mw-dashboard-item__body
+            %p.mw-dashboard-item__title= "#{@children_without_consent.size} Kinder ohne Foto-Einwilligung"
+            %p.mw-dashboard-item__meta Bitte Einwilligung nachtragen
+          = lucide_icon "chevron-right", size: 16, class: "mw-dashboard-item__arrow"
+      - if open_tasks_count == 0
+        .mw-placeholder-note Alle Aufgaben erledigt.
+
+  .mw-dashboard-quicklinks
+    %h2.mw-dashboard-quicklinks__title Schnellaktionen
+    .mw-dashboard-quicklinks__grid
+      = link_to new_message_path, class: "mw-dashboard-quicklink mw-dashboard-quicklink--accent" do
+        = lucide_icon "send", size: 24
+        %span Neue Mitteilung
+      = link_to new_event_path, class: "mw-dashboard-quicklink" do
+        = lucide_icon "calendar-plus", size: 24
+        %span Neue Veranstaltung
+      = link_to new_child_path, class: "mw-dashboard-quicklink" do
+        = lucide_icon "user-plus", size: 24
+        %span Neues Kind
+      = link_to attendance_lists_path, class: "mw-dashboard-quicklink" do
+        = lucide_icon "clipboard-list", size: 24
+        %span Listen
+
+  - if @group_stats.any?
+    .mw-dashboard-section.mw-dashboard-section--stats
+      .mw-dashboard-section__header
+        .mw-dashboard-section__icon
+          = lucide_icon "layout-grid", size: 20
+        %h2.mw-dashboard-section__title Gruppen
+        - if @active_year
+          %span.mw-badge.mw-badge--neutral= @active_year.label
+      .mw-dashboard-section__body
+        .mw-dashboard-stats
+          - @group_stats.each do |group, count|
+            .mw-dashboard-stat
+              %p.mw-dashboard-stat__value= count
+              %p.mw-dashboard-stat__label= group.name

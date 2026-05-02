@@ -1905,3 +1905,245 @@ a:hover { color: var(--fg-link-hover); border-bottom-color: currentColor; }
 .mw-lightbox__prev:hover,
 .mw-lightbox__next:hover,
 .mw-lightbox__close:hover { background: rgba(255,255,255,.25); }
+
+/* ==========================================================================
+   Dashboard (Eltern & Betreuer)
+   ========================================================================== */
+
+.mw-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding-bottom: var(--space-8);
+}
+
+.mw-dashboard__greeting { margin-bottom: var(--space-1); }
+
+.mw-dashboard__title {
+  font-size: var(--fs-24);
+  font-weight: var(--fw-bold);
+  color: var(--fg-1);
+  margin: 0;
+}
+
+.mw-dashboard__date {
+  font-size: var(--fs-14);
+  color: var(--fg-3);
+  margin: 4px 0 0;
+}
+
+/* Section */
+.mw-dashboard-section {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.mw-dashboard-section__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.mw-dashboard-section__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.mw-dashboard-section__title {
+  font-size: var(--fs-15);
+  font-weight: var(--fw-semibold);
+  color: var(--fg-1);
+  margin: 0;
+  flex: 1;
+}
+
+.mw-dashboard-section__body {
+  display: flex;
+  flex-direction: column;
+}
+
+.mw-dashboard-section__more {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+  color: var(--fg-link);
+  border-top: 1px solid var(--border-subtle);
+  text-decoration: none;
+}
+.mw-dashboard-section__more:hover { background: var(--surface-hover); border-bottom: none; }
+
+/* Item */
+.mw-dashboard-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  text-decoration: none;
+  color: var(--fg-1);
+  min-height: 56px;
+  transition: background 120ms var(--ease-soft);
+}
+.mw-dashboard-item:last-child { border-bottom: none; }
+.mw-dashboard-item:not(.mw-dashboard-item--static):hover { background: var(--surface-hover); border-bottom-color: var(--border-subtle); }
+
+.mw-dashboard-item__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-3);
+  flex-shrink: 0;
+}
+
+.mw-dashboard-item__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.mw-dashboard-item__title {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  color: var(--fg-1);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mw-dashboard-item__meta {
+  font-size: var(--fs-12);
+  color: var(--fg-3);
+  margin: 2px 0 0;
+}
+
+.mw-dashboard-item__arrow { color: var(--fg-4); flex-shrink: 0; }
+
+/* Date chip inside item */
+.mw-dashboard-item__date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 40px;
+  flex-shrink: 0;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 4px 0;
+}
+
+.mw-dashboard-item__date-day {
+  font-size: var(--fs-16);
+  font-weight: var(--fw-bold);
+  color: var(--fg-1);
+  line-height: 1.1;
+}
+
+.mw-dashboard-item__date-month {
+  font-size: var(--fs-10);
+  font-weight: var(--fw-semibold);
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Quick links */
+.mw-dashboard-quicklinks { }
+
+.mw-dashboard-quicklinks__title {
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 var(--space-3);
+}
+
+.mw-dashboard-quicklinks__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .mw-dashboard-quicklinks__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.mw-dashboard-quicklink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  color: var(--fg-2);
+  font-size: var(--fs-13);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+  text-align: center;
+  min-height: 80px;
+  transition: background 120ms var(--ease-soft), box-shadow 120ms var(--ease-soft);
+}
+.mw-dashboard-quicklink:hover { background: var(--surface-hover); box-shadow: var(--shadow-md); border-bottom: 1px solid var(--border-subtle); }
+.mw-dashboard-quicklink--accent { color: var(--accent); }
+
+/* Stats grid */
+.mw-dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0;
+}
+
+.mw-dashboard-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-4) var(--space-3);
+  border-right: 1px solid var(--border-subtle);
+  text-align: center;
+}
+.mw-dashboard-stat:last-child { border-right: none; }
+
+.mw-dashboard-stat__value {
+  font-size: var(--fs-28);
+  font-weight: var(--fw-bold);
+  color: var(--fg-1);
+  margin: 0;
+  line-height: 1.1;
+}
+
+.mw-dashboard-stat__label {
+  font-size: var(--fs-12);
+  color: var(--fg-3);
+  margin: 4px 0 0;
+}
+
+@media (max-width: 640px) {
+  .mw-dashboard__title { font-size: var(--fs-20); }
+  .mw-dashboard-stats { grid-template-columns: repeat(2, 1fr); }
+  .mw-dashboard-stat:nth-child(even) { border-right: none; }
+  .mw-dashboard-stat:nth-child(-n+2):not(:last-child) { border-bottom: 1px solid var(--border-subtle); }
+}

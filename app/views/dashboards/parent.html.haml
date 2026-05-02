@@ -1,0 +1,127 @@
+- content_for :title, "Startseite · Mikiwa"
+
+.mw-dashboard
+  .mw-dashboard__greeting
+    %h1.mw-dashboard__title
+      Guten Morgen,
+      = current_user.first_name.presence || "Familie"
+    %p.mw-dashboard__date= l(Date.today, format: :long)
+
+  - if @unread_messages.any?
+    .mw-dashboard-section.mw-dashboard-section--inbox
+      .mw-dashboard-section__header
+        .mw-dashboard-section__icon
+          = lucide_icon "inbox", size: 20
+        %h2.mw-dashboard-section__title Ungelesene Mitteilungen
+        %span.mw-badge.mw-badge--accent= @unread_messages.count
+      .mw-dashboard-section__body
+        - @unread_messages.first(3).each do |entry|
+          = link_to inbox_message_path(entry.message), class: "mw-dashboard-item" do
+            .mw-dashboard-item__icon
+              = lucide_icon "mail", size: 18
+            .mw-dashboard-item__body
+              %p.mw-dashboard-item__title= entry.message.title
+              %p.mw-dashboard-item__meta= entry.message.groups.map(&:name).join(", ")
+            = lucide_icon "chevron-right", size: 16, class: "mw-dashboard-item__arrow"
+        - if @unread_messages.count > 3
+          = link_to inbox_path, class: "mw-dashboard-section__more" do
+            = "Alle #{@unread_messages.count} Mitteilungen ansehen"
+            = lucide_icon "arrow-right", size: 14
+
+  - if @upcoming_events.any?
+    .mw-dashboard-section
+      .mw-dashboard-section__header
+        .mw-dashboard-section__icon
+          = lucide_icon "calendar-days", size: 20
+        %h2.mw-dashboard-section__title Anstehende Veranstaltungen
+      .mw-dashboard-section__body
+        - @upcoming_events.first(4).each do |event|
+          = link_to event_path(event), class: "mw-dashboard-item" do
+            .mw-dashboard-item__date
+              %span.mw-dashboard-item__date-day= event.start_date.strftime("%-d")
+              %span.mw-dashboard-item__date-month= l(event.start_date, format: "%b")
+            .mw-dashboard-item__body
+              %p.mw-dashboard-item__title= event.title
+              %p.mw-dashboard-item__meta
+                = event.groups.map(&:name).join(", ")
+                - unless event.all_day
+                  · #{event.start_time}
+            = lucide_icon "chevron-right", size: 16, class: "mw-dashboard-item__arrow"
+
+  - if @open_lists.any? || @open_polls.any?
+    .mw-dashboard-section.mw-dashboard-section--open-lists
+      .mw-dashboard-section__header
+        .mw-dashboard-section__icon
+          = lucide_icon "clipboard-list", size: 20
+        %h2.mw-dashboard-section__title Offene Listen & Abstimmungen
+      .mw-dashboard-section__body
+        - @open_lists.first(3).each do |list|
+          = link_to attendance_list_path(list), class: "mw-dashboard-item", "data-list-id": list.id do
+            .mw-dashboard-item__icon
+              = lucide_icon "clipboard-list", size: 18
+            .mw-dashboard-item__body
+              %p.mw-dashboard-item__title= list.title
+              %p.mw-dashboard-item__meta Teilnahmeliste · #{list.group.name}
+            = lucide_icon "chevron-right", size: 16, class: "mw-dashboard-item__arrow"
+        - @open_polls.first(3).each do |poll|
+          = link_to poll_path(poll), class: "mw-dashboard-item" do
+            .mw-dashboard-item__icon
+              = lucide_icon "bar-chart-2", size: 18
+            .mw-dashboard-item__body
+              %p.mw-dashboard-item__title= poll.title
+              %p.mw-dashboard-item__meta Abstimmung · #{poll.group.name}
+            = lucide_icon "chevron-right", size: 16, class: "mw-dashboard-item__arrow"
+
+  - if @upcoming_bdays.any?
+    .mw-dashboard-section
+      .mw-dashboard-section__header
+        .mw-dashboard-section__icon
+          = lucide_icon "cake", size: 20
+        %h2.mw-dashboard-section__title Anstehende Geburtstage
+      .mw-dashboard-section__body
+        - @upcoming_bdays.first(4).each do |child|
+          .mw-dashboard-item.mw-dashboard-item--static
+            .mw-dashboard-item__icon
+              = lucide_icon "gift", size: 18
+            .mw-dashboard-item__body
+              %p.mw-dashboard-item__title= child.display_name
+              %p.mw-dashboard-item__meta
+                - today = Date.today
+                - bday = child.date_of_birth.change(year: today.year)
+                - bday = bday.change(year: today.year + 1) if bday < today
+                = l(bday, format: :long)
+                · #{child.group.name}
+        = link_to "Alle Geburtstage", birthdays_path, class: "mw-dashboard-section__more" do
+          = lucide_icon "arrow-right", size: 14
+
+  - if @meal_entries.any?
+    .mw-dashboard-section.mw-dashboard-section--meals
+      .mw-dashboard-section__header
+        .mw-dashboard-section__icon
+          = lucide_icon "utensils", size: 20
+        %h2.mw-dashboard-section__title Speiseplan
+      .mw-dashboard-section__body
+        - @meal_entries.each do |entry|
+          .mw-dashboard-item.mw-dashboard-item--static
+            .mw-dashboard-item__date
+              %span.mw-dashboard-item__date-day= entry.date.strftime("%-d")
+              %span.mw-dashboard-item__date-month= l(entry.date, format: "%b")
+            .mw-dashboard-item__body
+              %p.mw-dashboard-item__title= entry.meal
+              %p.mw-dashboard-item__meta= entry.group.name
+
+  .mw-dashboard-quicklinks
+    %h2.mw-dashboard-quicklinks__title Schnellzugriff
+    .mw-dashboard-quicklinks__grid
+      = link_to calendar_events_path, class: "mw-dashboard-quicklink" do
+        = lucide_icon "calendar", size: 24
+        %span Kalender
+      = link_to galleries_path, class: "mw-dashboard-quicklink" do
+        = lucide_icon "image", size: 24
+        %span Galerien
+      = link_to profile_path, class: "mw-dashboard-quicklink" do
+        = lucide_icon "user", size: 24
+        %span Profil
+      = link_to inbox_path, class: "mw-dashboard-quicklink" do
+        = lucide_icon "inbox", size: 24
+        %span Posteingang

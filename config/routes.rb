@@ -111,5 +111,8 @@ Rails.application.routes.draw do
   get "impressum"   => "admin/pages#impressum",   as: :impressum
   get "datenschutz" => "admin/pages#datenschutz",  as: :datenschutz
 
+  get "dashboard/parent", to: "dashboards#parent", as: :parent_dashboard
+  get "dashboard/staff",  to: "dashboards#staff",  as: :staff_dashboard
+
   root "pages#home"
 end

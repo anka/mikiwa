@@ -1341,7 +1341,7 @@
       "id": "F17",
       "name": "Eltern-Dashboard (Startseite)",
       "phase": 4,
-      "status": "open",
+      "status": "done",
       "short_description": "Personalisierte Eltern-Startseite mit Überblick über ungelesene Mitteilungen, anstehende Veranstaltungen, offene Listen/Abstimmungen, Geburtstage und Speiseplan.",
       "description": "Das Eltern-Dashboard ist die Startseite nach dem Login und gibt in Sekunden einen Überblick über alle relevanten Inhalte. Sektionen: (1) Ungelesene Mitteilungen – nur angezeigt, wenn vorhanden; (2) Anstehende Veranstaltungen der eigenen Kinder (nächste 14 Tage); (3) Offene Listen/Abstimmungen, in denen noch kein Eintrag/keine Stimme abgegeben wurde; (4) Anstehende Geburtstage in den Gruppen der eigenen Kinder; (5) Heutiger und morgiger Speiseplan (falls vorhanden); Quick-Links zu Kalender, Galerien und Profil. Jede Karte zeigt maximal 1 Aktion, hat große Touch-Targets und nutzt Farbcodes aus dem Mikiwa-Designsystem. Alle Inhalte sind ausschließlich auf die eigenen Kinder und Gruppen eingeschränkt.",
       "acceptance_criteria": [
@@ -1393,7 +1393,7 @@
       "id": "F18",
       "name": "Betreuer-Dashboard (Startseite)",
       "phase": 4,
-      "status": "open",
+      "status": "done",
       "short_description": "Operative Betreuer-Startseite mit Tagesübersicht, offenen Aufgaben, Schnellaktionen und Gruppen-Statistiken.",
       "description": "Das Betreuer-Dashboard ist die operative Startseite nach dem Login. Sektionen: (1) Heute – aktuelle Veranstaltungen, fälliger Speiseplan, anstehende Geburtstage in den Gruppen; (2) Offene Aufgaben – Listen mit zu wenigen Eintragungen, Abstimmungen vor Stimmschluss, fehlende Galerien zu vergangenen Veranstaltungen, Kinder ohne Foto-Einwilligungs-Antwort; (3) Schnellaktionen – neue Mitteilung, neue Veranstaltung, neues Kind anlegen; (4) Kleine Statistik – Anzahl Kinder pro Gruppe im aktiven Kindergartenjahr.",
       "acceptance_criteria": [
