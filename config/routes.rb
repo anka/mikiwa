@@ -11,5 +11,9 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   get "offline" => "pages#offline", as: :offline
 
+  namespace :webhooks do
+    post "bounce" => "bounces#create"
+  end
+
   root "pages#home"
 end

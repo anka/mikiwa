@@ -99,7 +99,7 @@
       "id": "T7",
       "name": "Mailer & E-Mail-Pipeline",
       "phase": 1,
-      "status": "open",
+      "status": "done",
       "short_description": "Transaktionale und Massen-E-Mails über einen DSGVO-konformen EU-Provider, parallelisiert über ActiveJob/Solid Queue, mit HTML- und Text-Varianten.",
       "description": "MIKIWA versendet E-Mails für Magic Links, Passwort-Resets, Eltern-Einladungen und Mitteilungs-Benachrichtigungen. Die E-Mail-Infrastruktur muss zuverlässig, datenschutzkonform und ausfallsicher sein. Anforderungen: Anbindung eines EU-ansässigen SMTP/API-Providers (Mailjet); jede Mailer-Klasse liefert HTML- und Plaintext-Variante; Massen-E-Mails werden über ActiveJob / Solid Queue parallelisiert mit Retry-Strategie versandt; Bounce- und Complaint-Webhooks deaktivieren nicht erreichbare Adressen und markieren den Eltern-Account als 'E-Mail ungültig'; im Development-Modus wird Letter Opener verwendet. Mailer-Layouts und -Templates verwenden das mikiwa-design-Branding.",
       "acceptance_criteria": [
