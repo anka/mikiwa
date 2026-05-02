@@ -1,0 +1,41 @@
+- content_for :title, "Benutzerverwaltung · Mikiwa Admin"
+
+.mw-page-header
+  %h1.mw-page-header__title Benutzerverwaltung
+  %p.mw-page-header__lede Betreuer:innen und Admins verwalten, einladen und sperren.
+  = link_to "Betreuer:in einladen", new_admin_user_path, class: "mw-btn mw-btn--primary mw-btn--sm"
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+.mw-card{ style: "margin-top: 1.5rem;" }
+  %table.mw-table{ style: "width: 100%;" }
+    %thead
+      %tr
+        %th Name
+        %th E-Mail
+        %th Rolle
+        %th Status
+        %th{ style: "text-align: right;" } Aktionen
+    %tbody
+      - @users.each do |user|
+        %tr
+          %td
+            %span.mw-text-strong= user.full_name.presence || "–"
+          %td= user.email
+          %td
+            - role_label = user.admin? ? "Admin" : "Betreuer:in"
+            %span.mw-badge{ class: user.admin? ? "mw-badge--accent" : "mw-badge--neutral" }= role_label
+          %td
+            - if user.locked?
+              %span.mw-badge.mw-badge--danger Gesperrt
+            - else
+              %span.mw-badge.mw-badge--success Aktiv
+          %td{ style: "text-align: right;" }
+            .mw-actions
+              - unless user == current_user
+                - if user.locked?
+                  = button_to "Reaktivieren", unlock_admin_user_path(user), method: :patch, class: "mw-btn mw-btn--secondary mw-btn--sm"
+                - else
+                  = button_to "Sperren", lock_admin_user_path(user), method: :patch, class: "mw-btn mw-btn--secondary mw-btn--sm", data: { turbo_confirm: "#{user.full_name.presence || user.email} wirklich sperren?" }
+                = button_to "Löschen", admin_user_path(user), method: :delete, class: "mw-btn mw-btn--danger mw-btn--sm", data: { turbo_confirm: "Account von #{user.full_name.presence || user.email} endgültig löschen?" }

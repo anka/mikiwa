@@ -18,7 +18,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   test "create with invalid credentials" do
     post session_path, params: { email: @user.email, password: "wrong" }
 
-    assert_redirected_to new_session_path
+    assert_response :unprocessable_entity
     assert_nil cookies[:session_id]
   end
 

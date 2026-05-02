@@ -1,0 +1,36 @@
+- content_for :title, "Betreuer:in einladen · Mikiwa Admin"
+
+.mw-page-header
+  %h1.mw-page-header__title Betreuer:in einladen
+  %p.mw-page-header__lede Eine Einladungs-E-Mail mit Anmeldelink wird automatisch versandt.
+
+.mw-card{ style: "margin-top: 1.5rem; max-width: 480px;" }
+  = form_with model: [:admin, @user], class: "mw-form" do |form|
+    - if @user.errors.any?
+      .mw-field__error
+        %ul
+          - @user.errors.full_messages.each do |msg|
+            %li= msg
+
+    .mw-field
+      = form.label :email, "E-Mail-Adresse", class: "mw-field__label"
+      = form.email_field :email, required: true, autofocus: true, class: "mw-input", placeholder: "name@example.at"
+
+    .mw-field
+      = form.label :first_name, "Vorname", class: "mw-field__label"
+      = form.text_field :first_name, class: "mw-input"
+
+    .mw-field
+      = form.label :last_name, "Nachname", class: "mw-field__label"
+      = form.text_field :last_name, class: "mw-input"
+
+    .mw-field
+      = form.label :role, "Rolle", class: "mw-field__label"
+      = form.select :role,
+          [["Betreuer:in", "caretaker"], ["Admin", "admin"]],
+          {},
+          class: "mw-input"
+
+    .mw-form__actions
+      = form.submit "Einladung senden", class: "mw-btn mw-btn--primary"
+      = link_to "Abbrechen", admin_users_path, class: "mw-btn mw-btn--ghost"

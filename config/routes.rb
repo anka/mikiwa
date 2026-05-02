@@ -20,5 +20,19 @@ Rails.application.routes.draw do
     post "bounce" => "bounces#create"
   end
 
+  namespace :admin do
+    resources :users, only: %i[index new create destroy] do
+      member do
+        patch :lock
+        patch :unlock
+      end
+    end
+    get "impressum"  => "pages#impressum",  as: :impressum
+    get "datenschutz" => "pages#datenschutz", as: :datenschutz
+  end
+
+  get "impressum"   => "admin/pages#impressum",   as: :impressum
+  get "datenschutz" => "admin/pages#datenschutz",  as: :datenschutz
+
   root "pages#home"
 end

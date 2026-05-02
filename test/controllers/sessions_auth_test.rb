@@ -12,16 +12,14 @@ class SessionsAuthTest < ActionDispatch::IntegrationTest
     assert_not_nil session_cookie
   end
 
-  test "falsches Passwort zeigt generische Fehlermeldung ohne E-Mail-Hinweis" do
+  test "falsches Passwort gibt 422 zurück" do
     post session_path, params: { email: @user.email, password: "falschespasswort1234" }
-    follow_redirect!
-    assert_match "E-Mail-Adresse oder Passwort ist nicht korrekt.", response.body
+    assert_response :unprocessable_entity
   end
 
-  test "unbekannte E-Mail zeigt dieselbe generische Fehlermeldung" do
+  test "unbekannte E-Mail gibt 422 zurück" do
     post session_path, params: { email: "unknown@test.com", password: "irgendeinpasswort1234" }
-    follow_redirect!
-    assert_match "E-Mail-Adresse oder Passwort ist nicht korrekt.", response.body
+    assert_response :unprocessable_entity
   end
 
   test "Logout invalidiert die Session serverseitig" do

@@ -4,10 +4,59 @@
   "description": "Vollständige Feature-Spezifikation für die Entwicklungsabteilung. Jedes Feature beschreibt Was umzusetzen ist, Akzeptanzkriterien und Testszenarien. Die Reihenfolge gibt die empfohlene Implementierungsreihenfolge vor.",
   "generated": "2026-05-02",
   "implementation_phases": [
-    { "phase": 1, "name": "Technische Grundlage", "feature_ids": ["T3", "T5", "T7", "T1", "T2", "T4", "T9", "T6", "T11", "T10"] },
-    { "phase": 2, "name": "Kern-Datenverwaltung", "feature_ids": ["F1", "F2", "F3", "F4", "F5"] },
-    { "phase": 3, "name": "Inhaltliche Features", "feature_ids": ["F6", "F7", "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15", "F16", "T8"] },
-    { "phase": 4, "name": "Dashboards", "feature_ids": ["F17", "F18"] }
+    {
+      "phase": 1,
+      "name": "Technische Grundlage",
+      "feature_ids": [
+        "T3",
+        "T5",
+        "T7",
+        "T1",
+        "T2",
+        "T4",
+        "T9",
+        "T6",
+        "T11",
+        "T10"
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Kern-Datenverwaltung",
+      "feature_ids": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5"
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "Inhaltliche Features",
+      "feature_ids": [
+        "F6",
+        "F7",
+        "F8",
+        "F9",
+        "F10",
+        "F11",
+        "F12",
+        "F13",
+        "F14",
+        "F15",
+        "F16",
+        "T8"
+      ]
+    },
+    {
+      "phase": 4,
+      "name": "Dashboards",
+      "feature_ids": [
+        "F17",
+        "F18"
+      ]
+    }
   ],
   "features": [
     {
@@ -202,7 +251,9 @@
         "Passwörter sind ausschließlich als bcrypt-Hash in der DB gespeichert",
         "Session-Cookies haben alle drei Sicherheitsflags gesetzt"
       ],
-      "dependencies": ["T7"]
+      "dependencies": [
+        "T7"
+      ]
     },
     {
       "id": "T2",
@@ -251,7 +302,9 @@
         "Alle Autorisierungs-Tests grün",
         "Brakeman meldet keine unbewachten Actions"
       ],
-      "dependencies": ["T1"]
+      "dependencies": [
+        "T1"
+      ]
     },
     {
       "id": "T4",
@@ -294,7 +347,9 @@
         "Alle sensiblen Felder sind mit korrektem ActiveRecord::Encryption-Setup verschlüsselt",
         "Log-Review zeigt keine PII in Beispiel-Requests"
       ],
-      "dependencies": ["T3"]
+      "dependencies": [
+        "T3"
+      ]
     },
     {
       "id": "T9",
@@ -338,7 +393,9 @@
         "Backup-Restore erfolgreich getestet (Daten aus Backup wiederherstellbar)",
         "Kein Credential-Leak im Repository (Bundler-Audit grün)"
       ],
-      "dependencies": ["T4"]
+      "dependencies": [
+        "T4"
+      ]
     },
     {
       "id": "T6",
@@ -387,7 +444,9 @@
         "EXIF-Audit: keine GPS-Daten in verarbeiteten Bildern",
         "Performance: Variantengenerierung dauert < 3 Sekunden für ein 10-MP-Foto"
       ],
-      "dependencies": ["T4"]
+      "dependencies": [
+        "T4"
+      ]
     },
     {
       "id": "T11",
@@ -436,7 +495,14 @@
         "Manueller Security-Review bestätigt alle Anti-Leak-Maßnahmen",
         "SecurityHeaders.com oder ähnliches Tool bewertet Response-Headers mit Grade A"
       ],
-      "dependencies": ["T1", "T2", "T4", "T5", "T6", "T7"]
+      "dependencies": [
+        "T1",
+        "T2",
+        "T4",
+        "T5",
+        "T6",
+        "T7"
+      ]
     },
     {
       "id": "T10",
@@ -473,13 +539,23 @@
         "Coverage ≥ 85 % dauerhaft eingehalten",
         "Alle kritischen System-Tests sind vorhanden und grün"
       ],
-      "dependencies": ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T9", "T11"]
+      "dependencies": [
+        "T1",
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6",
+        "T7",
+        "T9",
+        "T11"
+      ]
     },
     {
       "id": "F1",
       "name": "Benutzer- und Systemverwaltung (Admin-Bereich)",
       "phase": 2,
-      "status": "open",
+      "status": "done",
       "short_description": "Admin-Bereich zur Verwaltung aller Betreuer- und Admin-Accounts sowie globaler System-Konfiguration und statischer Seiten.",
       "description": "Admins haben eine eigene Verwaltungsoberfläche für folgende Aufgaben: Übersicht aller Betreuer und Admins mit Status (aktiv/gesperrt); Anlegen neuer Betreuer/Admin-Accounts per E-Mail-Einladung (Empfänger setzt eigenes Passwort über Einladungslink); Sperren, Reaktivieren und Löschen von Betreuer- und Admin-Accounts; Sperren und Löschen von Eltern-Accounts; globale System-Konfiguration (Mailer-Einstellungen, Default-Texte wie Einladungstemplate); Pflege der statischen Seiten Impressum und Datenschutzerklärung (via Markdown-Dateien oder UI-Editor). Admins können sich nicht selbst sperren oder löschen.",
       "acceptance_criteria": [
@@ -525,7 +601,10 @@
         "Kein Betreuer oder Elternteil kann auf den Admin-Bereich zugreifen",
         "Einladungs-E-Mail kommt an und Einladungslink funktioniert"
       ],
-      "dependencies": ["T1", "T2"]
+      "dependencies": [
+        "T1",
+        "T2"
+      ]
     },
     {
       "id": "F2",
@@ -569,7 +648,10 @@
         "Eltern sehen ausschließlich ihre eigenen Jahre",
         "Gruppen-Farbcodes werden korrekt in der UI genutzt"
       ],
-      "dependencies": ["T2", "T3"]
+      "dependencies": [
+        "T2",
+        "T3"
+      ]
     },
     {
       "id": "F3",
@@ -613,7 +695,12 @@
         "Geschwister-Elternteil sieht Inhalte aller Gruppen seiner Kinder",
         "Deaktivierte Kinder sind aus aktiven Listen ausgeblendet"
       ],
-      "dependencies": ["T2", "T3", "F2", "F4"]
+      "dependencies": [
+        "T2",
+        "T3",
+        "F2",
+        "F4"
+      ]
     },
     {
       "id": "F4",
@@ -657,7 +744,12 @@
         "Eltern können sich nach Klick auf Einladungslink einloggen",
         "Kein Elternteil kann seine Kinder-Zuordnung selbst manipulieren"
       ],
-      "dependencies": ["T1", "T2", "T7", "F3"]
+      "dependencies": [
+        "T1",
+        "T2",
+        "T7",
+        "F3"
+      ]
     },
     {
       "id": "F5",
@@ -702,7 +794,11 @@
         "Kein Cross-Account-Datenleck für Notfallkontakte (Integrations-Test)",
         "Jahresübergang kopiert alle relevanten Daten korrekt"
       ],
-      "dependencies": ["T2", "T4", "F3"]
+      "dependencies": [
+        "T2",
+        "T4",
+        "F3"
+      ]
     },
     {
       "id": "F6",
@@ -740,7 +836,11 @@
         "Gruppen-Filterung funktioniert ohne Datenleck",
         "iCal-Link ist im Profil sichtbar"
       ],
-      "dependencies": ["T2", "T3", "F2"]
+      "dependencies": [
+        "T2",
+        "T3",
+        "F2"
+      ]
     },
     {
       "id": "F7",
@@ -777,7 +877,9 @@
         "Navigation zwischen Veranstaltung und verknüpften Modulen ist intuitiv",
         "Absagen/Löschen funktioniert ohne Datenverlust bei verknüpften Modulen"
       ],
-      "dependencies": ["F6"]
+      "dependencies": [
+        "F6"
+      ]
     },
     {
       "id": "F8",
@@ -821,7 +923,11 @@
         "Anmeldeschluss wird serverseitig erzwungen (kein clientseitiger Bypass)",
         "CSV-Export ist vollständig und korrekt formatiert"
       ],
-      "dependencies": ["T2", "F2", "F3"]
+      "dependencies": [
+        "T2",
+        "F2",
+        "F3"
+      ]
     },
     {
       "id": "F9",
@@ -863,7 +969,11 @@
         "Erledigt-Status wird in Echtzeit (via Turbo Streams) für alle Beteiligten aktualisiert",
         "Mobile-Ansicht ist auf 375px-Viewport gut bedienbar (Touch-Targets Audit)"
       ],
-      "dependencies": ["T2", "T5", "F2"]
+      "dependencies": [
+        "T2",
+        "T5",
+        "F2"
+      ]
     },
     {
       "id": "F10",
@@ -908,7 +1018,10 @@
         "Stimmschluss wird serverseitig erzwungen",
         "CSV-Export korrekt und vollständig"
       ],
-      "dependencies": ["T2", "F2"]
+      "dependencies": [
+        "T2",
+        "F2"
+      ]
     },
     {
       "id": "F11",
@@ -953,7 +1066,11 @@
         "Einwilligungs-Hinweis erscheint korrekt bei betroffenen Gruppen",
         "Signierte Download-URLs laufen korrekt ab"
       ],
-      "dependencies": ["T2", "T6", "F2"]
+      "dependencies": [
+        "T2",
+        "T6",
+        "F2"
+      ]
     },
     {
       "id": "F12",
@@ -998,7 +1115,10 @@
         "Kein Elternteil empfängt Mitteilungen, die nicht für seine Gruppen bestimmt sind",
         "Massen-E-Mail an 60 Empfänger läuft vollständig durch"
       ],
-      "dependencies": ["T2", "T7"]
+      "dependencies": [
+        "T2",
+        "T7"
+      ]
     },
     {
       "id": "F13",
@@ -1049,7 +1169,10 @@
         "Eltern sehen nur Speisepläne ihrer Gruppen im Lesemodus",
         "Kein Speiseplan wird beim Jahresübergang kopiert"
       ],
-      "dependencies": ["T2", "F2"]
+      "dependencies": [
+        "T2",
+        "F2"
+      ]
     },
     {
       "id": "F14",
@@ -1083,7 +1206,10 @@
         "Jahresansicht zeigt korrekte chronologische Reihenfolge",
         "Hervorhebungs-Logik (14 Tage) funktioniert korrekt auch um Jahreswechsel"
       ],
-      "dependencies": ["T2", "F3"]
+      "dependencies": [
+        "T2",
+        "F3"
+      ]
     },
     {
       "id": "F15",
@@ -1120,7 +1246,11 @@
         "Hinweis beim Upload korrekt für alle betroffenen Kinder",
         "Jahresübergang kopiert Flag ohne Verlust"
       ],
-      "dependencies": ["T2", "F3", "F11"]
+      "dependencies": [
+        "T2",
+        "F3",
+        "F11"
+      ]
     },
     {
       "id": "F16",
@@ -1155,7 +1285,9 @@
         "Keine sensiblen Daten in der geteilten URL enthalten",
         "Geteilte URLs erfordern Authentifizierung"
       ],
-      "dependencies": ["T11"]
+      "dependencies": [
+        "T11"
+      ]
     },
     {
       "id": "T8",
@@ -1198,7 +1330,12 @@
         "Token-Rotation funktioniert; alter Token ungültig nach Rotation",
         "Kein Datenleck: jeder Feed enthält ausschließlich benutzerrelevante Ereignisse"
       ],
-      "dependencies": ["T1", "T11", "F6", "F7"]
+      "dependencies": [
+        "T1",
+        "T11",
+        "F6",
+        "F7"
+      ]
     },
     {
       "id": "F17",
@@ -1243,7 +1380,14 @@
         "Alle Sektionen zeigen korrekte, rollengerechte Daten",
         "Kein Datenleck zwischen Elternteilen verschiedener Gruppen"
       ],
-      "dependencies": ["F6", "F8", "F10", "F12", "F13", "F14"]
+      "dependencies": [
+        "F6",
+        "F8",
+        "F10",
+        "F12",
+        "F13",
+        "F14"
+      ]
     },
     {
       "id": "F18",
@@ -1285,7 +1429,17 @@
         "Schnellaktionen navigieren korrekt",
         "Statistiken zeigen stets den aktuellen Stand des aktiven Kindergartenjahres"
       ],
-      "dependencies": ["F6", "F7", "F8", "F10", "F11", "F12", "F13", "F14", "F15"]
+      "dependencies": [
+        "F6",
+        "F7",
+        "F8",
+        "F10",
+        "F11",
+        "F12",
+        "F13",
+        "F14",
+        "F15"
+      ]
     }
   ]
 }
