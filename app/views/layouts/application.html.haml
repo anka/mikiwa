@@ -35,6 +35,9 @@
                 = link_to children_path, class: "mw-nav-link #{nav_active?('/children')}" do
                   = lucide_icon "users", size: 20
                   %span Kinder
+                = link_to birthdays_path, class: "mw-nav-link #{nav_active?('/birthdays')}" do
+                  = lucide_icon "cake", size: 20
+                  %span Geburtstage
                 = link_to calendar_events_path, class: "mw-nav-link #{nav_active?('/calendar_events')}" do
                   = lucide_icon "calendar", size: 20
                   %span Kalender

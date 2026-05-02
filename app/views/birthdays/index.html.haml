@@ -1,0 +1,37 @@
+- content_for :title, "Geburtstagsübersicht · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Geburtstagsübersicht
+
+- if @children.any?
+  .mw-card{ style: "margin-top: 1.5rem;" }
+    %table.mw-table{ style: "width: 100%;" }
+      %thead
+        %tr
+          %th Name
+          %th Gruppe
+          %th Geburtstag
+          %th Alter
+          %th Nächster Geburtstag
+      %tbody
+        - today = Date.current
+        - @children.each do |child|
+          - upcoming = next_birthday(child.date_of_birth, today)
+          - days_until = (upcoming - today).to_i
+          - highlight = days_until <= 14
+          %tr{ class: highlight ? "mw-table-row--highlight" : nil }
+            %td= child.full_name
+            %td= child.group.name
+            %td= l(child.date_of_birth, format: :long)
+            %td= today.year - child.date_of_birth.year
+            %td
+              - if days_until == 0
+                %span.mw-badge.mw-badge--success Heute!
+              - elsif days_until <= 14
+                %span.mw-badge.mw-badge--warning= "in #{days_until} Tag#{days_until == 1 ? '' : 'en'}"
+              - else
+                = l(upcoming, format: :short)
+- else
+  .mw-empty-state{ style: "margin-top: 2rem;" }
+    %p.mw-text-muted Keine aktiven Kinder gefunden.

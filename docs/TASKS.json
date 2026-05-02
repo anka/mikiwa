@@ -1178,7 +1178,7 @@
       "id": "F14",
       "name": "Geburtstagsübersicht",
       "phase": 3,
-      "status": "open",
+      "status": "done",
       "short_description": "Übersicht aller Kinder-Geburtstage pro Gruppe, sortierbar, mit Hervorhebung anstehender Geburtstage (nächste 14 Tage).",
       "description": "Alle authentifizierten Benutzer können eine Geburtstagsübersicht der Gruppen einsehen, zu denen sie Zugang haben. Die Liste zeigt alle Kinder einer Gruppe mit ihrem Geburtstag, sortierbar nach Datum (Jahresansicht, Geburtstage des aktuellen Kalenderjahres in chronologischer Reihenfolge) oder nach Alter. Kinder mit Geburtstag in den nächsten 14 Tagen werden hervorgehoben.",
       "acceptance_criteria": [
