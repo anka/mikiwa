@@ -67,6 +67,8 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+  # Code coverage reporting
+  gem "simplecov", require: false
 end
 
 # Use Haml for HTML templates

@@ -442,7 +442,7 @@
       "id": "T10",
       "name": "Test-Foundation",
       "phase": 1,
-      "status": "open",
+      "status": "done",
       "short_description": "Minitest Unit-Tests, Capybara System-Tests für kritische Flows, SimpleCov ≥ 85 % Coverage, CI mit RuboCop und Brakeman.",
       "description": "Alle wesentlichen Features werden mit automatisierten Tests abgesichert. Unit-Tests (Minitest) für Models, Policies, Mailer und Services. System-Tests (Capybara + Selenium/Headless Chrome) für kritische End-to-End-Flows: Login (Passwort und Magic Link), Kind anlegen und Eltern einladen, Veranstaltung anlegen + Liste füllen + Galerie hochladen, Eltern-Posteingang + Liste eintragen + Galerie ansehen. SimpleCov misst Line Coverage, Ziel ≥ 85 % auf Application Code. CI-Pipeline (GitHub Actions oder selbst-gehosteter Runner) führt bei jedem Push Tests + RuboCop + Brakeman aus. Bundler-Audit prüft bekannte Vulnerabilities in Dependencies.",
       "acceptance_criteria": [
