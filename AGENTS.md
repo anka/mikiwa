@@ -58,7 +58,7 @@ Standard Rails layout. Key entry points:
 8. Business logic goes in dedicated service objects
 9. Background jobs use Solid Queue (Rails 8's default job backend) and should be small and idempotent
 10. Use conventional commit messages with a brief title and a detailed body. The body can contain asciiart for architectual patterns or introduced design patterns. The body should describe the main changes in a summary easy to read and comprehend.
-
+11. Die Sprache in der Entwicklung für alle Code-Artefakte (User), Tabellen (users), Assets (users_controller.js), etc. ist ENGLISCH.
 
 ## STRICT Development/Architecting/Coding Guidelines
 
