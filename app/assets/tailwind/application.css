@@ -1302,3 +1302,96 @@ a:hover { color: var(--fg-link-hover); border-bottom-color: currentColor; }
 .mw-prose p { margin: 0 0 1em; }
 .mw-prose ul { padding-left: 1.5em; }
 .mw-prose li { margin-bottom: 0.25em; }
+
+/* Field row (two-column layout) */
+.mw-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 600px) {
+  .mw-field-row { grid-template-columns: 1fr; }
+}
+
+/* Radio group */
+.mw-radio-group { display: flex; flex-direction: column; gap: 8px; }
+.mw-radio-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: var(--fs-14);
+  color: var(--fg-1);
+  cursor: pointer;
+  padding: 8px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: background 120ms var(--ease-soft);
+}
+.mw-radio-option:hover { background: var(--surface-hover); }
+.mw-radio-option input[type="radio"] { margin-top: 2px; accent-color: var(--accent); }
+
+/* Empty state */
+.mw-empty-state {
+  text-align: center;
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Detail sections (Kind-Profil, Notfallkontakte, etc.) */
+.mw-detail-section {
+  margin-top: 1.5rem;
+}
+.mw-detail-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.mw-detail-section__title {
+  font-size: var(--fs-15);
+  font-weight: var(--fw-semibold);
+  color: var(--fg-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Notfallkontakt list item */
+.mw-nk-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.mw-nk-item:last-child { border-bottom: none; }
+.mw-nk-item__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--sun-800);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-14);
+}
+.mw-nk-item__body { flex: 1; min-width: 0; }
+.mw-nk-item__name { font-weight: var(--fw-semibold); color: var(--fg-1); }
+.mw-nk-item__meta { font-size: var(--fs-13); color: var(--fg-3); margin-top: 2px; }
+
+/* Medizinischer Hinweis list item */
+.mw-mh-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.mw-mh-item:last-child { border-bottom: none; }
+.mw-mh-item__body { flex: 1; min-width: 0; }
+.mw-mh-item__inhalt { font-size: var(--fs-14); color: var(--fg-1); line-height: 1.5; }

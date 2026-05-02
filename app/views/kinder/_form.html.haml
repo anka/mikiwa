@@ -47,6 +47,15 @@
         class: "mw-input",
         name: "kind[eltern_id]"
 
+  .mw-field-row
+    .mw-field
+      = form.label :krankenkasse, "Krankenkasse (optional)", class: "mw-field__label"
+      = form.text_field :krankenkasse, class: "mw-input", placeholder: "z.B. ÖGK, BVA …"
+    .mw-field
+      = form.label :versicherungsnummer, "Versicherungsnummer (optional)", class: "mw-field__label"
+      = form.text_field :versicherungsnummer, class: "mw-input"
+      %p.mw-field__hint Wird verschlüsselt gespeichert.
+
   .mw-field
     = form.label :profilfoto, "Profilfoto (optional)", class: "mw-field__label"
     = form.file_field :profilfoto, accept: ImageAttachable::ALLOWED_TYPES.join(","), class: "mw-input"

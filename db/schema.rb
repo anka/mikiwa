@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_02_093625) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_02_095500) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -64,9 +64,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_093625) do
     t.date "geburtsdatum", null: false
     t.string "gruppe_id", limit: 36, null: false
     t.string "kindergartenjahr_id", limit: 36, null: false
+    t.string "krankenkasse"
     t.string "nachname", null: false
     t.string "rufname"
     t.datetime "updated_at", null: false
+    t.string "versicherungsnummer"
     t.string "vorname", null: false
     t.index ["gruppe_id"], name: "index_kinder_on_gruppe_id"
     t.index ["kindergartenjahr_id"], name: "index_kinder_on_kindergartenjahr_id"
@@ -79,6 +81,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_093625) do
     t.date "end_datum", null: false
     t.date "start_datum", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "medizinische_hinweise", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "hinweis_typ", null: false
+    t.text "inhalt", null: false
+    t.string "kind_id", limit: 36, null: false
+    t.datetime "updated_at", null: false
+    t.index ["kind_id"], name: "index_medizinische_hinweise_on_kind_id"
+  end
+
+  create_table "notfallkontakte", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.string "beziehung", null: false
+    t.datetime "created_at", null: false
+    t.string "kind_id", limit: 36, null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.string "telefon", null: false
+    t.datetime "updated_at", null: false
+    t.index ["kind_id", "position"], name: "index_notfallkontakte_on_kind_id_and_position"
+    t.index ["kind_id"], name: "index_notfallkontakte_on_kind_id"
   end
 
   create_table "sessions", id: { type: :string, limit: 36 }, force: :cascade do |t|

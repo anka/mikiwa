@@ -7,7 +7,11 @@ class Kind < ApplicationRecord
   belongs_to :kindergartenjahr
   has_many :eltern_kinder, class_name: "ElternKind", foreign_key: "kind_id", dependent: :destroy
   has_many :eltern, through: :eltern_kinder, source: :user
+  has_many :notfallkontakte, class_name: "Notfallkontakt", dependent: :destroy
+  has_many :medizinische_hinweise, class_name: "MedizinischerHinweis", dependent: :destroy
   has_one_attached :profilfoto
+
+  encrypts :versicherungsnummer
 
   validates_image_attachment :profilfoto
 
@@ -46,6 +50,16 @@ class Kind < ApplicationRecord
 
     eltern_kinder.find_each do |ek|
       ElternKind.create!(user_id: ek.user_id, kind_id: neues_kind.id, bemerkung: ek.bemerkung)
+    end
+
+    notfallkontakte.find_each do |nk|
+      neues_kind.notfallkontakte.create!(
+        name: nk.name, beziehung: nk.beziehung, telefon: nk.telefon, position: nk.position
+      )
+    end
+
+    medizinische_hinweise.find_each do |mh|
+      neues_kind.medizinische_hinweise.create!(hinweis_typ: mh.hinweis_typ, inhalt: mh.inhalt)
     end
 
     neues_kind

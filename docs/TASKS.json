@@ -755,7 +755,7 @@
       "id": "F5",
       "name": "Notfallkontakte & medizinische Hinweise",
       "phase": 2,
-      "status": "open",
+      "status": "done",
       "short_description": "Pro Kind hinterlegte Notfallkontakte, medizinische Hinweise und Versicherungsdaten; verschlüsselt at-rest; pflegbar von Eltern und Betreuern.",
       "description": "Pro Kind können mehrere Notfallkontakte (Name, Beziehung zum Kind, Telefon, Reihenfolge) sowie medizinische Hinweise (Allergien, Medikamente, Besonderheiten als Freitext-Einträge) und optionale Versicherungsdaten (Krankenkasse, Versicherungsnummer) hinterlegt werden. Eltern pflegen die Daten ihrer eigenen Kinder; Betreuer können alle Kinder einsehen und bearbeiten. Eltern haben keinen Zugriff auf Daten fremder Kinder. Alle medizinischen Felder und die Versicherungsnummer werden at-rest verschlüsselt gespeichert (ActiveRecord::Encryption). Beim Jahresübergang werden Notfallkontakte und medizinische Hinweise automatisch ins neue Jahr kopiert.",
       "acceptance_criteria": [

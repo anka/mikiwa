@@ -1,0 +1,30 @@
+= form_with model: [@kind, notfallkontakt],
+    url: notfallkontakt.new_record? ? kinder_notfallkontakte_path(@kind) : kinder_notfallkontakt_path(@kind, notfallkontakt),
+    method: notfallkontakt.new_record? ? :post : :patch,
+    class: "mw-form" do |form|
+  - if notfallkontakt.errors.any?
+    .mw-flash.mw-flash--error
+      %ul{ style: "margin: 0; padding-left: 1.25rem;" }
+        - notfallkontakt.errors.full_messages.each do |msg|
+          %li= msg
+
+  .mw-field-row
+    .mw-field
+      = form.label :name, "Name", class: "mw-field__label"
+      = form.text_field :name, required: true, autofocus: true, class: "mw-input"
+    .mw-field
+      = form.label :beziehung, "Beziehung zum Kind", class: "mw-field__label"
+      = form.text_field :beziehung, required: true, placeholder: "z.B. Mutter, Vater, Großmutter …", class: "mw-input"
+
+  .mw-field-row
+    .mw-field
+      = form.label :telefon, "Telefonnummer", class: "mw-field__label"
+      = form.telephone_field :telefon, required: true, class: "mw-input"
+    .mw-field
+      = form.label :position, "Reihenfolge", class: "mw-field__label"
+      = form.number_field :position, required: true, min: 1, class: "mw-input"
+      %p.mw-field__hint 1 = zuerst anrufen
+
+  .mw-form__actions
+    = form.submit notfallkontakt.new_record? ? "Kontakt hinzufügen" : "Änderungen speichern", class: "mw-btn mw-btn--primary"
+    = link_to "Abbrechen", kinder_path(@kind), class: "mw-btn mw-btn--ghost"

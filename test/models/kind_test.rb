@@ -101,6 +101,31 @@ class KindTest < ActiveSupport::TestCase
     assert_includes neues_kind.eltern, @parent
   end
 
+  test "uebertragen_in kopiert Notfallkontakte ins neue Jahr" do
+    @kind.save!
+    Notfallkontakt.create!(kind: @kind, name: "Oma", beziehung: "Großmutter", telefon: "+43 650 111", position: 1)
+    Notfallkontakt.create!(kind: @kind, name: "Papa", beziehung: "Vater", telefon: "+43 650 222", position: 2)
+    neues_kgj = Kindergartenjahr.create!(
+      bezeichnung: "KGJ 2026/27", start_datum: Date.new(2026, 9, 1),
+      end_datum: Date.new(2027, 7, 31), aktiv: false
+    )
+    neues_kind = @kind.uebertragen_in(neues_kgj)
+    assert_equal 2, neues_kind.notfallkontakte.count
+    assert_equal "Oma", neues_kind.notfallkontakte.first.name
+  end
+
+  test "uebertragen_in kopiert medizinische Hinweise ins neue Jahr" do
+    @kind.save!
+    MedizinischerHinweis.create!(kind: @kind, hinweis_typ: "allergie", inhalt: "Erdnussallergie")
+    neues_kgj = Kindergartenjahr.create!(
+      bezeichnung: "KGJ 2026/27", start_datum: Date.new(2026, 9, 1),
+      end_datum: Date.new(2027, 7, 31), aktiv: false
+    )
+    neues_kind = @kind.uebertragen_in(neues_kgj)
+    assert_equal 1, neues_kind.medizinische_hinweise.count
+    assert_equal "Erdnussallergie", neues_kind.medizinische_hinweise.first.inhalt
+  end
+
   test "uebertragen_in ist idempotent" do
     @kind.save!
     neues_kgj = Kindergartenjahr.create!(

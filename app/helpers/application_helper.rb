@@ -35,6 +35,26 @@ module ApplicationHelper
     )
   end
 
+  HINWEIS_TYP_LABELS = {
+    "allergie"    => "Allergie",
+    "medikament"  => "Medikament",
+    "besonderheit" => "Besonderheit"
+  }.freeze
+
+  HINWEIS_TYP_BADGE_TONES = {
+    "allergie"    => "danger",
+    "medikament"  => "warning",
+    "besonderheit" => "info"
+  }.freeze
+
+  def hinweis_typ_label(typ)
+    HINWEIS_TYP_LABELS.fetch(typ, typ.humanize)
+  end
+
+  def badge_tone_for(typ)
+    HINWEIS_TYP_BADGE_TONES.fetch(typ, "neutral")
+  end
+
   # Path-data for the small Lucide subset we use today. Add icons here on
   # demand — keep the list lean and copy paths verbatim from lucide.dev so
   # they stay 1:1 with the upstream set.

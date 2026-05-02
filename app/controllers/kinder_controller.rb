@@ -1,9 +1,13 @@
 class KinderController < ApplicationController
-  before_action :set_kind, only: %i[edit update deaktivieren]
+  before_action :set_kind, only: %i[show edit update deaktivieren]
   before_action :require_staff_for_mutations!, only: %i[new create edit update deaktivieren]
 
   def index
     @kinder = scoped_kinder.active.includes(:gruppe, :eltern).order(:nachname, :vorname)
+  end
+
+  def show
+    authorize_kind_access!(@kind)
   end
 
   def new
@@ -44,7 +48,8 @@ class KinderController < ApplicationController
   def kind_params
     params.require(:kind).permit(
       :vorname, :nachname, :rufname, :geburtsdatum,
-      :gruppe_id, :kindergartenjahr_id, :foto_einwilligung, :profilfoto
+      :gruppe_id, :kindergartenjahr_id, :foto_einwilligung, :profilfoto,
+      :krankenkasse, :versicherungsnummer
     )
   end
 
@@ -56,6 +61,12 @@ class KinderController < ApplicationController
   def scoped_kinder
     return Kind.all if current_user&.staff?
     current_user.kinder
+  end
+
+  def authorize_kind_access!(kind)
+    return if current_user&.staff?
+    return if current_user.kinder.exists?(kind.id)
+    render plain: "Zugriff verweigert", status: :forbidden
   end
 
   def aktives_jahr

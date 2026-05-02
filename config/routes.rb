@@ -16,10 +16,12 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   get "offline" => "pages#offline", as: :offline
 
-  resources :kinder, only: %i[index new create edit update] do
+  resources :kinder, only: %i[index new create edit update show] do
     member do
       patch :deaktivieren
     end
+    resources :notfallkontakte, only: %i[new create edit update destroy]
+    resources :medizinische_hinweise, only: %i[new create edit update destroy]
   end
 
   resources :parents, only: %i[index new create] do

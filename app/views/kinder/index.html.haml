@@ -25,7 +25,8 @@
         - @kinder.each do |kind|
           %tr
             %td
-              %strong= kind.vollstaendiger_name
+              = link_to kinder_path(kind), style: "text-decoration: none; color: inherit;" do
+                %strong= kind.vollstaendiger_name
               - if kind.rufname.present?
                 %span.mw-text-muted{ style: "font-size: var(--fs-12); margin-left: 4px;" }= "(#{kind.rufname})"
             %td= I18n.l(kind.geburtsdatum, format: :short)
