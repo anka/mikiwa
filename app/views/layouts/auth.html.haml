@@ -4,9 +4,6 @@
     %meta{ "http-equiv": "Content-Type", content: "text/html; charset=UTF-8" }/
     %title= content_for(:title) || "Mikiwa"
     %meta{ name: "viewport", content: "width=device-width,initial-scale=1" }/
-    %meta{ name: "apple-mobile-web-app-capable", content: "yes" }/
-    %meta{ name: "application-name", content: "Mikiwa" }/
-    %meta{ name: "mobile-web-app-capable", content: "yes" }/
     = csrf_meta_tags
     = csp_meta_tag
     = yield :head
@@ -16,13 +13,14 @@
     = stylesheet_link_tag "tailwind", "data-turbo-track": "reload"
     = javascript_importmap_tags
   %body
-    .mw-app-shell
-      %header.mw-app-topbar
-        = link_to "/", class: "mw-app-brand", "aria-label": "Mikiwa" do
-          = image_tag "mikiwa/logo-mikiwa.svg", class: "mw-app-brand__mark", alt: ""
-          %span.mw-app-brand__wordmark mikiwa
-        .mw-app-topbar__spacer
-        - unless authenticated?
-          = link_to "Anmelden", new_session_path, class: "mw-btn mw-btn--primary mw-btn--sm"
-      %main.mw-app-main
+    .mw-auth-shell
+      .mw-auth-card
+        .mw-auth-brand
+          = image_tag "mikiwa/logo-mikiwa.svg", class: "mw-auth-brand__mark", alt: ""
+          %span.mw-auth-brand__wordmark mikiwa
+          %span.mw-auth-brand__tagline Mit Kindern wachsen
+        - if flash[:alert]
+          .mw-flash.mw-flash--alert= flash[:alert]
+        - if flash[:notice]
+          .mw-flash.mw-flash--notice= flash[:notice]
         = yield

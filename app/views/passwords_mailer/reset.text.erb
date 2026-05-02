@@ -1,4 +1,12 @@
-You can reset your password on
+Passwort zurücksetzen
+---------------------
+
+Sie haben angefordert, Ihr Passwort für Mikiwa zurückzusetzen.
+Öffnen Sie folgenden Link, um ein neues Passwort zu vergeben:
+
 <%= edit_password_url(@user.password_reset_token) %>
 
-This link will expire in <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %>.
+Der Link ist <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %> gültig.
+
+Wenn Sie diese E-Mail nicht angefordert haben, können Sie sie ignorieren —
+Ihr Passwort bleibt unverändert.

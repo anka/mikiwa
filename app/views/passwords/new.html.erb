@@ -1,8 +1,23 @@
-<h1>Forgot your password?</h1>
+<% content_for :title, "Passwort zurücksetzen · Mikiwa" %>
 
-<%= tag.div(flash[:alert], style: "color:red") if flash[:alert] %>
+<h1 class="mw-auth-card__title">Passwort zurücksetzen</h1>
+<p class="mw-auth-card__lede">Geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Link, mit dem Sie ein neues Passwort vergeben können.</p>
 
-<%= form_with url: passwords_path do |form| %>
-  <%= form.email_field :email, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email] %><br>
-  <%= form.submit "Email reset instructions" %>
+<%= form_with url: passwords_path, class: "mw-auth-form" do |form| %>
+  <div class="mw-field">
+    <%= form.label :email, "E-Mail-Adresse", class: "mw-field__label" %>
+    <%= form.email_field :email,
+          required: true,
+          autofocus: true,
+          autocomplete: "username",
+          placeholder: "name@example.at",
+          value: params[:email],
+          class: "mw-input" %>
+  </div>
+
+  <%= form.submit "Anweisungen senden", class: "mw-btn mw-btn--primary mw-btn--block mw-btn--lg" %>
 <% end %>
+
+<p class="mw-auth-footer">
+  <%= link_to "Zurück zur Anmeldung", new_session_path %>
+</p>

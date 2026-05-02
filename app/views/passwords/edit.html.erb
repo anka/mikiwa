@@ -1,9 +1,32 @@
-<h1>Update your password</h1>
+<% content_for :title, "Neues Passwort vergeben · Mikiwa" %>
 
-<%= tag.div(flash[:alert], style: "color:red") if flash[:alert] %>
+<h1 class="mw-auth-card__title">Neues Passwort vergeben</h1>
+<p class="mw-auth-card__lede">Bitte wählen Sie ein neues Passwort. Verwenden Sie mindestens acht Zeichen.</p>
 
-<%= form_with url: password_path(params[:token]), method: :put do |form| %>
-  <%= form.password_field :password, required: true, autocomplete: "new-password", placeholder: "Enter new password", maxlength: 72 %><br>
-  <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", placeholder: "Repeat new password", maxlength: 72 %><br>
-  <%= form.submit "Save" %>
+<%= form_with url: password_path(params[:token]), method: :put, class: "mw-auth-form" do |form| %>
+  <div class="mw-field">
+    <%= form.label :password, "Neues Passwort", class: "mw-field__label" %>
+    <%= form.password_field :password,
+          required: true,
+          autocomplete: "new-password",
+          placeholder: "Mindestens 8 Zeichen",
+          maxlength: 72,
+          class: "mw-input" %>
+  </div>
+
+  <div class="mw-field">
+    <%= form.label :password_confirmation, "Passwort bestätigen", class: "mw-field__label" %>
+    <%= form.password_field :password_confirmation,
+          required: true,
+          autocomplete: "new-password",
+          placeholder: "Passwort wiederholen",
+          maxlength: 72,
+          class: "mw-input" %>
+  </div>
+
+  <%= form.submit "Passwort speichern", class: "mw-btn mw-btn--primary mw-btn--block mw-btn--lg" %>
 <% end %>
+
+<p class="mw-auth-footer">
+  <%= link_to "Zurück zur Anmeldung", new_session_path %>
+</p>

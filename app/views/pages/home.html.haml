@@ -1,0 +1,169 @@
+- content_for :title, "Mikiwa · Verwaltungsplattform für Kindergärten"
+
+%section.mw-hero
+  -# Decorative sunflower marks — purely background
+  = image_tag "mikiwa/logo-mikiwa.svg", class: "mw-hero__decoration mw-hero__decoration--tl", "aria-hidden": "true", alt: ""
+  = image_tag "mikiwa/logo-mikiwa.svg", class: "mw-hero__decoration mw-hero__decoration--br", "aria-hidden": "true", alt: ""
+  .mw-hero__inner
+    %span.mw-hero__badge
+      %span.mw-hero__badge-dot
+      Beta · Verwaltungsplattform für Kindergärten
+    %h1.mw-hero__title Verwaltung, die im Hintergrund bleibt.
+    %p.mw-hero__lede
+      Mikiwa ist die ruhige, gut gestaltete Plattform für Kindergärten und Kindergruppen — Anwesenheit, Kalender, Eltern-Kommunikation und Team-Koordination an einem Ort. Damit Sie sich wieder auf das Wesentliche konzentrieren können: die Kinder.
+    .mw-hero__actions
+      = link_to "Anmelden", new_session_path, class: "mw-btn mw-btn--primary mw-btn--lg"
+      = link_to "Funktionen ansehen", "#funktionen", class: "mw-btn mw-btn--secondary mw-btn--lg"
+    .mw-hero__meta
+      %span Made in Österreich
+      %span.mw-hero__meta-dot
+      %span DSGVO-konform
+      %span.mw-hero__meta-dot
+      %span Deutschsprachig (de-AT)
+
+%section.mw-section{ id: "funktionen" }
+  .mw-section__header
+    %span.mw-section__eyebrow Funktionen
+    %h2.mw-section__title Alles, was eine moderne Kinderbetreuung organisiert
+    %p.mw-section__lede
+      Vier Module, die zusammen den Alltag tragen — ohne Excel-Tabellen, ohne private Messenger, ohne Papierberge.
+  .mw-pillars
+    %article.mw-pillar
+      %span.mw-pillar__mark.mw-pillar__mark--sun= lucide_icon "check-circle-2", size: 24
+      %h3.mw-pillar__title Anwesenheit
+      %p.mw-pillar__body
+        Tägliche Anwesenheit in Sekunden eintragen. Übersicht für das ganze Team, exportierbar für Förderstellen.
+    %article.mw-pillar
+      %span.mw-pillar__mark.mw-pillar__mark--leaf= lucide_icon "calendar-days", size: 24
+      %h3.mw-pillar__title Kalender
+      %p.mw-pillar__body
+        Termine, Schließtage, Ausflüge, Feste — eine Quelle für alle. Eltern sehen, was sie brauchen, sobald es geplant ist.
+    %article.mw-pillar
+      %span.mw-pillar__mark.mw-pillar__mark--sky= lucide_icon "message-circle", size: 24
+      %h3.mw-pillar__title Mitteilungen
+      %p.mw-pillar__body
+        Direkte Kommunikation mit Eltern. Lesebestätigungen, Anhänge und Übersetzungen — ohne private Messenger.
+    %article.mw-pillar
+      %span.mw-pillar__mark.mw-pillar__mark--coral= lucide_icon "users-round", size: 24
+      %h3.mw-pillar__title Team
+      %p.mw-pillar__body
+        Dienstplan, Vertretung, interne Notizen. Was die Gruppe weiß, weiß auch die Springkraft am Montag früh.
+
+%section.mw-section.mw-section--canvas
+  .mw-section__header
+    %span.mw-section__eyebrow Für wen
+    %h2.mw-section__title Zwei Rollen, ein Werkzeug
+    %p.mw-section__lede
+      Betreuer:innen und Eltern arbeiten in derselben Anwendung — mit unterschiedlichen Sichten auf das, was relevant ist.
+  .mw-audiences
+    %article.mw-audience
+      %span.mw-audience__eyebrow.mw-audience__eyebrow--leaf Betreuer:innen &amp; Verwaltung
+      %h3.mw-audience__title Den Tag im Blick. Die Gruppe im Griff.
+      %ul.mw-audience__list
+        %li
+          = lucide_icon "check", size: 16, class: "mw-audience__check"
+          %span Anwesenheitsliste mit einem Klick führen
+        %li
+          = lucide_icon "check", size: 16, class: "mw-audience__check"
+          %span Kalender, Schließtage und Ausflüge zentral planen
+        %li
+          = lucide_icon "check", size: 16, class: "mw-audience__check"
+          %span Mitteilungen an einzelne Familien oder ganze Gruppen
+        %li
+          = lucide_icon "check", size: 16, class: "mw-audience__check"
+          %span Dienstpläne und interne Notizen für das Team
+        %li
+          = lucide_icon "check", size: 16, class: "mw-audience__check"
+          %span Förderstellen-Auswertungen automatisch generieren
+    %article.mw-audience
+      %span.mw-audience__eyebrow.mw-audience__eyebrow--sky Eltern &amp; Familien
+      %h3.mw-audience__title Verbunden bleiben. Ohne Aufwand.
+      %ul.mw-audience__list
+        %li
+          = lucide_icon "check", size: 16, class: "mw-audience__check"
+          %span Termine, Feste und Schließtage immer aktuell
+        %li
+          = lucide_icon "check", size: 16, class: "mw-audience__check"
+          %span Direkte Mitteilungen von der Gruppe — ohne Messenger
+        %li
+          = lucide_icon "check", size: 16, class: "mw-audience__check"
+          %span Mein Kind: Übersicht, Geburtstage, Notfallkontakte
+        %li
+          = lucide_icon "check", size: 16, class: "mw-audience__check"
+          %span Anmeldungen zu Ausflügen und Veranstaltungen
+        %li
+          = lucide_icon "check", size: 16, class: "mw-audience__check"
+          %span Geburtstage und kleine Momente werden geteilt
+
+%section.mw-section
+  .mw-section__header
+    %span.mw-placeholder-note Vorschau · Inhalte folgen
+    %h2.mw-section__title So fühlt sich die Verwaltung an
+    %p.mw-section__lede
+      Klar, ruhig, deutschsprachig. Hier ein erster Blick auf die Übersicht — finale Produktansichten kommen in den nächsten Wochen.
+  .mw-mockup-card
+    .mw-mockup-card__bar
+      %i
+      %i
+      %i
+      %span.mw-mockup-card__bar-title mikiwa · Übersicht
+    .mw-mockup-card__body
+      .mw-mockup-grid
+        .mw-mockup-tile
+          %span.mw-mockup-tile__label Anwesenheit heute
+          %span.mw-mockup-tile__value 14 / 18
+          .mw-mockup-bar
+            %span{ style: "width: 78%" }
+          %span.mw-mockup-tile__hint 4 Kinder noch offen · 09:12
+        .mw-mockup-tile
+          %span.mw-mockup-tile__label Nächste Termine
+          %span.mw-mockup-tile__value 3
+          %span.mw-mockup-tile__hint Diese Woche · Sommerfest, Waldtag, Elternabend
+        .mw-mockup-tile
+          %span.mw-mockup-tile__label Ungelesene Mitteilungen
+          %span.mw-mockup-tile__value 2
+          %span.mw-mockup-tile__hint Familie Huber · Familie Bauer
+        .mw-mockup-tile
+          %span.mw-mockup-tile__label Team heute
+          %span.mw-mockup-tile__value 4 anwesend
+          %span.mw-mockup-tile__hint Sabine, Klaus, Tine, Markus
+  %p.mw-mockup-caption Beispielinhalt — keine echten Daten
+
+%section.mw-section.mw-section--canvas
+  .mw-section__header
+    %span.mw-section__eyebrow Häufige Fragen
+    %h2.mw-section__title Was Sie noch wissen sollten
+    %p.mw-section__lede
+      Detaillierte Antworten und ein vollständiges FAQ folgen — hier die wichtigsten Punkte vorab.
+  .mw-faq
+    %div.mw-faq-item
+      %h3.mw-faq-item__q Wo werden die Daten gespeichert?
+      %p.mw-faq-item__a
+        Auf Servern in der Europäischen Union. Mikiwa ist DSGVO-konform aufgebaut — ein Auftragsverarbeitungsvertrag (AVV) ist Bestandteil jeder Einrichtung.
+        %em (Platzhaltertext — finale Datenschutz-Erklärung folgt.)
+    %div.mw-faq-item
+      %h3.mw-faq-item__q Wie viele Kinder und Mitarbeiter:innen sind möglich?
+      %p.mw-faq-item__a
+        Mikiwa ist auf kleine bis mittelgroße Einrichtungen ausgelegt — Kindergruppen, Kindergärten, Krabbelstuben.
+        %em (Konkrete Limits folgen, sobald die Beta abgeschlossen ist.)
+    %div.mw-faq-item
+      %h3.mw-faq-item__q Was kostet Mikiwa?
+      %p.mw-faq-item__a
+        Während der Beta-Phase ist die Plattform für Pilot-Einrichtungen kostenlos.
+        %em (Tarife folgen — wir entwickeln gemeinsam mit den ersten Gruppen.)
+
+%section.mw-section
+  .mw-cta-panel
+    %h2.mw-cta-panel__title Bereit für eine ruhige Verwaltung?
+    %p.mw-cta-panel__lede
+      Wir suchen aktuell Pilot-Einrichtungen für die Beta-Phase. Melden Sie sich an oder schreiben Sie uns — wir richten Ihren Zugang persönlich ein.
+    .mw-cta-panel__actions
+      = link_to "Anmelden", new_session_path, class: "mw-btn mw-btn--primary mw-btn--lg"
+      = link_to "Pilotprogramm anfragen", "mailto:hallo@mikiwa.app", class: "mw-btn mw-btn--secondary mw-btn--lg"
+
+%footer.mw-footer
+  .mw-footer__inner
+    %span.mw-footer__brand
+      = image_tag "mikiwa/logo-mikiwa.svg", class: "mw-footer__brand-mark", alt: ""
+      %span.mw-footer__brand-name mikiwa
+    %span © #{Date.current.year} Mikiwa · Verwaltungsplattform für Kindergärten

@@ -1,11 +1,33 @@
-<%= tag.div(flash[:alert], style: "color:red") if flash[:alert] %>
-<%= tag.div(flash[:notice], style: "color:green") if flash[:notice] %>
+<% content_for :title, "Anmelden · Mikiwa" %>
 
-<%= form_with url: session_path do |form| %>
-  <%= form.email_field :email, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email] %><br>
-  <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: "Enter your password", maxlength: 72 %><br>
-  <%= form.submit "Sign in" %>
+<h1 class="mw-auth-card__title">Anmelden</h1>
+<p class="mw-auth-card__lede">Willkommen zurück. Bitte melden Sie sich mit Ihrer E-Mail-Adresse und Ihrem Passwort an.</p>
+
+<%= form_with url: session_path, class: "mw-auth-form" do |form| %>
+  <div class="mw-field">
+    <%= form.label :email, "E-Mail-Adresse", class: "mw-field__label" %>
+    <%= form.email_field :email,
+          required: true,
+          autofocus: true,
+          autocomplete: "username",
+          placeholder: "name@example.at",
+          value: params[:email],
+          class: "mw-input" %>
+  </div>
+
+  <div class="mw-field">
+    <%= form.label :password, "Passwort", class: "mw-field__label" %>
+    <%= form.password_field :password,
+          required: true,
+          autocomplete: "current-password",
+          placeholder: "Ihr Passwort",
+          maxlength: 72,
+          class: "mw-input" %>
+  </div>
+
+  <%= form.submit "Anmelden", class: "mw-btn mw-btn--primary mw-btn--block mw-btn--lg" %>
 <% end %>
-<br>
 
-<%= link_to "Forgot password?", new_password_path %>
+<p class="mw-auth-footer">
+  <%= link_to "Passwort vergessen?", new_password_path %>
+</p>
