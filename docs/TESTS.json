@@ -2021,7 +2021,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer kann Kind anlegen, bearbeiten und deaktivieren.",
       "preconditions": [
         "Betreuer eingeloggt"
