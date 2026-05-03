@@ -525,7 +525,7 @@
       "type": "integration",
       "role": "caretaker",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Uploads über 15 MB und unerlaubte Formate werden abgewiesen.",
       "preconditions": [],
       "scenarios": [
