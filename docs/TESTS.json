@@ -1584,7 +1584,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer plant Woche; Eltern sehen Leseansicht ohne Bearbeitungsoption.",
       "preconditions": [
         "Betreuer eingeloggt",
