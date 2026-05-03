@@ -690,7 +690,7 @@
       "type": "integration",
       "role": "all",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Web App Manifest enthält alle Pflichtfelder; Service Worker ist registriert.",
       "preconditions": [],
       "scenarios": [
