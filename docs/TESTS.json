@@ -1655,7 +1655,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Elternteil setzt Foto-Einwilligung; Zeitstempel wird gesetzt.",
       "preconditions": [
         "Elternteil eingeloggt",
