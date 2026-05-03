@@ -558,7 +558,7 @@
       "type": "integration",
       "role": "all",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Korrekte Security-Header bei jeder Response.",
       "preconditions": [],
       "scenarios": [
