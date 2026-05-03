@@ -446,7 +446,7 @@
       "type": "unit",
       "role": "all",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "E-Mail und Passwort sind in filter_parameters eingetragen.",
       "preconditions": [],
       "scenarios": [
