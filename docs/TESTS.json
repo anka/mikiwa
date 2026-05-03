@@ -1450,7 +1450,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer legt Galerie an und lädt Bilder hoch; Einwilligungs-Hinweis erscheint.",
       "preconditions": [
         "Betreuer eingeloggt",
