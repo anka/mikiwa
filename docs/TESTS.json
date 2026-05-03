@@ -1549,7 +1549,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Elternteil sieht ungelesene Mitteilungen; Öffnen markiert als gelesen; fremde Mitteilungen nicht sichtbar.",
       "preconditions": [
         "Ungelesene Mitteilung im Posteingang"
