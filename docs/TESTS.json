@@ -2048,7 +2048,7 @@
       "type": "system",
       "role": "all",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Beide Kalenderansichten zeigen korrekte Ereignisse.",
       "preconditions": [
         "Ereignis im aktuellen Monat vorhanden"
