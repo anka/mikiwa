@@ -2083,7 +2083,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Elternteil wählt in Pro-Datum-Modus für mehrere Termine.",
       "preconditions": [
         "Liste im Pro-Datum-Modus mit 3 Datums-Optionen"
