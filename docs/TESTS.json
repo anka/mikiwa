@@ -2191,7 +2191,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer sieht Gesendet-Bereich und kann archivieren.",
       "preconditions": [
         "Betreuer hat Mitteilung gesendet"
