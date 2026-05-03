@@ -1486,7 +1486,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Eltern sehen nur Galerien eigener Gruppen; Download via signierter URL.",
       "preconditions": [
         "Galerie für Gruppe Löwen vorhanden; Elternteil nur in Bären"
