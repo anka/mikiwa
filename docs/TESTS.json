@@ -17,7 +17,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer loggt sich mit gültiger E-Mail und Passwort ein und landet auf dem Dashboard.",
       "preconditions": ["Aktiver Betreuer-Account mit Passwort existiert"],
       "scenarios": [
