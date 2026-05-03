@@ -3,7 +3,11 @@
   "project": "MIKIWA",
   "description": "Vollständige Test-Spezifikation parallel zu TASKS.json. Deckt alle Rollen (admin, caretaker, parent) ab. Typen: system (Capybara/Selenium), unit (Minitest Model/Service), integration (Request/Controller).",
   "generated": "2026-05-02",
-  "roles": ["admin", "caretaker", "parent"],
+  "roles": [
+    "admin",
+    "caretaker",
+    "parent"
+  ],
   "test_types": {
     "system": "test/system/ — End-to-End via Capybara+Selenium, prüft echte Browser-Flows",
     "unit": "test/models/ | test/mailers/ | test/jobs/ — isolierte Logik-Tests",
@@ -19,7 +23,9 @@
       "priority": "p0",
       "status": "done",
       "description": "Betreuer loggt sich mit gültiger E-Mail und Passwort ein und landet auf dem Dashboard.",
-      "preconditions": ["Aktiver Betreuer-Account mit Passwort existiert"],
+      "preconditions": [
+        "Aktiver Betreuer-Account mit Passwort existiert"
+      ],
       "scenarios": [
         {
           "id": "TS-001-S01",
@@ -38,7 +44,11 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Session-Cookie korrekt gesetzt", "Redirect auf richtiges Dashboard", "Kein Passwort in Logs"],
+      "success_criteria": [
+        "Session-Cookie korrekt gesetzt",
+        "Redirect auf richtiges Dashboard",
+        "Kein Passwort in Logs"
+      ],
       "minitest_path": "test/system/authentication/caretaker_login_test.rb"
     },
     {
@@ -50,7 +60,9 @@
       "priority": "p0",
       "status": "done",
       "description": "Falsches Passwort und unbekannte E-Mail zeigen dieselbe generische Fehlermeldung.",
-      "preconditions": ["Betreuer-Account existiert"],
+      "preconditions": [
+        "Betreuer-Account existiert"
+      ],
       "scenarios": [
         {
           "id": "TS-002-S01",
@@ -69,7 +81,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Beide Fehlerpfade liefern identischen Response-Body"],
+      "success_criteria": [
+        "Beide Fehlerpfade liefern identischen Response-Body"
+      ],
       "minitest_path": "test/controllers/sessions_controller_test.rb"
     },
     {
@@ -81,7 +95,10 @@
       "priority": "p0",
       "status": "done",
       "description": "Elternteil fordert Magic Link an, klickt ihn und erhält eine Session.",
-      "preconditions": ["Aktiver Eltern-Account existiert", "ActionMailer auf :test gesetzt"],
+      "preconditions": [
+        "Aktiver Eltern-Account existiert",
+        "ActionMailer auf :test gesetzt"
+      ],
       "scenarios": [
         {
           "id": "TS-003-S01",
@@ -100,7 +117,10 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Token in DB nach Klick als used markiert", "Session-Cookie korrekt gesetzt"],
+      "success_criteria": [
+        "Token in DB nach Klick als used markiert",
+        "Session-Cookie korrekt gesetzt"
+      ],
       "minitest_path": "test/system/authentication/magic_link_test.rb"
     },
     {
@@ -131,7 +151,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Token.valid? gibt false zurück nach Verwendung und nach Ablauf"],
+      "success_criteria": [
+        "Token.valid? gibt false zurück nach Verwendung und nach Ablauf"
+      ],
       "minitest_path": "test/models/magic_link_token_test.rb"
     },
     {
@@ -143,7 +165,9 @@
       "priority": "p0",
       "status": "done",
       "description": "Session läuft nach 7 Tagen ab; Logout invalidiert Session serverseitig.",
-      "preconditions": ["Eingeloggter Benutzer"],
+      "preconditions": [
+        "Eingeloggter Benutzer"
+      ],
       "scenarios": [
         {
           "id": "TS-005-S01",
@@ -162,7 +186,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Session-Record hat expires_at; abgelaufene Sessions werden abgewiesen"],
+      "success_criteria": [
+        "Session-Record hat expires_at; abgelaufene Sessions werden abgewiesen"
+      ],
       "minitest_path": "test/controllers/sessions_controller_test.rb"
     },
     {
@@ -174,7 +200,9 @@
       "priority": "p0",
       "status": "done",
       "description": "Mehr als 5 fehlgeschlagene Login-Versuche in 10 Minuten von einer IP werden blockiert.",
-      "preconditions": ["Rack::Attack konfiguriert"],
+      "preconditions": [
+        "Rack::Attack konfiguriert"
+      ],
       "scenarios": [
         {
           "id": "TS-006-S01",
@@ -185,7 +213,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Rack::Attack-Regel schlägt bei Überschreitung an"],
+      "success_criteria": [
+        "Rack::Attack-Regel schlägt bei Überschreitung an"
+      ],
       "minitest_path": "test/integration/rate_limiting_test.rb"
     },
     {
@@ -197,7 +227,9 @@
       "priority": "p0",
       "status": "done",
       "description": "Betreuer setzt Passwort über Token-Link zurück.",
-      "preconditions": ["Betreuer-Account existiert"],
+      "preconditions": [
+        "Betreuer-Account existiert"
+      ],
       "scenarios": [
         {
           "id": "TS-007-S01",
@@ -216,7 +248,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Token max. 1 Stunde gültig; Single-Use"],
+      "success_criteria": [
+        "Token max. 1 Stunde gültig; Single-Use"
+      ],
       "minitest_path": "test/system/authentication/password_reset_test.rb"
     },
     {
@@ -228,7 +262,9 @@
       "priority": "p1",
       "status": "done",
       "description": "Alle Mailer-Klassen liefern HTML- und Plaintext-Variante.",
-      "preconditions": ["ActionMailer delivery_method :test"],
+      "preconditions": [
+        "ActionMailer delivery_method :test"
+      ],
       "scenarios": [
         {
           "id": "TS-008-S01",
@@ -247,7 +283,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Alle Mailer haben HTML + Text"],
+      "success_criteria": [
+        "Alle Mailer haben HTML + Text"
+      ],
       "minitest_path": "test/mailers/application_mailer_test.rb"
     },
     {
@@ -259,7 +297,9 @@
       "priority": "p1",
       "status": "done",
       "description": "Provider-Bounce-Webhook markiert betroffenen Account als email_invalid.",
-      "preconditions": ["User-Account existiert"],
+      "preconditions": [
+        "User-Account existiert"
+      ],
       "scenarios": [
         {
           "id": "TS-009-S01",
@@ -270,7 +310,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["email_invalid wird persistent gesetzt"],
+      "success_criteria": [
+        "email_invalid wird persistent gesetzt"
+      ],
       "minitest_path": "test/controllers/webhooks/mailjet_controller_test.rb"
     },
     {
@@ -282,7 +324,9 @@
       "priority": "p0",
       "status": "done",
       "description": "Elternteil sieht ausschließlich Kinder, die dem eigenen Account zugeordnet sind.",
-      "preconditions": ["Zwei Elternteile mit je einem Kind"],
+      "preconditions": [
+        "Zwei Elternteile mit je einem Kind"
+      ],
       "scenarios": [
         {
           "id": "TS-010-S01",
@@ -301,7 +345,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Kein Cross-Account-Datenleck nachweisbar"],
+      "success_criteria": [
+        "Kein Cross-Account-Datenleck nachweisbar"
+      ],
       "minitest_path": "test/integration/authorization/parent_scoping_test.rb"
     },
     {
@@ -313,7 +359,9 @@
       "priority": "p0",
       "status": "done",
       "description": "Betreuer erhält HTTP 403 bei Admin-Only-Endpunkten.",
-      "preconditions": ["Eingeloggter Betreuer"],
+      "preconditions": [
+        "Eingeloggter Betreuer"
+      ],
       "scenarios": [
         {
           "id": "TS-011-S01",
@@ -324,7 +372,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Alle /admin-Routen antworten mit 403 für Nicht-Admins"],
+      "success_criteria": [
+        "Alle /admin-Routen antworten mit 403 für Nicht-Admins"
+      ],
       "minitest_path": "test/integration/authorization/role_enforcement_test.rb"
     },
     {
@@ -336,7 +386,9 @@
       "priority": "p0",
       "status": "done",
       "description": "Alle geschützten Routen leiten ohne Session zu /login weiter.",
-      "preconditions": ["Keine aktive Session"],
+      "preconditions": [
+        "Keine aktive Session"
+      ],
       "scenarios": [
         {
           "id": "TS-012-S01",
@@ -347,7 +399,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Alle auth-pflichtigen Routen leiten korrekt um"],
+      "success_criteria": [
+        "Alle auth-pflichtigen Routen leiten korrekt um"
+      ],
       "minitest_path": "test/integration/authorization/unauthenticated_access_test.rb"
     },
     {
@@ -357,9 +411,11 @@
       "type": "unit",
       "role": "all",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Medizinische Hinweise und Versicherungsnummern sind in der DB verschlüsselt.",
-      "preconditions": ["ActiveRecord::Encryption konfiguriert"],
+      "preconditions": [
+        "ActiveRecord::Encryption konfiguriert"
+      ],
       "scenarios": [
         {
           "id": "TS-013-S01",
@@ -378,7 +434,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Alle sensiblen Felder sind in ActiveRecord::Encryption deklariert"],
+      "success_criteria": [
+        "Alle sensiblen Felder sind in ActiveRecord::Encryption deklariert"
+      ],
       "minitest_path": "test/models/encryption_test.rb"
     },
     {
@@ -401,7 +459,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Keine PII in Test-Log-Output nach Login-Request"],
+      "success_criteria": [
+        "Keine PII in Test-Log-Output nach Login-Request"
+      ],
       "minitest_path": "test/integration/privacy/log_filtering_test.rb"
     },
     {
@@ -413,7 +473,9 @@
       "priority": "p0",
       "status": "open",
       "description": "GPS- und Gerätedaten werden aus hochgeladenen Bildern entfernt.",
-      "preconditions": ["Bild mit EXIF-GPS-Daten vorhanden (fixtures/test_with_gps.jpg)"],
+      "preconditions": [
+        "Bild mit EXIF-GPS-Daten vorhanden (fixtures/test_with_gps.jpg)"
+      ],
       "scenarios": [
         {
           "id": "TS-015-S01",
@@ -424,7 +486,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["MiniExiftool oder ExifReader bestätigt keine GPS-Daten"],
+      "success_criteria": [
+        "MiniExiftool oder ExifReader bestätigt keine GPS-Daten"
+      ],
       "minitest_path": "test/models/image_processing_test.rb"
     },
     {
@@ -436,7 +500,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Nach Upload existieren thumb, display und original als Varianten.",
-      "preconditions": ["Gültiges JPEG hochgeladen"],
+      "preconditions": [
+        "Gültiges JPEG hochgeladen"
+      ],
       "scenarios": [
         {
           "id": "TS-016-S01",
@@ -447,7 +513,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Alle Varianten als WebP ausgeliefert"],
+      "success_criteria": [
+        "Alle Varianten als WebP ausgeliefert"
+      ],
       "minitest_path": "test/models/image_variants_test.rb"
     },
     {
@@ -478,7 +546,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Validierung serverseitig; kein Client-seitiger Bypass"],
+      "success_criteria": [
+        "Validierung serverseitig; kein Client-seitiger Bypass"
+      ],
       "minitest_path": "test/models/image_upload_validation_test.rb"
     },
     {
@@ -517,7 +587,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Alle drei Header korrekt gesetzt"],
+      "success_criteria": [
+        "Alle drei Header korrekt gesetzt"
+      ],
       "minitest_path": "test/integration/security/security_headers_test.rb"
     },
     {
@@ -540,7 +612,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Antwort in <500ms"],
+      "success_criteria": [
+        "Antwort in <500ms"
+      ],
       "minitest_path": "test/controllers/health_controller_test.rb"
     },
     {
@@ -571,7 +645,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Alle Entitäten: Group, KindergartenYear, Child, User, Event, Gallery haben UUID-IDs"],
+      "success_criteria": [
+        "Alle Entitäten: Group, KindergartenYear, Child, User, Event, Gallery haben UUID-IDs"
+      ],
       "minitest_path": "test/models/uuid_primary_keys_test.rb"
     },
     {
@@ -602,7 +678,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["KindergartenYear.active.count == 1 zu jedem Zeitpunkt"],
+      "success_criteria": [
+        "KindergartenYear.active.count == 1 zu jedem Zeitpunkt"
+      ],
       "minitest_path": "test/models/kindergarten_year_test.rb"
     },
     {
@@ -633,7 +711,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Lighthouse PWA-Score ≥ 90"],
+      "success_criteria": [
+        "Lighthouse PWA-Score ≥ 90"
+      ],
       "minitest_path": "test/integration/pwa/manifest_test.rb"
     },
     {
@@ -645,7 +725,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Admin lädt neuen Betreuer ein; Einladungs-E-Mail wird versendet.",
-      "preconditions": ["Admin ist eingeloggt"],
+      "preconditions": [
+        "Admin ist eingeloggt"
+      ],
       "scenarios": [
         {
           "id": "TS-023-S01",
@@ -656,7 +738,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Einladungs-E-Mail enthält gültigen Aktivierungs-Link"],
+      "success_criteria": [
+        "Einladungs-E-Mail enthält gültigen Aktivierungs-Link"
+      ],
       "minitest_path": "test/system/admin/user_management_test.rb"
     },
     {
@@ -668,7 +752,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Gesperrter Account kann sich nicht einloggen; Reaktivierung stellt Zugang wieder her.",
-      "preconditions": ["Admin und Betreuer-Account vorhanden"],
+      "preconditions": [
+        "Admin und Betreuer-Account vorhanden"
+      ],
       "scenarios": [
         {
           "id": "TS-024-S01",
@@ -695,7 +781,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Gesperrte Sessions werden sofort invalidiert"],
+      "success_criteria": [
+        "Gesperrte Sessions werden sofort invalidiert"
+      ],
       "minitest_path": "test/system/admin/account_lock_test.rb"
     },
     {
@@ -707,7 +795,9 @@
       "priority": "p0",
       "status": "done",
       "description": "Betreuer und Eltern erhalten HTTP 403 für alle /admin-Routen.",
-      "preconditions": ["Betreuer eingeloggt"],
+      "preconditions": [
+        "Betreuer eingeloggt"
+      ],
       "scenarios": [
         {
           "id": "TS-025-S01",
@@ -726,7 +816,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Alle /admin-Subrouten ebenfalls geschützt"],
+      "success_criteria": [
+        "Alle /admin-Subrouten ebenfalls geschützt"
+      ],
       "minitest_path": "test/integration/authorization/admin_access_test.rb"
     },
     {
@@ -738,7 +830,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Betreuer legt Gruppe mit Name, Farbe und Beschreibung an.",
-      "preconditions": ["Betreuer eingeloggt"],
+      "preconditions": [
+        "Betreuer eingeloggt"
+      ],
       "scenarios": [
         {
           "id": "TS-026-S01",
@@ -757,7 +851,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["CRUD für Gruppen vollständig funktionsfähig"],
+      "success_criteria": [
+        "CRUD für Gruppen vollständig funktionsfähig"
+      ],
       "minitest_path": "test/system/groups/group_management_test.rb"
     },
     {
@@ -769,7 +865,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Jahresübergang überträgt ausgewählte Kinder mit Notfallkontakten; Inhalte bleiben beim alten Jahr.",
-      "preconditions": ["KGJ 2025/26 aktiv mit 3 Kindern und einer Galerie"],
+      "preconditions": [
+        "KGJ 2025/26 aktiv mit 3 Kindern und einer Galerie"
+      ],
       "scenarios": [
         {
           "id": "TS-027-S01",
@@ -788,7 +886,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Notfallkontakte und Foto-Einwilligung werden korrekt kopiert"],
+      "success_criteria": [
+        "Notfallkontakte und Foto-Einwilligung werden korrekt kopiert"
+      ],
       "minitest_path": "test/system/kindergarten_years/year_rollover_test.rb"
     },
     {
@@ -800,7 +900,10 @@
       "priority": "p0",
       "status": "open",
       "description": "Betreuer legt Kind mit allen Pflichtfeldern an; fehlende Felder werden abgewiesen.",
-      "preconditions": ["Betreuer eingeloggt", "Gruppe und aktives KGJ vorhanden"],
+      "preconditions": [
+        "Betreuer eingeloggt",
+        "Gruppe und aktives KGJ vorhanden"
+      ],
       "scenarios": [
         {
           "id": "TS-028-S01",
@@ -827,7 +930,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Alle Pflichtfelder erzwingen Validierung"],
+      "success_criteria": [
+        "Alle Pflichtfelder erzwingen Validierung"
+      ],
       "minitest_path": "test/system/children/child_creation_test.rb"
     },
     {
@@ -839,7 +944,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Elternteil mit Kindern in verschiedenen Gruppen sieht Inhalte beider Gruppen.",
-      "preconditions": ["Elternteil A mit Kind X (Gruppe Bären) und Kind Y (Gruppe Löwen)"],
+      "preconditions": [
+        "Elternteil A mit Kind X (Gruppe Bären) und Kind Y (Gruppe Löwen)"
+      ],
       "scenarios": [
         {
           "id": "TS-029-S01",
@@ -850,7 +957,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Gruppen-Scope berücksichtigt alle verknüpften Kinder"],
+      "success_criteria": [
+        "Gruppen-Scope berücksichtigt alle verknüpften Kinder"
+      ],
       "minitest_path": "test/integration/children/sibling_scoping_test.rb"
     },
     {
@@ -862,7 +971,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Deaktiviertes Kind erscheint nicht mehr in aktiven Listen.",
-      "preconditions": ["Aktives Kind in DB"],
+      "preconditions": [
+        "Aktives Kind in DB"
+      ],
       "scenarios": [
         {
           "id": "TS-030-S01",
@@ -873,7 +984,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Soft-Delete; keine Löschung von Verknüpfungen"],
+      "success_criteria": [
+        "Soft-Delete; keine Löschung von Verknüpfungen"
+      ],
       "minitest_path": "test/system/children/child_deactivation_test.rb"
     },
     {
@@ -885,7 +998,10 @@
       "priority": "p0",
       "status": "open",
       "description": "Betreuer legt Eltern-Account an; Elternteil klickt Einladungslink und vervollständigt Profil.",
-      "preconditions": ["Betreuer eingeloggt", "Kind in DB vorhanden"],
+      "preconditions": [
+        "Betreuer eingeloggt",
+        "Kind in DB vorhanden"
+      ],
       "scenarios": [
         {
           "id": "TS-031-S01",
@@ -904,7 +1020,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Account wird durch Klick aktiviert; kein selbstständiger Registrierungs-Flow"],
+      "success_criteria": [
+        "Account wird durch Klick aktiviert; kein selbstständiger Registrierungs-Flow"
+      ],
       "minitest_path": "test/system/parents/parent_onboarding_test.rb"
     },
     {
@@ -916,7 +1034,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Elternteil kann Name, Telefon und E-Mail ändern, aber nicht Kinder-Zuordnung.",
-      "preconditions": ["Elternteil eingeloggt"],
+      "preconditions": [
+        "Elternteil eingeloggt"
+      ],
       "scenarios": [
         {
           "id": "TS-032-S01",
@@ -935,7 +1055,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Strong-Parameters blockiert children_ids für parent-Rolle"],
+      "success_criteria": [
+        "Strong-Parameters blockiert children_ids für parent-Rolle"
+      ],
       "minitest_path": "test/system/parents/parent_profile_test.rb"
     },
     {
@@ -947,7 +1069,10 @@
       "priority": "p0",
       "status": "open",
       "description": "Betreuer legt Notfallkontakte für Kind an; sortierbar.",
-      "preconditions": ["Betreuer eingeloggt", "Kind vorhanden"],
+      "preconditions": [
+        "Betreuer eingeloggt",
+        "Kind vorhanden"
+      ],
       "scenarios": [
         {
           "id": "TS-033-S01",
@@ -958,7 +1083,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Mehrere Kontakte pro Kind möglich"],
+      "success_criteria": [
+        "Mehrere Kontakte pro Kind möglich"
+      ],
       "minitest_path": "test/system/emergency_contacts/emergency_contact_test.rb"
     },
     {
@@ -970,7 +1097,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Elternteil kann keine Notfallkontakte fremder Kinder lesen.",
-      "preconditions": ["Zwei Kinder mit je einem Elternteil"],
+      "preconditions": [
+        "Zwei Kinder mit je einem Elternteil"
+      ],
       "scenarios": [
         {
           "id": "TS-034-S01",
@@ -981,7 +1110,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Policy-Scoping korrekt"],
+      "success_criteria": [
+        "Policy-Scoping korrekt"
+      ],
       "minitest_path": "test/integration/authorization/emergency_contact_access_test.rb"
     },
     {
@@ -993,7 +1124,10 @@
       "priority": "p1",
       "status": "open",
       "description": "Elternteil kann medizinische Hinweise für eigenes Kind pflegen.",
-      "preconditions": ["Elternteil eingeloggt", "Eigenes Kind vorhanden"],
+      "preconditions": [
+        "Elternteil eingeloggt",
+        "Eigenes Kind vorhanden"
+      ],
       "scenarios": [
         {
           "id": "TS-035-S01",
@@ -1004,7 +1138,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Hinweis via ActiveRecord lesbar aber DB-seitig verschlüsselt"],
+      "success_criteria": [
+        "Hinweis via ActiveRecord lesbar aber DB-seitig verschlüsselt"
+      ],
       "minitest_path": "test/system/medical_notes/parent_medical_notes_test.rb"
     },
     {
@@ -1016,7 +1152,10 @@
       "priority": "p0",
       "status": "open",
       "description": "Betreuer legt Ereignis an; erscheint im Kalender aller Gruppen-Mitglieder.",
-      "preconditions": ["Betreuer eingeloggt", "Gruppe und KGJ vorhanden"],
+      "preconditions": [
+        "Betreuer eingeloggt",
+        "Gruppe und KGJ vorhanden"
+      ],
       "scenarios": [
         {
           "id": "TS-036-S01",
@@ -1035,7 +1174,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Monats- und Listenansicht korrekt"],
+      "success_criteria": [
+        "Monats- und Listenansicht korrekt"
+      ],
       "minitest_path": "test/system/calendar/calendar_events_test.rb"
     },
     {
@@ -1047,7 +1188,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Jeder Benutzer hat einen personalisierten iCal-Link im Profil.",
-      "preconditions": ["Eingeloggter Benutzer"],
+      "preconditions": [
+        "Eingeloggter Benutzer"
+      ],
       "scenarios": [
         {
           "id": "TS-037-S01",
@@ -1058,7 +1201,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Link ist einzigartig pro Benutzer"],
+      "success_criteria": [
+        "Link ist einzigartig pro Benutzer"
+      ],
       "minitest_path": "test/integration/ical/ical_link_in_profile_test.rb"
     },
     {
@@ -1070,7 +1215,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Betreuer legt Veranstaltung an, verknüpft Module und sagt ab.",
-      "preconditions": ["Betreuer eingeloggt"],
+      "preconditions": [
+        "Betreuer eingeloggt"
+      ],
       "scenarios": [
         {
           "id": "TS-038-S01",
@@ -1089,7 +1236,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Absagen invalidiert keine verknüpften Module"],
+      "success_criteria": [
+        "Absagen invalidiert keine verknüpften Module"
+      ],
       "minitest_path": "test/system/events/event_management_test.rb"
     },
     {
@@ -1101,7 +1250,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Elternteil sieht Detailseite mit allen verknüpften Modulen.",
-      "preconditions": ["Veranstaltung mit Teilnahmeliste und Galerie vorhanden"],
+      "preconditions": [
+        "Veranstaltung mit Teilnahmeliste und Galerie vorhanden"
+      ],
       "scenarios": [
         {
           "id": "TS-039-S01",
@@ -1112,7 +1263,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Navigation zu allen verknüpften Modulen funktioniert"],
+      "success_criteria": [
+        "Navigation zu allen verknüpften Modulen funktioniert"
+      ],
       "minitest_path": "test/system/events/event_detail_parent_test.rb"
     },
     {
@@ -1124,7 +1277,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Elternteil trägt sich ein und nimmt Eintrag zurück (vor Anmeldeschluss).",
-      "preconditions": ["Offene Teilnahmeliste existiert"],
+      "preconditions": [
+        "Offene Teilnahmeliste existiert"
+      ],
       "scenarios": [
         {
           "id": "TS-040-S01",
@@ -1143,7 +1298,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Anmeldeschluss serverseitig erzwungen"],
+      "success_criteria": [
+        "Anmeldeschluss serverseitig erzwungen"
+      ],
       "minitest_path": "test/system/signup_lists/signup_list_test.rb"
     },
     {
@@ -1155,7 +1312,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Betreuer exportiert Liste als CSV mit allen Einträgen.",
-      "preconditions": ["Liste mit 3 Einträgen vorhanden"],
+      "preconditions": [
+        "Liste mit 3 Einträgen vorhanden"
+      ],
       "scenarios": [
         {
           "id": "TS-041-S01",
@@ -1166,7 +1325,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["CSV UTF-8 kodiert; alle Einträge enthalten"],
+      "success_criteria": [
+        "CSV UTF-8 kodiert; alle Einträge enthalten"
+      ],
       "minitest_path": "test/controllers/signup_lists_controller_test.rb"
     },
     {
@@ -1178,7 +1339,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Elternteil markiert Einkaufseintrag als erledigt; Filter zeigt nur offene.",
-      "preconditions": ["Einkaufsliste mit 3 Einträgen vorhanden"],
+      "preconditions": [
+        "Einkaufsliste mit 3 Einträgen vorhanden"
+      ],
       "scenarios": [
         {
           "id": "TS-042-S01",
@@ -1205,7 +1368,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Echtzeit-Update via Turbo Streams für alle Beteiligten"],
+      "success_criteria": [
+        "Echtzeit-Update via Turbo Streams für alle Beteiligten"
+      ],
       "minitest_path": "test/system/shopping_lists/shopping_list_test.rb"
     },
     {
@@ -1217,7 +1382,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Elternteil stimmt ab und ändert Stimme; Ergebnis namentlich sichtbar.",
-      "preconditions": ["Offene Abstimmung vorhanden"],
+      "preconditions": [
+        "Offene Abstimmung vorhanden"
+      ],
       "scenarios": [
         {
           "id": "TS-043-S01",
@@ -1244,7 +1411,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Einfach- und Mehrfachauswahl korrekt; serverseitige Validierung"],
+      "success_criteria": [
+        "Einfach- und Mehrfachauswahl korrekt; serverseitige Validierung"
+      ],
       "minitest_path": "test/system/polls/poll_voting_test.rb"
     },
     {
@@ -1256,7 +1425,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Betreuer exportiert Abstimmungsergebnis als CSV.",
-      "preconditions": ["Abstimmung mit 3 Stimmen"],
+      "preconditions": [
+        "Abstimmung mit 3 Stimmen"
+      ],
       "scenarios": [
         {
           "id": "TS-044-S01",
@@ -1267,7 +1438,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["CSV vollständig und korrekt"],
+      "success_criteria": [
+        "CSV vollständig und korrekt"
+      ],
       "minitest_path": "test/controllers/polls_controller_test.rb"
     },
     {
@@ -1279,7 +1452,10 @@
       "priority": "p0",
       "status": "open",
       "description": "Betreuer legt Galerie an und lädt Bilder hoch; Einwilligungs-Hinweis erscheint.",
-      "preconditions": ["Betreuer eingeloggt", "Gruppe mit Kind ohne Foto-Einwilligung"],
+      "preconditions": [
+        "Betreuer eingeloggt",
+        "Gruppe mit Kind ohne Foto-Einwilligung"
+      ],
       "scenarios": [
         {
           "id": "TS-045-S01",
@@ -1298,7 +1474,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Upload-Limit 200 Bilder; Hinweis blockiert nicht"],
+      "success_criteria": [
+        "Upload-Limit 200 Bilder; Hinweis blockiert nicht"
+      ],
       "minitest_path": "test/system/galleries/gallery_upload_test.rb"
     },
     {
@@ -1310,7 +1488,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Eltern sehen nur Galerien eigener Gruppen; Download via signierter URL.",
-      "preconditions": ["Galerie für Gruppe Löwen vorhanden; Elternteil nur in Bären"],
+      "preconditions": [
+        "Galerie für Gruppe Löwen vorhanden; Elternteil nur in Bären"
+      ],
       "scenarios": [
         {
           "id": "TS-046-S01",
@@ -1329,7 +1509,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Signierte URLs laufen korrekt ab"],
+      "success_criteria": [
+        "Signierte URLs laufen korrekt ab"
+      ],
       "minitest_path": "test/system/galleries/gallery_parent_test.rb"
     },
     {
@@ -1341,7 +1523,10 @@
       "priority": "p0",
       "status": "open",
       "description": "Betreuer sendet Mitteilung an Gruppe; alle Eltern erhalten sie im Posteingang.",
-      "preconditions": ["Betreuer eingeloggt", "Gruppe Bären mit 2 Elternteilen"],
+      "preconditions": [
+        "Betreuer eingeloggt",
+        "Gruppe Bären mit 2 Elternteilen"
+      ],
       "scenarios": [
         {
           "id": "TS-047-S01",
@@ -1352,7 +1537,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["E-Mail-Benachrichtigung als Background-Job ausgeführt"],
+      "success_criteria": [
+        "E-Mail-Benachrichtigung als Background-Job ausgeführt"
+      ],
       "minitest_path": "test/system/messages/message_send_test.rb"
     },
     {
@@ -1364,7 +1551,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Elternteil sieht ungelesene Mitteilungen; Öffnen markiert als gelesen; fremde Mitteilungen nicht sichtbar.",
-      "preconditions": ["Ungelesene Mitteilung im Posteingang"],
+      "preconditions": [
+        "Ungelesene Mitteilung im Posteingang"
+      ],
       "scenarios": [
         {
           "id": "TS-048-S01",
@@ -1383,7 +1572,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Keine Antwortfunktion für Eltern sichtbar"],
+      "success_criteria": [
+        "Keine Antwortfunktion für Eltern sichtbar"
+      ],
       "minitest_path": "test/system/messages/parent_inbox_test.rb"
     },
     {
@@ -1395,7 +1586,10 @@
       "priority": "p0",
       "status": "open",
       "description": "Betreuer plant Woche; Eltern sehen Leseansicht ohne Bearbeitungsoption.",
-      "preconditions": ["Betreuer eingeloggt", "Gruppe vorhanden"],
+      "preconditions": [
+        "Betreuer eingeloggt",
+        "Gruppe vorhanden"
+      ],
       "scenarios": [
         {
           "id": "TS-049-S01",
@@ -1414,7 +1608,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Leere Woche zeigt Platzhalter statt Fehler"],
+      "success_criteria": [
+        "Leere Woche zeigt Platzhalter statt Fehler"
+      ],
       "minitest_path": "test/system/meal_plans/meal_plan_test.rb"
     },
     {
@@ -1426,7 +1622,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Kinder mit Geburtstag in den nächsten 14 Tagen hervorgehoben; Eltern sehen nur eigene Gruppen.",
-      "preconditions": ["Kind A Geburtstag in 7 Tagen; Kind B Geburtstag in 30 Tagen"],
+      "preconditions": [
+        "Kind A Geburtstag in 7 Tagen; Kind B Geburtstag in 30 Tagen"
+      ],
       "scenarios": [
         {
           "id": "TS-050-S01",
@@ -1445,7 +1643,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["14-Tage-Fenster auch bei Jahreswechsel korrekt"],
+      "success_criteria": [
+        "14-Tage-Fenster auch bei Jahreswechsel korrekt"
+      ],
       "minitest_path": "test/system/birthdays/birthday_overview_test.rb"
     },
     {
@@ -1457,7 +1657,10 @@
       "priority": "p1",
       "status": "open",
       "description": "Elternteil setzt Foto-Einwilligung; Zeitstempel wird gesetzt.",
-      "preconditions": ["Elternteil eingeloggt", "Kind ohne Einwilligung"],
+      "preconditions": [
+        "Elternteil eingeloggt",
+        "Kind ohne Einwilligung"
+      ],
       "scenarios": [
         {
           "id": "TS-051-S01",
@@ -1476,7 +1679,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Zeitstempel bei jeder Änderung aktualisiert"],
+      "success_criteria": [
+        "Zeitstempel bei jeder Änderung aktualisiert"
+      ],
       "minitest_path": "test/system/photo_consent/photo_consent_test.rb"
     },
     {
@@ -1488,7 +1693,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Share-Button generiert korrekten wa.me-Link mit Titel und URL.",
-      "preconditions": ["Veranstaltung existiert"],
+      "preconditions": [
+        "Veranstaltung existiert"
+      ],
       "scenarios": [
         {
           "id": "TS-052-S01",
@@ -1507,7 +1714,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Keine sensiblen Daten in URL"],
+      "success_criteria": [
+        "Keine sensiblen Daten in URL"
+      ],
       "minitest_path": "test/integration/sharing/whatsapp_share_test.rb"
     },
     {
@@ -1519,7 +1728,9 @@
       "priority": "p0",
       "status": "open",
       "description": "iCal-Feed enthält nur Ereignisse, die für den Benutzer sichtbar sind.",
-      "preconditions": ["Elternteil mit Kind in Gruppe Bären; Löwen haben eigenes Ereignis"],
+      "preconditions": [
+        "Elternteil mit Kind in Gruppe Bären; Löwen haben eigenes Ereignis"
+      ],
       "scenarios": [
         {
           "id": "TS-053-S01",
@@ -1530,7 +1741,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["RFC 5545 gültiger iCal-Output; Content-Type: text/calendar"],
+      "success_criteria": [
+        "RFC 5545 gültiger iCal-Output; Content-Type: text/calendar"
+      ],
       "minitest_path": "test/models/ical_feed_test.rb"
     },
     {
@@ -1542,7 +1755,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Token kann rotiert werden; alter Token ungültig.",
-      "preconditions": ["Elternteil eingeloggt mit iCal-Token T1"],
+      "preconditions": [
+        "Elternteil eingeloggt mit iCal-Token T1"
+      ],
       "scenarios": [
         {
           "id": "TS-054-S01",
@@ -1553,7 +1768,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Token-Rotation atomar; kein Fenster mit zwei gültigen Tokens"],
+      "success_criteria": [
+        "Token-Rotation atomar; kein Fenster mit zwei gültigen Tokens"
+      ],
       "minitest_path": "test/system/ical/ical_token_rotation_test.rb"
     },
     {
@@ -1565,7 +1782,9 @@
       "priority": "p2",
       "status": "open",
       "description": "Unveränderter Feed liefert HTTP 304 mit ETag.",
-      "preconditions": ["Feed bereits abgerufen; kein neues Ereignis"],
+      "preconditions": [
+        "Feed bereits abgerufen; kein neues Ereignis"
+      ],
       "scenarios": [
         {
           "id": "TS-055-S01",
@@ -1576,7 +1795,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["ETag und Last-Modified korrekt gesetzt"],
+      "success_criteria": [
+        "ETag und Last-Modified korrekt gesetzt"
+      ],
       "minitest_path": "test/integration/ical/ical_caching_test.rb"
     },
     {
@@ -1588,7 +1809,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Dashboard zeigt alle 5 Sektionen mit korrekten Daten.",
-      "preconditions": ["Elternteil mit ungelesener Mitteilung, kommendem Ereignis, offener Liste, Geburtstag in 7 Tagen, Speiseplan heute"],
+      "preconditions": [
+        "Elternteil mit ungelesener Mitteilung, kommendem Ereignis, offener Liste, Geburtstag in 7 Tagen, Speiseplan heute"
+      ],
       "scenarios": [
         {
           "id": "TS-056-S01",
@@ -1607,7 +1830,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Dashboard lädt <1s; alle Daten rollenkonform"],
+      "success_criteria": [
+        "Dashboard lädt <1s; alle Daten rollenkonform"
+      ],
       "minitest_path": "test/system/dashboard/parent_dashboard_test.rb"
     },
     {
@@ -1619,7 +1844,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Dashboard zeigt ausschließlich Daten aus eigenen Gruppen.",
-      "preconditions": ["Elternteil A und B mit Mitteilung nur an A's Gruppe"],
+      "preconditions": [
+        "Elternteil A und B mit Mitteilung nur an A's Gruppe"
+      ],
       "scenarios": [
         {
           "id": "TS-057-S01",
@@ -1630,7 +1857,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Alle Dashboard-Queries scope-korrekt"],
+      "success_criteria": [
+        "Alle Dashboard-Queries scope-korrekt"
+      ],
       "minitest_path": "test/integration/dashboard/parent_dashboard_isolation_test.rb"
     },
     {
@@ -1642,7 +1871,12 @@
       "priority": "p0",
       "status": "open",
       "description": "Dashboard zeigt Heute, Offene Aufgaben, Schnellaktionen und Statistik.",
-      "preconditions": ["Betreuer eingeloggt", "Veranstaltung heute", "Vergangene Veranstaltung ohne Galerie", "2 Gruppen mit Kindern"],
+      "preconditions": [
+        "Betreuer eingeloggt",
+        "Veranstaltung heute",
+        "Vergangene Veranstaltung ohne Galerie",
+        "2 Gruppen mit Kindern"
+      ],
       "scenarios": [
         {
           "id": "TS-058-S01",
@@ -1669,7 +1903,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Alle offenen Aufgaben korrekt identifiziert"],
+      "success_criteria": [
+        "Alle offenen Aufgaben korrekt identifiziert"
+      ],
       "minitest_path": "test/system/dashboard/caretaker_dashboard_test.rb"
     },
     {
@@ -1681,7 +1917,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Dashboard zeigt Kinder ohne gesetztes Foto-Einwilligungs-Flag als offene Aufgabe.",
-      "preconditions": ["Kind ohne photo_consent gesetzt"],
+      "preconditions": [
+        "Kind ohne photo_consent gesetzt"
+      ],
       "scenarios": [
         {
           "id": "TS-059-S01",
@@ -1692,7 +1930,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Nur Kinder mit photo_consent == nil erscheinen; null != false"],
+      "success_criteria": [
+        "Nur Kinder mit photo_consent == nil erscheinen; null != false"
+      ],
       "minitest_path": "test/integration/dashboard/caretaker_dashboard_test.rb"
     },
     {
@@ -1704,7 +1944,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Test-Suite erreicht mindestens 85% Line Coverage.",
-      "preconditions": ["SimpleCov konfiguriert"],
+      "preconditions": [
+        "SimpleCov konfiguriert"
+      ],
       "scenarios": [
         {
           "id": "TS-060-S01",
@@ -1715,7 +1957,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["CI schlägt fehl wenn Coverage < 85%"],
+      "success_criteria": [
+        "CI schlägt fehl wenn Coverage < 85%"
+      ],
       "minitest_path": "test/test_helper.rb"
     },
     {
@@ -1738,7 +1982,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Brakeman meldet keine unbewachten Actions"],
+      "success_criteria": [
+        "Brakeman meldet keine unbewachten Actions"
+      ],
       "minitest_path": "test/integration/authorization/policy_coverage_test.rb"
     },
     {
@@ -1750,7 +1996,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Betreuer legt neues KGJ an und setzt es als aktiv; vorheriges wird inaktiv.",
-      "preconditions": ["KGJ 2025/26 aktiv"],
+      "preconditions": [
+        "KGJ 2025/26 aktiv"
+      ],
       "scenarios": [
         {
           "id": "TS-062-S01",
@@ -1761,7 +2009,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Jahresauswahl zeigt beide Jahre"],
+      "success_criteria": [
+        "Jahresauswahl zeigt beide Jahre"
+      ],
       "minitest_path": "test/system/kindergarten_years/kindergarten_year_management_test.rb"
     },
     {
@@ -1773,7 +2023,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Betreuer kann Kind anlegen, bearbeiten und deaktivieren.",
-      "preconditions": ["Betreuer eingeloggt"],
+      "preconditions": [
+        "Betreuer eingeloggt"
+      ],
       "scenarios": [
         {
           "id": "TS-063-S01",
@@ -1784,7 +2036,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["updated_at aktualisiert nach Bearbeitung"],
+      "success_criteria": [
+        "updated_at aktualisiert nach Bearbeitung"
+      ],
       "minitest_path": "test/system/children/child_crud_test.rb"
     },
     {
@@ -1796,7 +2050,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Beide Kalenderansichten zeigen korrekte Ereignisse.",
-      "preconditions": ["Ereignis im aktuellen Monat vorhanden"],
+      "preconditions": [
+        "Ereignis im aktuellen Monat vorhanden"
+      ],
       "scenarios": [
         {
           "id": "TS-064-S01",
@@ -1815,7 +2071,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Navigation zwischen Monaten funktioniert"],
+      "success_criteria": [
+        "Navigation zwischen Monaten funktioniert"
+      ],
       "minitest_path": "test/system/calendar/calendar_views_test.rb"
     },
     {
@@ -1827,7 +2085,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Elternteil wählt in Pro-Datum-Modus für mehrere Termine.",
-      "preconditions": ["Liste im Pro-Datum-Modus mit 3 Datums-Optionen"],
+      "preconditions": [
+        "Liste im Pro-Datum-Modus mit 3 Datums-Optionen"
+      ],
       "scenarios": [
         {
           "id": "TS-065-S01",
@@ -1838,7 +2098,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["CSV-Export enthält gewählte Optionen pro Eintrag"],
+      "success_criteria": [
+        "CSV-Export enthält gewählte Optionen pro Eintrag"
+      ],
       "minitest_path": "test/system/signup_lists/signup_list_date_mode_test.rb"
     },
     {
@@ -1850,7 +2112,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Betreuer legt Einkaufsliste mit Positions-Einträgen an.",
-      "preconditions": ["Betreuer eingeloggt"],
+      "preconditions": [
+        "Betreuer eingeloggt"
+      ],
       "scenarios": [
         {
           "id": "TS-066-S01",
@@ -1861,7 +2125,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Einträge ohne Menge valide; optionales Feld"],
+      "success_criteria": [
+        "Einträge ohne Menge valide; optionales Feld"
+      ],
       "minitest_path": "test/system/shopping_lists/shopping_list_create_test.rb"
     },
     {
@@ -1873,7 +2139,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Bei Mehrfachauswahl können mehrere Optionen gewählt werden.",
-      "preconditions": ["Mehrfachauswahl-Abstimmung mit 3 Optionen"],
+      "preconditions": [
+        "Mehrfachauswahl-Abstimmung mit 3 Optionen"
+      ],
       "scenarios": [
         {
           "id": "TS-067-S01",
@@ -1884,7 +2152,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Einfachauswahl blockiert zweite Wahl serverseitig"],
+      "success_criteria": [
+        "Einfachauswahl blockiert zweite Wahl serverseitig"
+      ],
       "minitest_path": "test/system/polls/poll_multiple_choice_test.rb"
     },
     {
@@ -1896,7 +2166,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Klick auf Bild öffnet Lightbox mit Vollbild-Ansicht.",
-      "preconditions": ["Galerie mit mindestens einem Bild"],
+      "preconditions": [
+        "Galerie mit mindestens einem Bild"
+      ],
       "scenarios": [
         {
           "id": "TS-068-S01",
@@ -1907,7 +2179,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Lightbox schließbar per Klick oder Escape"],
+      "success_criteria": [
+        "Lightbox schließbar per Klick oder Escape"
+      ],
       "minitest_path": "test/system/galleries/gallery_lightbox_test.rb"
     },
     {
@@ -1919,7 +2193,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Betreuer sieht Gesendet-Bereich und kann archivieren.",
-      "preconditions": ["Betreuer hat Mitteilung gesendet"],
+      "preconditions": [
+        "Betreuer hat Mitteilung gesendet"
+      ],
       "scenarios": [
         {
           "id": "TS-069-S01",
@@ -1930,7 +2206,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Archivierte Mitteilungen weiterhin in Posteingang der Empfänger"],
+      "success_criteria": [
+        "Archivierte Mitteilungen weiterhin in Posteingang der Empfänger"
+      ],
       "minitest_path": "test/system/messages/caretaker_sent_test.rb"
     },
     {
@@ -1942,7 +2220,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Speiseplan-Einträge werden beim Jahresübergang nicht kopiert.",
-      "preconditions": ["Speiseplan-Einträge in KGJ 2025/26"],
+      "preconditions": [
+        "Speiseplan-Einträge in KGJ 2025/26"
+      ],
       "scenarios": [
         {
           "id": "TS-070-S01",
@@ -1953,7 +2233,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Jahresübergang-Service kopiert keinen Speiseplan"],
+      "success_criteria": [
+        "Jahresübergang-Service kopiert keinen Speiseplan"
+      ],
       "minitest_path": "test/models/year_rollover_test.rb"
     },
     {
@@ -1965,7 +2247,9 @@
       "priority": "p0",
       "status": "open",
       "description": "Notfallkontakte werden beim Jahresübergang in das neue Jahr kopiert.",
-      "preconditions": ["Kind mit 2 Notfallkontakten in KGJ 2025/26"],
+      "preconditions": [
+        "Kind mit 2 Notfallkontakten in KGJ 2025/26"
+      ],
       "scenarios": [
         {
           "id": "TS-071-S01",
@@ -1976,7 +2260,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Kopie ist unabhängig (Änderung im neuen Jahr ändert nicht altes Jahr)"],
+      "success_criteria": [
+        "Kopie ist unabhängig (Änderung im neuen Jahr ändert nicht altes Jahr)"
+      ],
       "minitest_path": "test/models/emergency_contact_rollover_test.rb"
     },
     {
@@ -1988,7 +2274,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Foto-Einwilligungs-Flag wird beim Jahresübergang kopiert.",
-      "preconditions": ["Kind mit photo_consent: true"],
+      "preconditions": [
+        "Kind mit photo_consent: true"
+      ],
       "scenarios": [
         {
           "id": "TS-072-S01",
@@ -1999,7 +2287,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Consent-Timestamp wird nicht kopiert (frischer Timestamp nach Kopie)"],
+      "success_criteria": [
+        "Consent-Timestamp wird nicht kopiert (frischer Timestamp nach Kopie)"
+      ],
       "minitest_path": "test/models/photo_consent_rollover_test.rb"
     },
     {
@@ -2022,7 +2312,9 @@
           "negative": true
         }
       ],
-      "success_criteria": ["Keine externe API öffentlich erreichbar"],
+      "success_criteria": [
+        "Keine externe API öffentlich erreichbar"
+      ],
       "minitest_path": "test/integration/security/cors_test.rb"
     },
     {
@@ -2034,7 +2326,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Betreuer löscht Veranstaltung; verknüpfte Module bleiben erhalten.",
-      "preconditions": ["Veranstaltung mit Teilnahmeliste"],
+      "preconditions": [
+        "Veranstaltung mit Teilnahmeliste"
+      ],
       "scenarios": [
         {
           "id": "TS-074-S01",
@@ -2045,7 +2339,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Kein Cascade-Delete auf unabhängige Module"],
+      "success_criteria": [
+        "Kein Cascade-Delete auf unabhängige Module"
+      ],
       "minitest_path": "test/controllers/events_controller_test.rb"
     },
     {
@@ -2057,7 +2353,9 @@
       "priority": "p1",
       "status": "open",
       "description": "Offene Liste im Dashboard verschwindet nachdem Elternteil sich eingetragen hat.",
-      "preconditions": ["Elternteil eingeloggt; offene Teilnahmeliste vorhanden"],
+      "preconditions": [
+        "Elternteil eingeloggt; offene Teilnahmeliste vorhanden"
+      ],
       "scenarios": [
         {
           "id": "TS-075-S01",
@@ -2068,7 +2366,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Dashboard-Query prüft Teilnahme-Status korrekt"],
+      "success_criteria": [
+        "Dashboard-Query prüft Teilnahme-Status korrekt"
+      ],
       "minitest_path": "test/system/dashboard/parent_dashboard_open_list_test.rb"
     },
     {
@@ -2099,7 +2399,9 @@
           "negative": false
         }
       ],
-      "success_criteria": ["Kein Login für statische Seiten notwendig"],
+      "success_criteria": [
+        "Kein Login für statische Seiten notwendig"
+      ],
       "minitest_path": "test/integration/static_pages_test.rb"
     }
   ]
