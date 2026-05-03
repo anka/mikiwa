@@ -1380,7 +1380,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Elternteil stimmt ab und ändert Stimme; Ergebnis namentlich sichtbar.",
       "preconditions": [
         "Offene Abstimmung vorhanden"
