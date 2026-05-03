@@ -21,7 +21,7 @@
 -# Filter "nur offen"
 .mw-calendar-filters{ style: "margin-top: 1rem;" }
   - if @open_only
-    = link_to "Alle anzeigen", shopping_list_path(@list), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+    = link_to shopping_list_path(@list), class: "mw-btn mw-btn--secondary mw-btn--sm" do
       = lucide_icon "list", size: 14
       Alle anzeigen
   - else

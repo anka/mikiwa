@@ -1337,7 +1337,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Elternteil markiert Einkaufseintrag als erledigt; Filter zeigt nur offene.",
       "preconditions": [
         "Einkaufsliste mit 3 Einträgen vorhanden"
