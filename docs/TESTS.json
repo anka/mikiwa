@@ -828,7 +828,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer legt Gruppe mit Name, Farbe und Beschreibung an.",
       "preconditions": [
         "Betreuer eingeloggt"
@@ -898,7 +898,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer legt Kind mit allen Pflichtfeldern an; fehlende Felder werden abgewiesen.",
       "preconditions": [
         "Betreuer eingeloggt",
@@ -942,7 +942,7 @@
       "type": "integration",
       "role": "parent",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Elternteil mit Kindern in verschiedenen Gruppen sieht Inhalte beider Gruppen.",
       "preconditions": [
         "Elternteil A mit Kind X (Gruppe Bären) und Kind Y (Gruppe Löwen)"
@@ -969,7 +969,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Deaktiviertes Kind erscheint nicht mehr in aktiven Listen.",
       "preconditions": [
         "Aktives Kind in DB"
