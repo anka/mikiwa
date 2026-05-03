@@ -2218,7 +2218,7 @@
       "type": "unit",
       "role": "caretaker",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Speiseplan-Einträge werden beim Jahresübergang nicht kopiert.",
       "preconditions": [
         "Speiseplan-Einträge in KGJ 2025/26"
@@ -2245,7 +2245,7 @@
       "type": "unit",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Notfallkontakte werden beim Jahresübergang in das neue Jahr kopiert.",
       "preconditions": [
         "Kind mit 2 Notfallkontakten in KGJ 2025/26"
@@ -2272,7 +2272,7 @@
       "type": "unit",
       "role": "caretaker",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Foto-Einwilligungs-Flag wird beim Jahresübergang kopiert.",
       "preconditions": [
         "Kind mit photo_consent: true"
