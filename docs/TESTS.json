@@ -498,7 +498,7 @@
       "type": "unit",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Nach Upload existieren thumb, display und original als Varianten.",
       "preconditions": [
         "Gültiges JPEG hochgeladen"
