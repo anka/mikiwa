@@ -723,7 +723,7 @@
       "type": "system",
       "role": "admin",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Admin lädt neuen Betreuer ein; Einladungs-E-Mail wird versendet.",
       "preconditions": [
         "Admin ist eingeloggt"
@@ -750,7 +750,7 @@
       "type": "system",
       "role": "admin",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Gesperrter Account kann sich nicht einloggen; Reaktivierung stellt Zugang wieder her.",
       "preconditions": [
         "Admin und Betreuer-Account vorhanden"
