@@ -151,4 +151,25 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
     delete event_path(@event)
     assert_response :forbidden
   end
+
+  # TS-074-S01: Löschen einer Veranstaltung kaskadiert nicht auf Teilnahmeliste
+  test "TS-074 Veranstaltung löschen belässt verknüpfte Teilnahmeliste in DB" do
+    list = AttendanceList.create!(
+      title: "Ausflug-Anmeldeliste",
+      mode: "general",
+      group: @group_baeren,
+      kindergarten_year: @year,
+      created_by: @caretaker,
+      event: @event
+    )
+    list_id = list.id
+
+    sign_in_as(@caretaker)
+    delete event_path(@event)
+    assert_response :redirect
+    assert_not Event.exists?(@event.id), "Veranstaltung muss gelöscht sein"
+    assert AttendanceList.exists?(list_id), "Teilnahmeliste muss noch in DB vorhanden sein"
+
+    list.destroy!
+  end
 end
