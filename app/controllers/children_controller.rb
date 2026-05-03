@@ -11,7 +11,7 @@ class ChildrenController < ApplicationController
   end
 
   def new
-    @child = Child.new(kindergarten_year: active_year)
+    @child = Child.new(kindergarten_year: active_kindergarten_year)
   end
 
   def create
@@ -77,10 +77,6 @@ class ChildrenController < ApplicationController
     return if current_user&.staff?
     return if current_user.children.exists?(child.id)
     render plain: "Zugriff verweigert", status: :forbidden
-  end
-
-  def active_year
-    KindergartenYear.find_by(active: true)
   end
 
   def link_parent(child)

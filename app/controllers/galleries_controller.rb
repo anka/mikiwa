@@ -13,7 +13,7 @@ class GalleriesController < ApplicationController
   end
 
   def new
-    @gallery = Gallery.new(kindergarten_year: active_year)
+    @gallery = Gallery.new(kindergarten_year: active_kindergarten_year)
     @groups = Group.order(:name)
     @kindergarten_years = KindergartenYear.order(start_date: :desc)
     @events = Event.order(:start_date)
@@ -86,10 +86,6 @@ class GalleriesController < ApplicationController
   def require_staff!
     return if current_user&.staff?
     render plain: "Zugriff verweigert", status: :forbidden
-  end
-
-  def active_year
-    KindergartenYear.find_by(active: true)
   end
 
   def assign_groups

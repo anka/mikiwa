@@ -14,6 +14,11 @@ class ApplicationController < ActionController::Base
   end
   helper_method :current_user
 
+  def active_kindergarten_year
+    KindergartenYear.active
+  end
+  helper_method :active_kindergarten_year
+
   def authorize!(record, policy_class: nil)
     klass = policy_class || "#{record.class}Policy".safe_constantize || ApplicationPolicy
     policy = klass.new(current_user, record)

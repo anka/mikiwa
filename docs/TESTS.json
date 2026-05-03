@@ -2403,6 +2403,102 @@
         "Kein Login für statische Seiten notwendig"
       ],
       "minitest_path": "test/integration/static_pages_test.rb"
+    },
+    {
+      "id": "TS-077",
+      "feature_id": "BF-001",
+      "name": "KindergartenYear.active Scope",
+      "type": "unit",
+      "role": "all",
+      "priority": "p0",
+      "status": "done",
+      "description": "KindergartenYear.active gibt das aktive Jahr zurück; nil wenn kein aktives Jahr vorhanden.",
+      "preconditions": [],
+      "scenarios": [
+        {
+          "id": "TS-077-S01",
+          "name": "Active Scope gibt aktives Jahr zurück",
+          "given": "Genau ein KindergartenYear hat active: true",
+          "when": "KindergartenYear.active aufgerufen wird",
+          "then": "Das aktive KindergartenYear-Objekt wird zurückgegeben",
+          "negative": false
+        },
+        {
+          "id": "TS-077-S02",
+          "name": "Active Scope gibt nil zurück wenn kein aktives Jahr",
+          "given": "Kein KindergartenYear hat active: true",
+          "when": "KindergartenYear.active aufgerufen wird",
+          "then": "nil wird zurückgegeben",
+          "negative": true
+        },
+        {
+          "id": "TS-077-S03",
+          "name": "Jahreswechsel: Active Scope reflektiert neues aktives Jahr",
+          "given": "KGJ 2024/25 ist aktiv; KGJ 2025/26 wird aktiviert",
+          "when": "KindergartenYear.active aufgerufen wird",
+          "then": "KGJ 2025/26 wird zurückgegeben; KGJ 2024/25 ist inaktiv",
+          "negative": false
+        }
+      ],
+      "success_criteria": [
+        "KindergartenYear.active ist ein definierter Scope/Klassenmethode",
+        "Konsistent mit bestehender deactivate_others Logik"
+      ],
+      "minitest_path": "test/models/kindergarten_year_active_scope_test.rb"
+    },
+    {
+      "id": "TS-078",
+      "feature_id": "BF-001",
+      "name": "Einkaufsliste: Aktives Kindergartenjahr automatisch gesetzt",
+      "type": "integration",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "done",
+      "description": "ShoppingList-Formular enthält hidden field; create-Action setzt aktives Jahr automatisch wenn nicht übergeben.",
+      "preconditions": [
+        "Betreuer eingeloggt",
+        "Aktives Kindergartenjahr vorhanden",
+        "Gruppe vorhanden"
+      ],
+      "scenarios": [
+        {
+          "id": "TS-078-S01",
+          "name": "Formular enthält hidden field mit aktivem Jahr",
+          "given": "Aktives KGJ vorhanden",
+          "when": "GET /shopping_lists/new",
+          "then": "HTML enthält input[type=hidden][name='shopping_list[kindergarten_year_id]'] mit aktiver Jahr-ID",
+          "negative": false
+        },
+        {
+          "id": "TS-078-S02",
+          "name": "Create ohne kindergarten_year_id nutzt aktives Jahr",
+          "given": "Aktives KGJ vorhanden; POST ohne kindergarten_year_id in Params",
+          "when": "POST /shopping_lists mit title, event_date, group_id aber ohne kindergarten_year_id",
+          "then": "Einkaufsliste wird angelegt; kindergarten_year_id == aktives Jahr; HTTP 302",
+          "negative": false
+        },
+        {
+          "id": "TS-078-S03",
+          "name": "Create mit hidden field liefert keine Validierungsfehler",
+          "given": "Aktives KGJ; POST mit kindergarten_year_id == aktives Jahr",
+          "when": "POST /shopping_lists mit allen Pflichtfeldern inklusive kindergarten_year_id",
+          "then": "HTTP 302; kein Validierungsfehler für kindergarten_year_id",
+          "negative": false
+        },
+        {
+          "id": "TS-078-S04",
+          "name": "Create ohne aktives Jahr und ohne ID liefert 422",
+          "given": "Kein aktives KGJ; POST ohne kindergarten_year_id",
+          "when": "POST /shopping_lists",
+          "then": "HTTP 422; Validierungsfehler",
+          "negative": true
+        }
+      ],
+      "success_criteria": [
+        "Betreuer kann Einkaufsliste ohne manuelle Jahresauswahl anlegen",
+        "Fallback aktives Jahr greift wenn hidden field fehlt"
+      ],
+      "minitest_path": "test/controllers/shopping_list_active_year_test.rb"
     }
   ]
 }

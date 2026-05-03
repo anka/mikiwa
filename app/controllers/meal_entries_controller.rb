@@ -22,7 +22,7 @@ class MealEntriesController < ApplicationController
     @meal_entry = MealEntry.new(
       date: params[:date].present? ? Date.parse(params[:date]) : Date.current,
       group_id: params[:group_id],
-      kindergarten_year: active_year
+      kindergarten_year: active_kindergarten_year
     )
     @groups = Group.order(:name)
     @kindergarten_years = KindergartenYear.order(start_date: :desc)
@@ -78,9 +78,5 @@ class MealEntriesController < ApplicationController
   def require_staff!
     return if current_user&.staff?
     render plain: "Zugriff verweigert", status: :forbidden
-  end
-
-  def active_year
-    KindergartenYear.find_by(active: true)
   end
 end

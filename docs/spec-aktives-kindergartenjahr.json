@@ -1,0 +1,202 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:aktives-kindergartenjahr-auto-vorausfullen",
+  "name": "Aktives Kindergartenjahr automatisch vorausfüllen",
+  "description": "Alle Formulare und Controller, die ein Kindergartenjahr als Pflichtfeld benötigen, sollen automatisch das aktuell aktive Kindergartenjahr vorausgefüllt bekommen – ohne manuelle Auswahl durch den Benutzer.",
+  "dateCreated": "2026-05-03",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Beim Erstellen einer Einkaufsliste (und potenziell weiterer Ressourcen) erscheint der Validierungsfehler 'Kindergartenjahr muss ausgefüllt werden', obwohl der Controller in der new-Action bereits das aktive Jahr vorbesetzt. Das Problem: Das Formular enthält kein entsprechendes hidden field, weshalb der Wert beim Submit verloren geht.",
+    "affectedUsers": "Betreuer und Admins, die neue Einkaufslisten, Veranstaltungen, Galerien, Abstimmungen oder Teilnahmelisten anlegen wollen. Betrifft jeden Erstellvorgang im laufenden Betrieb.",
+    "costOfInaction": "Kernfunktionen der App sind nicht nutzbar. Betreuer können keine Einkaufslisten anlegen. Das untergräbt das Vertrauen in die Anwendung und erzeugt unnötige Reibung im täglichen Betrieb."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Alle Formulare, die kindergarten_year_id als Pflichtfeld haben, senden beim Submit immer einen gültigen Wert",
+      "type": "user",
+      "target": "0 Validierungsfehler zu kindergarten_year_id nach dem Fix"
+    },
+    {
+      "description": "KindergartenYear.active scope ist zentral definiert und wird konsistent in allen Controllern verwendet",
+      "type": "business",
+      "target": "Einheitliche, wartbare Implementierung ohne Code-Duplikation"
+    },
+    {
+      "description": "Keine manuelle Auswahl des Kindergartenjahres bei normalen Erstellvorgängen erforderlich",
+      "type": "user",
+      "target": "Formular-Flow ohne zusätzlichen Schritt oder Dropdown für das Jahr"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Multi-Year-Switching im Formular (Benutzer wählt explizit ein anderes Jahr)",
+      "rationale": "Nicht gefordert; das aktive Jahr ist immer der richtige Kontext im laufenden Betrieb"
+    },
+    {
+      "description": "Nachträgliche Migration bestehender Datensätze ohne Kindergartenjahr",
+      "rationale": "Nicht Teil des Bugs; bestehende Daten haben bereits gültige Werte"
+    },
+    {
+      "description": "UI-Anzeige des aktiven Kindergartenjahres im Formular",
+      "rationale": "Implizit durch Hidden Field; keine visuelle Hervorhebung nötig in v1"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer",
+      "capability": "Eine neue Einkaufsliste anlegen ohne ein Kindergartenjahr manuell auswählen zu müssen",
+      "benefit": "Der tägliche Workflow ist reibungslos; kein Fehler beim Speichern",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Neue Veranstaltungen, Galerien, Abstimmungen und Teilnahmelisten anlegen ohne Kindergartenjahr-Fehler",
+      "benefit": "Alle Erstellformulare funktionieren konsistent ohne manuelle Jahresauswahl",
+      "priority": 1
+    },
+    {
+      "persona": "Entwickler",
+      "capability": "KindergartenYear.active als zentralen, gut lesbaren Scope verwenden",
+      "benefit": "Einheitliche Codebase; keine verstreuten find_by(active: true) Aufrufe",
+      "priority": 2
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "ShoppingList-Formular enthält ein hidden field für kindergarten_year_id mit dem Wert des aktiven Jahres",
+        "acceptanceCriteria": [
+          {
+            "given": "Ein aktives Kindergartenjahr existiert",
+            "when": "Betreuer das Formular für eine neue Einkaufsliste öffnet und abschickt",
+            "then": "Einkaufsliste wird ohne Validierungsfehler gespeichert; kindergarten_year_id ist gesetzt"
+          },
+          {
+            "given": "Kein aktives Kindergartenjahr existiert",
+            "when": "Betreuer versucht eine Einkaufsliste anzulegen",
+            "then": "Klare Fehlermeldung 'Kein aktives Kindergartenjahr gefunden'"
+          }
+        ],
+        "technicalNotes": "= f.hidden_field :kindergarten_year_id in _form.html.haml ergänzen",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "KindergartenYear erhält einen .active class-method Scope der das aktuell aktive Jahr zurückgibt",
+        "acceptanceCriteria": [
+          {
+            "given": "Genau ein KindergartenYear hat active: true",
+            "when": "KindergartenYear.active aufgerufen wird",
+            "then": "Gibt das aktive KindergartenYear-Objekt zurück (nicht nil)"
+          }
+        ],
+        "technicalNotes": "scope :active, -> { find_by(active: true) } oder def self.active",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-003",
+        "description": "ApplicationController stellt einen zentralen active_kindergarten_year Helper bereit, den alle betroffenen Controller nutzen",
+        "acceptanceCriteria": [
+          {
+            "given": "Ein Controller erbt von ApplicationController",
+            "when": "active_kindergarten_year aufgerufen wird",
+            "then": "Gibt KindergartenYear.active zurück; kein Code-Duplikat in Einzelcontrollern"
+          }
+        ],
+        "technicalNotes": "helper_method :active_kindergarten_year; ersetzt lokale active_year Methoden in ShoppingListsController, PollsController, GalleriesController, AttendanceListsController, EventsController, CalendarEventsController",
+        "dependencies": ["R-P0-002"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Alle anderen betroffenen Formulare (Polls, Galleries, AttendanceLists, Events, CalendarEvents) konsistent auf Hidden Field oder aktiv vorausgefülltes Select umgestellt",
+        "acceptanceCriteria": [
+          {
+            "given": "Aktives Kindergartenjahr existiert",
+            "when": "Betreuer eines der oben genannten Formulare abschickt",
+            "then": "Kein Kindergartenjahr-Validierungsfehler"
+          }
+        ],
+        "technicalNotes": "Diese Formulare haben teils sichtbare Selects – prüfen ob Hidden Field sinnvoller ist",
+        "dependencies": ["R-P0-003"]
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Controller-Create-Actions setzen kindergarten_year als Fallback wenn nicht über Form-Params übergeben",
+        "acceptanceCriteria": [
+          {
+            "given": "Ein POST-Request enthält keine kindergarten_year_id",
+            "when": "Create-Action ausgeführt wird",
+            "then": "Das aktive Kindergartenjahr wird automatisch gesetzt"
+          }
+        ],
+        "technicalNotes": "@resource.kindergarten_year ||= active_kindergarten_year in create actions",
+        "dependencies": ["R-P0-003"]
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Explizite Jahresauswahl für Archiv-Zugriff (altes Jahr betrachten/bearbeiten)",
+        "rationale": "Nicht im aktuellen Scope; das aktive Jahr ist immer der richtige Kontext"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Erfolgreiche Einkaufslisten-Erstellungen",
+        "description": "Anzahl erfolgreicher POST /shopping_lists ohne Validierungsfehler",
+        "target": "100% Erfolgsrate nach Fix",
+        "measurementMethod": "Rails Logs / Test-Suite",
+        "evaluationAt": "Direkt nach Deployment"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Support-Tickets zu Kindergartenjahr-Fehler",
+        "description": "Anzahl gemeldeter Fehler zu 'Kindergartenjahr muss ausgefüllt werden'",
+        "target": "0 Tickets nach Fix",
+        "measurementMethod": "Support-Channel Monitoring",
+        "evaluationAt": "7 Tage post-deployment"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Sollen Formulare mit sichtbarem Kindergartenjahr-Select (Polls, Galleries) auf Hidden Field umgestellt werden oder das aktive Jahr nur vorauswählen?",
+      "owner": "engineering",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [
+      { "description": "Blocker für produktiven Betrieb – so schnell wie möglich", "date": "2026-05-03" }
+    ],
+    "dependencies": [],
+    "phases": [
+      {
+        "name": "v1",
+        "scope": "KindergartenYear.active scope, ApplicationController helper, ShoppingList hidden field fix, Controller-Fallbacks"
+      },
+      {
+        "name": "v2",
+        "scope": "Konsistente Bereinigung aller anderen betroffenen Formulare"
+      }
+    ]
+  }
+}

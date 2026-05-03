@@ -4,7 +4,7 @@ class CalendarEventsController < ApplicationController
 
   def index
     @view = params[:view] == "list" ? "list" : "month"
-    @current_year = active_year || KindergartenYear.order(start_date: :desc).first
+    @current_year = active_kindergarten_year || KindergartenYear.order(start_date: :desc).first
     @filter_year  = params[:kindergarten_year_id].present? ?
       KindergartenYear.find_by(id: params[:kindergarten_year_id]) : @current_year
     @filter_year ||= @current_year
@@ -32,7 +32,7 @@ class CalendarEventsController < ApplicationController
   end
 
   def new
-    @event = CalendarEvent.new(kindergarten_year: active_year, all_day: true)
+    @event = CalendarEvent.new(kindergarten_year: active_kindergarten_year, all_day: true)
     @groups = Group.order(:name)
     @kindergarten_years = KindergartenYear.order(start_date: :desc)
   end
@@ -92,10 +92,6 @@ class CalendarEventsController < ApplicationController
   def require_staff_for_mutations!
     return if current_user&.staff?
     render plain: "Zugriff verweigert", status: :forbidden
-  end
-
-  def active_year
-    KindergartenYear.find_by(active: true)
   end
 
   def parse_month(month_param)

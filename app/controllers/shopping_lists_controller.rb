@@ -14,7 +14,7 @@ class ShoppingListsController < ApplicationController
   end
 
   def new
-    @list = ShoppingList.new(kindergarten_year: active_year)
+    @list = ShoppingList.new(kindergarten_year: active_kindergarten_year)
     @list.shopping_items.build
     @groups = Group.order(:name)
     @kindergarten_years = KindergartenYear.order(start_date: :desc)
@@ -22,6 +22,7 @@ class ShoppingListsController < ApplicationController
 
   def create
     @list = ShoppingList.new(list_params)
+    @list.kindergarten_year ||= active_kindergarten_year
     @list.created_by = current_user
     if @list.save
       redirect_to shopping_list_path(@list), notice: "Einkaufsliste wurde angelegt."
@@ -70,7 +71,4 @@ class ShoppingListsController < ApplicationController
     render plain: "Zugriff verweigert", status: :forbidden
   end
 
-  def active_year
-    KindergartenYear.find_by(active: true)
-  end
 end

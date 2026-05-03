@@ -3,7 +3,7 @@ class EventsController < ApplicationController
   before_action :require_staff!, only: %i[new create edit update destroy cancel]
 
   def index
-    @current_year = active_year || KindergartenYear.order(start_date: :desc).first
+    @current_year = active_kindergarten_year || KindergartenYear.order(start_date: :desc).first
     @filter_year  = params[:kindergarten_year_id].present? ?
       KindergartenYear.find_by(id: params[:kindergarten_year_id]) : @current_year
     @filter_year ||= @current_year
@@ -21,7 +21,7 @@ class EventsController < ApplicationController
   end
 
   def new
-    @event = Event.new(kindergarten_year: active_year, all_day: false)
+    @event = Event.new(kindergarten_year: active_kindergarten_year, all_day: false)
     @groups = Group.order(:name)
     @kindergarten_years = KindergartenYear.order(start_date: :desc)
   end
@@ -87,9 +87,5 @@ class EventsController < ApplicationController
   def require_staff!
     return if current_user&.staff?
     render plain: "Zugriff verweigert", status: :forbidden
-  end
-
-  def active_year
-    KindergartenYear.find_by(active: true)
   end
 end

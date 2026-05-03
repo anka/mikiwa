@@ -7,6 +7,10 @@ class KindergartenYear < ApplicationRecord
 
   before_save :deactivate_others, if: -> { active? && active_changed? }
 
+  def self.active
+    find_by(active: true)
+  end
+
   private
 
   def deactivate_others

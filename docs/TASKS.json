@@ -56,6 +56,13 @@
         "F17",
         "F18"
       ]
+    },
+    {
+      "phase": 5,
+      "name": "Bugfixes",
+      "feature_ids": [
+        "BF-001"
+      ]
     }
   ],
   "features": [
@@ -1439,6 +1446,49 @@
         "F13",
         "F14",
         "F15"
+      ]
+    },
+    {
+      "id": "BF-001",
+      "name": "Aktives Kindergartenjahr automatisch vorausfüllen",
+      "phase": 5,
+      "status": "done",
+      "short_description": "Bugfix: Alle Erstellformulare übermitteln automatisch das aktive Kindergartenjahr – kein manueller Auswahlschritt nötig.",
+      "description": "Beim Erstellen einer Einkaufsliste (und potenziell weiterer Ressourcen) erscheint der Validierungsfehler 'Kindergartenjahr muss ausgefüllt werden'. Die Ursache: Der ShoppingListsController setzt in der new-Action zwar @list = ShoppingList.new(kindergarten_year: active_year), aber das Formular enthält kein hidden field für kindergarten_year_id – der Wert geht beim Submit verloren. Lösung: (1) KindergartenYear.active Scope hinzufügen, (2) active_kindergarten_year Helper in ApplicationController zentralisieren (ersetzt lokale active_year-Duplikate in allen Controllern), (3) ShoppingList-Formular um hidden field ergänzen, (4) Fallback in Controller-Create-Actions wenn kein Jahr übergeben. Spec: docs/spec-aktives-kindergartenjahr.json",
+      "acceptance_criteria": [
+        "KindergartenYear hat einen .active Scope/Klassenmethode der das aktive Jahr zurückgibt",
+        "ApplicationController stellt active_kindergarten_year als Helper bereit; alle betroffenen Controller verwenden diesen statt lokaler active_year-Methoden",
+        "ShoppingList-Formular enthält hidden field für kindergarten_year_id",
+        "Neue Einkaufsliste kann ohne Validierungsfehler erstellt werden wenn ein aktives Kindergartenjahr existiert",
+        "Controller-Create-Actions setzen kindergarten_year als Fallback wenn nicht über Params übergeben"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Einkaufsliste anlegen – kein Validierungsfehler",
+          "given": "Ein aktives Kindergartenjahr existiert und Betreuer ist eingeloggt",
+          "when": "Betreuer öffnet neue Einkaufsliste, füllt Pflichtfelder aus und schickt Formular ab",
+          "then": "Einkaufsliste wird ohne Fehler gespeichert; kindergarten_year_id ist gleich dem aktiven Jahr"
+        },
+        {
+          "scenario": "KindergartenYear.active gibt aktives Jahr zurück",
+          "given": "Genau ein KindergartenYear hat active: true",
+          "when": "KindergartenYear.active aufgerufen wird",
+          "then": "Das aktive Jahr wird zurückgegeben"
+        },
+        {
+          "scenario": "ApplicationController Helper verfügbar",
+          "given": "Controller erbt von ApplicationController",
+          "when": "active_kindergarten_year aufgerufen wird",
+          "then": "Gibt das aktive Kindergartenjahr zurück; kein NoMethodError"
+        }
+      ],
+      "success_criteria": [
+        "Keine Validierungsfehler für kindergarten_year_id bei normalen Erstellvorgängen",
+        "Kein Code-Duplikat: active_year-Methode nur noch einmal im ApplicationController",
+        "Alle betroffenen Tests grün"
+      ],
+      "dependencies": [
+        "T3"
       ]
     }
   ]

@@ -19,7 +19,7 @@ class AttendanceListsController < ApplicationController
   end
 
   def new
-    @list = AttendanceList.new(kindergarten_year: active_year)
+    @list = AttendanceList.new(kindergarten_year: active_kindergarten_year)
     @groups = Group.order(:name)
     @kindergarten_years = KindergartenYear.order(start_date: :desc)
   end
@@ -103,9 +103,5 @@ class AttendanceListsController < ApplicationController
   def require_staff!
     return if current_user&.staff?
     render plain: "Zugriff verweigert", status: :forbidden
-  end
-
-  def active_year
-    KindergartenYear.find_by(active: true)
   end
 end
