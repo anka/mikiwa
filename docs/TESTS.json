@@ -1807,7 +1807,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Dashboard zeigt alle 5 Sektionen mit korrekten Daten.",
       "preconditions": [
         "Elternteil mit ungelesener Mitteilung, kommendem Ereignis, offener Liste, Geburtstag in 7 Tagen, Speiseplan heute"
@@ -1842,7 +1842,7 @@
       "type": "integration",
       "role": "parent",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Dashboard zeigt ausschließlich Daten aus eigenen Gruppen.",
       "preconditions": [
         "Elternteil A und B mit Mitteilung nur an A's Gruppe"
