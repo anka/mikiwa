@@ -2351,7 +2351,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Offene Liste im Dashboard verschwindet nachdem Elternteil sich eingetragen hat.",
       "preconditions": [
         "Elternteil eingeloggt; offene Teilnahmeliste vorhanden"
