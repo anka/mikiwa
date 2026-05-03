@@ -79,7 +79,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Elternteil fordert Magic Link an, klickt ihn und erhält eine Session.",
       "preconditions": ["Aktiver Eltern-Account existiert", "ActionMailer auf :test gesetzt"],
       "scenarios": [
@@ -110,7 +110,7 @@
       "type": "unit",
       "role": "parent",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Bereits verwendete oder abgelaufene Tokens werden abgewiesen.",
       "preconditions": [],
       "scenarios": [
