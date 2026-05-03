@@ -2299,7 +2299,7 @@
       "type": "integration",
       "role": "all",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Preflight-Requests von fremden Origins werden abgewiesen.",
       "preconditions": [],
       "scenarios": [
