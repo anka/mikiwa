@@ -1620,7 +1620,7 @@
       "type": "system",
       "role": "all",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Kinder mit Geburtstag in den nächsten 14 Tagen hervorgehoben; Eltern sehen nur eigene Gruppen.",
       "preconditions": [
         "Kind A Geburtstag in 7 Tagen; Kind B Geburtstag in 30 Tagen"
