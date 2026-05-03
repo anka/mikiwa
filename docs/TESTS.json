@@ -172,7 +172,7 @@
       "type": "integration",
       "role": "all",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Mehr als 5 fehlgeschlagene Login-Versuche in 10 Minuten von einer IP werden blockiert.",
       "preconditions": ["Rack::Attack konfiguriert"],
       "scenarios": [
