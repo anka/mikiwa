@@ -599,7 +599,7 @@
       "type": "integration",
       "role": "all",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "GET /up liefert HTTP 200.",
       "preconditions": [],
       "scenarios": [
@@ -624,7 +624,7 @@
       "type": "unit",
       "role": "all",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Alle benutzerexponierten Tabellen verwenden UUIDs statt Integer-IDs.",
       "preconditions": [],
       "scenarios": [
@@ -657,7 +657,7 @@
       "type": "unit",
       "role": "admin",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Nur ein KindergartenYear kann gleichzeitig aktiv sein.",
       "preconditions": [],
       "scenarios": [
