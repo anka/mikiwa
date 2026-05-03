@@ -195,7 +195,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer setzt Passwort über Token-Link zurück.",
       "preconditions": ["Betreuer-Account existiert"],
       "scenarios": [
