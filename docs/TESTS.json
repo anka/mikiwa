@@ -1780,7 +1780,7 @@
       "type": "integration",
       "role": "all",
       "priority": "p2",
-      "status": "open",
+      "status": "done",
       "description": "Unveränderter Feed liefert HTTP 304 mit ETag.",
       "preconditions": [
         "Feed bereits abgerufen; kein neues Ereignis"
