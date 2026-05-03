@@ -1969,7 +1969,7 @@
       "type": "unit",
       "role": "all",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Jede Controller-Action ruft eine Policy auf; kein ungeschützter Endpunkt.",
       "preconditions": [],
       "scenarios": [
