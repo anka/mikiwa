@@ -159,6 +159,29 @@ class PollsControllerTest < ActionDispatch::IntegrationTest
 
   # --- export ---
 
+  # TS-044-S01: Betreuer exportiert Abstimmungsergebnis als CSV mit allen Stimmen
+  test "TS-044 CSV-Export enthält alle 3 Stimmen" do
+    parent2 = User.create!(email: "poll_p2@mikiwa.at", password: SecureRandom.hex(20), role: "parent", first_name: "Anna", last_name: "Zwei")
+    parent3 = User.create!(email: "poll_p3@mikiwa.at", password: SecureRandom.hex(20), role: "parent", first_name: "Ben",  last_name: "Drei")
+    option = @poll.poll_options.order(:created_at).first
+
+    @poll.vote!(user: @parent, option_ids: [ option.id ])
+    @poll.vote!(user: parent2, option_ids: [ option.id ])
+    @poll.vote!(user: parent3, option_ids: [ option.id ])
+
+    sign_in_as(@staff)
+    get export_poll_path(@poll, format: :csv)
+
+    assert_response :success
+    assert_match "text/csv", response.content_type
+
+    data_lines = response.body.lines.reject { |l| l.strip.empty? }
+    assert data_lines.size >= 4, "Header + 3 Datenzeilen erwartet, war #{data_lines.size}"
+  ensure
+    Vote.joins(:poll_option).where(poll_options: { poll_id: @poll.id }).destroy_all
+    [ parent2, parent3 ].compact.each(&:destroy!)
+  end
+
   test "staff can export CSV" do
     sign_in_as(@staff)
     get export_poll_path(@poll, format: :csv)
