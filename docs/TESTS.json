@@ -226,7 +226,7 @@
       "type": "unit",
       "role": "all",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Alle Mailer-Klassen liefern HTML- und Plaintext-Variante.",
       "preconditions": ["ActionMailer delivery_method :test"],
       "scenarios": [
