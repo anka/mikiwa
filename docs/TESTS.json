@@ -1310,7 +1310,7 @@
       "type": "integration",
       "role": "caretaker",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer exportiert Liste als CSV mit allen Einträgen.",
       "preconditions": [
         "Liste mit 3 Einträgen vorhanden"

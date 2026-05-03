@@ -115,6 +115,44 @@ class AttendanceListsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
+  # TS-041-S01: Betreuer exportiert Liste als CSV mit allen Einträgen
+  test "TS-041 CSV-Export enthält alle eingetragenen Kinder" do
+    child2 = Child.create!(
+      first_name: "Mia", last_name: "Kraft",
+      date_of_birth: Date.new(2021, 3, 10),
+      group: @group_baeren, kindergarten_year: @year, photo_consent: true
+    )
+    child3 = Child.create!(
+      first_name: "Leo", last_name: "Steyr",
+      date_of_birth: Date.new(2020, 7, 22),
+      group: @group_baeren, kindergarten_year: @year, photo_consent: true
+    )
+    parent2 = User.create!(email: "csv_p2@mikiwa.at", password: SecureRandom.hex(20), role: "parent")
+    parent3 = User.create!(email: "csv_p3@mikiwa.at", password: SecureRandom.hex(20), role: "parent")
+    ParentChild.create!(user: parent2, child: child2)
+    ParentChild.create!(user: parent3, child: child3)
+
+    AttendanceEntry.create!(list: @list, child: @child,  user: @parent)
+    AttendanceEntry.create!(list: @list, child: child2, user: parent2)
+    AttendanceEntry.create!(list: @list, child: child3, user: parent3)
+
+    sign_in_as(@caretaker)
+    get export_attendance_list_path(@list, format: :csv)
+
+    assert_response :success
+    assert_match "text/csv", response.content_type
+    assert_match @child.full_name,  response.body
+    assert_match child2.full_name,  response.body
+    assert_match child3.full_name,  response.body
+
+    data_lines = response.body.lines.reject { |l| l.strip.empty? }
+    assert data_lines.size >= 4, "Header + 3 Datenzeilen erwartet, war #{data_lines.size}"
+  ensure
+    AttendanceEntry.where(list: @list).destroy_all
+    ParentChild.where(user: [ parent2, parent3 ]).destroy_all
+    [ child2, child3, parent2, parent3 ].each(&:destroy!)
+  end
+
   # --- CSV export ---
   test "caretaker can download CSV export" do
     AttendanceEntry.create!(list: @list, child: @child, user: @parent)

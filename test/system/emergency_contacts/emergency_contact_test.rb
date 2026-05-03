@@ -1,6 +1,6 @@
 require "test_helper"
 
-class EmergencyContactTest < ActionDispatch::IntegrationTest
+class EmergencyContactIntegrationTest < ActionDispatch::IntegrationTest
   setup do
     @year = KindergartenYear.where(active: true).first || KindergartenYear.create!(
       label: "2025/26", start_date: Date.new(2025, 9, 1), end_date: Date.new(2026, 7, 31), active: true
