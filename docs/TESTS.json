@@ -1150,7 +1150,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer legt Ereignis an; erscheint im Kalender aller Gruppen-Mitglieder.",
       "preconditions": [
         "Betreuer eingeloggt",
@@ -1186,7 +1186,7 @@
       "type": "integration",
       "role": "all",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Jeder Benutzer hat einen personalisierten iCal-Link im Profil.",
       "preconditions": [
         "Eingeloggter Benutzer"
@@ -1213,7 +1213,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer legt Veranstaltung an, verknüpft Module und sagt ab.",
       "preconditions": [
         "Betreuer eingeloggt"
@@ -1248,7 +1248,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Elternteil sieht Detailseite mit allen verknüpften Modulen.",
       "preconditions": [
         "Veranstaltung mit Teilnahmeliste und Galerie vorhanden"
@@ -1275,7 +1275,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Elternteil trägt sich ein und nimmt Eintrag zurück (vor Anmeldeschluss).",
       "preconditions": [
         "Offene Teilnahmeliste existiert"
