@@ -3,6 +3,7 @@
 ## Product overview
 
 MIKIWA is a Rails 8.1 kindergarden management platform. It uses SQLLite, Solid Queue for background jobs, and importmap-rails (no Node.js/npm). It's UI is based on Tailwindcss.
+The full product description can be found at docs/PRODUCT.md.
 
 ## Tech Stack
 
@@ -50,6 +51,7 @@ Standard Rails layout. Key entry points:
    - Add focused tests for custom business logic (services/queries/forms), especially money, permissions, data integrity, and security behavior.
    - Avoid low-value tests that only re-test Rails defaults (basic validations/associations/CRUD wiring) or purely cosmetic UI details.
    - Keep the suite fast and pragmatic; do not add low-risk edge-case tests unless they protect meaningful business risk.
+   - Use the agent-browser skill to verify features in the browser, setup accounts and base data before if necessary. 
 3. Do not assume that smooth migration is absolutely required, ask for clarification in such situations
 4. This project builds upon the ideas, philosophy and functionality of the Ruby on Rails framework, stick to them and its best practices. 
 5. Prefer a "clear contract" where a component takes responsibility and others can rely on that (e.g. no need for read-time fallback handling if there's a component that validates input at write-time)

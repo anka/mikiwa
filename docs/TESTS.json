@@ -1,0 +1,2106 @@
+{
+  "version": "1.0",
+  "project": "MIKIWA",
+  "description": "Vollständige Test-Spezifikation parallel zu TASKS.json. Deckt alle Rollen (admin, caretaker, parent) ab. Typen: system (Capybara/Selenium), unit (Minitest Model/Service), integration (Request/Controller).",
+  "generated": "2026-05-02",
+  "roles": ["admin", "caretaker", "parent"],
+  "test_types": {
+    "system": "test/system/ — End-to-End via Capybara+Selenium, prüft echte Browser-Flows",
+    "unit": "test/models/ | test/mailers/ | test/jobs/ — isolierte Logik-Tests",
+    "integration": "test/controllers/ | test/integration/ — HTTP-Request/Response ohne Browser"
+  },
+  "test_suites": [
+    {
+      "id": "TS-001",
+      "feature_id": "T1",
+      "name": "Caretaker/Admin Password Login – Happy Path",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Betreuer loggt sich mit gültiger E-Mail und Passwort ein und landet auf dem Dashboard.",
+      "preconditions": ["Aktiver Betreuer-Account mit Passwort existiert"],
+      "scenarios": [
+        {
+          "id": "TS-001-S01",
+          "name": "Erfolgreicher Login",
+          "given": "Betreuer-Account mit E-Mail caretaker@test.de und Passwort (≥16 Zeichen) existiert",
+          "when": "Benutzer öffnet /login, gibt Credentials ein und klickt 'Anmelden'",
+          "then": "Redirect auf Betreuer-Dashboard; Session-Cookie mit httpOnly, Secure, SameSite=Lax gesetzt",
+          "negative": false
+        },
+        {
+          "id": "TS-001-S02",
+          "name": "Admin Login",
+          "given": "Admin-Account existiert",
+          "when": "Admin loggt sich ein",
+          "then": "Redirect auf Admin-Dashboard",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Session-Cookie korrekt gesetzt", "Redirect auf richtiges Dashboard", "Kein Passwort in Logs"],
+      "minitest_path": "test/system/authentication/caretaker_login_test.rb"
+    },
+    {
+      "id": "TS-002",
+      "feature_id": "T1",
+      "name": "Login Fehlerfälle – Anti-Enumeration",
+      "type": "integration",
+      "role": "all",
+      "priority": "p0",
+      "status": "open",
+      "description": "Falsches Passwort und unbekannte E-Mail zeigen dieselbe generische Fehlermeldung.",
+      "preconditions": ["Betreuer-Account existiert"],
+      "scenarios": [
+        {
+          "id": "TS-002-S01",
+          "name": "Falsches Passwort – generische Meldung",
+          "given": "Betreuer-Account existiert",
+          "when": "POST /session mit korrekter E-Mail aber falschem Passwort",
+          "then": "HTTP 422; Fehlermeldung enthält weder 'E-Mail nicht gefunden' noch 'Passwort falsch' – nur generische Meldung",
+          "negative": true
+        },
+        {
+          "id": "TS-002-S02",
+          "name": "Unbekannte E-Mail – gleiche Meldung",
+          "given": "E-Mail unbekannt@test.de existiert nicht",
+          "when": "POST /session mit unbekannter E-Mail",
+          "then": "Exakt gleiche Fehlermeldung wie bei falschem Passwort",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Beide Fehlerpfade liefern identischen Response-Body"],
+      "minitest_path": "test/controllers/sessions_controller_test.rb"
+    },
+    {
+      "id": "TS-003",
+      "feature_id": "T1",
+      "name": "Magic Link für Eltern – vollständiger Flow",
+      "type": "system",
+      "role": "parent",
+      "priority": "p0",
+      "status": "open",
+      "description": "Elternteil fordert Magic Link an, klickt ihn und erhält eine Session.",
+      "preconditions": ["Aktiver Eltern-Account existiert", "ActionMailer auf :test gesetzt"],
+      "scenarios": [
+        {
+          "id": "TS-003-S01",
+          "name": "Magic Link Request + Klick",
+          "given": "Eltern-Account parent@test.de ist aktiv",
+          "when": "Benutzer gibt E-Mail im Magic-Link-Formular ein, klickt 'Link senden', öffnet den Link aus deliveries",
+          "then": "Session ist geöffnet; Redirect auf Eltern-Dashboard",
+          "negative": false
+        },
+        {
+          "id": "TS-003-S02",
+          "name": "Anti-Enumeration Magic Link",
+          "given": "E-Mail nicht.vorhanden@test.de existiert nicht",
+          "when": "Benutzer gibt unbekannte E-Mail im Magic-Link-Formular ein",
+          "then": "Seite zeigt neutrale Bestätigungsmeldung; keine E-Mail versendet; kein Unterschied zu bekannter E-Mail sichtbar",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Token in DB nach Klick als used markiert", "Session-Cookie korrekt gesetzt"],
+      "minitest_path": "test/system/authentication/magic_link_test.rb"
+    },
+    {
+      "id": "TS-004",
+      "feature_id": "T1",
+      "name": "Magic Link – Einmalverwendung & Ablauf",
+      "type": "unit",
+      "role": "parent",
+      "priority": "p0",
+      "status": "open",
+      "description": "Bereits verwendete oder abgelaufene Tokens werden abgewiesen.",
+      "preconditions": [],
+      "scenarios": [
+        {
+          "id": "TS-004-S01",
+          "name": "Zweite Verwendung abgewiesen",
+          "given": "Magic-Link-Token wurde bereits einmal verwendet",
+          "when": "Derselbe Token erneut übergeben wird",
+          "then": "Token gilt als ungültig; keine Session",
+          "negative": true
+        },
+        {
+          "id": "TS-004-S02",
+          "name": "Abgelaufener Token (>30 Min)",
+          "given": "Token wurde vor 31 Minuten erzeugt",
+          "when": "Token zur Authentifizierung übergeben wird",
+          "then": "Token gilt als abgelaufen; Fehlermeldung",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Token.valid? gibt false zurück nach Verwendung und nach Ablauf"],
+      "minitest_path": "test/models/magic_link_token_test.rb"
+    },
+    {
+      "id": "TS-005",
+      "feature_id": "T1",
+      "name": "Session Lifetime & Logout",
+      "type": "integration",
+      "role": "all",
+      "priority": "p0",
+      "status": "open",
+      "description": "Session läuft nach 7 Tagen ab; Logout invalidiert Session serverseitig.",
+      "preconditions": ["Eingeloggter Benutzer"],
+      "scenarios": [
+        {
+          "id": "TS-005-S01",
+          "name": "Logout invalidiert Session",
+          "given": "Betreuer ist eingeloggt",
+          "when": "DELETE /session (Logout) aufgerufen wird",
+          "then": "Session-Record in DB invalidiert; folgende Requests auf geschützte Seiten liefern Redirect zu /login",
+          "negative": false
+        },
+        {
+          "id": "TS-005-S02",
+          "name": "Abgelaufene Session",
+          "given": "Session wurde vor 8 Tagen erstellt",
+          "when": "Geschützte Seite aufgerufen wird",
+          "then": "Redirect zu /login; kein Datenzugriff",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Session-Record hat expires_at; abgelaufene Sessions werden abgewiesen"],
+      "minitest_path": "test/controllers/sessions_controller_test.rb"
+    },
+    {
+      "id": "TS-006",
+      "feature_id": "T1",
+      "name": "Brute-Force-Schutz (Rate Limiting)",
+      "type": "integration",
+      "role": "all",
+      "priority": "p0",
+      "status": "open",
+      "description": "Mehr als 5 fehlgeschlagene Login-Versuche in 10 Minuten von einer IP werden blockiert.",
+      "preconditions": ["Rack::Attack konfiguriert"],
+      "scenarios": [
+        {
+          "id": "TS-006-S01",
+          "name": "6. Versuch blockiert",
+          "given": "5 fehlgeschlagene Login-Versuche von IP 127.0.0.1 in den letzten 5 Minuten",
+          "when": "6. Login-Versuch erfolgt",
+          "then": "HTTP 429 Too Many Requests",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Rack::Attack-Regel schlägt bei Überschreitung an"],
+      "minitest_path": "test/integration/rate_limiting_test.rb"
+    },
+    {
+      "id": "TS-007",
+      "feature_id": "T1",
+      "name": "Passwort-Reset Flow",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Betreuer setzt Passwort über Token-Link zurück.",
+      "preconditions": ["Betreuer-Account existiert"],
+      "scenarios": [
+        {
+          "id": "TS-007-S01",
+          "name": "Reset vollständig",
+          "given": "Betreuer hat Passwort vergessen",
+          "when": "Betreuer fordert Reset an, öffnet Token-Link, gibt neues Passwort (≥16 Zeichen) ein",
+          "then": "Login mit neuem Passwort erfolgreich; alter Token ungültig",
+          "negative": false
+        },
+        {
+          "id": "TS-007-S02",
+          "name": "Abgelaufener Reset-Token",
+          "given": "Reset-Token wurde vor 2 Stunden erzeugt",
+          "when": "Token-Link geöffnet wird",
+          "then": "Fehlermeldung 'Link abgelaufen'; kein Passwort-Reset möglich",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Token max. 1 Stunde gültig; Single-Use"],
+      "minitest_path": "test/system/authentication/password_reset_test.rb"
+    },
+    {
+      "id": "TS-008",
+      "feature_id": "T7",
+      "name": "Mailer HTML und Plaintext",
+      "type": "unit",
+      "role": "all",
+      "priority": "p1",
+      "status": "open",
+      "description": "Alle Mailer-Klassen liefern HTML- und Plaintext-Variante.",
+      "preconditions": ["ActionMailer delivery_method :test"],
+      "scenarios": [
+        {
+          "id": "TS-008-S01",
+          "name": "Magic Link Mailer beide Teile",
+          "given": "MagicLinkMailer.magic_link aufgerufen",
+          "when": "mail.parts abgefragt",
+          "then": "text/html und text/plain sind beide vorhanden und nicht leer",
+          "negative": false
+        },
+        {
+          "id": "TS-008-S02",
+          "name": "Invitation Mailer beide Teile",
+          "given": "InvitationMailer.invite aufgerufen",
+          "when": "mail.parts abgefragt",
+          "then": "text/html und text/plain vorhanden",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Alle Mailer haben HTML + Text"],
+      "minitest_path": "test/mailers/application_mailer_test.rb"
+    },
+    {
+      "id": "TS-009",
+      "feature_id": "T7",
+      "name": "Bounce-Webhook setzt email_invalid",
+      "type": "integration",
+      "role": "all",
+      "priority": "p1",
+      "status": "open",
+      "description": "Provider-Bounce-Webhook markiert betroffenen Account als email_invalid.",
+      "preconditions": ["User-Account existiert"],
+      "scenarios": [
+        {
+          "id": "TS-009-S01",
+          "name": "Bounce verarbeitet",
+          "given": "User mit E-Mail bounce@test.de existiert",
+          "when": "POST /webhooks/mailjet/bounce mit payload für bounce@test.de",
+          "then": "User.email_invalid == true",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["email_invalid wird persistent gesetzt"],
+      "minitest_path": "test/controllers/webhooks/mailjet_controller_test.rb"
+    },
+    {
+      "id": "TS-010",
+      "feature_id": "T2",
+      "name": "Eltern-Datenschutz – Scoping",
+      "type": "integration",
+      "role": "parent",
+      "priority": "p0",
+      "status": "open",
+      "description": "Elternteil sieht ausschließlich Kinder, die dem eigenen Account zugeordnet sind.",
+      "preconditions": ["Zwei Elternteile mit je einem Kind"],
+      "scenarios": [
+        {
+          "id": "TS-010-S01",
+          "name": "Nur eigene Kinder",
+          "given": "Elternteil A (Kind X) und Elternteil B (Kind Y) sind in DB",
+          "when": "Elternteil A GET /children aufruft",
+          "then": "Response enthält nur Kind X; Kind Y ist nicht enthalten",
+          "negative": false
+        },
+        {
+          "id": "TS-010-S02",
+          "name": "Direktzugriff auf fremdes Kind abgewiesen",
+          "given": "Elternteil A ist eingeloggt",
+          "when": "GET /children/:id_von_kind_Y direkt aufgerufen",
+          "then": "HTTP 403",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Kein Cross-Account-Datenleck nachweisbar"],
+      "minitest_path": "test/integration/authorization/parent_scoping_test.rb"
+    },
+    {
+      "id": "TS-011",
+      "feature_id": "T2",
+      "name": "Betreuer kann keine Admin-Routes aufrufen",
+      "type": "integration",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Betreuer erhält HTTP 403 bei Admin-Only-Endpunkten.",
+      "preconditions": ["Eingeloggter Betreuer"],
+      "scenarios": [
+        {
+          "id": "TS-011-S01",
+          "name": "Admin-Route für Betreuer gesperrt",
+          "given": "Betreuer ist eingeloggt",
+          "when": "GET /admin/users aufgerufen wird",
+          "then": "HTTP 403",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Alle /admin-Routen antworten mit 403 für Nicht-Admins"],
+      "minitest_path": "test/integration/authorization/role_enforcement_test.rb"
+    },
+    {
+      "id": "TS-012",
+      "feature_id": "T2",
+      "name": "Unauthentifizierter Zugriff wird zu Login umgeleitet",
+      "type": "integration",
+      "role": "all",
+      "priority": "p0",
+      "status": "open",
+      "description": "Alle geschützten Routen leiten ohne Session zu /login weiter.",
+      "preconditions": ["Keine aktive Session"],
+      "scenarios": [
+        {
+          "id": "TS-012-S01",
+          "name": "Dashboard ohne Session",
+          "given": "Kein Session-Cookie vorhanden",
+          "when": "GET /dashboard aufgerufen",
+          "then": "HTTP 302 Redirect zu /login; keine Daten ausgegeben",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Alle auth-pflichtigen Routen leiten korrekt um"],
+      "minitest_path": "test/integration/authorization/unauthenticated_access_test.rb"
+    },
+    {
+      "id": "TS-013",
+      "feature_id": "T4",
+      "name": "Sensible Felder at-rest verschlüsselt",
+      "type": "unit",
+      "role": "all",
+      "priority": "p0",
+      "status": "open",
+      "description": "Medizinische Hinweise und Versicherungsnummern sind in der DB verschlüsselt.",
+      "preconditions": ["ActiveRecord::Encryption konfiguriert"],
+      "scenarios": [
+        {
+          "id": "TS-013-S01",
+          "name": "Medizinischer Hinweis verschlüsselt",
+          "given": "MedicalNote mit content 'Erdnussallergie' gespeichert",
+          "when": "ActiveRecord::Base.connection.execute('SELECT content FROM medical_notes LIMIT 1').first",
+          "then": "Feldinhalt ist nicht 'Erdnussallergie'; sieht wie verschlüsselter Ciphertext aus",
+          "negative": false
+        },
+        {
+          "id": "TS-013-S02",
+          "name": "Versicherungsnummer verschlüsselt",
+          "given": "Child mit insurance_number gespeichert",
+          "when": "Roher DB-Wert abgelesen",
+          "then": "Kein Klartext sichtbar",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Alle sensiblen Felder sind in ActiveRecord::Encryption deklariert"],
+      "minitest_path": "test/models/encryption_test.rb"
+    },
+    {
+      "id": "TS-014",
+      "feature_id": "T4",
+      "name": "PII erscheint nicht in Logs",
+      "type": "unit",
+      "role": "all",
+      "priority": "p0",
+      "status": "open",
+      "description": "E-Mail und Passwort sind in filter_parameters eingetragen.",
+      "preconditions": [],
+      "scenarios": [
+        {
+          "id": "TS-014-S01",
+          "name": "filter_parameters enthält PII-Felder",
+          "given": "Rails.application.config.filter_parameters abgefragt",
+          "when": "Liste geprüft",
+          "then": ":password, :email, :token sind in der Liste enthalten",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Keine PII in Test-Log-Output nach Login-Request"],
+      "minitest_path": "test/integration/privacy/log_filtering_test.rb"
+    },
+    {
+      "id": "TS-015",
+      "feature_id": "T6",
+      "name": "EXIF-Daten werden beim Upload entfernt",
+      "type": "unit",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "GPS- und Gerätedaten werden aus hochgeladenen Bildern entfernt.",
+      "preconditions": ["Bild mit EXIF-GPS-Daten vorhanden (fixtures/test_with_gps.jpg)"],
+      "scenarios": [
+        {
+          "id": "TS-015-S01",
+          "name": "GPS-EXIF entfernt",
+          "given": "JPEG mit GPS-EXIF-Tags",
+          "when": "Bild über ActiveStorage-Pipeline verarbeitet wird",
+          "then": "Verarbeitetes Bild enthält keine GPS-EXIF-Daten mehr",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["MiniExiftool oder ExifReader bestätigt keine GPS-Daten"],
+      "minitest_path": "test/models/image_processing_test.rb"
+    },
+    {
+      "id": "TS-016",
+      "feature_id": "T6",
+      "name": "Bild-Varianten werden generiert",
+      "type": "unit",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Nach Upload existieren thumb, display und original als Varianten.",
+      "preconditions": ["Gültiges JPEG hochgeladen"],
+      "scenarios": [
+        {
+          "id": "TS-016-S01",
+          "name": "Drei Varianten vorhanden",
+          "given": "Bild über GalleryImage hochgeladen",
+          "when": "image.variant(:thumb), image.variant(:display), image.variant(:original) abgefragt",
+          "then": "Alle drei Varianten sind vorhanden und repräsentieren gültige Bilddateien",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Alle Varianten als WebP ausgeliefert"],
+      "minitest_path": "test/models/image_variants_test.rb"
+    },
+    {
+      "id": "TS-017",
+      "feature_id": "T6",
+      "name": "Dateigrößen- und Format-Validierung",
+      "type": "integration",
+      "role": "caretaker",
+      "priority": "p1",
+      "status": "open",
+      "description": "Uploads über 15 MB und unerlaubte Formate werden abgewiesen.",
+      "preconditions": [],
+      "scenarios": [
+        {
+          "id": "TS-017-S01",
+          "name": "20 MB Bild abgewiesen",
+          "given": "20-MB-Bilddatei vorbereitet",
+          "when": "POST auf Gallery-Upload-Endpoint mit 20-MB-Datei",
+          "then": "HTTP 422; Fehlermeldung 'Datei zu groß'",
+          "negative": true
+        },
+        {
+          "id": "TS-017-S02",
+          "name": "GIF-Format abgewiesen",
+          "given": ".gif-Datei vorbereitet",
+          "when": "Upload mit GIF",
+          "then": "HTTP 422; Fehlermeldung zu ungültigem Format",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Validierung serverseitig; kein Client-seitiger Bypass"],
+      "minitest_path": "test/models/image_upload_validation_test.rb"
+    },
+    {
+      "id": "TS-018",
+      "feature_id": "T11",
+      "name": "Security-Header – Robots, CSP, CSRF",
+      "type": "integration",
+      "role": "all",
+      "priority": "p0",
+      "status": "open",
+      "description": "Korrekte Security-Header bei jeder Response.",
+      "preconditions": [],
+      "scenarios": [
+        {
+          "id": "TS-018-S01",
+          "name": "X-Robots-Tag Header",
+          "given": "Betreuer ist eingeloggt",
+          "when": "GET /dashboard",
+          "then": "Response-Header enthält X-Robots-Tag: noindex, nofollow",
+          "negative": false
+        },
+        {
+          "id": "TS-018-S02",
+          "name": "CSP Header gesetzt",
+          "given": "Beliebige App-Seite",
+          "when": "Response-Header analysiert",
+          "then": "Content-Security-Policy Header vorhanden; keine externen Script-Src-Domains",
+          "negative": false
+        },
+        {
+          "id": "TS-018-S03",
+          "name": "CSRF Schutz aktiv",
+          "given": "POST-Endpoint existiert",
+          "when": "POST ohne CSRF-Token gesendet",
+          "then": "HTTP 422",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Alle drei Header korrekt gesetzt"],
+      "minitest_path": "test/integration/security/security_headers_test.rb"
+    },
+    {
+      "id": "TS-019",
+      "feature_id": "T9",
+      "name": "Health-Check Endpoint",
+      "type": "integration",
+      "role": "all",
+      "priority": "p1",
+      "status": "open",
+      "description": "GET /up liefert HTTP 200.",
+      "preconditions": [],
+      "scenarios": [
+        {
+          "id": "TS-019-S01",
+          "name": "Health Check antwortet",
+          "given": "App und DB laufen",
+          "when": "GET /up",
+          "then": "HTTP 200",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Antwort in <500ms"],
+      "minitest_path": "test/controllers/health_controller_test.rb"
+    },
+    {
+      "id": "TS-020",
+      "feature_id": "T3",
+      "name": "UUID-Primärschlüssel für alle Entitäten",
+      "type": "unit",
+      "role": "all",
+      "priority": "p0",
+      "status": "open",
+      "description": "Alle benutzerexponierten Tabellen verwenden UUIDs statt Integer-IDs.",
+      "preconditions": [],
+      "scenarios": [
+        {
+          "id": "TS-020-S01",
+          "name": "Gruppe hat UUID",
+          "given": "Neue Gruppe angelegt",
+          "when": "group.id abgefragt",
+          "then": "ID ist gültige UUID (Format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)",
+          "negative": false
+        },
+        {
+          "id": "TS-020-S02",
+          "name": "KindergartenYear hat UUID",
+          "given": "Neues KindergartenYear angelegt",
+          "when": "year.id abgefragt",
+          "then": "ID ist UUID",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Alle Entitäten: Group, KindergartenYear, Child, User, Event, Gallery haben UUID-IDs"],
+      "minitest_path": "test/models/uuid_primary_keys_test.rb"
+    },
+    {
+      "id": "TS-021",
+      "feature_id": "T3",
+      "name": "Aktives KindergartenYear – Eindeutigkeit",
+      "type": "unit",
+      "role": "admin",
+      "priority": "p0",
+      "status": "open",
+      "description": "Nur ein KindergartenYear kann gleichzeitig aktiv sein.",
+      "preconditions": [],
+      "scenarios": [
+        {
+          "id": "TS-021-S01",
+          "name": "Zweites Jahr als aktiv setzt erstes inaktiv",
+          "given": "KGJ 2025/26 ist aktiv",
+          "when": "KGJ 2026/27 als aktiv markiert wird",
+          "then": "KGJ 2026/27 ist aktiv; KGJ 2025/26 ist nicht mehr aktiv",
+          "negative": false
+        },
+        {
+          "id": "TS-021-S02",
+          "name": "Kein zweites aktives Jahr via DB",
+          "given": "Ein aktives Jahr existiert",
+          "when": "Versuch, ein zweites direkt als aktiv zu setzen",
+          "then": "Model-Validierung oder DB-Callback deaktiviert das vorherige",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["KindergartenYear.active.count == 1 zu jedem Zeitpunkt"],
+      "minitest_path": "test/models/kindergarten_year_test.rb"
+    },
+    {
+      "id": "TS-022",
+      "feature_id": "T5",
+      "name": "PWA Manifest und Service Worker",
+      "type": "integration",
+      "role": "all",
+      "priority": "p1",
+      "status": "open",
+      "description": "Web App Manifest enthält alle Pflichtfelder; Service Worker ist registriert.",
+      "preconditions": [],
+      "scenarios": [
+        {
+          "id": "TS-022-S01",
+          "name": "Manifest vollständig",
+          "given": "App läuft",
+          "when": "GET /manifest.json",
+          "then": "JSON enthält name, icons (192x192 und 512x512), theme_color, start_url, display: standalone",
+          "negative": false
+        },
+        {
+          "id": "TS-022-S02",
+          "name": "Service Worker registriert",
+          "given": "Browser lädt App",
+          "when": "Seite mit JS geladen wird",
+          "then": "navigator.serviceWorker.controller ist nicht null",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Lighthouse PWA-Score ≥ 90"],
+      "minitest_path": "test/integration/pwa/manifest_test.rb"
+    },
+    {
+      "id": "TS-023",
+      "feature_id": "F1",
+      "name": "Admin: Betreuer einladen",
+      "type": "system",
+      "role": "admin",
+      "priority": "p0",
+      "status": "open",
+      "description": "Admin lädt neuen Betreuer ein; Einladungs-E-Mail wird versendet.",
+      "preconditions": ["Admin ist eingeloggt"],
+      "scenarios": [
+        {
+          "id": "TS-023-S01",
+          "name": "Einladungs-Flow",
+          "given": "Admin öffnet Benutzerverwaltung",
+          "when": "Admin gibt neue E-Mail ein und klickt 'Einladen'",
+          "then": "E-Mail landet in deliveries; neuer User-Record mit status: invited in DB",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Einladungs-E-Mail enthält gültigen Aktivierungs-Link"],
+      "minitest_path": "test/system/admin/user_management_test.rb"
+    },
+    {
+      "id": "TS-024",
+      "feature_id": "F1",
+      "name": "Admin: Account sperren und reaktivieren",
+      "type": "system",
+      "role": "admin",
+      "priority": "p0",
+      "status": "open",
+      "description": "Gesperrter Account kann sich nicht einloggen; Reaktivierung stellt Zugang wieder her.",
+      "preconditions": ["Admin und Betreuer-Account vorhanden"],
+      "scenarios": [
+        {
+          "id": "TS-024-S01",
+          "name": "Account sperren",
+          "given": "Aktiver Betreuer-Account existiert",
+          "when": "Admin Account sperrt",
+          "then": "Betreuer kann sich nicht mehr einloggen (HTTP 422 mit Fehlermeldung 'Account gesperrt')",
+          "negative": false
+        },
+        {
+          "id": "TS-024-S02",
+          "name": "Account reaktivieren",
+          "given": "Gesperrter Betreuer-Account",
+          "when": "Admin Account reaktiviert",
+          "then": "Betreuer kann sich wieder einloggen",
+          "negative": false
+        },
+        {
+          "id": "TS-024-S03",
+          "name": "Selbst-Sperre verhindert",
+          "given": "Admin ist eingeloggt und betrachtet eigenen Account",
+          "when": "Admin versucht sich selbst zu sperren",
+          "then": "HTTP 422 oder UI zeigt Fehler: 'Eigenen Account kann nicht gesperrt werden'",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Gesperrte Sessions werden sofort invalidiert"],
+      "minitest_path": "test/system/admin/account_lock_test.rb"
+    },
+    {
+      "id": "TS-025",
+      "feature_id": "F1",
+      "name": "Admin-Bereich für Nicht-Admins gesperrt",
+      "type": "integration",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Betreuer und Eltern erhalten HTTP 403 für alle /admin-Routen.",
+      "preconditions": ["Betreuer eingeloggt"],
+      "scenarios": [
+        {
+          "id": "TS-025-S01",
+          "name": "Betreuer → /admin → 403",
+          "given": "Betreuer eingeloggt",
+          "when": "GET /admin",
+          "then": "HTTP 403",
+          "negative": true
+        },
+        {
+          "id": "TS-025-S02",
+          "name": "Elternteil → /admin → 403",
+          "given": "Elternteil eingeloggt",
+          "when": "GET /admin",
+          "then": "HTTP 403",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Alle /admin-Subrouten ebenfalls geschützt"],
+      "minitest_path": "test/integration/authorization/admin_access_test.rb"
+    },
+    {
+      "id": "TS-026",
+      "feature_id": "F2",
+      "name": "Gruppe anlegen und verwalten",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Betreuer legt Gruppe mit Name, Farbe und Beschreibung an.",
+      "preconditions": ["Betreuer eingeloggt"],
+      "scenarios": [
+        {
+          "id": "TS-026-S01",
+          "name": "Gruppe anlegen",
+          "given": "Betreuer öffnet Gruppen-Formular",
+          "when": "Name 'Bären', Farbe '#FF5733' eingegeben und gespeichert",
+          "then": "Gruppe erscheint in der Übersicht mit korrektem Namen und Farbcode",
+          "negative": false
+        },
+        {
+          "id": "TS-026-S02",
+          "name": "Gruppe ohne Namen abgewiesen",
+          "given": "Betreuer öffnet Gruppen-Formular",
+          "when": "Formular ohne Namen abgeschickt",
+          "then": "Validierungsfehler; Gruppe nicht angelegt",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["CRUD für Gruppen vollständig funktionsfähig"],
+      "minitest_path": "test/system/groups/group_management_test.rb"
+    },
+    {
+      "id": "TS-027",
+      "feature_id": "F2",
+      "name": "Kindergartenjahr-Übergang mit Kinder-Übernahme",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Jahresübergang überträgt ausgewählte Kinder mit Notfallkontakten; Inhalte bleiben beim alten Jahr.",
+      "preconditions": ["KGJ 2025/26 aktiv mit 3 Kindern und einer Galerie"],
+      "scenarios": [
+        {
+          "id": "TS-027-S01",
+          "name": "Kinder übernommen, Galerie nicht",
+          "given": "KGJ 2025/26 hat Kinder A, B, C und Galerie G",
+          "when": "Betreuer Jahresübergang zu 2026/27 durchführt und alle 3 Kinder auswählt",
+          "then": "Kinder A, B, C existieren in 2026/27; Galerie G ist nicht in 2026/27 vorhanden",
+          "negative": false
+        },
+        {
+          "id": "TS-027-S02",
+          "name": "Eltern sehen beide Jahre",
+          "given": "Elternteil hat Kind in 2025/26 und 2026/27",
+          "when": "Elternteil Jahresauswahl öffnet",
+          "then": "Beide Jahre sind sichtbar",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Notfallkontakte und Foto-Einwilligung werden korrekt kopiert"],
+      "minitest_path": "test/system/kindergarten_years/year_rollover_test.rb"
+    },
+    {
+      "id": "TS-028",
+      "feature_id": "F3",
+      "name": "Kind anlegen – Pflichtfelder und Validierung",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Betreuer legt Kind mit allen Pflichtfeldern an; fehlende Felder werden abgewiesen.",
+      "preconditions": ["Betreuer eingeloggt", "Gruppe und aktives KGJ vorhanden"],
+      "scenarios": [
+        {
+          "id": "TS-028-S01",
+          "name": "Kind vollständig angelegt",
+          "given": "Betreuer öffnet Kind-Formular",
+          "when": "Vorname, Nachname, Geburtsdatum, Gruppe und Foto-Einwilligung (ja) eingegeben",
+          "then": "Kind wird angelegt; erscheint in Kinderliste der Gruppe",
+          "negative": false
+        },
+        {
+          "id": "TS-028-S02",
+          "name": "Fehlendes Geburtsdatum",
+          "given": "Betreuer öffnet Kind-Formular",
+          "when": "Formular ohne Geburtsdatum abgeschickt",
+          "then": "Validierungsfehler für date_of_birth; Kind nicht angelegt",
+          "negative": true
+        },
+        {
+          "id": "TS-028-S03",
+          "name": "Foto-Einwilligung Pflichtfeld",
+          "given": "Betreuer öffnet Kind-Formular",
+          "when": "Foto-Einwilligung nicht gesetzt",
+          "then": "Validierungsfehler; kein Standardwert gesetzt",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Alle Pflichtfelder erzwingen Validierung"],
+      "minitest_path": "test/system/children/child_creation_test.rb"
+    },
+    {
+      "id": "TS-029",
+      "feature_id": "F3",
+      "name": "Geschwister-Logik – Elternteil sieht mehrere Gruppen",
+      "type": "integration",
+      "role": "parent",
+      "priority": "p0",
+      "status": "open",
+      "description": "Elternteil mit Kindern in verschiedenen Gruppen sieht Inhalte beider Gruppen.",
+      "preconditions": ["Elternteil A mit Kind X (Gruppe Bären) und Kind Y (Gruppe Löwen)"],
+      "scenarios": [
+        {
+          "id": "TS-029-S01",
+          "name": "Beide Gruppen sichtbar",
+          "given": "Elternteil A hat Kinder in Bären und Löwen",
+          "when": "Elternteil A GET /calendar",
+          "then": "Ereignisse beider Gruppen sind im Response enthalten",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Gruppen-Scope berücksichtigt alle verknüpften Kinder"],
+      "minitest_path": "test/integration/children/sibling_scoping_test.rb"
+    },
+    {
+      "id": "TS-030",
+      "feature_id": "F3",
+      "name": "Kind deaktivieren",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p1",
+      "status": "open",
+      "description": "Deaktiviertes Kind erscheint nicht mehr in aktiven Listen.",
+      "preconditions": ["Aktives Kind in DB"],
+      "scenarios": [
+        {
+          "id": "TS-030-S01",
+          "name": "Kind deaktiviert",
+          "given": "Kind Z ist aktiv",
+          "when": "Betreuer Kind Z deaktiviert",
+          "then": "Kind Z erscheint nicht in GET /children (ohne deactivated-Filter); historische Daten bleiben erhalten",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Soft-Delete; keine Löschung von Verknüpfungen"],
+      "minitest_path": "test/system/children/child_deactivation_test.rb"
+    },
+    {
+      "id": "TS-031",
+      "feature_id": "F4",
+      "name": "Eltern-Einladungs-Flow vollständig",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Betreuer legt Eltern-Account an; Elternteil klickt Einladungslink und vervollständigt Profil.",
+      "preconditions": ["Betreuer eingeloggt", "Kind in DB vorhanden"],
+      "scenarios": [
+        {
+          "id": "TS-031-S01",
+          "name": "Vollständiger Einladungs-Flow",
+          "given": "Betreuer öffnet Eltern-Anlegen-Formular",
+          "when": "E-Mail parent@test.de eingegeben, gespeichert; Link aus deliveries geöffnet",
+          "then": "Session geöffnet; Redirect auf Profil-Vervollständigungs-Seite",
+          "negative": false
+        },
+        {
+          "id": "TS-031-S02",
+          "name": "Re-Einladung invalidiert alten Token",
+          "given": "Elternteil hat unbenutzten Einladungstoken",
+          "when": "Betreuer neue Einladungs-E-Mail sendet",
+          "then": "Alter Token ungültig; neuer Token gültig",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Account wird durch Klick aktiviert; kein selbstständiger Registrierungs-Flow"],
+      "minitest_path": "test/system/parents/parent_onboarding_test.rb"
+    },
+    {
+      "id": "TS-032",
+      "feature_id": "F4",
+      "name": "Elternteil bearbeitet eigenes Profil",
+      "type": "system",
+      "role": "parent",
+      "priority": "p1",
+      "status": "open",
+      "description": "Elternteil kann Name, Telefon und E-Mail ändern, aber nicht Kinder-Zuordnung.",
+      "preconditions": ["Elternteil eingeloggt"],
+      "scenarios": [
+        {
+          "id": "TS-032-S01",
+          "name": "Telefon ändern",
+          "given": "Elternteil öffnet Profil",
+          "when": "Telefonnummer geändert und gespeichert",
+          "then": "Änderung persistent; bei nächstem Aufruf sichtbar",
+          "negative": false
+        },
+        {
+          "id": "TS-032-S02",
+          "name": "Kinder-Zuordnung nicht editierbar",
+          "given": "Elternteil auf Profil-Seite",
+          "when": "Elternteil versucht Kinder-Zuordnung zu ändern",
+          "then": "Kein entsprechendes Formularfeld vorhanden; PATCH-Versuch mit children_ids wird ignoriert",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Strong-Parameters blockiert children_ids für parent-Rolle"],
+      "minitest_path": "test/system/parents/parent_profile_test.rb"
+    },
+    {
+      "id": "TS-033",
+      "feature_id": "F5",
+      "name": "Notfallkontakte anlegen und verwalten",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Betreuer legt Notfallkontakte für Kind an; sortierbar.",
+      "preconditions": ["Betreuer eingeloggt", "Kind vorhanden"],
+      "scenarios": [
+        {
+          "id": "TS-033-S01",
+          "name": "Notfallkontakt anlegen",
+          "given": "Betreuer öffnet Kind-Detail",
+          "when": "Notfallkontakt mit Name, Beziehung und Telefon hinzugefügt",
+          "then": "Kontakt erscheint in der Liste; Reihenfolge ist anpassbar",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Mehrere Kontakte pro Kind möglich"],
+      "minitest_path": "test/system/emergency_contacts/emergency_contact_test.rb"
+    },
+    {
+      "id": "TS-034",
+      "feature_id": "F5",
+      "name": "Eltern-Datenisolation für Notfallkontakte",
+      "type": "integration",
+      "role": "parent",
+      "priority": "p0",
+      "status": "open",
+      "description": "Elternteil kann keine Notfallkontakte fremder Kinder lesen.",
+      "preconditions": ["Zwei Kinder mit je einem Elternteil"],
+      "scenarios": [
+        {
+          "id": "TS-034-S01",
+          "name": "Fremder Kontakt nicht erreichbar",
+          "given": "Kind X (Elternteil A) hat Kontakt K",
+          "when": "Elternteil B GET /children/:id_X/emergency_contacts",
+          "then": "HTTP 403",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Policy-Scoping korrekt"],
+      "minitest_path": "test/integration/authorization/emergency_contact_access_test.rb"
+    },
+    {
+      "id": "TS-035",
+      "feature_id": "F5",
+      "name": "Medizinische Hinweise – Eltern-Pflege",
+      "type": "system",
+      "role": "parent",
+      "priority": "p1",
+      "status": "open",
+      "description": "Elternteil kann medizinische Hinweise für eigenes Kind pflegen.",
+      "preconditions": ["Elternteil eingeloggt", "Eigenes Kind vorhanden"],
+      "scenarios": [
+        {
+          "id": "TS-035-S01",
+          "name": "Allergie hinzufügen",
+          "given": "Elternteil öffnet Kind-Profil",
+          "when": "Medizinischer Hinweis 'Laktoseintoleranz' hinzugefügt",
+          "then": "Hinweis erscheint in der Liste; in DB verschlüsselt gespeichert",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Hinweis via ActiveRecord lesbar aber DB-seitig verschlüsselt"],
+      "minitest_path": "test/system/medical_notes/parent_medical_notes_test.rb"
+    },
+    {
+      "id": "TS-036",
+      "feature_id": "F6",
+      "name": "Kalender-Ereignis anlegen (Betreuer)",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Betreuer legt Ereignis an; erscheint im Kalender aller Gruppen-Mitglieder.",
+      "preconditions": ["Betreuer eingeloggt", "Gruppe und KGJ vorhanden"],
+      "scenarios": [
+        {
+          "id": "TS-036-S01",
+          "name": "Ereignis anlegen",
+          "given": "Betreuer öffnet Kalender",
+          "when": "Betreuer Ereignis 'Elternsprechtag' für Gruppe Bären am 15.06.2026 anlegt",
+          "then": "Ereignis erscheint am 15. Juni im Kalender der Gruppe Bären",
+          "negative": false
+        },
+        {
+          "id": "TS-036-S02",
+          "name": "Eltern sehen nur eigene Gruppe",
+          "given": "Bären-Ereignis A und Löwen-Ereignis B",
+          "when": "Elternteil mit Kind nur in Bären Kalender öffnet",
+          "then": "Nur Ereignis A sichtbar",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Monats- und Listenansicht korrekt"],
+      "minitest_path": "test/system/calendar/calendar_events_test.rb"
+    },
+    {
+      "id": "TS-037",
+      "feature_id": "F6",
+      "name": "iCal-Link im Benutzerprofil",
+      "type": "integration",
+      "role": "all",
+      "priority": "p1",
+      "status": "open",
+      "description": "Jeder Benutzer hat einen personalisierten iCal-Link im Profil.",
+      "preconditions": ["Eingeloggter Benutzer"],
+      "scenarios": [
+        {
+          "id": "TS-037-S01",
+          "name": "iCal-Link sichtbar",
+          "given": "Benutzer öffnet Profil-Seite",
+          "when": "Profil-HTML analysiert",
+          "then": "Link auf /calendar/<token>.ics ist vorhanden",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Link ist einzigartig pro Benutzer"],
+      "minitest_path": "test/integration/ical/ical_link_in_profile_test.rb"
+    },
+    {
+      "id": "TS-038",
+      "feature_id": "F7",
+      "name": "Veranstaltung anlegen und absagen",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Betreuer legt Veranstaltung an, verknüpft Module und sagt ab.",
+      "preconditions": ["Betreuer eingeloggt"],
+      "scenarios": [
+        {
+          "id": "TS-038-S01",
+          "name": "Veranstaltung anlegen",
+          "given": "Betreuer öffnet Veranstaltungs-Formular",
+          "when": "Titel 'Sommerfest', Datum, Gruppe eingegeben und gespeichert",
+          "then": "Veranstaltung erscheint im Kalender als eigenes Ereignis",
+          "negative": false
+        },
+        {
+          "id": "TS-038-S02",
+          "name": "Veranstaltung absagen",
+          "given": "Veranstaltung 'Ausflug' existiert",
+          "when": "Betreuer Veranstaltung absagt",
+          "then": "Veranstaltung zeigt Status 'abgesagt' im Kalender; Eltern sehen Status",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Absagen invalidiert keine verknüpften Module"],
+      "minitest_path": "test/system/events/event_management_test.rb"
+    },
+    {
+      "id": "TS-039",
+      "feature_id": "F7",
+      "name": "Eltern-Detailseite Veranstaltung",
+      "type": "system",
+      "role": "parent",
+      "priority": "p0",
+      "status": "open",
+      "description": "Elternteil sieht Detailseite mit allen verknüpften Modulen.",
+      "preconditions": ["Veranstaltung mit Teilnahmeliste und Galerie vorhanden"],
+      "scenarios": [
+        {
+          "id": "TS-039-S01",
+          "name": "Module navigierbar",
+          "given": "Veranstaltung 'Sommerfest' hat Teilnahmeliste und Galerie",
+          "when": "Elternteil Detailseite öffnet",
+          "then": "Links zu Teilnahmeliste und Galerie sichtbar; Klick navigiert korrekt",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Navigation zu allen verknüpften Modulen funktioniert"],
+      "minitest_path": "test/system/events/event_detail_parent_test.rb"
+    },
+    {
+      "id": "TS-040",
+      "feature_id": "F8",
+      "name": "Teilnahmeliste – Eintragen und Rücknahme",
+      "type": "system",
+      "role": "parent",
+      "priority": "p0",
+      "status": "open",
+      "description": "Elternteil trägt sich ein und nimmt Eintrag zurück (vor Anmeldeschluss).",
+      "preconditions": ["Offene Teilnahmeliste existiert"],
+      "scenarios": [
+        {
+          "id": "TS-040-S01",
+          "name": "Eintragen und zurücknehmen",
+          "given": "Elternteil öffnet offene Liste",
+          "when": "Elternteil sich einträgt, dann zurücknimmt",
+          "then": "Name erscheint nach Eintrag; verschwindet nach Rücknahme",
+          "negative": false
+        },
+        {
+          "id": "TS-040-S02",
+          "name": "Anmeldeschluss verhindert Eintrag",
+          "given": "Anmeldeschluss ist gestern",
+          "when": "Elternteil versucht sich einzutragen",
+          "then": "Formular deaktiviert; Hinweis 'Anmeldeschluss überschritten'",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Anmeldeschluss serverseitig erzwungen"],
+      "minitest_path": "test/system/signup_lists/signup_list_test.rb"
+    },
+    {
+      "id": "TS-041",
+      "feature_id": "F8",
+      "name": "Teilnahmeliste CSV-Export",
+      "type": "integration",
+      "role": "caretaker",
+      "priority": "p1",
+      "status": "open",
+      "description": "Betreuer exportiert Liste als CSV mit allen Einträgen.",
+      "preconditions": ["Liste mit 3 Einträgen vorhanden"],
+      "scenarios": [
+        {
+          "id": "TS-041-S01",
+          "name": "CSV korrekt",
+          "given": "3 Elternteile eingetragen",
+          "when": "GET /signup_lists/:id/export.csv",
+          "then": "Content-Type: text/csv; Body enthält 3 Zeilen mit Name und Datum",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["CSV UTF-8 kodiert; alle Einträge enthalten"],
+      "minitest_path": "test/controllers/signup_lists_controller_test.rb"
+    },
+    {
+      "id": "TS-042",
+      "feature_id": "F9",
+      "name": "Einkaufsliste – Eintrag erledigen und Filter",
+      "type": "system",
+      "role": "parent",
+      "priority": "p0",
+      "status": "open",
+      "description": "Elternteil markiert Einkaufseintrag als erledigt; Filter zeigt nur offene.",
+      "preconditions": ["Einkaufsliste mit 3 Einträgen vorhanden"],
+      "scenarios": [
+        {
+          "id": "TS-042-S01",
+          "name": "Eintrag erledigen",
+          "given": "Eintrag '2 kg Mehl' offen",
+          "when": "Elternteil Häkchen setzt",
+          "then": "Eintrag zeigt Häkchen + Name + Zeitstempel; für alle Beteiligten sichtbar",
+          "negative": false
+        },
+        {
+          "id": "TS-042-S02",
+          "name": "Filter 'nur offen'",
+          "given": "3 Einträge; 2 erledigt",
+          "when": "Filter aktiviert",
+          "then": "Nur 1 offener Eintrag sichtbar",
+          "negative": false
+        },
+        {
+          "id": "TS-042-S03",
+          "name": "Erledigt rückgängig",
+          "given": "Eintrag als erledigt markiert",
+          "when": "Erledigt-Status aufgehoben",
+          "then": "Eintrag erscheint wieder als offen",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Echtzeit-Update via Turbo Streams für alle Beteiligten"],
+      "minitest_path": "test/system/shopping_lists/shopping_list_test.rb"
+    },
+    {
+      "id": "TS-043",
+      "feature_id": "F10",
+      "name": "Abstimmung – Stimme abgeben und ändern",
+      "type": "system",
+      "role": "parent",
+      "priority": "p0",
+      "status": "open",
+      "description": "Elternteil stimmt ab und ändert Stimme; Ergebnis namentlich sichtbar.",
+      "preconditions": ["Offene Abstimmung vorhanden"],
+      "scenarios": [
+        {
+          "id": "TS-043-S01",
+          "name": "Stimme abgeben",
+          "given": "Elternteil öffnet Abstimmung",
+          "when": "Option A gewählt",
+          "then": "Ergebnis zeigt Elternteil bei Option A",
+          "negative": false
+        },
+        {
+          "id": "TS-043-S02",
+          "name": "Stimme ändern",
+          "given": "Elternteil hat Option A gewählt",
+          "when": "Elternteil zu Option B wechselt",
+          "then": "Elternteil bei Option B; nicht mehr bei Option A",
+          "negative": false
+        },
+        {
+          "id": "TS-043-S03",
+          "name": "Stimmschluss verhindert Abstimmung",
+          "given": "Stimmschluss überschritten",
+          "when": "Elternteil stimmt ab",
+          "then": "Formular deaktiviert; Hinweis 'Abstimmung geschlossen'",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Einfach- und Mehrfachauswahl korrekt; serverseitige Validierung"],
+      "minitest_path": "test/system/polls/poll_voting_test.rb"
+    },
+    {
+      "id": "TS-044",
+      "feature_id": "F10",
+      "name": "Abstimmung CSV-Export",
+      "type": "integration",
+      "role": "caretaker",
+      "priority": "p1",
+      "status": "open",
+      "description": "Betreuer exportiert Abstimmungsergebnis als CSV.",
+      "preconditions": ["Abstimmung mit 3 Stimmen"],
+      "scenarios": [
+        {
+          "id": "TS-044-S01",
+          "name": "CSV enthält alle Stimmen",
+          "given": "3 Elternteile haben abgestimmt",
+          "when": "GET /polls/:id/export.csv",
+          "then": "3 Zeilen mit Name und gewählter Option",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["CSV vollständig und korrekt"],
+      "minitest_path": "test/controllers/polls_controller_test.rb"
+    },
+    {
+      "id": "TS-045",
+      "feature_id": "F11",
+      "name": "Galerie anlegen und Bilder hochladen",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Betreuer legt Galerie an und lädt Bilder hoch; Einwilligungs-Hinweis erscheint.",
+      "preconditions": ["Betreuer eingeloggt", "Gruppe mit Kind ohne Foto-Einwilligung"],
+      "scenarios": [
+        {
+          "id": "TS-045-S01",
+          "name": "Galerie mit Upload",
+          "given": "Betreuer öffnet neue Galerie für Gruppe Bären",
+          "when": "3 JPEG-Bilder hochgeladen",
+          "then": "Galerie zeigt 3 Bilder als Grid; Fortschrittsanzeige war während Upload sichtbar",
+          "negative": false
+        },
+        {
+          "id": "TS-045-S02",
+          "name": "Einwilligungs-Hinweis",
+          "given": "Kind X hat keine Foto-Einwilligung",
+          "when": "Betreuer Galerie für Gruppe Bären anlegt",
+          "then": "Hinweis-Banner zeigt 'Kind X hat keine Foto-Einwilligung'",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Upload-Limit 200 Bilder; Hinweis blockiert nicht"],
+      "minitest_path": "test/system/galleries/gallery_upload_test.rb"
+    },
+    {
+      "id": "TS-046",
+      "feature_id": "F11",
+      "name": "Galerie Eltern-Sichtbarkeit und Download",
+      "type": "system",
+      "role": "parent",
+      "priority": "p0",
+      "status": "open",
+      "description": "Eltern sehen nur Galerien eigener Gruppen; Download via signierter URL.",
+      "preconditions": ["Galerie für Gruppe Löwen vorhanden; Elternteil nur in Bären"],
+      "scenarios": [
+        {
+          "id": "TS-046-S01",
+          "name": "Fremde Galerie nicht sichtbar",
+          "given": "Elternteil hat Kind nur in Gruppe Bären",
+          "when": "Elternteil Galerien-Übersicht öffnet",
+          "then": "Löwen-Galerie nicht vorhanden",
+          "negative": false
+        },
+        {
+          "id": "TS-046-S02",
+          "name": "Abgelaufener Download-Link",
+          "given": "Download-Link vor >1 Stunde generiert",
+          "when": "Link aufgerufen",
+          "then": "HTTP 403 oder 404",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Signierte URLs laufen korrekt ab"],
+      "minitest_path": "test/system/galleries/gallery_parent_test.rb"
+    },
+    {
+      "id": "TS-047",
+      "feature_id": "F12",
+      "name": "Mitteilung verfassen und senden",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Betreuer sendet Mitteilung an Gruppe; alle Eltern erhalten sie im Posteingang.",
+      "preconditions": ["Betreuer eingeloggt", "Gruppe Bären mit 2 Elternteilen"],
+      "scenarios": [
+        {
+          "id": "TS-047-S01",
+          "name": "Mitteilung gesendet und empfangen",
+          "given": "Betreuer öffnet Mitteilungs-Formular",
+          "when": "Titel und Rich-Text eingegeben, Gruppe Bären ausgewählt, gesendet",
+          "then": "Beide Elternteile haben Mitteilung im Posteingang; E-Mail-Benachrichtigung in deliveries",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["E-Mail-Benachrichtigung als Background-Job ausgeführt"],
+      "minitest_path": "test/system/messages/message_send_test.rb"
+    },
+    {
+      "id": "TS-048",
+      "feature_id": "F12",
+      "name": "Eltern-Posteingang – Gelesen-Status und Isolation",
+      "type": "system",
+      "role": "parent",
+      "priority": "p0",
+      "status": "open",
+      "description": "Elternteil sieht ungelesene Mitteilungen; Öffnen markiert als gelesen; fremde Mitteilungen nicht sichtbar.",
+      "preconditions": ["Ungelesene Mitteilung im Posteingang"],
+      "scenarios": [
+        {
+          "id": "TS-048-S01",
+          "name": "Als gelesen markiert",
+          "given": "Ungelesene Mitteilung in Posteingang",
+          "when": "Mitteilung geöffnet",
+          "then": "Status wechselt zu gelesen; Zähler dekrementiert",
+          "negative": false
+        },
+        {
+          "id": "TS-048-S02",
+          "name": "Fremde Mitteilung nicht sichtbar",
+          "given": "Mitteilung nur an Gruppe Löwen",
+          "when": "Elternteil mit Kind in Bären Posteingang öffnet",
+          "then": "Mitteilung nicht vorhanden",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Keine Antwortfunktion für Eltern sichtbar"],
+      "minitest_path": "test/system/messages/parent_inbox_test.rb"
+    },
+    {
+      "id": "TS-049",
+      "feature_id": "F13",
+      "name": "Speiseplan – Wochenplanung und Eltern-Leseansicht",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Betreuer plant Woche; Eltern sehen Leseansicht ohne Bearbeitungsoption.",
+      "preconditions": ["Betreuer eingeloggt", "Gruppe vorhanden"],
+      "scenarios": [
+        {
+          "id": "TS-049-S01",
+          "name": "Woche planen",
+          "given": "Betreuer navigiert zur nächsten Woche im Speiseplan",
+          "when": "5 Einträge (Mo–Fr) angelegt",
+          "then": "Alle 5 Einträge korrekt in Wochenansicht",
+          "negative": false
+        },
+        {
+          "id": "TS-049-S02",
+          "name": "Eltern – nur Lesezugriff",
+          "given": "Betreuer hat aktuelle Woche geplant",
+          "when": "Elternteil Speiseplan öffnet",
+          "then": "Wochenansicht sichtbar; kein Bearbeiten-Button oder Formular",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Leere Woche zeigt Platzhalter statt Fehler"],
+      "minitest_path": "test/system/meal_plans/meal_plan_test.rb"
+    },
+    {
+      "id": "TS-050",
+      "feature_id": "F14",
+      "name": "Geburtstagsübersicht – Hervorhebung und Scoping",
+      "type": "system",
+      "role": "all",
+      "priority": "p1",
+      "status": "open",
+      "description": "Kinder mit Geburtstag in den nächsten 14 Tagen hervorgehoben; Eltern sehen nur eigene Gruppen.",
+      "preconditions": ["Kind A Geburtstag in 7 Tagen; Kind B Geburtstag in 30 Tagen"],
+      "scenarios": [
+        {
+          "id": "TS-050-S01",
+          "name": "Hervorhebung korrekt",
+          "given": "Kind A (7 Tage) und Kind B (30 Tage)",
+          "when": "Betreuer Geburtstagsübersicht öffnet",
+          "then": "Kind A ist hervorgehoben; Kind B nicht",
+          "negative": false
+        },
+        {
+          "id": "TS-050-S02",
+          "name": "Eltern sehen nur eigene Gruppe",
+          "given": "Elternteil mit Kind nur in Gruppe Bären",
+          "when": "Geburtstagsübersicht geöffnet",
+          "then": "Nur Kinder der Gruppe Bären sichtbar",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["14-Tage-Fenster auch bei Jahreswechsel korrekt"],
+      "minitest_path": "test/system/birthdays/birthday_overview_test.rb"
+    },
+    {
+      "id": "TS-051",
+      "feature_id": "F15",
+      "name": "Foto-Einwilligung setzen",
+      "type": "system",
+      "role": "parent",
+      "priority": "p1",
+      "status": "open",
+      "description": "Elternteil setzt Foto-Einwilligung; Zeitstempel wird gesetzt.",
+      "preconditions": ["Elternteil eingeloggt", "Kind ohne Einwilligung"],
+      "scenarios": [
+        {
+          "id": "TS-051-S01",
+          "name": "Einwilligung erteilt",
+          "given": "Kind X mit photo_consent: false",
+          "when": "Elternteil setzt Einwilligung auf 'ja'",
+          "then": "photo_consent == true; consent_updated_at == jetzt (within 5s)",
+          "negative": false
+        },
+        {
+          "id": "TS-051-S02",
+          "name": "Fremdes Kind nicht editierbar",
+          "given": "Elternteil A eingeloggt",
+          "when": "PATCH /children/:id_fremdes_kind mit photo_consent",
+          "then": "HTTP 403",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Zeitstempel bei jeder Änderung aktualisiert"],
+      "minitest_path": "test/system/photo_consent/photo_consent_test.rb"
+    },
+    {
+      "id": "TS-052",
+      "feature_id": "F16",
+      "name": "WhatsApp Share-Button",
+      "type": "integration",
+      "role": "caretaker",
+      "priority": "p1",
+      "status": "open",
+      "description": "Share-Button generiert korrekten wa.me-Link mit Titel und URL.",
+      "preconditions": ["Veranstaltung existiert"],
+      "scenarios": [
+        {
+          "id": "TS-052-S01",
+          "name": "wa.me-Link korrekt",
+          "given": "Veranstaltung 'Sommerfest' mit URL /events/:id",
+          "when": "HTML der Detailseite analysiert",
+          "then": "href des Share-Buttons enthält wa.me/?text= mit 'Sommerfest' und HTTPS-URL",
+          "negative": false
+        },
+        {
+          "id": "TS-052-S02",
+          "name": "Geteilte URL erfordert Login",
+          "given": "Veranstaltungs-URL ohne Session aufgerufen",
+          "when": "GET /events/:id ohne Cookie",
+          "then": "HTTP 302 zu /login",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Keine sensiblen Daten in URL"],
+      "minitest_path": "test/integration/sharing/whatsapp_share_test.rb"
+    },
+    {
+      "id": "TS-053",
+      "feature_id": "T8",
+      "name": "iCal-Feed Inhalt nach Rolle",
+      "type": "unit",
+      "role": "parent",
+      "priority": "p0",
+      "status": "open",
+      "description": "iCal-Feed enthält nur Ereignisse, die für den Benutzer sichtbar sind.",
+      "preconditions": ["Elternteil mit Kind in Gruppe Bären; Löwen haben eigenes Ereignis"],
+      "scenarios": [
+        {
+          "id": "TS-053-S01",
+          "name": "Nur Bären-Ereignisse im Feed",
+          "given": "Bären-Ereignis A und Löwen-Ereignis B",
+          "when": "Elternteil-Feed über Token abgerufen",
+          "then": "VEVENT für A vorhanden; VEVENT für B fehlt",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["RFC 5545 gültiger iCal-Output; Content-Type: text/calendar"],
+      "minitest_path": "test/models/ical_feed_test.rb"
+    },
+    {
+      "id": "TS-054",
+      "feature_id": "T8",
+      "name": "iCal Token-Rotation",
+      "type": "system",
+      "role": "parent",
+      "priority": "p1",
+      "status": "open",
+      "description": "Token kann rotiert werden; alter Token ungültig.",
+      "preconditions": ["Elternteil eingeloggt mit iCal-Token T1"],
+      "scenarios": [
+        {
+          "id": "TS-054-S01",
+          "name": "Alter Token ungültig nach Rotation",
+          "given": "Token T1 im Profil",
+          "when": "Elternteil Token rotiert; neuer Token T2 vergeben",
+          "then": "GET /calendar/T1.ics → HTTP 404; GET /calendar/T2.ics → HTTP 200",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Token-Rotation atomar; kein Fenster mit zwei gültigen Tokens"],
+      "minitest_path": "test/system/ical/ical_token_rotation_test.rb"
+    },
+    {
+      "id": "TS-055",
+      "feature_id": "T8",
+      "name": "iCal HTTP-Caching 304",
+      "type": "integration",
+      "role": "all",
+      "priority": "p2",
+      "status": "open",
+      "description": "Unveränderter Feed liefert HTTP 304 mit ETag.",
+      "preconditions": ["Feed bereits abgerufen; kein neues Ereignis"],
+      "scenarios": [
+        {
+          "id": "TS-055-S01",
+          "name": "304 bei unverändertem Feed",
+          "given": "ETag aus erstem Request bekannt",
+          "when": "GET /calendar/<token>.ics mit If-None-Match: <etag>",
+          "then": "HTTP 304 Not Modified",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["ETag und Last-Modified korrekt gesetzt"],
+      "minitest_path": "test/integration/ical/ical_caching_test.rb"
+    },
+    {
+      "id": "TS-056",
+      "feature_id": "F17",
+      "name": "Eltern-Dashboard – vollständige Anzeige",
+      "type": "system",
+      "role": "parent",
+      "priority": "p0",
+      "status": "open",
+      "description": "Dashboard zeigt alle 5 Sektionen mit korrekten Daten.",
+      "preconditions": ["Elternteil mit ungelesener Mitteilung, kommendem Ereignis, offener Liste, Geburtstag in 7 Tagen, Speiseplan heute"],
+      "scenarios": [
+        {
+          "id": "TS-056-S01",
+          "name": "Alle Sektionen vorhanden",
+          "given": "Alle Testdaten vorhanden",
+          "when": "Elternteil Dashboard öffnet",
+          "then": "Ungelesene Mitteilungen, Ereignisse, offene Liste, Geburtstag, Speiseplan alle sichtbar",
+          "negative": false
+        },
+        {
+          "id": "TS-056-S02",
+          "name": "Leeres Dashboard",
+          "given": "Frischer Account ohne Daten",
+          "when": "Dashboard geöffnet",
+          "then": "Leere States mit Hinweistexten; kein Fehler",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Dashboard lädt <1s; alle Daten rollenkonform"],
+      "minitest_path": "test/system/dashboard/parent_dashboard_test.rb"
+    },
+    {
+      "id": "TS-057",
+      "feature_id": "F17",
+      "name": "Eltern-Dashboard – Datenisolation",
+      "type": "integration",
+      "role": "parent",
+      "priority": "p0",
+      "status": "open",
+      "description": "Dashboard zeigt ausschließlich Daten aus eigenen Gruppen.",
+      "preconditions": ["Elternteil A und B mit Mitteilung nur an A's Gruppe"],
+      "scenarios": [
+        {
+          "id": "TS-057-S01",
+          "name": "Fremde Mitteilung nicht sichtbar",
+          "given": "Mitteilung nur an Gruppe von Elternteil A",
+          "when": "Elternteil B Dashboard öffnet",
+          "then": "Mitteilung nicht in Dashboard-Response",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Alle Dashboard-Queries scope-korrekt"],
+      "minitest_path": "test/integration/dashboard/parent_dashboard_isolation_test.rb"
+    },
+    {
+      "id": "TS-058",
+      "feature_id": "F18",
+      "name": "Betreuer-Dashboard – alle 4 Sektionen",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Dashboard zeigt Heute, Offene Aufgaben, Schnellaktionen und Statistik.",
+      "preconditions": ["Betreuer eingeloggt", "Veranstaltung heute", "Vergangene Veranstaltung ohne Galerie", "2 Gruppen mit Kindern"],
+      "scenarios": [
+        {
+          "id": "TS-058-S01",
+          "name": "Offene Aufgabe fehlende Galerie",
+          "given": "Vergangene Veranstaltung 'Ausflug' ohne Galerie",
+          "when": "Betreuer Dashboard öffnet",
+          "then": "'Ausflug ohne Galerie' in Sektion 'Offene Aufgaben' sichtbar",
+          "negative": false
+        },
+        {
+          "id": "TS-058-S02",
+          "name": "Schnellaktion neue Mitteilung",
+          "given": "Betreuer auf Dashboard",
+          "when": "Klick auf 'Neue Mitteilung'",
+          "then": "Direkte Navigation zu Mitteilungs-Formular",
+          "negative": false
+        },
+        {
+          "id": "TS-058-S03",
+          "name": "Statistik korrekt",
+          "given": "Bären: 18 Kinder; Löwen: 15 Kinder",
+          "when": "Dashboard geöffnet",
+          "then": "Statistik zeigt Bären 18, Löwen 15",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Alle offenen Aufgaben korrekt identifiziert"],
+      "minitest_path": "test/system/dashboard/caretaker_dashboard_test.rb"
+    },
+    {
+      "id": "TS-059",
+      "feature_id": "F18",
+      "name": "Betreuer-Dashboard – Kinder ohne Foto-Einwilligung",
+      "type": "integration",
+      "role": "caretaker",
+      "priority": "p1",
+      "status": "open",
+      "description": "Dashboard zeigt Kinder ohne gesetztes Foto-Einwilligungs-Flag als offene Aufgabe.",
+      "preconditions": ["Kind ohne photo_consent gesetzt"],
+      "scenarios": [
+        {
+          "id": "TS-059-S01",
+          "name": "Kind ohne Einwilligung in offenen Aufgaben",
+          "given": "Kind X hat photo_consent == nil",
+          "when": "GET /dashboard (Betreuer)",
+          "then": "Response enthält Kind X in offene-Aufgaben-Sektion",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Nur Kinder mit photo_consent == nil erscheinen; null != false"],
+      "minitest_path": "test/integration/dashboard/caretaker_dashboard_test.rb"
+    },
+    {
+      "id": "TS-060",
+      "feature_id": "T10",
+      "name": "SimpleCov Line Coverage ≥ 85%",
+      "type": "unit",
+      "role": "all",
+      "priority": "p0",
+      "status": "open",
+      "description": "Test-Suite erreicht mindestens 85% Line Coverage.",
+      "preconditions": ["SimpleCov konfiguriert"],
+      "scenarios": [
+        {
+          "id": "TS-060-S01",
+          "name": "Coverage-Schwelle",
+          "given": "Vollständige Test-Suite ausgeführt",
+          "when": "SimpleCov-Report gelesen",
+          "then": "Line Coverage >= 85%",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["CI schlägt fehl wenn Coverage < 85%"],
+      "minitest_path": "test/test_helper.rb"
+    },
+    {
+      "id": "TS-061",
+      "feature_id": "T2",
+      "name": "Policy Coverage – alle Controller-Actions abgedeckt",
+      "type": "unit",
+      "role": "all",
+      "priority": "p0",
+      "status": "open",
+      "description": "Jede Controller-Action ruft eine Policy auf; kein ungeschützter Endpunkt.",
+      "preconditions": [],
+      "scenarios": [
+        {
+          "id": "TS-061-S01",
+          "name": "Alle Actions haben Policy",
+          "given": "Liste aller Controller-Actions via ActionDispatch::Routing",
+          "when": "Test-Helper über alle Actions iteriert",
+          "then": "Keine Action ohne Policy-Aufruf gefunden",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Brakeman meldet keine unbewachten Actions"],
+      "minitest_path": "test/integration/authorization/policy_coverage_test.rb"
+    },
+    {
+      "id": "TS-062",
+      "feature_id": "F2",
+      "name": "Kindergartenjahr anlegen und aktivieren",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Betreuer legt neues KGJ an und setzt es als aktiv; vorheriges wird inaktiv.",
+      "preconditions": ["KGJ 2025/26 aktiv"],
+      "scenarios": [
+        {
+          "id": "TS-062-S01",
+          "name": "Neues Jahr aktivieren",
+          "given": "KGJ 2025/26 aktiv",
+          "when": "KGJ 2026/27 angelegt und als aktiv gesetzt",
+          "then": "KGJ 2026/27 aktiv; KGJ 2025/26 nicht mehr aktiv; beide in DB vorhanden",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Jahresauswahl zeigt beide Jahre"],
+      "minitest_path": "test/system/kindergarten_years/kindergarten_year_management_test.rb"
+    },
+    {
+      "id": "TS-063",
+      "feature_id": "F3",
+      "name": "Kind-CRUD vollständig (Betreuer)",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Betreuer kann Kind anlegen, bearbeiten und deaktivieren.",
+      "preconditions": ["Betreuer eingeloggt"],
+      "scenarios": [
+        {
+          "id": "TS-063-S01",
+          "name": "Kind bearbeiten",
+          "given": "Kind X existiert",
+          "when": "Betreuer Spitzname 'Maxi' hinzufügt",
+          "then": "Spitzname im Profil sichtbar",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["updated_at aktualisiert nach Bearbeitung"],
+      "minitest_path": "test/system/children/child_crud_test.rb"
+    },
+    {
+      "id": "TS-064",
+      "feature_id": "F6",
+      "name": "Kalender Monats- und Listenansicht",
+      "type": "system",
+      "role": "all",
+      "priority": "p1",
+      "status": "open",
+      "description": "Beide Kalenderansichten zeigen korrekte Ereignisse.",
+      "preconditions": ["Ereignis im aktuellen Monat vorhanden"],
+      "scenarios": [
+        {
+          "id": "TS-064-S01",
+          "name": "Monatsansicht",
+          "given": "Ereignis am 15. des Monats",
+          "when": "Monatsansicht geöffnet",
+          "then": "Ereignis an Tag 15 sichtbar",
+          "negative": false
+        },
+        {
+          "id": "TS-064-S02",
+          "name": "Listenansicht",
+          "given": "Ereignis existiert",
+          "when": "Listenansicht geöffnet",
+          "then": "Ereignis chronologisch in Liste vorhanden",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Navigation zwischen Monaten funktioniert"],
+      "minitest_path": "test/system/calendar/calendar_views_test.rb"
+    },
+    {
+      "id": "TS-065",
+      "feature_id": "F8",
+      "name": "Teilnahmeliste Pro-Datum-Modus",
+      "type": "system",
+      "role": "parent",
+      "priority": "p1",
+      "status": "open",
+      "description": "Elternteil wählt in Pro-Datum-Modus für mehrere Termine.",
+      "preconditions": ["Liste im Pro-Datum-Modus mit 3 Datums-Optionen"],
+      "scenarios": [
+        {
+          "id": "TS-065-S01",
+          "name": "Mehrere Daten auswählen",
+          "given": "Liste mit 3 Datums-Optionen",
+          "when": "Elternteil Optionen 1 und 3 auswählt",
+          "then": "Eintrag zeigt 2 ausgewählte Termine; Option 2 nicht gewählt",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["CSV-Export enthält gewählte Optionen pro Eintrag"],
+      "minitest_path": "test/system/signup_lists/signup_list_date_mode_test.rb"
+    },
+    {
+      "id": "TS-066",
+      "feature_id": "F9",
+      "name": "Einkaufsliste anlegen (Betreuer)",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p1",
+      "status": "open",
+      "description": "Betreuer legt Einkaufsliste mit Positions-Einträgen an.",
+      "preconditions": ["Betreuer eingeloggt"],
+      "scenarios": [
+        {
+          "id": "TS-066-S01",
+          "name": "Liste mit 5 Einträgen",
+          "given": "Betreuer öffnet neue Einkaufsliste",
+          "when": "5 Einträge mit Bezeichnung und Menge hinzugefügt",
+          "then": "Alle 5 Einträge in der Liste sichtbar",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Einträge ohne Menge valide; optionales Feld"],
+      "minitest_path": "test/system/shopping_lists/shopping_list_create_test.rb"
+    },
+    {
+      "id": "TS-067",
+      "feature_id": "F10",
+      "name": "Abstimmung Mehrfachauswahl",
+      "type": "system",
+      "role": "parent",
+      "priority": "p1",
+      "status": "open",
+      "description": "Bei Mehrfachauswahl können mehrere Optionen gewählt werden.",
+      "preconditions": ["Mehrfachauswahl-Abstimmung mit 3 Optionen"],
+      "scenarios": [
+        {
+          "id": "TS-067-S01",
+          "name": "Zwei Optionen wählen",
+          "given": "Mehrfachauswahl-Abstimmung offen",
+          "when": "Elternteil Optionen A und C wählt",
+          "then": "Beide Optionen als gewählt gespeichert; Ergebnis zeigt beide",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Einfachauswahl blockiert zweite Wahl serverseitig"],
+      "minitest_path": "test/system/polls/poll_multiple_choice_test.rb"
+    },
+    {
+      "id": "TS-068",
+      "feature_id": "F11",
+      "name": "Galerie Lightbox-Ansicht",
+      "type": "system",
+      "role": "parent",
+      "priority": "p1",
+      "status": "open",
+      "description": "Klick auf Bild öffnet Lightbox mit Vollbild-Ansicht.",
+      "preconditions": ["Galerie mit mindestens einem Bild"],
+      "scenarios": [
+        {
+          "id": "TS-068-S01",
+          "name": "Lightbox öffnet sich",
+          "given": "Elternteil öffnet Galerie",
+          "when": "Klick auf erstes Bild",
+          "then": "Lightbox mit Vollbild-Ansicht wird angezeigt",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Lightbox schließbar per Klick oder Escape"],
+      "minitest_path": "test/system/galleries/gallery_lightbox_test.rb"
+    },
+    {
+      "id": "TS-069",
+      "feature_id": "F12",
+      "name": "Betreuer – Gesendete Mitteilungen archivieren",
+      "type": "system",
+      "role": "caretaker",
+      "priority": "p1",
+      "status": "open",
+      "description": "Betreuer sieht Gesendet-Bereich und kann archivieren.",
+      "preconditions": ["Betreuer hat Mitteilung gesendet"],
+      "scenarios": [
+        {
+          "id": "TS-069-S01",
+          "name": "Gesendete Mitteilung archivieren",
+          "given": "Mitteilung in Gesendet-Bereich",
+          "when": "Betreuer archiviert Mitteilung",
+          "then": "Mitteilung nicht mehr in aktivem Gesendet-Bereich; im Archiv vorhanden",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Archivierte Mitteilungen weiterhin in Posteingang der Empfänger"],
+      "minitest_path": "test/system/messages/caretaker_sent_test.rb"
+    },
+    {
+      "id": "TS-070",
+      "feature_id": "F13",
+      "name": "Speiseplan Jahresübergang – keine Übernahme",
+      "type": "unit",
+      "role": "caretaker",
+      "priority": "p1",
+      "status": "open",
+      "description": "Speiseplan-Einträge werden beim Jahresübergang nicht kopiert.",
+      "preconditions": ["Speiseplan-Einträge in KGJ 2025/26"],
+      "scenarios": [
+        {
+          "id": "TS-070-S01",
+          "name": "Kein Speiseplan im neuen Jahr",
+          "given": "Speiseplan-Einträge für KGJ 2025/26",
+          "when": "Jahresübergang zu KGJ 2026/27 durchgeführt",
+          "then": "MealPlan.where(kindergarten_year: kgj_2026_27).count == 0",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Jahresübergang-Service kopiert keinen Speiseplan"],
+      "minitest_path": "test/models/year_rollover_test.rb"
+    },
+    {
+      "id": "TS-071",
+      "feature_id": "F5",
+      "name": "Notfallkontakt Jahresübergang – Kopie vorhanden",
+      "type": "unit",
+      "role": "caretaker",
+      "priority": "p0",
+      "status": "open",
+      "description": "Notfallkontakte werden beim Jahresübergang in das neue Jahr kopiert.",
+      "preconditions": ["Kind mit 2 Notfallkontakten in KGJ 2025/26"],
+      "scenarios": [
+        {
+          "id": "TS-071-S01",
+          "name": "Kontakte im neuen Jahr",
+          "given": "Kind X hat 2 Notfallkontakte",
+          "when": "Jahresübergang; Kind in 2026/27 übernommen",
+          "then": "EmergencyContact.where(child: kind_x_in_2026_27).count == 2",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Kopie ist unabhängig (Änderung im neuen Jahr ändert nicht altes Jahr)"],
+      "minitest_path": "test/models/emergency_contact_rollover_test.rb"
+    },
+    {
+      "id": "TS-072",
+      "feature_id": "F15",
+      "name": "Foto-Einwilligung Jahresübergang",
+      "type": "unit",
+      "role": "caretaker",
+      "priority": "p1",
+      "status": "open",
+      "description": "Foto-Einwilligungs-Flag wird beim Jahresübergang kopiert.",
+      "preconditions": ["Kind mit photo_consent: true"],
+      "scenarios": [
+        {
+          "id": "TS-072-S01",
+          "name": "Flag im neuen Jahr vorhanden",
+          "given": "Kind mit photo_consent: true in 2025/26",
+          "when": "Jahresübergang; Kind in 2026/27",
+          "then": "Kind in 2026/27 hat photo_consent: true",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Consent-Timestamp wird nicht kopiert (frischer Timestamp nach Kopie)"],
+      "minitest_path": "test/models/photo_consent_rollover_test.rb"
+    },
+    {
+      "id": "TS-073",
+      "feature_id": "T11",
+      "name": "CORS deaktiviert",
+      "type": "integration",
+      "role": "all",
+      "priority": "p0",
+      "status": "open",
+      "description": "Preflight-Requests von fremden Origins werden abgewiesen.",
+      "preconditions": [],
+      "scenarios": [
+        {
+          "id": "TS-073-S01",
+          "name": "OPTIONS von fremder Origin abgewiesen",
+          "given": "Keine CORS-Konfiguration für externe Domains",
+          "when": "OPTIONS-Request von Origin https://evil.example.com",
+          "then": "Kein Access-Control-Allow-Origin Header in Response; HTTP 400 oder kein CORS-Header",
+          "negative": true
+        }
+      ],
+      "success_criteria": ["Keine externe API öffentlich erreichbar"],
+      "minitest_path": "test/integration/security/cors_test.rb"
+    },
+    {
+      "id": "TS-074",
+      "feature_id": "F7",
+      "name": "Veranstaltung löschen",
+      "type": "integration",
+      "role": "caretaker",
+      "priority": "p1",
+      "status": "open",
+      "description": "Betreuer löscht Veranstaltung; verknüpfte Module bleiben erhalten.",
+      "preconditions": ["Veranstaltung mit Teilnahmeliste"],
+      "scenarios": [
+        {
+          "id": "TS-074-S01",
+          "name": "Löschen ohne Datenverlust bei Modulen",
+          "given": "Veranstaltung mit Teilnahmeliste L",
+          "when": "DELETE /events/:id",
+          "then": "Veranstaltung gelöscht; SignupList L noch in DB oder korrekt mit Event entkoppelt",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Kein Cascade-Delete auf unabhängige Module"],
+      "minitest_path": "test/controllers/events_controller_test.rb"
+    },
+    {
+      "id": "TS-075",
+      "feature_id": "F17",
+      "name": "Eltern-Dashboard offene Liste verschwindet nach Eintrag",
+      "type": "system",
+      "role": "parent",
+      "priority": "p1",
+      "status": "open",
+      "description": "Offene Liste im Dashboard verschwindet nachdem Elternteil sich eingetragen hat.",
+      "preconditions": ["Elternteil eingeloggt; offene Teilnahmeliste vorhanden"],
+      "scenarios": [
+        {
+          "id": "TS-075-S01",
+          "name": "Liste verschwindet aus Dashboard",
+          "given": "Offene Liste in Dashboard-Sektion sichtbar",
+          "when": "Elternteil sich in Liste einträgt; zurück zum Dashboard",
+          "then": "Liste nicht mehr in offene-Listen-Sektion vorhanden",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Dashboard-Query prüft Teilnahme-Status korrekt"],
+      "minitest_path": "test/system/dashboard/parent_dashboard_open_list_test.rb"
+    },
+    {
+      "id": "TS-076",
+      "feature_id": "F1",
+      "name": "Statische Seiten – Impressum und Datenschutz",
+      "type": "integration",
+      "role": "all",
+      "priority": "p1",
+      "status": "open",
+      "description": "Impressum und Datenschutzerklärung sind erreichbar; Admin kann Inhalt aktualisieren.",
+      "preconditions": [],
+      "scenarios": [
+        {
+          "id": "TS-076-S01",
+          "name": "Impressum erreichbar",
+          "given": "Kein Login notwendig",
+          "when": "GET /impressum",
+          "then": "HTTP 200; Inhalt vorhanden",
+          "negative": false
+        },
+        {
+          "id": "TS-076-S02",
+          "name": "Admin aktualisiert Inhalt",
+          "given": "Admin eingeloggt",
+          "when": "Admin Impressum-Text ändert und speichert",
+          "then": "Aktualisierter Text auf /impressum sichtbar",
+          "negative": false
+        }
+      ],
+      "success_criteria": ["Kein Login für statische Seiten notwendig"],
+      "minitest_path": "test/integration/static_pages_test.rb"
+    }
+  ]
+}
