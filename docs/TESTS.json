@@ -1521,7 +1521,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer sendet Mitteilung an Gruppe; alle Eltern erhalten sie im Posteingang.",
       "preconditions": [
         "Betreuer eingeloggt",
