@@ -257,7 +257,7 @@
       "type": "integration",
       "role": "all",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Provider-Bounce-Webhook markiert betroffenen Account als email_invalid.",
       "preconditions": ["User-Account existiert"],
       "scenarios": [
