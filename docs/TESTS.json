@@ -1726,7 +1726,7 @@
       "type": "unit",
       "role": "parent",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "iCal-Feed enthält nur Ereignisse, die für den Benutzer sichtbar sind.",
       "preconditions": [
         "Elternteil mit Kind in Gruppe Bären; Löwen haben eigenes Ereignis"
@@ -1753,7 +1753,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Token kann rotiert werden; alter Token ungültig.",
       "preconditions": [
         "Elternteil eingeloggt mit iCal-Token T1"
