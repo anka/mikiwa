@@ -1994,7 +1994,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer legt neues KGJ an und setzt es als aktiv; vorheriges wird inaktiv.",
       "preconditions": [
         "KGJ 2025/26 aktiv"
