@@ -863,7 +863,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Jahresübergang überträgt ausgewählte Kinder mit Notfallkontakten; Inhalte bleiben beim alten Jahr.",
       "preconditions": [
         "KGJ 2025/26 aktiv mit 3 Kindern und einer Galerie"
