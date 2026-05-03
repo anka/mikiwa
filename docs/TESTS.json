@@ -1942,7 +1942,7 @@
       "type": "unit",
       "role": "all",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Test-Suite erreicht mindestens 85% Line Coverage.",
       "preconditions": [
         "SimpleCov konfiguriert"

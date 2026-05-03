@@ -3,7 +3,7 @@ SimpleCov.start "rails" do
   add_filter "/test/"
   add_filter "/config/"
   add_filter "/db/"
-  minimum_coverage 84
+  minimum_coverage 85
 end
 
 ENV["RAILS_ENV"] ||= "test"
