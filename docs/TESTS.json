@@ -2164,7 +2164,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Klick auf Bild öffnet Lightbox mit Vollbild-Ansicht.",
       "preconditions": [
         "Galerie mit mindestens einem Bild"

@@ -11,7 +11,11 @@ class Gallery < ApplicationRecord
   has_many :gallery_groups, dependent: :destroy
   has_many :groups, through: :gallery_groups
 
-  has_many_attached :photos
+  has_many_attached :photos do |attachable|
+    ImageAttachable::VARIANT_CONFIGS.each do |name, config|
+      attachable.variant name, **config
+    end
+  end
 
   validates :title,             presence: true
   validates :kindergarten_year, presence: true
