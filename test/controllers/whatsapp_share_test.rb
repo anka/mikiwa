@@ -37,6 +37,24 @@ class WhatsappShareTest < ActionDispatch::IntegrationTest
     @poll.save!
   end
 
+  # TS-052-S01: wa.me-Link enthält Titel und HTTPS-URL
+  test "TS-052 WhatsApp-Link enthält Titel und HTTPS-Event-URL" do
+    sign_in_as(@staff)
+    get event_path(@event), headers: { "HOST" => "example.com" }
+
+    assert_response :success
+    assert_match "wa.me",                       response.body
+    assert_match CGI.escape(@event.title),       response.body
+    assert_match CGI.escape("http"),             response.body
+  end
+
+  # TS-052-S02: Veranstaltungs-URL ohne Session liefert 302
+  test "TS-052 Event-URL ohne Login leitet auf Anmeldeseite weiter" do
+    get event_path(@event)
+    assert_response :redirect
+    assert_redirected_to new_session_path
+  end
+
   test "event show page contains WhatsApp share link" do
     sign_in_as(@staff)
     get event_path(@event)
