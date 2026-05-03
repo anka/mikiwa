@@ -996,7 +996,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer legt Eltern-Account an; Elternteil klickt Einladungslink und vervollständigt Profil.",
       "preconditions": [
         "Betreuer eingeloggt",
@@ -1032,7 +1032,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Elternteil kann Name, Telefon und E-Mail ändern, aber nicht Kinder-Zuordnung.",
       "preconditions": [
         "Elternteil eingeloggt"
@@ -1067,7 +1067,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer legt Notfallkontakte für Kind an; sortierbar.",
       "preconditions": [
         "Betreuer eingeloggt",
@@ -1095,7 +1095,7 @@
       "type": "integration",
       "role": "parent",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Elternteil kann keine Notfallkontakte fremder Kinder lesen.",
       "preconditions": [
         "Zwei Kinder mit je einem Elternteil"
@@ -1122,7 +1122,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Elternteil kann medizinische Hinweise für eigenes Kind pflegen.",
       "preconditions": [
         "Elternteil eingeloggt",
