@@ -2110,7 +2110,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Betreuer legt Einkaufsliste mit Positions-Einträgen an.",
       "preconditions": [
         "Betreuer eingeloggt"
