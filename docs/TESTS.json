@@ -2137,7 +2137,7 @@
       "type": "system",
       "role": "parent",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Bei Mehrfachauswahl können mehrere Optionen gewählt werden.",
       "preconditions": [
         "Mehrfachauswahl-Abstimmung mit 3 Optionen"
