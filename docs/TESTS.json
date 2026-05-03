@@ -2378,7 +2378,7 @@
       "type": "integration",
       "role": "all",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Impressum und Datenschutzerklärung sind erreichbar; Admin kann Inhalt aktualisieren.",
       "preconditions": [],
       "scenarios": [
