@@ -25,10 +25,14 @@ module Authentication
       Current.session ||= find_session_by_cookie
     end
 
+    SESSION_DURATION = 7.days
+
     def find_session_by_cookie
       return unless cookies.signed[:session_id]
       session = Session.find_by(id: cookies.signed[:session_id])
-      return if session&.user&.locked?
+      return unless session
+      return if session.user.locked?
+      return if session.created_at < SESSION_DURATION.ago
       session
     end
 

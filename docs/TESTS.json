@@ -48,7 +48,7 @@
       "type": "integration",
       "role": "all",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Falsches Passwort und unbekannte E-Mail zeigen dieselbe generische Fehlermeldung.",
       "preconditions": ["Betreuer-Account existiert"],
       "scenarios": [
@@ -141,7 +141,7 @@
       "type": "integration",
       "role": "all",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Session läuft nach 7 Tagen ab; Logout invalidiert Session serverseitig.",
       "preconditions": ["Eingeloggter Benutzer"],
       "scenarios": [
