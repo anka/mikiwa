@@ -471,7 +471,7 @@
       "type": "unit",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "GPS- und Gerätedaten werden aus hochgeladenen Bildern entfernt.",
       "preconditions": [
         "Bild mit EXIF-GPS-Daten vorhanden (fixtures/test_with_gps.jpg)"
