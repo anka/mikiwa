@@ -1869,7 +1869,7 @@
       "type": "system",
       "role": "caretaker",
       "priority": "p0",
-      "status": "open",
+      "status": "done",
       "description": "Dashboard zeigt Heute, Offene Aufgaben, Schnellaktionen und Statistik.",
       "preconditions": [
         "Betreuer eingeloggt",
@@ -1915,7 +1915,7 @@
       "type": "integration",
       "role": "caretaker",
       "priority": "p1",
-      "status": "open",
+      "status": "done",
       "description": "Dashboard zeigt Kinder ohne gesetztes Foto-Einwilligungs-Flag als offene Aufgabe.",
       "preconditions": [
         "Kind ohne photo_consent gesetzt"
