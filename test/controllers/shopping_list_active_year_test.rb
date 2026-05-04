@@ -64,7 +64,7 @@ class ShoppingListActiveYearTest < ActionDispatch::IntegrationTest
 
     list = ShoppingList.order(:created_at).last
     assert_equal @year.id, list.kindergarten_year_id
-    assert_redirected_to shopping_list_path(list)
+    assert_redirected_to edit_shopping_list_path(list)
   end
 
   # --- Edge case: no active year ---

@@ -6,9 +6,7 @@ class ShoppingList < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :event, class_name: "Event", optional: true, foreign_key: :event_id
 
-  has_many :shopping_items, dependent: :destroy
-
-  accepts_nested_attributes_for :shopping_items, allow_destroy: true, reject_if: :all_blank
+  has_many :shopping_items, -> { ordered }, dependent: :destroy, inverse_of: :shopping_list
 
   validates :title, presence: true
   validates :event_date, presence: true

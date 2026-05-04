@@ -1,4 +1,33 @@
 - content_for :title, "#{@list.title} bearbeiten · Mikiwa"
+
 .mw-page-header
-  %h1.mw-page-header__title Einkaufsliste bearbeiten
-= render "form", list: @list, groups: @groups, kindergarten_years: @kindergarten_years
+  .mw-page-header__text
+    %h1.mw-page-header__title Einkaufsliste bearbeiten
+    %p.mw-page-header__lede Pflege Stammdaten und Einträge dieser Liste.
+  .mw-page-header__actions
+    = link_to shopping_list_path(@list), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+      Vorschau
+    = link_to shopping_lists_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
+      Zurück
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+.mw-shopping-editor
+  %section.mw-card
+    %header.mw-shopping-editor__section-header
+      %h2.mw-shopping-editor__section-title Stammdaten
+    = render "form", list: @list, groups: @groups, kindergarten_years: @kindergarten_years
+
+  %section.mw-card{ id: "shopping_items_card" }
+    %header.mw-shopping-editor__section-header
+      %h2.mw-shopping-editor__section-title Einträge
+      #shopping_items_summary
+        = render "shopping_items/summary", list: @list
+
+    %ul#shopping_items.mw-shopping-editor__list
+      - @items.each do |item|
+        = render "shopping_items/item", item: item, mode: :edit
+
+    #new_shopping_item.mw-shopping-editor__new-item
+      = render "shopping_items/form", list: @list, item: @new_item

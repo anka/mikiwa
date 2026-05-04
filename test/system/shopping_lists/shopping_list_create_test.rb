@@ -20,30 +20,33 @@ class ShoppingListCreateTest < ActionDispatch::IntegrationTest
     @group.destroy!
   end
 
-  # TS-066-S01: 5 Einträge anlegen → alle sichtbar; Menge ist optional
+  # TS-066-S01: Liste anlegen + 5 Einträge per Item-Endpoint hinzufügen → alle sichtbar
   test "TS-066 Betreuer legt Einkaufsliste mit 5 Einträgen an" do
     sign_in_as(@caretaker)
-
-    items_attrs = {
-      "0" => { name: "Mehl", quantity: "500g" },
-      "1" => { name: "Zucker", quantity: "" },
-      "2" => { name: "Eier", quantity: "12 Stück" },
-      "3" => { name: "Milch", quantity: "" },
-      "4" => { name: "Butter", quantity: "250g" }
-    }
 
     post shopping_lists_path, params: {
       shopping_list: {
         title: "Backtag-Liste",
         event_date: "2026-05-20",
         group_id: @group.id,
-        kindergarten_year_id: @year.id,
-        shopping_items_attributes: items_attrs
+        kindergarten_year_id: @year.id
       }
     }
     assert_response :redirect
-
     list = ShoppingList.find_by!(title: "Backtag-Liste")
+    assert_redirected_to edit_shopping_list_path(list)
+
+    [
+      { name: "Mehl",   quantity: "500g" },
+      { name: "Zucker", quantity: "" },
+      { name: "Eier",   quantity: "12 Stück" },
+      { name: "Milch",  quantity: "" },
+      { name: "Butter", quantity: "250g" }
+    ].each do |attrs|
+      post shopping_list_shopping_items_path(list), params: { shopping_item: attrs }, as: :turbo_stream
+      assert_response :success, "POST /shopping_items für #{attrs[:name]} muss 200 sein"
+    end
+
     assert_equal 5, list.shopping_items.count, "Liste muss 5 Einträge enthalten"
 
     get shopping_list_path(list)

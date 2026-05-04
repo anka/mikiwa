@@ -1,0 +1,62 @@
+-# Editor-Variante eines Items: Inline-Edit für Name/Menge/Notiz, Foto-Upload, Löschen.
+-# Felder submitten per Stimulus auto_submit (blur/Enter, debounce).
+%li.mw-shopping-edit-item{ id: dom_id(item) }
+  = form_with model: item,
+              url: shopping_list_shopping_item_path(item.shopping_list, item),
+              method: :patch,
+              multipart: true,
+              html: { class: "mw-shopping-edit-item__form",
+                      data: { controller: "auto-submit",
+                              "auto-submit-debounce-value": 600 } } do |f|
+
+    .mw-shopping-edit-item__photo
+      - if item.photo.attached?
+        %label.mw-shopping-edit-item__thumb{ title: "Bild ersetzen" }
+          = image_tag item.photo.variant(:thumb), class: "mw-shopping-edit-item__thumb-img", alt: item.name
+          = f.file_field :photo,
+                          accept: "image/*",
+                          class: "mw-shopping-edit-item__photo-input",
+                          data: { action: "change->auto-submit#submit" }
+      - else
+        %label.mw-shopping-edit-item__thumb.mw-shopping-edit-item__thumb--empty{ title: "Bild anhängen" }
+          = lucide_icon "image-plus", size: 22
+          = f.file_field :photo,
+                          accept: "image/*",
+                          class: "mw-shopping-edit-item__photo-input",
+                          data: { action: "change->auto-submit#submit" }
+
+    .mw-shopping-edit-item__fields
+      = f.text_field :name,
+                      placeholder: "Bezeichnung",
+                      required: true,
+                      autocomplete: "off",
+                      class: "mw-input mw-input--inline mw-shopping-edit-item__name",
+                      data: { action: "change->auto-submit#submit blur->auto-submit#submit" }
+      .mw-shopping-edit-item__meta-row
+        = f.text_field :quantity,
+                        placeholder: "Menge",
+                        autocomplete: "off",
+                        class: "mw-input mw-input--inline mw-shopping-edit-item__qty",
+                        data: { action: "change->auto-submit#submit blur->auto-submit#submit" }
+        = f.text_field :note,
+                        placeholder: "Notiz",
+                        autocomplete: "off",
+                        class: "mw-input mw-input--inline mw-shopping-edit-item__note",
+                        data: { action: "change->auto-submit#submit blur->auto-submit#submit" }
+
+  - if item.errors.any?
+    .mw-shopping-edit-item__errors= item.errors.full_messages.to_sentence
+
+  .mw-shopping-edit-item__actions
+    - if item.photo.attached?
+      = button_to purge_photo_shopping_list_shopping_item_path(item.shopping_list, item),
+                    method: :delete,
+                    class: "mw-shopping-edit-item__icon-btn",
+                    title: "Bild entfernen" do
+        = lucide_icon "image-off", size: 16
+    = button_to shopping_list_shopping_item_path(item.shopping_list, item),
+                  method: :delete,
+                  class: "mw-shopping-edit-item__icon-btn mw-shopping-edit-item__icon-btn--danger",
+                  title: "Eintrag löschen",
+                  form: { data: { turbo_confirm: "Eintrag wirklich löschen?" } } do
+      = lucide_icon "trash-2", size: 16

@@ -1,0 +1,8 @@
+- total = list.shopping_items.count
+- done  = list.shopping_items.done.count
+%span.mw-shopping-summary
+  - if total.zero?
+    Noch keine Einträge
+  - else
+    %strong= "#{done}/#{total}"
+    erledigt

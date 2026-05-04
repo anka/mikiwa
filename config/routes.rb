@@ -65,10 +65,11 @@ Rails.application.routes.draw do
 
   resources :calendar_events
   resources :shopping_lists do
-    resources :shopping_items, only: [] do
+    resources :shopping_items, only: %i[create update destroy] do
       member do
         patch :complete
         patch :uncomplete
+        delete :photo, action: :purge_photo, as: :purge_photo
       end
     end
   end

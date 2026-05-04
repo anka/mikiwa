@@ -1,0 +1,49 @@
+-# Inline-Form zum Hinzufügen eines neuen Eintrags. Wird nach erfolgreichem
+-# Submit per Turbo-Stream durch eine frische Instanz ersetzt.
+= form_with model: item,
+            url: shopping_list_shopping_items_path(list),
+            method: :post,
+            multipart: true,
+            html: { class: "mw-shopping-new",
+                    data: { controller: "shopping-new-item",
+                            action: "turbo:submit-end->shopping-new-item#focusName" } } do |f|
+  - if item.errors.any?
+    .mw-shopping-new__errors
+      = item.errors.full_messages.to_sentence
+
+  .mw-shopping-new__row
+    = f.text_field :name,
+                   placeholder: "Was wird gebraucht?",
+                   required: true,
+                   autocomplete: "off",
+                   class: "mw-input mw-shopping-new__name",
+                   data: { "shopping-new-item-target": "name" }
+    = f.text_field :quantity,
+                   placeholder: "Menge",
+                   autocomplete: "off",
+                   class: "mw-input mw-shopping-new__qty"
+
+  .mw-shopping-new__row.mw-shopping-new__row--secondary
+    = f.text_field :note,
+                   placeholder: "Notiz (optional)",
+                   autocomplete: "off",
+                   class: "mw-input mw-shopping-new__note"
+
+    %label.mw-shopping-new__photo{ title: "Bild anhängen" }
+      = lucide_icon "image-plus", size: 18
+      %span.mw-shopping-new__photo-label Bild
+      = f.file_field :photo,
+                      accept: "image/*",
+                      class: "mw-shopping-new__photo-input",
+                      data: { "shopping-new-item-target": "photo",
+                              action: "change->shopping-new-item#previewPhoto" }
+
+    %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit" }
+      = lucide_icon "plus", size: 16
+      Hinzufügen
+
+  %div.mw-shopping-new__photo-preview{ data: { "shopping-new-item-target": "preview" }, hidden: true }
+    %img{ data: { "shopping-new-item-target": "previewImg" }, alt: "" }
+    %button.mw-shopping-new__photo-remove{ type: "button",
+                                            data: { action: "shopping-new-item#clearPhoto" } }
+      = lucide_icon "x", size: 14

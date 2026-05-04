@@ -18,48 +18,27 @@
 - if notice
   .mw-flash.mw-flash--success= notice
 
--# Filter "nur offen"
-.mw-calendar-filters{ style: "margin-top: 1rem;" }
-  - if @open_only
-    = link_to shopping_list_path(@list), class: "mw-btn mw-btn--secondary mw-btn--sm" do
-      = lucide_icon "list", size: 14
-      Alle anzeigen
-  - else
-    = link_to shopping_list_path(@list, filter: "open"), class: "mw-btn mw-btn--secondary mw-btn--sm" do
-      = lucide_icon "filter", size: 14
-      Nur offene
+.mw-shopping-show
+  .mw-shopping-show__bar
+    #shopping_items_summary
+      = render "shopping_items/summary", list: @list
+    - if @open_only
+      = link_to shopping_list_path(@list), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+        = lucide_icon "list", size: 14
+        Alle anzeigen
+    - else
+      = link_to shopping_list_path(@list, filter: "open"), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+        = lucide_icon "filter", size: 14
+        Nur offene
 
--# Einkaufsliste – mobile-optimiert
-.mw-shopping-list{ style: "margin-top: 1rem;" }
   - if @items.any?
-    - @items.each do |item|
-      .mw-shopping-item{ class: item.done? ? "mw-shopping-item--done" : nil }
-        .mw-shopping-item__check
-          - if item.done?
-            = button_to uncomplete_shopping_list_shopping_item_path(@list, item), method: :patch,
-                class: "mw-shopping-item__btn mw-shopping-item__btn--done",
-                "aria-label": "Als offen markieren" do
-              = lucide_icon "check", size: 20
-          - else
-            = button_to complete_shopping_list_shopping_item_path(@list, item), method: :patch,
-                class: "mw-shopping-item__btn",
-                "aria-label": "Als erledigt markieren" do
-              %span.mw-shopping-item__circle
-        .mw-shopping-item__body
-          .mw-shopping-item__name{ class: item.done? ? "mw-shopping-item__name--done" : nil }= item.name
-          - if item.quantity.present?
-            .mw-shopping-item__qty= item.quantity
-          - if item.note.present?
-            .mw-shopping-item__note= item.note
-          - if item.done? && item.completed_by.present?
-            .mw-shopping-item__meta
-              = lucide_icon "check-circle-2", size: 12
-              Erledigt von
-              = item.completed_by.full_name.presence || item.completed_by.email
-              um #{l(item.completed_at, format: :short)}
+    %ul#shopping_items.mw-shopping-list
+      - @items.each do |item|
+        = render "shopping_items/show_item", item: item, list: @list
   - else
-    %p.mw-text-muted{ style: "padding: 1rem 0;" }
-      - if @open_only
-        Alle Einträge sind erledigt.
-      - else
-        Noch keine Einträge.
+    .mw-empty-state
+      %p.mw-text-muted
+        - if @open_only
+          Alle Einträge sind erledigt.
+        - else
+          Noch keine Einträge.
