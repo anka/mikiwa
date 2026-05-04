@@ -39,13 +39,20 @@
         = form.radio_button :photo_consent, "0", required: true
         %span Nein – keine Fotos
 
-  .mw-field
-    = form.label :parent_id, "Elternteil verknüpfen (optional)", class: "mw-field__label"
-    = form.select :parent_id,
-        User.where(role: "parent").order(:last_name, :first_name).map { |u| ["#{u.full_name} (#{u.email})", u.id] },
-        { prompt: "Elternteil auswählen …" },
-        class: "mw-input",
-        name: "child[parent_id]"
+  - if child.new_record?
+    .mw-field
+      = form.label :parent_id, "Elternteil verknüpfen (optional)", class: "mw-field__label"
+      = form.select :parent_id,
+          User.where(role: "parent").order(:last_name, :first_name).map { |u| ["#{u.full_name} (#{u.email})", u.id] },
+          { prompt: "Elternteil auswählen …" },
+          class: "mw-input",
+          name: "child[parent_id]"
+  - else
+    .mw-field
+      %p.mw-field__label Eltern
+      %p.mw-field__hint
+        Eltern werden in der Detailansicht verwaltet.
+        = link_to "Zur Detailansicht", child_path(child), class: "mw-link"
 
   .mw-field-row
     .mw-field

@@ -1,0 +1,48 @@
+- can_manage = current_user&.staff?
+- assigned_parents = child.parents.order(:last_name, :first_name)
+- available_parents = User.parents.active.where.not(id: child.parent_children.select(:user_id)).order(:last_name, :first_name)
+
+.mw-detail-section
+  .mw-detail-section__header
+    %span.mw-detail-section__title Eltern
+  .mw-card
+    - if assigned_parents.any?
+      - assigned_parents.each do |user|
+        .mw-nk-item{ data: { test: "parent-row-#{user.id}" } }
+          .mw-nk-item__icon
+            = lucide_icon "user", size: 16
+          .mw-nk-item__body
+            .mw-nk-item__name= user.full_name.presence || user.email
+            .mw-nk-item__meta= user.email
+          - if can_manage
+            .mw-actions
+              = button_to detach_parent_child_path(child, user_id: user.id), method: :delete,
+                  class: "mw-page-action mw-page-action--danger",
+                  data: { turbo_confirm: "#{user.full_name.presence || user.email} wirklich von #{child.full_name} entfernen?" } do
+                = lucide_icon "trash-2", size: 14
+                Entfernen
+    - else
+      .mw-empty-state
+        %p.mw-text-muted Keine Eltern zugeordnet.
+
+    - if can_manage
+      - if available_parents.any?
+        = form_with url: attach_parent_child_path(child), method: :post,
+            data: { test: "attach-parent-form" },
+            class: "mw-form",
+            html: { style: "margin-top: 1rem; display: flex; gap: 0.5rem; align-items: flex-end; flex-wrap: wrap;" } do |f|
+          .mw-field{ style: "flex: 1 1 240px; margin: 0;" }
+            = label_tag :user_id, "Elternteil hinzufügen", class: "mw-field__label"
+            = select_tag :user_id,
+                options_for_select(available_parents.map { |u| [ "#{u.full_name.presence || u.email} (#{u.email})", u.id ] }),
+                prompt: "Elternteil auswählen …",
+                class: "mw-input",
+                required: true
+          %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit" }
+            = lucide_icon "plus", size: 14
+            Hinzufügen
+      - else
+        %p.mw-text-muted{ style: "margin-top: 1rem;" }
+          Alle Eltern bereits zugeordnet. Neue Eltern-Konten können in der
+          = link_to "Benutzerverwaltung", parents_path, class: "mw-link"
+          angelegt werden.

@@ -1518,7 +1518,7 @@
       "id": "F19",
       "name": "Eltern-Zuordnung in Kind-Show-View verschieben",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-eltern-zuordnung-kind-show.json",
       "short_description": "Mehrfach-Eltern-Zuordnung wird vom Edit-Formular in die Show-View des Kindes verschoben mit eigenen Hinzufügen-/Entfernen-Aktionen.",
       "description": "Die Verwaltung der Eltern-Beziehung pro Kind soll von der Edit-Maske in die Detailansicht verschoben werden, damit Pflege ohne komplettes Stammdatenformular erfolgt. Show-View bekommt einen Block 'Eltern' mit Liste, Hinzufügen-Dialog und Entfernen-Aktion. Edit-Formular wird um Eltern-Block bereinigt. Pundit-Policy erlaubt manage_parents nur für Admin/Staff. Spec: docs/spec-eltern-zuordnung-kind-show.json",

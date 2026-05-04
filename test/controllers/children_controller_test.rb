@@ -80,4 +80,79 @@ class ChildrenControllerTest < ActionDispatch::IntegrationTest
     patch deactivate_child_path(@child)
     assert_response :forbidden
   end
+
+  # F19 – Eltern-Zuordnung in Kind-Show-View
+  test "caretaker can attach parent to child" do
+    sign_in_as(@caretaker)
+    new_parent = User.create!(email: "neu_eltern@mikiwa.at", password: SecureRandom.hex(20), role: "parent")
+
+    assert_difference "ParentChild.count", 1 do
+      post attach_parent_child_path(@child), params: { user_id: new_parent.id }
+    end
+    assert_redirected_to child_path(@child)
+    assert @child.parents.include?(new_parent)
+  end
+
+  test "caretaker can detach parent from child" do
+    sign_in_as(@caretaker)
+
+    assert_difference "ParentChild.count", -1 do
+      delete detach_parent_child_path(@child, user_id: @parent.id)
+    end
+    assert_redirected_to child_path(@child)
+    assert_not @child.reload.parents.include?(@parent)
+  end
+
+  test "attach_parent forbidden for parent role (403)" do
+    sign_in_as(@parent)
+    other_parent = User.create!(email: "andere_eltern@mikiwa.at", password: SecureRandom.hex(20), role: "parent")
+
+    assert_no_difference "ParentChild.count" do
+      post attach_parent_child_path(@child), params: { user_id: other_parent.id }
+    end
+    assert_response :forbidden
+  end
+
+  test "detach_parent forbidden for parent role (403)" do
+    sign_in_as(@parent)
+
+    assert_no_difference "ParentChild.count" do
+      delete detach_parent_child_path(@child, user_id: @parent.id)
+    end
+    assert_response :forbidden
+  end
+
+  test "attach_parent rejects non-parent user with error" do
+    sign_in_as(@caretaker)
+    staff_user = User.create!(email: "staffel@mikiwa.at", password: SecureRandom.hex(20), role: "caretaker")
+
+    assert_no_difference "ParentChild.count" do
+      post attach_parent_child_path(@child), params: { user_id: staff_user.id }
+    end
+    assert_redirected_to child_path(@child)
+    assert_match(/Kein passendes Eltern-Konto/i, flash[:alert].to_s)
+  end
+
+  test "attach_parent is idempotent for already-linked parent" do
+    sign_in_as(@caretaker)
+
+    assert_no_difference "ParentChild.count" do
+      post attach_parent_child_path(@child), params: { user_id: @parent.id }
+    end
+    assert_redirected_to child_path(@child)
+  end
+
+  test "edit form contains no parent_id select" do
+    sign_in_as(@caretaker)
+    get edit_child_path(@child)
+    assert_response :success
+    assert_no_match(/name="child\[parent_id\]"/, response.body)
+  end
+
+  test "new form keeps parent_id select" do
+    sign_in_as(@caretaker)
+    get new_child_path
+    assert_response :success
+    assert_match(/name="child\[parent_id\]"/, response.body)
+  end
 end

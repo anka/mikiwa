@@ -1,5 +1,5 @@
 class ChildrenController < ApplicationController
-  before_action :set_child, only: %i[show edit update deactivate update_consent]
+  before_action :set_child, only: %i[show edit update deactivate update_consent attach_parent detach_parent]
   before_action :require_staff_for_mutations!, only: %i[new create edit update deactivate]
 
   def index
@@ -47,6 +47,31 @@ class ChildrenController < ApplicationController
     consent = ActiveModel::Type::Boolean.new.cast(params.dig(:child, :photo_consent))
     @child.update_consent!(consent)
     redirect_to child_path(@child), notice: "Foto-Einwilligung wurde aktualisiert."
+  end
+
+  def attach_parent
+    authorize!(@child, policy_class: ChildPolicy)
+    parent = User.find_by(id: params[:user_id], role: "parent")
+    if parent.nil?
+      redirect_to child_path(@child), alert: "Kein passendes Eltern-Konto gefunden."
+      return
+    end
+
+    ParentChild.find_or_create_by!(user: parent, child: @child)
+    redirect_to child_path(@child), notice: "#{parent.full_name} wurde als Elternteil zugeordnet."
+  end
+
+  def detach_parent
+    authorize!(@child, policy_class: ChildPolicy)
+    link = @child.parent_children.find_by(user_id: params[:user_id])
+    if link.nil?
+      redirect_to child_path(@child), alert: "Diese Eltern-Zuordnung existiert nicht."
+      return
+    end
+
+    name = link.user.full_name
+    link.destroy!
+    redirect_to child_path(@child), notice: "#{name} wurde von diesem Kind entfernt."
   end
 
   private
