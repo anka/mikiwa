@@ -42,5 +42,12 @@
             %p.mw-print-day__placeholder Noch nicht geplant
 
   %footer.mw-print-footer
-    %span Mikiwa · Mit Kindern wachsen
-    %span= "Stand: #{l(Date.current, format: :long)}"
+    %span.mw-print-footer__brand Mikiwa · Mit Kindern wachsen
+    .mw-print-legend
+      %span.mw-print-legend__item
+        = lucide_icon "sprout", size: 14, class: "mw-diet-icon mw-diet-icon--vegetarian", title: "Vegetarisch"
+        Vegetarisch
+      %span.mw-print-legend__item
+        = lucide_icon "leaf", size: 14, class: "mw-diet-icon mw-diet-icon--vegan", title: "Vegan"
+        Vegan
+    %span.mw-print-footer__date= "Stand: #{l(Date.current, format: :long)}"

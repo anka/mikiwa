@@ -373,4 +373,17 @@ class MealEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/mw-diet-icon mw-diet-icon--vegan|title="Vegan"/, response.body)
   end
+
+  test "F34 Druck enthält Legende für Vegetarisch- und Vegan-Icons" do
+    sign_in_as(@staff)
+    get print_meal_entries_path, params: { group_id: @group.id, week: "2026-05-04" }
+    assert_response :success
+    legend_match = response.body.match(/<div[^>]*class="mw-print-legend"[^>]*>(.*?)<\/div>/m)
+    assert legend_match, "Legende-Section muss gerendert werden"
+    legend = legend_match[1]
+    assert_match "Vegetarisch", legend
+    assert_match "Vegan", legend
+    assert_match(/mw-diet-icon--vegetarian/, legend)
+    assert_match(/mw-diet-icon--vegan/, legend)
+  end
 end
