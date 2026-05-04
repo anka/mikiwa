@@ -240,6 +240,28 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # F28: Light/Dark Mode Toggle
+  # F31: Mobile Bottom-Nav für Eltern
+  test "F31 Eltern-Bottom-Nav enthält 4 Punkte: Übersicht, Einkauf, Posteingang, Kalender" do
+    sign_in_as(@parent_a)
+    get parent_dashboard_path
+    assert_response :success
+    nav = response.body[/<nav[^>]*aria-label="Mobile Navigation".*?<\/nav>/m]
+    assert_not_nil nav, "Mobile-Nav muss vorhanden sein"
+    assert_match(/Übersicht/, nav)
+    assert_match(/Einkauf/, nav)
+    assert_match(/Posteingang/, nav)
+    assert_match(/Kalender/, nav)
+    assert_no_match(/Veranstaltungen/, nav, "Eltern-Mobile-Nav soll keine Veranstaltungen mehr haben")
+    assert_no_match(/Kinder/, nav, "Eltern-Mobile-Nav soll keine Kinder mehr haben")
+  end
+
+  test "F31 Eltern-Bottom-Nav Active-State auf Posteingang" do
+    sign_in_as(@parent_a)
+    get inbox_path
+    assert_response :success
+    assert_match(/<a class="mw-mobile-nav__item mw-nav-link--active" href="#{Regexp.escape(inbox_path)}"/, response.body)
+  end
+
   # F30: Mobile Layout – Burger-Menü
   test "F30 Topbar enthält Burger-Button mit Drawer-Controller" do
     sign_in_as(@staff)

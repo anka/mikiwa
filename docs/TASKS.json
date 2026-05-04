@@ -1970,7 +1970,7 @@
       "id": "F31",
       "name": "Mobile Bottom-Nav für Eltern",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-mobile-bottom-nav-eltern.json",
       "short_description": "Bottom-Nav für Eltern-Rolle enthält genau 4 Punkte: Übersicht, Einkaufsliste, Posteingang, Kalender.",
       "description": "Rollen-spezifischer Helper bottom_nav_items_for(current_user). Active-State per current_page?. Icons aus Mikiwa Design System. Optional: Badge für ungelesene Posteingangs-Nachrichten. Spec: docs/spec-mobile-bottom-nav-eltern.json",
