@@ -31,7 +31,8 @@
       %tbody
         - @parents.each do |parent|
           %tr
-            %td= parent.full_name.presence || "–"
+            %td
+              = link_to (parent.full_name.presence || "–"), parent_path(parent), class: "mw-link"
             %td= parent.email
             %td= parent.phone.presence || "–"
             %td

@@ -1615,7 +1615,7 @@
       "id": "F21",
       "name": "Eltern-Detailansicht (Show-Seite)",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-eltern-show-seite.json",
       "short_description": "Eigene Show-Seite für Eltern mit Stammdaten, zugeordneten Kindern und Folgeaktionen (Bearbeiten, Posteingang).",
       "description": "Eigener ParentsController mit Show-Seite unter /parents/:id. Header mit Stammdaten, Liste zugeordneter Kinder mit Foto-Consent-Badge und Click-Through, Aktionen Bearbeiten / Kind zuordnen / Posteingang. Pundit erlaubt Admin/Staff vollen Zugriff; Eltern dürfen nur ihre eigene Show öffnen. Spec: docs/spec-eltern-show-seite.json",

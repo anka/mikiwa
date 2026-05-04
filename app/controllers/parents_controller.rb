@@ -1,7 +1,7 @@
 class ParentsController < ApplicationController
   before_action :require_staff!, only: %i[index new create]
-  before_action :set_parent, only: %i[edit update lock unlock reinvite]
-  before_action :authorize_parent!, only: %i[edit update lock unlock reinvite]
+  before_action :set_parent, only: %i[show edit update lock unlock reinvite]
+  before_action :authorize_parent!, only: %i[show edit update lock unlock reinvite]
 
   def index
     scope = User.where(role: "parent")
@@ -33,6 +33,10 @@ class ParentsController < ApplicationController
     else
       render :new, status: :unprocessable_entity
     end
+  end
+
+  def show
+    @children = @parent.children.includes(:group).order(:last_name, :first_name)
   end
 
   def edit

@@ -1,6 +1,6 @@
 class UserPolicy < ApplicationPolicy
   def index?   = staff?
-  def show?    = staff?
+  def show?    = (staff? && record_is_parent?) || self_record?
   def new?     = staff?
   def create?  = staff?
   def edit?    = staff? && record_is_parent?
@@ -15,5 +15,9 @@ class UserPolicy < ApplicationPolicy
 
   def record_is_parent?
     record.respond_to?(:parent?) && record.parent?
+  end
+
+  def self_record?
+    user.present? && record.respond_to?(:id) && user.id == record.id
   end
 end

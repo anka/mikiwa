@@ -1,0 +1,73 @@
+- content_for :title, "#{(@parent.full_name.presence || @parent.email)} · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title= @parent.full_name.presence || @parent.email
+    %p.mw-page-header__lede
+      Eltern-Account
+      - if @parent.locked?
+        ·
+        %span.mw-badge.mw-badge--danger Deaktiviert
+      - elsif @parent.invitation_sent_at.present? && @parent.magic_link_token_version.zero?
+        ·
+        %span.mw-badge.mw-badge--warning Eingeladen
+      - else
+        ·
+        %span.mw-badge.mw-badge--success Aktiv
+  .mw-page-header__actions
+    - if current_user.staff?
+      = link_to edit_parent_path(@parent), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+        = lucide_icon "pencil", size: 14
+        Bearbeiten
+    = link_to "Zurück", parents_path, class: "mw-page-action"
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+/ Stammdaten
+.mw-detail-section
+  .mw-detail-section__header
+    %span.mw-detail-section__title Stammdaten
+  .mw-card{ style: "padding: 16px 20px;" }
+    .mw-detail-list-row
+      .mw-detail-list-row__label E-Mail
+      .mw-detail-list-row__value= @parent.email
+    .mw-detail-list-row
+      .mw-detail-list-row__label Telefon
+      .mw-detail-list-row__value= @parent.phone.presence || "–"
+    - if @parent.invitation_sent_at.present?
+      .mw-detail-list-row
+        .mw-detail-list-row__label Eingeladen am
+        .mw-detail-list-row__value= l(@parent.invitation_sent_at, format: :long)
+
+/ Zugeordnete Kinder
+.mw-detail-section
+  .mw-detail-section__header
+    %span.mw-detail-section__title Zugeordnete Kinder
+  .mw-card
+    - if @children.any?
+      - @children.each do |child|
+        .mw-nk-item
+          .mw-nk-item__body
+            .mw-nk-item__name
+              = link_to child.full_name, child_path(child), class: "mw-link"
+            .mw-nk-item__meta
+              = child.group.name
+              ·
+              = I18n.l(child.date_of_birth, format: :short)
+              ·
+              - if child.photo_consent
+                %span.mw-badge.mw-badge--success Erteilt
+              - else
+                %span.mw-badge.mw-badge--danger Nicht erteilt
+          .mw-actions
+            = link_to child_path(child), class: "mw-page-action" do
+              = lucide_icon "eye", size: 14
+              Öffnen
+    - else
+      .mw-empty-state{ style: "padding: 1.5rem;" }
+        %p.mw-text-muted{ style: "margin: 0 0 0.75rem;" } Keine Kinder zugeordnet.
+        - if current_user.staff?
+          = link_to new_child_path, class: "mw-btn mw-btn--secondary mw-btn--sm" do
+            = lucide_icon "user-plus", size: 14
+            Kind anlegen

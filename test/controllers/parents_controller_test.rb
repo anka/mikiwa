@@ -135,4 +135,69 @@ class ParentsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "Felix", response.body
   end
+
+  # F21: Eltern-Detailansicht (Show-Seite)
+  test "F21 Betreuer kann Eltern-Show-Seite öffnen" do
+    sign_in_as(@caretaker)
+    get parent_path(@parent)
+    assert_response :success
+    assert_match @parent.email, response.body
+    assert_match "Anna", response.body
+    assert_match "Huber", response.body
+  end
+
+  test "F21 Show zeigt zugeordnete Kinder mit Foto-Consent-Badge" do
+    sign_in_as(@caretaker)
+    group = Group.create!(name: "Show-Bären")
+    year  = KindergartenYear.where(active: true).first || KindergartenYear.create!(
+      label: "KGJ 2025/26", start_date: Date.new(2025, 9, 1),
+      end_date: Date.new(2026, 7, 31), active: true
+    )
+    child_yes = Child.create!(
+      first_name: "Lukas", last_name: "Huber",
+      date_of_birth: Date.new(2021, 3, 1),
+      group: group, kindergarten_year: year, photo_consent: true
+    )
+    child_no = Child.create!(
+      first_name: "Mia", last_name: "Huber",
+      date_of_birth: Date.new(2022, 6, 1),
+      group: group, kindergarten_year: year, photo_consent: false
+    )
+    ParentChild.create!(user: @parent, child: child_yes)
+    ParentChild.create!(user: @parent, child: child_no)
+
+    get parent_path(@parent)
+    assert_response :success
+    assert_match "Lukas", response.body
+    assert_match "Mia", response.body
+    assert_match "Erteilt", response.body
+    assert_match "Nicht erteilt", response.body
+  end
+
+  test "F21 Show zeigt Empty-State wenn keine Kinder zugeordnet" do
+    sign_in_as(@caretaker)
+    get parent_path(@parent)
+    assert_response :success
+    assert_match(/Keine Kinder zugeordnet/i, response.body)
+  end
+
+  test "F21 Eltern darf eigene Show-Seite öffnen" do
+    sign_in_as(@parent)
+    get parent_path(@parent)
+    assert_response :success
+  end
+
+  test "F21 Eltern darf Show-Seite eines anderen Eltern NICHT öffnen (403)" do
+    sign_in_as(@parent)
+    other = User.create!(email: "fremde_eltern@mikiwa.at", password: SecureRandom.hex(20), role: "parent")
+    get parent_path(other)
+    assert_response :forbidden
+  end
+
+  test "F21 Show enthält Bearbeiten-Aktion für Staff" do
+    sign_in_as(@caretaker)
+    get parent_path(@parent)
+    assert_response :success
+    assert_match edit_parent_path(@parent), response.body
+  end
 end

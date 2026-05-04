@@ -58,4 +58,20 @@ class UserPolicyTest < ActiveSupport::TestCase
     policy = UserPolicy.new(@admin, @parent)
     assert policy.destroy?
   end
+
+  # F21: Show-Berechtigung
+  test "F21 Eltern darf eigene Show-Seite (sich selbst)" do
+    policy = UserPolicy.new(@parent, @parent)
+    assert policy.show?
+  end
+
+  test "F21 Eltern darf NICHT andere Eltern-Show öffnen" do
+    policy = UserPolicy.new(@parent, @other_parent)
+    assert_not policy.show?
+  end
+
+  test "F21 Staff darf jede parent-Show öffnen" do
+    assert UserPolicy.new(@caretaker, @parent).show?
+    assert UserPolicy.new(@admin, @parent).show?
+  end
 end
