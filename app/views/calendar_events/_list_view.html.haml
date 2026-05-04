@@ -5,7 +5,7 @@
 
 - if combined.any?
   .mw-card{ style: "margin-top: 1.5rem;" }
-    %table.mw-table{ style: "width: 100%;" }
+    %table.mw-table.mw-table--cards{ style: "width: 100%;" }
       %thead
         %tr
           %th Datum
@@ -19,8 +19,8 @@
           - if row[:kind] == :birthday
             - birthday = row[:payload]
             %tr
-              %td{ style: "white-space: nowrap;" }= l(birthday.date, format: :long)
-              %td
+              %td{ "data-label": "Datum", style: "white-space: nowrap;" }= l(birthday.date, format: :long)
+              %td{ "data-label": "Titel" }
                 .mw-event-title
                   %span.mw-badge.mw-badge--birthday{ style: "margin-right: 0.4rem;" }
                     = lucide_icon "cake", size: 12
@@ -28,14 +28,14 @@
                   = link_to birthday.title, child_path(birthday.child), class: "mw-link"
                   %span.mw-text-muted{ style: "margin-left: 0.5rem; font-size: 0.85em;" }
                     wird #{birthday.new_age} Jahre
-              %td= birthday.child.group.name
-              %td –
+              %td{ "data-label": "Gruppen" }= birthday.child.group.name
+              %td{ "data-label": "Ort" } –
               - if current_user.staff?
-                %td
+                %td{ "data-label": "Aktionen" }
           - else
             - event = row[:payload]
             %tr
-              %td{ style: "white-space: nowrap;" }
+              %td{ "data-label": "Datum", style: "white-space: nowrap;" }
                 - if event.all_day
                   = l(event.start_date, format: :long)
                 - else
@@ -43,18 +43,18 @@
                   %span.mw-text-muted{ style: "margin-left: 0.25rem; font-size: 0.85em;" }
                     = lucide_icon "clock", size: 12
                     = event.start_time
-              %td
+              %td{ "data-label": "Titel" }
                 .mw-event-title
                   - if event.event_type == "veranstaltung"
                     %span.mw-badge.mw-badge--accent{ style: "margin-right: 0.4rem;" } Veranstaltung
                   = link_to event.title, calendar_event_path(event), class: "mw-link"
-              %td
+              %td{ "data-label": "Gruppen" }
                 .mw-group-chips
                   - event.groups.each do |g|
                     %span.mw-badge.mw-badge--neutral= g.name
-              %td= event.location.presence || "–"
+              %td{ "data-label": "Ort" }= event.location.presence || "–"
               - if current_user.staff?
-                %td{ style: "text-align: right;" }
+                %td{ "data-label": "Aktionen", style: "text-align: right;" }
                   .mw-actions
                     = link_to edit_calendar_event_path(event), class: "mw-page-action", title: "Bearbeiten" do
                       = lucide_icon "pencil", size: 14

@@ -20,7 +20,7 @@
 
 .mw-card{ style: "margin-top: 1rem;" }
   - if @parents.any?
-    %table.mw-table{ style: "width: 100%;" }
+    %table.mw-table.mw-table--cards{ style: "width: 100%;" }
       %thead
         %tr
           %th Name
@@ -31,18 +31,18 @@
       %tbody
         - @parents.each do |parent|
           %tr
-            %td
+            %td{ "data-label": "Name" }
               = link_to (parent.full_name.presence || "–"), parent_path(parent), class: "mw-link"
-            %td= parent.email
-            %td= parent.phone.presence || "–"
-            %td
+            %td{ "data-label": "E-Mail" }= parent.email
+            %td{ "data-label": "Telefon" }= parent.phone.presence || "–"
+            %td{ "data-label": "Status" }
               - if parent.locked?
                 %span.mw-badge.mw-badge--danger Deaktiviert
               - elsif parent.invitation_sent_at.present? && parent.magic_link_token_version.zero?
                 %span.mw-badge.mw-badge--warning Eingeladen
               - else
                 %span.mw-badge.mw-badge--success Aktiv
-            %td{ style: "text-align: right;" }
+            %td{ "data-label": "Aktionen", style: "text-align: right;" }
               .mw-actions
                 = link_to edit_parent_path(parent), class: "mw-page-action" do
                   = lucide_icon "pencil", size: 14

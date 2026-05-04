@@ -15,7 +15,7 @@
 
 - if @children.any?
   .mw-card{ style: "margin-top: 1.5rem;" }
-    %table.mw-table{ style: "width: 100%;" }
+    %table.mw-table.mw-table--cards{ style: "width: 100%;" }
       %thead
         %tr
           %th Name
@@ -27,26 +27,26 @@
       %tbody
         - @children.each do |child|
           %tr
-            %td
+            %td{ "data-label": "Name" }
               = link_to child_path(child), style: "text-decoration: none; color: inherit;" do
                 %strong= child.full_name
               - if child.nickname.present?
                 %span.mw-text-muted{ style: "font-size: var(--fs-12); margin-left: 4px;" }= "(#{child.nickname})"
-            %td= I18n.l(child.date_of_birth, format: :short)
-            %td
+            %td{ "data-label": "Geburtsdatum" }= I18n.l(child.date_of_birth, format: :short)
+            %td{ "data-label": "Gruppe" }
               - if child.group&.color.present?
                 %span{ style: "display:inline-flex;align-items:center;gap:6px;" }
                   %span{ style: "width:10px;height:10px;border-radius:50%;background:#{child.group.color};flex-shrink:0;" }
                   = child.group.name
               - else
                 = child.group&.name || "–"
-            %td
+            %td{ "data-label": "Foto-Einw." }
               - if child.photo_consent
                 %span.mw-badge.mw-badge--success Ja
               - else
                 %span.mw-badge.mw-badge--neutral Nein
             - if current_user.staff?
-              %td{ style: "text-align: right;" }
+              %td{ "data-label": "Aktionen", style: "text-align: right;" }
                 .mw-actions
                   = link_to edit_child_path(child), class: "mw-page-action" do
                     = lucide_icon "pencil", size: 14

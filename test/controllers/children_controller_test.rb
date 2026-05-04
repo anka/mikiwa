@@ -211,6 +211,16 @@ class ChildrenControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
+  # F32: Mobile Tabellen-Layout
+  test "F32 Kinder-Index hat mw-table--cards Klasse und data-label Attribute" do
+    sign_in_as(@caretaker)
+    get children_path
+    assert_response :success
+    assert_match(/mw-table mw-table--cards/, response.body)
+    assert_match(/data-label="Name"/, response.body)
+    assert_match(/data-label="Geburtsdatum"/, response.body)
+  end
+
   test "BF-002 edit form shows current photo_consent=false as selected radio" do
     sign_in_as(@caretaker)
     @child.update!(photo_consent: false)

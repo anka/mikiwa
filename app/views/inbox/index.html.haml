@@ -9,7 +9,7 @@
 
 - if @entries.any?
   .mw-card{ style: "margin-top: 1.5rem;" }
-    %table.mw-table{ style: "width: 100%;" }
+    %table.mw-table.mw-table--cards{ style: "width: 100%;" }
       %thead
         %tr
           %th Betreff
@@ -19,11 +19,11 @@
       %tbody
         - @entries.each do |entry|
           %tr{ class: entry.read? ? nil : "mw-table-row--unread" }
-            %td
+            %td{ "data-label": "Betreff" }
               = link_to entry.message.title, inbox_message_path(entry.message), class: "mw-link"
-            %td= entry.message.groups.map(&:name).join(", ")
-            %td= l(entry.created_at, format: :short)
-            %td
+            %td{ "data-label": "Gruppen" }= entry.message.groups.map(&:name).join(", ")
+            %td{ "data-label": "Datum" }= l(entry.created_at, format: :short)
+            %td{ "data-label": "Status" }
               - if entry.read?
                 %span.mw-badge.mw-badge--neutral Gelesen
               - else

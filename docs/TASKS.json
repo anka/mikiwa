@@ -1999,7 +1999,7 @@
       "id": "F32",
       "name": "Mobile Tabellen-Layout (Card-Stack)",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-mobile-tabellen-layout.json",
       "short_description": "Listen-/Tabellen-Index-Pages werden auf Mobile als Card-Stack dargestellt; auf Desktop bleibt Tabelle.",
       "description": "Wiederverwendbares Card-Pattern für Hauptlisten (Kinder, Galerien, Veranstaltungen, Listen, Posteingang etc.). Tailwind hidden/md:hidden Strategie. Lange Strings umbrochen. Pro Listentyp wird das prominenteste Feld als Card-Title und 1-2 Sekundärfelder als Meta gewählt. Bei Listen ohne sinnvolles Mapping: Tabellen-Container overflow-x: auto als Fallback. agent-browser Tests auf 390px. Spec: docs/spec-mobile-tabellen-layout.json",

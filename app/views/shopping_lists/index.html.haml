@@ -20,7 +20,7 @@
 
 - if @lists.any?
   .mw-card{ style: "margin-top: 1rem;" }
-    %table.mw-table{ style: "width: 100%;" }
+    %table.mw-table.mw-table--cards{ style: "width: 100%;" }
       %thead
         %tr
           %th Titel
@@ -34,22 +34,22 @@
           - total  = list.shopping_items.size
           - done   = list.shopping_items.count(&:done?)
           %tr
-            %td= link_to list.title, shopping_list_path(list), class: "mw-link"
-            %td
+            %td{ "data-label": "Titel" }= link_to list.title, shopping_list_path(list), class: "mw-link"
+            %td{ "data-label": "Gruppe" }
               - if list.group.present?
                 %span.mw-badge.mw-badge--neutral= list.group.name
               - else
                 %span.mw-badge.mw-badge--accent Kindergarten
-            %td
+            %td{ "data-label": "Verantwortlich" }
               - if list.assigned_to.present?
                 = list.assigned_to.full_name.presence || list.assigned_to.email
               - else
                 %span.mw-badge.mw-badge--neutral Nicht zugewiesen
-            %td= l(list.event_date, format: :long)
-            %td
+            %td{ "data-label": "Datum" }= l(list.event_date, format: :long)
+            %td{ "data-label": "Einträge" }
               %span{ style: done == total && total > 0 ? "color: var(--success);" : nil }
                 = "#{done}/#{total} erledigt"
-            %td{ style: "text-align: right;" }
+            %td{ "data-label": "Aktionen", style: "text-align: right;" }
               .mw-actions
                 = link_to shopping_list_path(list), class: "mw-btn mw-btn--secondary mw-btn--sm" do
                   Öffnen
