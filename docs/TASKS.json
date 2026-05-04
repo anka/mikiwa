@@ -1737,7 +1737,7 @@
       "id": "F25",
       "name": "Einkaufsliste optional einer Gruppe zuordnen",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-einkaufsliste-gruppe-optional.json",
       "short_description": "ShoppingList erhält ein optionales group_id-Feld; ohne Gruppe gilt sie für den gesamten Kindergarten (staff-intern).",
       "description": "Migration ergänzt nullable group_id; Formular zeigt Auswahl mit Option 'Gesamter Kindergarten' (= NULL). Listen-Index kennzeichnet Kontext per Badge. Hinweis: Kindergarten-weite Listen (group_id=NULL) sind staff-intern; Eltern sehen sie nicht (siehe F26 Pundit-Scope). Spec: docs/spec-einkaufsliste-gruppe-optional.json",

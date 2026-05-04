@@ -15,10 +15,11 @@
       = f.label :event_date, "Bezugstag", class: "mw-field__label"
       = f.date_field :event_date, required: true, class: "mw-input"
     .mw-field
-      = f.label :group_id, "Gruppe", class: "mw-field__label"
+      = f.label :group_id, "Gruppe (optional)", class: "mw-field__label"
       = f.select :group_id,
           options_from_collection_for_select(groups, :id, :name, list.group_id),
-          { include_blank: "Bitte wählen" }, class: "mw-select", required: true
+          { include_blank: "— Gesamter Kindergarten —" }, class: "mw-select"
+      %p.mw-field__hint Ohne Gruppe ist die Liste nur für Betreuer:innen sichtbar.
 
   .mw-field
     = f.label :description, "Beschreibung (optional)", class: "mw-field__label"

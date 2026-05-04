@@ -20,6 +20,7 @@ class ShoppingListPolicy < ApplicationPolicy
 
   def parent_in_group?
     return false unless user&.parent?
+    return false if record.group_id.nil?
     user.children.active.pluck(:group_id).include?(record.group_id)
   end
 end

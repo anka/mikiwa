@@ -88,4 +88,60 @@ class ShoppingListsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to shopping_list_path(@list)
     assert_not @item.reload.done?
   end
+
+  # F25: Einkaufsliste optional einer Gruppe zuordnen
+  test "F25 Caretaker kann Liste ohne Gruppe (Kindergarten-weit) anlegen" do
+    sign_in_as(@caretaker)
+    assert_difference "ShoppingList.count", 1 do
+      post shopping_lists_path, params: {
+        shopping_list: {
+          title: "Kindergarten-Einkauf",
+          event_date: "2026-07-15",
+          group_id: "",
+          kindergarten_year_id: @year.id
+        }
+      }
+    end
+    assert_nil ShoppingList.find_by(title: "Kindergarten-Einkauf").group_id
+  end
+
+  test "F25 Index zeigt Badge 'Kindergarten' für Liste ohne Gruppe" do
+    sign_in_as(@caretaker)
+    ShoppingList.create!(
+      title: "KG-Einkauf", event_date: Date.new(2026, 6, 22),
+      group: nil, kindergarten_year: @year, created_by: @caretaker
+    )
+    get shopping_lists_path
+    assert_response :success
+    assert_match(/Kindergarten/, response.body)
+  end
+
+  test "F25 Form bietet Option 'Gesamter Kindergarten' (Blank-Option)" do
+    sign_in_as(@caretaker)
+    get new_shopping_list_path
+    assert_response :success
+    assert_match(/Gesamter Kindergarten/i, response.body)
+  end
+
+  test "F25 Eltern sieht KEINE Liste ohne Gruppe (staff-intern)" do
+    sign_in_as(@parent)
+    ShoppingList.create!(
+      title: "Staff-only-KG-Einkauf", event_date: Date.new(2026, 6, 22),
+      group: nil, kindergarten_year: @year, created_by: @caretaker
+    )
+    get shopping_lists_path
+    assert_response :success
+    assert_no_match(/Staff-only-KG-Einkauf/, response.body)
+  end
+
+  test "F25 Staff sieht Liste ohne Gruppe" do
+    sign_in_as(@caretaker)
+    ShoppingList.create!(
+      title: "Staff-KG-Einkauf", event_date: Date.new(2026, 6, 22),
+      group: nil, kindergarten_year: @year, created_by: @caretaker
+    )
+    get shopping_lists_path
+    assert_response :success
+    assert_match(/Staff-KG-Einkauf/, response.body)
+  end
 end

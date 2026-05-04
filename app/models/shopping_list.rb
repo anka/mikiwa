@@ -1,7 +1,7 @@
 class ShoppingList < ApplicationRecord
   include UuidPrimaryKey
 
-  belongs_to :group
+  belongs_to :group, optional: true
   belongs_to :kindergarten_year
   belongs_to :created_by, class_name: "User"
   belongs_to :event, class_name: "Event", optional: true, foreign_key: :event_id
@@ -10,7 +10,6 @@ class ShoppingList < ApplicationRecord
 
   validates :title, presence: true
   validates :event_date, presence: true
-  validates :group, presence: true
   validates :kindergarten_year, presence: true
   validates :created_by, presence: true
 

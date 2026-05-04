@@ -62,4 +62,16 @@ class ShoppingListTest < ActiveSupport::TestCase
     assert_not_includes open_items, item
     assert_includes open_items, @list.shopping_items.last
   end
+
+  # F25: Einkaufsliste optional einer Gruppe zuordnen
+  test "F25 ShoppingList kann ohne Gruppe gespeichert werden (Kindergarten-weit)" do
+    @list.group = nil
+    assert @list.save, @list.errors.full_messages.inspect
+    assert_nil @list.reload.group_id
+  end
+
+  test "F25 ShoppingList mit Gruppe lädt belongs_to korrekt" do
+    @list.save!
+    assert_equal @group, @list.reload.group
+  end
 end

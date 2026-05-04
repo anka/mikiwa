@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_03_090556) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_04_100000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -300,7 +300,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_03_090556) do
     t.text "description"
     t.date "event_date", null: false
     t.string "event_id", limit: 36
-    t.string "group_id", limit: 36, null: false
+    t.string "group_id", limit: 36
     t.string "kindergarten_year_id", limit: 36, null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false

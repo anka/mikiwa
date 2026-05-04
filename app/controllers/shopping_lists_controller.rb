@@ -60,9 +60,11 @@ class ShoppingListsController < ApplicationController
   end
 
   def list_params
-    params.require(:shopping_list).permit(
+    permitted = params.require(:shopping_list).permit(
       :title, :description, :event_date, :group_id, :kindergarten_year_id
     )
+    permitted[:group_id] = nil if permitted[:group_id].blank?
+    permitted
   end
 
   def load_form_collections
