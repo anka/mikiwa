@@ -1907,7 +1907,7 @@
       "id": "F29",
       "name": "Galerien Mehrfach-Upload mit Drag & Drop",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-galleries-multi-upload.json",
       "short_description": "Mehrere Fotos können per Drag & Drop in den Browser gezogen und zuverlässig hochgeladen werden mit Progress-Feedback.",
       "description": "Drop-Zone akzeptiert mehrere Bilddateien; Active Storage Direct Upload; Progress pro Datei und Gesamtfortschritt; Fehlerbehandlung pro Datei. Limit: 10 MB pro Datei (client + server validiert). agent-browser Test mit 10 Bildern. Spec: docs/spec-galleries-multi-upload.json",

@@ -2,7 +2,8 @@ module ImageAttachable
   extend ActiveSupport::Concern
 
   ALLOWED_TYPES = %w[image/jpeg image/png image/webp image/heic image/heif].freeze
-  MAX_SIZE_BYTES = 15.megabytes
+  MAX_SIZE_BYTES = 10.megabytes
+  MAX_SIZE_MB = MAX_SIZE_BYTES / 1.megabyte
 
   VARIANT_CONFIGS = {
     thumb:   { resize_to_limit: [ 300, 300 ], format: :webp, saver: { quality: 85 } },
@@ -21,7 +22,7 @@ module ImageAttachable
         end
 
         if attachment.byte_size > MAX_SIZE_BYTES
-          record.errors.add(attribute, "darf maximal 15 MB groß sein")
+          record.errors.add(attribute, "darf maximal #{MAX_SIZE_MB} MB groß sein")
         end
       end
     end

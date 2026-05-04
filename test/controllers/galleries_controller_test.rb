@@ -166,6 +166,44 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
                  @gallery.reload.groups.pluck(:id).sort
   end
 
+  # F29: Mehrfach-Upload mit Drag & Drop
+  test "F29 add_photo akzeptiert gültiges Bild und attached es" do
+    sign_in_as(@caretaker)
+    photo = fixture_file_upload(Rails.root.join("test/fixtures/files/sample_photo.jpg"), "image/jpeg")
+
+    assert_difference "@gallery.photos.attachments.count", 1 do
+      post add_photo_gallery_path(@gallery), params: { photo: photo }
+    end
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert body["ok"]
+  end
+
+  test "F29 add_photo lehnt ungültiges Format ab (422)" do
+    sign_in_as(@caretaker)
+    bogus = fixture_file_upload(Rails.root.join("test/fixtures/files/sample.txt"), "text/plain")
+
+    assert_no_difference "@gallery.photos.attachments.count" do
+      post add_photo_gallery_path(@gallery), params: { photo: bogus }
+    end
+    assert_response :unprocessable_entity
+    assert_match(/Format nicht erlaubt/i, response.body)
+  end
+
+  test "F29 add_photo verweigert Eltern (403)" do
+    sign_in_as(@parent)
+    photo = fixture_file_upload(Rails.root.join("test/fixtures/files/sample_photo.jpg"), "image/jpeg")
+    post add_photo_gallery_path(@gallery), params: { photo: photo }
+    assert_response :forbidden
+  end
+
+  test "F29 add_photo ohne Datei → 422" do
+    sign_in_as(@caretaker)
+    post add_photo_gallery_path(@gallery)
+    assert_response :unprocessable_entity
+    assert_match(/Keine Datei/i, response.body)
+  end
+
   test "parent cannot create gallery (403)" do
     sign_in_as(@parent)
     post galleries_path, params: {

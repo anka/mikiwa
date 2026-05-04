@@ -1,6 +1,6 @@
 class GalleriesController < ApplicationController
-  before_action :set_gallery,     only: %i[show edit update destroy remove_photo download]
-  before_action :require_staff!,  only: %i[new create edit update destroy remove_photo]
+  before_action :set_gallery,     only: %i[show edit update destroy add_photo remove_photo download]
+  before_action :require_staff!,  only: %i[new create edit update destroy add_photo remove_photo]
 
   def index
     @galleries = policy_scope(Gallery).includes(:groups, :created_by).ordered
@@ -65,6 +65,31 @@ class GalleriesController < ApplicationController
   def destroy
     @gallery.destroy
     redirect_to galleries_path, notice: "Galerie wurde gelöscht."
+  end
+
+  def add_photo
+    authorize!(@gallery, policy_class: GalleryPolicy)
+    photo = params[:photo]
+
+    if photo.blank? || !photo.respond_to?(:content_type)
+      render json: { error: "Keine Datei übermittelt." }, status: :unprocessable_entity
+      return
+    end
+
+    unless ImageAttachable::ALLOWED_TYPES.include?(photo.content_type)
+      render json: { error: "#{photo.original_filename}: Format nicht erlaubt (JPEG, PNG, HEIC, WebP)." },
+             status: :unprocessable_entity
+      return
+    end
+
+    if photo.size > ImageAttachable::MAX_SIZE_BYTES
+      render json: { error: "#{photo.original_filename}: zu groß (max. #{ImageAttachable::MAX_SIZE_MB} MB)." },
+             status: :unprocessable_entity
+      return
+    end
+
+    @gallery.photos.attach(photo)
+    render json: { ok: true, filename: photo.original_filename }
   end
 
   def remove_photo

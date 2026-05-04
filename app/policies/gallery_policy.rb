@@ -6,6 +6,7 @@ class GalleryPolicy < ApplicationPolicy
   def edit?     = staff?
   def update?   = staff?
   def destroy?  = staff?
+  def add_photo?    = staff?
   def remove_photo? = staff?
   def download? = staff? || parent_in_any_group?
 

@@ -52,7 +52,7 @@ class Gallery < ApplicationRecord
         errors.add(:photos, "#{photo.filename} muss JPEG, PNG, HEIC oder WebP sein")
       end
       if photo.byte_size > ImageAttachable::MAX_SIZE_BYTES
-        errors.add(:photos, "#{photo.filename} darf maximal 15 MB groß sein")
+        errors.add(:photos, "#{photo.filename} darf maximal #{ImageAttachable::MAX_SIZE_BYTES / 1.megabyte} MB groß sein")
       end
     end
   end

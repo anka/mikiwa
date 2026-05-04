@@ -49,6 +49,7 @@ Rails.application.routes.draw do
 
   resources :galleries, only: %i[index show new create edit update destroy] do
     member do
+      post   :add_photo
       delete :remove_photo
       get    :download
     end

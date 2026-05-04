@@ -33,25 +33,26 @@
   .mw-card{ style: "margin-top: 1rem; padding: 1rem 1.25rem;" }
     %p.mw-prose= @gallery.description
 
--# Upload-Formular für Betreuer
+-# Upload-Bereich für Betreuer (F29: Drag&Drop + Per-File-Progress)
 - if current_user.staff?
   .mw-card{ style: "margin-top: 1.5rem;" }
     %h2{ style: "padding: 1rem 1.25rem 0; font-size: var(--fs-14); font-weight: var(--fw-bold); color: var(--fg-2);" }
       Fotos hochladen
-    = form_with url: gallery_path(@gallery), method: :patch,
-        multipart: true, style: "padding: 1rem 1.25rem;" do |f|
-      .mw-gallery-dropzone{ data: { controller: "gallery-upload" } }
-        = file_field_tag "gallery[photos][]", multiple: true,
-            accept: "image/jpeg,image/png,image/webp,image/heic",
-            class: "mw-gallery-dropzone__input",
-            data: { gallery_upload_target: "input", action: "change->gallery-upload#preview" }
-        .mw-gallery-dropzone__hint
-          = lucide_icon "image", size: 24
-          %span Dateien auswählen oder hierher ziehen
-          %small JPEG, PNG, HEIC, WebP · max. 15 MB pro Bild
-        .mw-gallery-dropzone__preview{ data: { gallery_upload_target: "preview" } }
-      .mw-form__actions{ style: "margin-top: 0.75rem;" }
-        = f.submit "Fotos hinzufügen", class: "mw-btn mw-btn--primary"
+    .mw-gallery-dropzone{ style: "margin: 1rem 1.25rem 1.25rem;",
+                          data: { controller: "gallery-upload",
+                                  gallery_upload_endpoint_value: add_photo_gallery_path(@gallery),
+                                  gallery_upload_csrf_token_value: form_authenticity_token } }
+      %label.mw-gallery-dropzone__hint{ for: "gallery_photos_input" }
+        = lucide_icon "image", size: 24
+        %span Dateien auswählen oder hierher ziehen
+        %small JPEG, PNG, HEIC, WebP · max. 10 MB pro Bild
+      = file_field_tag "photos", multiple: true,
+          accept: "image/jpeg,image/png,image/webp,image/heic",
+          id: "gallery_photos_input",
+          class: "mw-gallery-dropzone__input",
+          data: { gallery_upload_target: "input", action: "change->gallery-upload#pick" }
+      .mw-upload-queue{ data: { gallery_upload_target: "queue" } }
+      %p.mw-upload-summary{ data: { gallery_upload_target: "summary" } }
 
 -# Foto-Grid mit Lightbox
 .mw-page-header{ style: "margin-top: 2rem;" }

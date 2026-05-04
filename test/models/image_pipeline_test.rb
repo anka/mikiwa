@@ -35,8 +35,9 @@ class ImagePipelineTest < ActiveSupport::TestCase
     assert_includes ImageAttachable::ALLOWED_TYPES, "image/heic"
   end
 
-  test "erlaubte Dateitypen sind definiert" do
-    assert_equal 15, ImageAttachable::MAX_SIZE_BYTES / 1_048_576
+  test "Maximale Dateigröße ist 10 MB (F29)" do
+    assert_equal 10, ImageAttachable::MAX_SIZE_BYTES / 1_048_576
+    assert_equal 10, ImageAttachable::MAX_SIZE_MB
   end
 
   test "GIF-Format ist nicht in der Erlaubt-Liste" do
