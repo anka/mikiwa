@@ -6,9 +6,10 @@
     - if @filter_year
       %p.mw-page-header__lede= @filter_year.label
   - if current_user.staff?
-    = link_to new_calendar_event_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
-      = lucide_icon "plus", size: 16
-      Neues Ereignis
+    .mw-page-header__actions
+      = link_to new_calendar_event_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+        = lucide_icon "plus", size: 16
+        Neues Ereignis
 
 - if notice
   .mw-flash.mw-flash--success= notice

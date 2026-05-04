@@ -6,22 +6,21 @@
     - if @event.cancelled?
       %span.mw-badge.mw-badge--danger{ style: "margin-top: 0.25rem;" } Abgesagt
   .mw-page-header__actions
+    - if current_user.staff? && !@event.cancelled?
+      = button_to cancel_event_path(@event), method: :patch,
+          class: "mw-page-action mw-page-action--danger",
+          data: { turbo_confirm: "Veranstaltung wirklich absagen?" } do
+        = lucide_icon "x", size: 14
+        Absagen
+    = link_to whatsapp_share_url(@event.title, event_url(@event)),
+        target: "_blank", rel: "noopener", class: "mw-page-action" do
+      = lucide_icon "share-2", size: 14
+      Teilen
     - if current_user.staff?
-      - unless @event.cancelled?
-        = button_to cancel_event_path(@event), method: :patch,
-            class: "mw-btn mw-btn--warning mw-btn--sm",
-            data: { turbo_confirm: "Veranstaltung wirklich absagen?" } do
-          = lucide_icon "x", size: 14
-          Absagen
       = link_to edit_event_path(@event), class: "mw-btn mw-btn--secondary mw-btn--sm" do
         = lucide_icon "pencil", size: 14
         Bearbeiten
-    = link_to whatsapp_share_url(@event.title, event_url(@event)),
-        target: "_blank", rel: "noopener", class: "mw-btn mw-btn--ghost mw-btn--sm" do
-      = lucide_icon "share-2", size: 14
-      Teilen
-    = link_to events_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
-      Zurück
+    = link_to "Zurück", events_path, class: "mw-page-action"
 
 .mw-card{ style: "margin-top: 1.5rem; max-width: 560px;" }
   .mw-detail-list

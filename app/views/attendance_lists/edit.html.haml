@@ -1,6 +1,12 @@
 - content_for :title, "#{@list.title} bearbeiten · Mikiwa"
 
 .mw-page-header
-  %h1.mw-page-header__title Liste bearbeiten
+  .mw-page-header__text
+    %h1.mw-page-header__title Liste bearbeiten
+  .mw-page-header__actions
+    = link_to "Abbrechen", attendance_list_path(@list), class: "mw-page-action"
+    %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit", form: "attendance_list_form" }
+      = lucide_icon "check", size: 14
+      Speichern
 
 = render "form", list: @list, groups: @groups, kindergarten_years: @kindergarten_years

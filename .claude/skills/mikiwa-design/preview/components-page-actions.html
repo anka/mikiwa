@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<style>
+  html,body{margin:0;padding:0;background:var(--bg-app);}
+  body{padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px;}
+  .stage{background:var(--surface);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:16px 20px;}
+  .label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--fg-3);margin-bottom:6px;}
+  .row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--border-subtle);}
+  h2{margin:0;font-family:var(--font-display);font-weight:800;font-size:24px;letter-spacing:-0.02em;color:var(--fg-1);}
+  .sub{margin:4px 0 0;color:var(--fg-3);font-size:13px;}
+  .actions{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+  .ghost{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:transparent;border:none;border-radius:999px;color:var(--fg-2);font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer;}
+  .ghost.danger{color:var(--danger);}
+  .ghost svg{width:14px;height:14px;}
+  .primary{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:var(--surface);border:1px solid var(--border-default);border-radius:999px;color:var(--fg-1);font-family:var(--font-body);font-size:14px;font-weight:700;cursor:pointer;}
+  .primary svg{width:14px;height:14px;}
+  .filled{background:var(--accent);color:var(--accent-on);border-color:transparent;}
+</style>
+</head>
+<body>
+<div>
+  <div class="label">Detail-Ansicht · Bearbeiten + Aktionen + Zurück</div>
+  <div class="stage">
+    <div class="row">
+      <div><h2>Sommerfest</h2><div class="sub">Sa, 27. Juni 2026 · 14:00–17:00</div></div>
+      <div class="actions">
+        <button class="ghost danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Absagen</button>
+        <button class="ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Teilen</button>
+        <button class="primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Bearbeiten</button>
+        <button class="ghost">Zurück</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div>
+  <div class="label">Listen-Ansicht · einzelne Hauptaktion</div>
+  <div class="stage">
+    <div class="row">
+      <div><h2>Kinder</h2><div class="sub">14 Kinder in 2 Gruppen</div></div>
+      <div class="actions">
+        <button class="primary filled"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Kind hinzufügen</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div>
+  <div class="label">Bearbeiten / Neu · Abbrechen + Speichern</div>
+  <div class="stage">
+    <div class="row">
+      <div><h2>Neues Kind</h2><div class="sub">Stammdaten des Kindes erfassen</div></div>
+      <div class="actions">
+        <button class="ghost">Abbrechen</button>
+        <button class="primary filled"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Speichern</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

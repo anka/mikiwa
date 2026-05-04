@@ -1,4 +1,4 @@
-= form_with model: poll, url: poll.new_record? ? polls_path : poll_path(poll), class: "mw-form" do |f|
+= form_with model: poll, url: poll.new_record? ? polls_path : poll_path(poll), class: "mw-form", html: { id: "poll_form" } do |f|
   - if poll.errors.any?
     .mw-flash.mw-flash--error
       %ul{ style: "margin: 0; padding-left: 1.25rem;" }
@@ -51,6 +51,3 @@
         = opt_f.check_box :_destroy, class: "mw-checkbox", id: "destroy_opt_#{opt_f.object.object_id}"
         = opt_f.label :_destroy, "Entfernen", class: "mw-field__label mw-field__label--inline"
 
-  .mw-form__actions
-    = f.submit poll.new_record? ? "Abstimmung anlegen" : "Änderungen speichern", class: "mw-btn mw-btn--primary"
-    = link_to "Abbrechen", polls_path, class: "mw-btn mw-btn--ghost"

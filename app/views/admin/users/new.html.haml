@@ -1,11 +1,17 @@
 - content_for :title, "Betreuer:in einladen · Mikiwa Admin"
 
 .mw-page-header
-  %h1.mw-page-header__title Betreuer:in einladen
-  %p.mw-page-header__lede Eine Einladungs-E-Mail mit Anmeldelink wird automatisch versandt.
+  .mw-page-header__text
+    %h1.mw-page-header__title Betreuer:in einladen
+    %p.mw-page-header__lede Eine Einladungs-E-Mail mit Anmeldelink wird automatisch versandt.
+  .mw-page-header__actions
+    = link_to "Abbrechen", admin_users_path, class: "mw-page-action"
+    %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit", form: "admin_user_form" }
+      = lucide_icon "send", size: 14
+      Einladung senden
 
 .mw-card{ style: "margin-top: 1.5rem; max-width: 480px;" }
-  = form_with model: [:admin, @user], class: "mw-form" do |form|
+  = form_with model: [:admin, @user], class: "mw-form", html: { id: "admin_user_form" } do |form|
     - if @user.errors.any?
       .mw-field__error
         %ul
@@ -31,6 +37,3 @@
           {},
           class: "mw-input"
 
-    .mw-form__actions
-      = form.submit "Einladung senden", class: "mw-btn mw-btn--primary"
-      = link_to "Abbrechen", admin_users_path, class: "mw-btn mw-btn--ghost"

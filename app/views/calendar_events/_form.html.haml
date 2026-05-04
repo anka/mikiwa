@@ -1,4 +1,4 @@
-= form_with model: event, url: event.new_record? ? calendar_events_path : calendar_event_path(event), class: "mw-form" do |f|
+= form_with model: event, url: event.new_record? ? calendar_events_path : calendar_event_path(event), class: "mw-form", html: { id: "calendar_event_form" } do |f|
   - if event.errors.any?
     .mw-flash.mw-flash--error
       %ul{ style: "margin: 0; padding-left: 1.25rem;" }
@@ -52,6 +52,3 @@
               class: "mw-checkbox"
           = label_tag "group_#{group.id}", group.name, class: "mw-field__label mw-field__label--inline"
 
-  .mw-form__actions
-    = f.submit event.new_record? ? "Ereignis anlegen" : "Änderungen speichern", class: "mw-btn mw-btn--primary"
-    = link_to "Abbrechen", calendar_events_path, class: "mw-btn mw-btn--ghost"

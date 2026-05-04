@@ -1,0 +1,175 @@
+/* Form input styles — used across all forms in the Mikiwa webapp */
+
+.mw-input {
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  background: var(--surface);
+  color: var(--fg-1);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color var(--dur-micro), box-shadow var(--dur-micro);
+}
+.mw-input:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+.mw-input:disabled { background: var(--surface-sunken); color: var(--fg-4); cursor: not-allowed; }
+.mw-input[readonly] { background: var(--surface-sunken); color: var(--fg-2); }
+.mw-input-error { border-color: var(--danger); }
+.mw-input-error:focus { box-shadow: 0 0 0 3px oklch(60% 0.180 14 / 0.25); }
+textarea.mw-input { resize: vertical; min-height: 96px; line-height: 1.5; }
+
+.mw-input-wrap { position: relative; display: flex; align-items: center; }
+.mw-input-wrap > svg, .mw-input-wrap > span:first-child { position: absolute; left: 12px; pointer-events: none; z-index: 1; }
+.mw-input-iconed { padding-left: 36px; }
+
+/* Checkbox + Radio */
+.mw-check, .mw-radio {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 14px; color: var(--fg-1); font-weight: 500;
+  cursor: pointer; user-select: none;
+  white-space: nowrap;
+}
+.mw-check input, .mw-radio input { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+
+.mw-stack { display: flex; flex-direction: column; gap: 8px; }
+
+/* Toggle */
+/* Custom select — matches mw-input but with chevron */
+.mw-select-wrap { position: relative; display: block; }
+.mw-select {
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 10px 36px 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  background: var(--surface);
+  color: var(--fg-1);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: border-color var(--dur-micro), box-shadow var(--dur-micro);
+}
+.mw-select:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+.mw-select:hover { border-color: var(--border-strong); }
+.mw-select-wrap::after {
+  content: "";
+  position: absolute;
+  right: 14px; top: 50%;
+  width: 8px; height: 8px;
+  border-right: 1.75px solid var(--fg-3);
+  border-bottom: 1.75px solid var(--fg-3);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+/* Toggle — label outside, generous hit area */
+.mw-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 10px 14px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.mw-toggle-row .mw-toggle-text { display: flex; flex-direction: column; min-width: 0; }
+.mw-toggle-row .mw-toggle-text-label { font-size: 14px; font-weight: 600; color: var(--fg-1); }
+.mw-toggle-row .mw-toggle-text-state { font-size: 12px; color: var(--fg-3); margin-top: 2px; }
+.mw-toggle-row .mw-toggle { gap: 0; }
+
+.mw-toggle { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; flex-shrink: 0; }
+.mw-toggle input { display: none; }
+.mw-toggle-track {
+  width: 36px; height: 20px; border-radius: 999px;
+  background: var(--border-default); position: relative;
+  transition: background var(--dur-micro);
+}
+.mw-toggle-thumb {
+  position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; border-radius: 999px;
+  background: #fff; box-shadow: var(--shadow-xs);
+  transition: left var(--dur-fast) var(--ease-soft);
+}
+.mw-toggle input:checked ~ .mw-toggle-track { background: var(--accent); }
+.mw-toggle input:checked ~ .mw-toggle-track .mw-toggle-thumb { left: 18px; }
+
+/* Range */
+.mw-range {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px; border-radius: 999px;
+  background: var(--border-default); outline: none;
+}
+.mw-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 18px; height: 18px; border-radius: 999px;
+  background: var(--accent); cursor: pointer;
+  border: 2px solid var(--surface); box-shadow: var(--shadow-sm);
+}
+.mw-range::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 999px;
+  background: var(--accent); cursor: pointer;
+  border: 2px solid var(--surface);
+}
+
+/* Multi-select chips */
+.mw-multi {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface); min-height: 44px;
+}
+.mw-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--sun-800);
+  font-size: 12px; font-weight: 600;
+  border: none;
+}
+.mw-chip-x {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 14px; height: 14px; border-radius: 999px;
+  background: rgba(0,0,0,.08); border: none; cursor: pointer;
+  color: inherit; padding: 0;
+}
+.mw-chip-add {
+  background: var(--surface-sunken); color: var(--fg-3);
+  border: 1px dashed var(--border-default); cursor: pointer;
+}
+.mw-chip-add:hover { background: var(--surface-hover); color: var(--fg-1); }
+
+/* Upload */
+.mw-upload {
+  display: flex; align-items: center; gap: 10px; justify-content: center;
+  padding: 18px;
+  border: 1.5px dashed var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 120ms var(--ease-soft);
+}
+.mw-upload:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+/* Color */
+.mw-color-row { display: flex; gap: 8px; }
+.mw-color-dot {
+  width: 32px; height: 32px; border-radius: 999px;
+  border: 1px solid var(--border-subtle); cursor: pointer; padding: 0;
+}
+
+/* Button shared */
+/* Sidebar nav — class-driven active + hover so React re-renders never leave a stuck inline style */
+.mw-nav-item { background: transparent; color: var(--fg-2); font-weight: 500; }
+.mw-nav-item.is-active { background: var(--accent-soft); color: var(--sun-800); font-weight: 700; }
+.mw-nav-item:not(.is-active):hover { background: var(--surface-hover); }
+
+.mw-btn-primary:hover { background: var(--accent-hover) !important; }
+.mw-btn-secondary:hover { background: var(--surface-hover) !important; }
+.mw-btn-ghost:hover { background: var(--surface-hover) !important; }
+.mw-btn:active { transform: scale(0.98); }
+.mw-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

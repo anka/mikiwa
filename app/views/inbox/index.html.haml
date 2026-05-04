@@ -5,7 +5,7 @@
     %h1.mw-page-header__title Posteingang
     - unread = @entries.count { |e| !e.read? }
     - if unread > 0
-      %span.mw-badge.mw-badge--accent{ style: "margin-left: 0.5rem;" }= "#{unread} ungelesen"
+      %p.mw-page-header__lede= "#{unread} ungelesen"
 
 - if @entries.any?
   .mw-card{ style: "margin-top: 1.5rem;" }

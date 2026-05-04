@@ -4,7 +4,10 @@
   .mw-page-header__text
     %h1.mw-page-header__title Kindergartenjahre
     %p.mw-page-header__lede Verwalten Sie Planung und Jahresübergang.
-  = link_to "Neues Jahr anlegen", new_kindergarten_year_path, class: "mw-btn mw-btn--primary mw-btn--sm"
+  .mw-page-header__actions
+    = link_to new_kindergarten_year_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+      = lucide_icon "plus", size: 16
+      Neues Jahr anlegen
 
 - if notice
   .mw-flash.mw-flash--success= notice
@@ -31,6 +34,12 @@
           %td{ style: "text-align: right;" }
             .mw-actions
               - unless year.active?
-                = button_to "Aktivieren", activate_kindergarten_year_path(year), method: :patch, class: "mw-btn mw-btn--secondary mw-btn--sm"
-                = link_to "Jahresübergang", rollover_kindergarten_year_path(year), class: "mw-btn mw-btn--secondary mw-btn--sm"
-              = link_to "Bearbeiten", edit_kindergarten_year_path(year), class: "mw-btn mw-btn--secondary mw-btn--sm"
+                = button_to activate_kindergarten_year_path(year), method: :patch, class: "mw-page-action" do
+                  = lucide_icon "check", size: 14
+                  Aktivieren
+                = link_to rollover_kindergarten_year_path(year), class: "mw-page-action" do
+                  = lucide_icon "arrow-right", size: 14
+                  Jahresübergang
+              = link_to edit_kindergarten_year_path(year), class: "mw-page-action" do
+                = lucide_icon "pencil", size: 14
+                Bearbeiten

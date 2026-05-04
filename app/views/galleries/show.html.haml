@@ -16,8 +16,7 @@
       = link_to edit_gallery_path(@gallery), class: "mw-btn mw-btn--secondary mw-btn--sm" do
         = lucide_icon "pencil", size: 14
         Bearbeiten
-    = link_to galleries_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
-      Zurück
+    = link_to "Zurück", galleries_path, class: "mw-page-action"
 
 - if notice
   .mw-flash.mw-flash--success= notice

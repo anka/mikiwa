@@ -10,8 +10,7 @@
       = link_to edit_calendar_event_path(@event), class: "mw-btn mw-btn--secondary mw-btn--sm" do
         = lucide_icon "pencil", size: 14
         Bearbeiten
-    = link_to calendar_events_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
-      Zurück zum Kalender
+    = link_to "Zurück", calendar_events_path, class: "mw-page-action"
 
 .mw-card{ style: "margin-top: 1.5rem; max-width: 560px;" }
   .mw-detail-list

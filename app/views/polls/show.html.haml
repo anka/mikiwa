@@ -17,24 +17,25 @@
         - else
           %span.mw-text-danger Stimmschluss überschritten (#{l(@poll.deadline, format: :long)})
   .mw-page-header__actions
+    - if current_user.staff? && @poll.open?
+      = button_to close_poll_path(@poll), method: :patch,
+          class: "mw-page-action mw-page-action--danger",
+          data: { turbo_confirm: "Abstimmung schließen?" } do
+        = lucide_icon "x", size: 14
+        Schließen
     - if current_user.staff?
-      = link_to export_poll_path(@poll, format: :csv), class: "mw-btn mw-btn--secondary mw-btn--sm" do
-        = lucide_icon "list", size: 14
+      = link_to export_poll_path(@poll, format: :csv), class: "mw-page-action" do
+        = lucide_icon "download", size: 14
         CSV-Export
-      - if @poll.open?
-        = button_to close_poll_path(@poll), method: :patch, class: "mw-btn mw-btn--secondary mw-btn--sm",
-            data: { turbo_confirm: "Abstimmung schließen?" } do
-          = lucide_icon "x", size: 14
-          Schließen
+    = link_to whatsapp_share_url(@poll.title, poll_url(@poll)),
+        target: "_blank", rel: "noopener", class: "mw-page-action" do
+      = lucide_icon "share-2", size: 14
+      Teilen
+    - if current_user.staff?
       = link_to edit_poll_path(@poll), class: "mw-btn mw-btn--secondary mw-btn--sm" do
         = lucide_icon "pencil", size: 14
         Bearbeiten
-    = link_to whatsapp_share_url(@poll.title, poll_url(@poll)),
-        target: "_blank", rel: "noopener", class: "mw-btn mw-btn--ghost mw-btn--sm" do
-      = lucide_icon "share-2", size: 14
-      Teilen
-    = link_to polls_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
-      Zurück
+    = link_to "Zurück", polls_path, class: "mw-page-action"
 
 - if notice
   .mw-flash.mw-flash--success= notice

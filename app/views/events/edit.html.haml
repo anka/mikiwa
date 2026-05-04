@@ -1,6 +1,12 @@
 - content_for :title, "#{@event.title} bearbeiten · Mikiwa"
 
 .mw-page-header
-  %h1.mw-page-header__title Veranstaltung bearbeiten
+  .mw-page-header__text
+    %h1.mw-page-header__title Veranstaltung bearbeiten
+  .mw-page-header__actions
+    = link_to "Abbrechen", event_path(@event), class: "mw-page-action"
+    %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit", form: "event_form" }
+      = lucide_icon "check", size: 14
+      Speichern
 
 = render "form", event: @event, groups: @groups, kindergarten_years: @kindergarten_years

@@ -1,9 +1,13 @@
 - content_for :title, "Benutzerverwaltung · Mikiwa Admin"
 
 .mw-page-header
-  %h1.mw-page-header__title Benutzerverwaltung
-  %p.mw-page-header__lede Betreuer:innen und Admins verwalten, einladen und sperren.
-  = link_to "Betreuer:in einladen", new_admin_user_path, class: "mw-btn mw-btn--primary mw-btn--sm"
+  .mw-page-header__text
+    %h1.mw-page-header__title Benutzerverwaltung
+    %p.mw-page-header__lede Betreuer:innen und Admins verwalten, einladen und sperren.
+  .mw-page-header__actions
+    = link_to new_admin_user_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+      = lucide_icon "user-plus", size: 16
+      Betreuer:in einladen
 
 - if notice
   .mw-flash.mw-flash--success= notice
@@ -35,7 +39,17 @@
             .mw-actions
               - unless user == current_user
                 - if user.locked?
-                  = button_to "Reaktivieren", unlock_admin_user_path(user), method: :patch, class: "mw-btn mw-btn--secondary mw-btn--sm"
+                  = button_to unlock_admin_user_path(user), method: :patch, class: "mw-page-action" do
+                    = lucide_icon "check", size: 14
+                    Reaktivieren
                 - else
-                  = button_to "Sperren", lock_admin_user_path(user), method: :patch, class: "mw-btn mw-btn--secondary mw-btn--sm", data: { turbo_confirm: "#{user.full_name.presence || user.email} wirklich sperren?" }
-                = button_to "Löschen", admin_user_path(user), method: :delete, class: "mw-btn mw-btn--danger mw-btn--sm", data: { turbo_confirm: "Account von #{user.full_name.presence || user.email} endgültig löschen?" }
+                  = button_to lock_admin_user_path(user), method: :patch,
+                      class: "mw-page-action mw-page-action--danger",
+                      data: { turbo_confirm: "#{user.full_name.presence || user.email} wirklich sperren?" } do
+                    = lucide_icon "x", size: 14
+                    Sperren
+                = button_to admin_user_path(user), method: :delete,
+                    class: "mw-page-action mw-page-action--danger",
+                    data: { turbo_confirm: "Account von #{user.full_name.presence || user.email} endgültig löschen?" } do
+                  = lucide_icon "trash-2", size: 14
+                  Löschen

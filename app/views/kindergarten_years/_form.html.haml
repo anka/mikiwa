@@ -1,6 +1,7 @@
 = form_with model: kindergarten_year,
     url: kindergarten_year.new_record? ? kindergarten_years_path : kindergarten_year_path(kindergarten_year),
-    class: "mw-form" do |form|
+    class: "mw-form",
+    html: { id: "kindergarten_year_form" } do |form|
   - if kindergarten_year.errors.any?
     .mw-flash.mw-flash--error
       %ul{ style: "margin: 0; padding-left: 1.25rem;" }
@@ -20,6 +21,3 @@
       = form.label :end_date, "Enddatum", class: "mw-field__label"
       = form.date_field :end_date, required: true, class: "mw-input"
 
-  .mw-form__actions
-    = form.submit kindergarten_year.new_record? ? "Jahr anlegen" : "Änderungen speichern", class: "mw-btn mw-btn--primary"
-    = link_to "Abbrechen", kindergarten_years_path, class: "mw-btn mw-btn--ghost"

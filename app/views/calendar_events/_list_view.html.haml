@@ -33,11 +33,11 @@
             - if current_user.staff?
               %td{ style: "text-align: right;" }
                 .mw-actions
-                  = link_to edit_calendar_event_path(event), class: "mw-btn mw-btn--secondary mw-btn--sm", "aria-label": "Bearbeiten" do
+                  = link_to edit_calendar_event_path(event), class: "mw-page-action", title: "Bearbeiten" do
                     = lucide_icon "pencil", size: 14
                   = button_to calendar_event_path(event), method: :delete,
-                      class: "mw-btn mw-btn--danger mw-btn--sm",
-                      "aria-label": "Löschen",
+                      class: "mw-page-action mw-page-action--danger",
+                      title: "Löschen",
                       data: { turbo_confirm: "Ereignis \"#{event.title}\" wirklich löschen?" } do
                     = lucide_icon "trash-2", size: 14
 - else

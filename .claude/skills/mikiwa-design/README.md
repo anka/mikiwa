@@ -162,6 +162,43 @@ Warm, daylight, slightly desaturated. Real photographs of children/activities, n
 
 ---
 
+## Page actions — placement metaphor
+
+Every full-page screen follows the same action-bar pattern (derived from the existing mikiwa Sommerfest detail page). The page header is *always* a single horizontal row at the top: title on the left, all actions on the right. **There is no separate "actions" panel further down the page.**
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│ Title                       [destructive] [secondary] [PRIMARY] [↩]│
+│ Optional subtitle / metadata                                       │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+### Rules
+
+1. **One primary per page.** Only ever one filled or outlined button. Everything else is a ghost text+icon button.
+2. **Right alignment, single row.** Actions are stacked horizontally and right-aligned. They never wrap into a card or sidebar.
+3. **Order, left → right:** destructive (`Absagen`, `Löschen`) → secondary actions (`Teilen`, `Duplizieren`) → primary (`Bearbeiten` / `Speichern`) → `Zurück` (always rightmost).
+4. **Icons left of label**, 14px, same color as the label text. No icon on `Zurück`.
+5. **Destructive ghost buttons use `--danger` for color**, not red fills. Loud reds are reserved for confirmation dialogs.
+6. **`Zurück`** is a ghost button with no icon, identical visual weight to other secondaries — nothing more.
+
+### Per-page-type defaults
+
+| Page type | Primary | Secondary (left of primary) | Right edge |
+|---|---|---|---|
+| **List** (e.g. `/kinder`) | `+ Kind hinzufügen` (filled outline) | — | — |
+| **Detail / view** (e.g. `/kinder/lena`) | `✎ Bearbeiten` | `× Absagen` (danger), `↗ Teilen` | `Zurück` |
+| **New / edit form** | `✓ Speichern` | `Abbrechen` (ghost) | — |
+| **Settings (no save needed)** | — | — | `Zurück` |
+
+### Why no kebab menu?
+
+Mikiwa is used by busy pedagogues with one hand on a child's shoulder. **Hidden actions in a `⋯` menu cost a click and a hunt.** The action row is generous enough to fit 3–4 visible actions; if you have more than that, the page is doing too much — split it.
+
+The component lives in `ui_kits/webapp/PageHeader.jsx` and is used by every staff-side page.
+
+---
+
 ## Iconography
 
 **Approach: outline-style, single-stroke, rounded.** Matches the soft warm tone — no filled-glyph severity, no two-tone Duotone, no cartoon icons.

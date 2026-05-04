@@ -6,12 +6,12 @@
     %p.mw-page-header__lede
       Woche #{l(@week_start, format: :short)} – #{l(@week_start + 4.days, format: :short)}
   .mw-page-header__actions
-    = link_to meal_entries_path(week: (@week_start - 7).iso8601), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+    = link_to meal_entries_path(week: (@week_start - 7).iso8601), class: "mw-page-action" do
       = lucide_icon "chevron-left", size: 14
       Vorherige Woche
-    = link_to meal_entries_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
+    = link_to meal_entries_path, class: "mw-page-action" do
       Heute
-    = link_to meal_entries_path(week: (@week_start + 7).iso8601), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+    = link_to meal_entries_path(week: (@week_start + 7).iso8601), class: "mw-page-action" do
       Nächste Woche
       = lucide_icon "chevron-right", size: 14
     - if current_user.staff?

@@ -1,14 +1,21 @@
 - content_for :title, "Jahresübergang nach #{@kindergarten_year.label} · Mikiwa"
 
 .mw-page-header
-  %h1.mw-page-header__title= "Jahresübergang nach #{@kindergarten_year.label}"
-  %p.mw-page-header__lede
-    Wählen Sie die Kinder aus, die in das neue Kindergartenjahr übernommen werden sollen.
-    Notfallkontakte und medizinische Hinweise werden automatisch mitübertragen.
+  .mw-page-header__text
+    %h1.mw-page-header__title= "Jahresübergang nach #{@kindergarten_year.label}"
+    %p.mw-page-header__lede
+      Wählen Sie die Kinder aus, die in das neue Kindergartenjahr übernommen werden sollen.
+      Notfallkontakte und medizinische Hinweise werden automatisch mitübertragen.
+  - if @children.any?
+    .mw-page-header__actions
+      = link_to "Abbrechen", kindergarten_years_path, class: "mw-page-action"
+      %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit", form: "kindergarten_year_rollover_form" }
+        = lucide_icon "check", size: 14
+        Übergang durchführen
 
 .mw-card{ style: "margin-top: 1.5rem;" }
   - if @children.any?
-    = form_with url: execute_rollover_kindergarten_year_path(@kindergarten_year), method: :post, class: "mw-form" do |form|
+    = form_with url: execute_rollover_kindergarten_year_path(@kindergarten_year), method: :post, class: "mw-form", html: { id: "kindergarten_year_rollover_form" } do |form|
       %p.mw-text-muted{ style: "margin-bottom: 1rem;" }
         Kinder des aktuell aktiven Jahres:
 
@@ -17,10 +24,6 @@
           %label.mw-kind-check
             %input{ type: "checkbox", name: "child_ids[]", value: child.id, checked: true }
             %span.mw-kind-check__name= child.display_name
-
-      .mw-form__actions{ style: "margin-top: 1.5rem;" }
-        = form.submit "Jahresübergang durchführen", class: "mw-btn mw-btn--primary"
-        = link_to "Abbrechen", kindergarten_years_path, class: "mw-btn mw-btn--ghost"
 
   - else
     .mw-empty-state

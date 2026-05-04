@@ -1,9 +1,15 @@
 - content_for :title, "Neue Mitteilung · Mikiwa"
 
 .mw-page-header
-  %h1.mw-page-header__title Neue Mitteilung verfassen
+  .mw-page-header__text
+    %h1.mw-page-header__title Neue Mitteilung verfassen
+  .mw-page-header__actions
+    = link_to "Abbrechen", messages_path, class: "mw-page-action"
+    %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit", form: "message_form" }
+      = lucide_icon "send", size: 14
+      Versenden
 
-= form_with model: @message, url: messages_path, class: "mw-form" do |f|
+= form_with model: @message, url: messages_path, class: "mw-form", html: { id: "message_form" } do |f|
   - if @message.errors.any?
     .mw-flash.mw-flash--error
       %ul{ style: "margin: 0; padding-left: 1.25rem;" }
@@ -31,6 +37,3 @@
     = f.label :attachment, "Anhang (optional)", class: "mw-field__label"
     = f.file_field :attachment, class: "mw-input"
 
-  .mw-form__actions
-    = f.submit "Mitteilung versenden", class: "mw-btn mw-btn--primary"
-    = link_to "Abbrechen", messages_path, class: "mw-btn mw-btn--ghost"

@@ -1,4 +1,12 @@
 - content_for :title, "Neue Einkaufsliste · Mikiwa"
+
 .mw-page-header
-  %h1.mw-page-header__title Neue Einkaufsliste
+  .mw-page-header__text
+    %h1.mw-page-header__title Neue Einkaufsliste
+  .mw-page-header__actions
+    = link_to "Abbrechen", shopping_lists_path, class: "mw-page-action"
+    %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit", form: "shopping_list_form" }
+      = lucide_icon "check", size: 14
+      Speichern
+
 = render "form", list: @list, groups: @groups, kindergarten_years: @kindergarten_years

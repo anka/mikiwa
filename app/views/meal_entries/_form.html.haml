@@ -1,4 +1,4 @@
-= form_with model: meal_entry, url: meal_entry.new_record? ? meal_entries_path : meal_entry_path(meal_entry), class: "mw-form" do |f|
+= form_with model: meal_entry, url: meal_entry.new_record? ? meal_entries_path : meal_entry_path(meal_entry), class: "mw-form", html: { id: "meal_entry_form" } do |f|
   - if meal_entry.errors.any?
     .mw-flash.mw-flash--error
       %ul{ style: "margin: 0; padding-left: 1.25rem;" }
@@ -31,8 +31,3 @@
     = f.text_area :notes, rows: 2, class: "mw-input",
         placeholder: "z. B. enthält Gluten, laktosefrei"
 
-  .mw-form__actions
-    = f.submit meal_entry.new_record? ? "Eintrag speichern" : "Änderungen speichern", class: "mw-btn mw-btn--primary"
-    = link_to "Abbrechen",
-        meal_entry.new_record? ? meal_entries_path : meal_entries_path(week: meal_entry.date&.iso8601),
-        class: "mw-btn mw-btn--ghost"

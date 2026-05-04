@@ -3,8 +3,12 @@
 .mw-page-header
   .mw-page-header__text
     %h1.mw-page-header__title Medizinischen Hinweis bearbeiten
-    %p.mw-page-header__lede
-      = @child.full_name
+    %p.mw-page-header__lede= @child.full_name
+  .mw-page-header__actions
+    = link_to "Abbrechen", child_path(@child), class: "mw-page-action"
+    %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit", form: "medical_note_form" }
+      = lucide_icon "check", size: 14
+      Speichern
 
 .mw-card{ style: "margin-top: 1.5rem; padding: 24px;" }
   = render "form", medical_note: @medical_note

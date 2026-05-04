@@ -4,7 +4,10 @@
   .mw-page-header__text
     %h1.mw-page-header__title Gruppen
     %p.mw-page-header__lede Bis zu 3 Gruppen für Ihre Einrichtung verwalten.
-  = link_to "Neue Gruppe", new_group_path, class: "mw-btn mw-btn--primary mw-btn--sm"
+  .mw-page-header__actions
+    = link_to new_group_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+      = lucide_icon "plus", size: 16
+      Neue Gruppe
 
 - if notice
   .mw-flash.mw-flash--success= notice
@@ -31,8 +34,14 @@
             %td= group.description.presence || "–"
             %td{ style: "text-align: right;" }
               .mw-actions
-                = link_to "Bearbeiten", edit_group_path(group), class: "mw-btn mw-btn--secondary mw-btn--sm"
-                = button_to "Löschen", group_path(group), method: :delete, class: "mw-btn mw-btn--danger mw-btn--sm", data: { turbo_confirm: "Gruppe \"#{group.name}\" wirklich löschen?" }
+                = link_to edit_group_path(group), class: "mw-page-action" do
+                  = lucide_icon "pencil", size: 14
+                  Bearbeiten
+                = button_to group_path(group), method: :delete,
+                    class: "mw-page-action mw-page-action--danger",
+                    data: { turbo_confirm: "Gruppe \"#{group.name}\" wirklich löschen?" } do
+                  = lucide_icon "trash-2", size: 14
+                  Löschen
 - else
   .mw-empty-state
     %p.mw-text-muted Noch keine Gruppen angelegt.

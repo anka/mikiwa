@@ -4,7 +4,10 @@
   .mw-page-header__text
     %h1.mw-page-header__title Eltern-Accounts
     %p.mw-page-header__lede Eltern anlegen, einladen und verwalten.
-  = link_to "Elternteil einladen", new_parent_path, class: "mw-btn mw-btn--primary mw-btn--sm"
+  .mw-page-header__actions
+    = link_to new_parent_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+      = lucide_icon "user-plus", size: 16
+      Elternteil einladen
 
 - if notice
   .mw-flash.mw-flash--success= notice
@@ -33,8 +36,16 @@
               %span.mw-badge.mw-badge--success Aktiv
           %td{ style: "text-align: right;" }
             .mw-actions
-              = button_to "Re-Einladen", reinvite_parent_path(parent), method: :post, class: "mw-btn mw-btn--secondary mw-btn--sm"
+              = button_to reinvite_parent_path(parent), method: :post, class: "mw-page-action" do
+                = lucide_icon "send", size: 14
+                Re-Einladen
               - if parent.locked?
-                = button_to "Reaktivieren", unlock_parent_path(parent), method: :patch, class: "mw-btn mw-btn--secondary mw-btn--sm"
+                = button_to unlock_parent_path(parent), method: :patch, class: "mw-page-action" do
+                  = lucide_icon "check", size: 14
+                  Reaktivieren
               - else
-                = button_to "Deaktivieren", lock_parent_path(parent), method: :patch, class: "mw-btn mw-btn--secondary mw-btn--sm", data: { turbo_confirm: "Account von #{parent.full_name.presence || parent.email} deaktivieren?" }
+                = button_to lock_parent_path(parent), method: :patch,
+                    class: "mw-page-action mw-page-action--danger",
+                    data: { turbo_confirm: "Account von #{parent.full_name.presence || parent.email} deaktivieren?" } do
+                  = lucide_icon "x", size: 14
+                  Deaktivieren

@@ -4,9 +4,10 @@
   .mw-page-header__text
     %h1.mw-page-header__title Bildergalerien
   - if current_user.staff?
-    = link_to new_gallery_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
-      = lucide_icon "plus", size: 16
-      Neue Galerie
+    .mw-page-header__actions
+      = link_to new_gallery_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+        = lucide_icon "plus", size: 16
+        Neue Galerie
 
 - if notice
   .mw-flash.mw-flash--success= notice
@@ -34,7 +35,7 @@
               Öffnen
             - if current_user.staff?
               = button_to gallery_path(gallery), method: :delete,
-                  class: "mw-btn mw-btn--danger mw-btn--sm",
+                  class: "mw-page-action mw-page-action--danger", title: "Löschen",
                   data: { turbo_confirm: "Galerie \"#{gallery.title}\" wirklich löschen?" } do
                 = lucide_icon "trash-2", size: 14
 - else

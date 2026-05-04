@@ -3,9 +3,10 @@
 .mw-page-header
   .mw-page-header__text
     %h1.mw-page-header__title Gesendete Mitteilungen
-  = link_to new_message_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
-    = lucide_icon "plus", size: 16
-    Neue Mitteilung
+  .mw-page-header__actions
+    = link_to new_message_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+      = lucide_icon "plus", size: 16
+      Neue Mitteilung
 
 - if notice
   .mw-flash.mw-flash--success= notice
@@ -29,7 +30,7 @@
             %td= l(msg.created_at, format: :short)
             %td{ style: "text-align: right;" }
               = button_to message_path(msg), method: :delete,
-                  class: "mw-btn mw-btn--danger mw-btn--sm",
+                  class: "mw-page-action mw-page-action--danger", title: "Löschen",
                   data: { turbo_confirm: "Mitteilung \"#{msg.title}\" wirklich löschen?" } do
                 = lucide_icon "trash-2", size: 14
 - else

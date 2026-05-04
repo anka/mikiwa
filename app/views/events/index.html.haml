@@ -6,9 +6,10 @@
     - if @filter_year
       %p.mw-page-header__lede= @filter_year.label
   - if current_user.staff?
-    = link_to new_event_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
-      = lucide_icon "plus", size: 16
-      Neue Veranstaltung
+    .mw-page-header__actions
+      = link_to new_event_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+        = lucide_icon "plus", size: 16
+        Neue Veranstaltung
 
 - if notice
   .mw-flash.mw-flash--success= notice
@@ -62,15 +63,15 @@
             - if current_user.staff?
               %td{ style: "text-align: right;" }
                 .mw-actions
-                  = link_to edit_event_path(event), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+                  = link_to edit_event_path(event), class: "mw-page-action", title: "Bearbeiten" do
                     = lucide_icon "pencil", size: 14
                   - unless event.cancelled?
                     = button_to cancel_event_path(event), method: :patch,
-                        class: "mw-btn mw-btn--warning mw-btn--sm",
+                        class: "mw-page-action mw-page-action--danger", title: "Absagen",
                         data: { turbo_confirm: "Veranstaltung \"#{event.title}\" wirklich absagen?" } do
                       = lucide_icon "x", size: 14
                   = button_to event_path(event), method: :delete,
-                      class: "mw-btn mw-btn--danger mw-btn--sm",
+                      class: "mw-page-action mw-page-action--danger", title: "Löschen",
                       data: { turbo_confirm: "Veranstaltung \"#{event.title}\" wirklich löschen?" } do
                     = lucide_icon "trash-2", size: 14
 - else

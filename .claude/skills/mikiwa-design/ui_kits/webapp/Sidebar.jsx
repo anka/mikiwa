@@ -9,6 +9,7 @@ const STAFF_NAV = [
   { id: 'children', label: 'Kinder', icon: 'users' },
   { id: 'parents', label: 'Eltern', icon: 'user-round' },
   { id: 'messages', label: 'Mitteilungen', icon: 'message-circle', badge: 3 },
+  { id: 'forms', label: 'Formularfelder', icon: 'list' },
   { id: 'settings', label: 'Einstellungen', icon: 'settings' },
 ];
 const PARENT_NAV = [
@@ -39,20 +40,14 @@ function Sidebar({ role, route, setRoute }) {
         {items.map(item => {
           const active = route === item.id;
           return (
-            <button key={item.id} onClick={() => setRoute(item.id)} style={{
+            <button key={item.id} onClick={() => setRoute(item.id)} className={`mw-nav-item${active ? ' is-active' : ''}`} style={{
               display: 'flex', alignItems: 'center', gap: 12,
               padding: '10px 12px',
               borderRadius: 'var(--radius-md)',
-              background: active ? 'var(--accent-soft)' : 'transparent',
-              color: active ? 'var(--sun-800)' : 'var(--fg-2)',
               border: 'none', cursor: 'pointer',
-              fontFamily: 'var(--font-body)', fontWeight: active ? 700 : 500, fontSize: 14,
+              fontFamily: 'var(--font-body)', fontSize: 14,
               textAlign: 'left', position: 'relative',
-              transition: 'all 120ms var(--ease-soft)',
-            }}
-            onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--surface-hover)'; }}
-            onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
-            >
+            }}>
               <Icon name={item.icon} size={18} />
               <span style={{ flex: 1 }}>{item.label}</span>
               {item.badge && (

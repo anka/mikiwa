@@ -4,9 +4,10 @@
   .mw-page-header__text
     %h1.mw-page-header__title Abstimmungen
   - if current_user.staff?
-    = link_to new_poll_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
-      = lucide_icon "plus", size: 16
-      Neue Abstimmung
+    .mw-page-header__actions
+      = link_to new_poll_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+        = lucide_icon "plus", size: 16
+        Neue Abstimmung
 
 - if notice
   .mw-flash.mw-flash--success= notice
@@ -55,7 +56,7 @@
                   Öffnen
                 - if current_user.staff?
                   = button_to poll_path(poll), method: :delete,
-                      class: "mw-btn mw-btn--danger mw-btn--sm",
+                      class: "mw-page-action mw-page-action--danger", title: "Löschen",
                       data: { turbo_confirm: "Abstimmung \"#{poll.title}\" wirklich löschen?" } do
                     = lucide_icon "trash-2", size: 14
 - else

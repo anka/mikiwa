@@ -1,13 +1,18 @@
 - content_for :title, "Mein Profil · Mikiwa"
 
 .mw-page-header
-  %h1.mw-page-header__title Mein Profil
+  .mw-page-header__text
+    %h1.mw-page-header__title Mein Profil
+  .mw-page-header__actions
+    %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit", form: "profile_form" }
+      = lucide_icon "check", size: 14
+      Speichern
 
 - if notice
   .mw-flash.mw-flash--success= notice
 
 .mw-card{ style: "margin-top: 1.5rem; max-width: 480px;" }
-  = form_with model: current_user, url: profile_path, method: :patch, class: "mw-form" do |form|
+  = form_with model: current_user, url: profile_path, method: :patch, class: "mw-form", html: { id: "profile_form" } do |form|
     - if current_user.errors.any?
       .mw-flash.mw-flash--error
         %ul{ style: "margin: 0; padding-left: 1.25rem;" }
@@ -30,8 +35,6 @@
       = form.label :phone, "Telefonnummer", class: "mw-field__label"
       = form.telephone_field :phone, class: "mw-input", placeholder: "0664 123 456"
 
-    .mw-form__actions
-      = form.submit "Profil speichern", class: "mw-btn mw-btn--primary"
 
 .mw-card{ style: "margin-top: 1.5rem; max-width: 480px;" }
   %h2.mw-section-title{ style: "padding: 1rem 1.25rem 0; font-size: var(--fs-14); font-weight: var(--fw-bold); color: var(--fg-2);" } Kalender-Abonnement

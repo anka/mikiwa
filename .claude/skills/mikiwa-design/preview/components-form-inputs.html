@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="../colors_and_type.css"/>
+<link rel="stylesheet" href="../ui_kits/webapp/forms.css"/>
+<style>
+  html,body{margin:0;padding:0;background:var(--bg-app);}
+  body{padding:24px;box-sizing:border-box;display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  label.flbl{font-size:13px;font-weight:600;color:var(--fg-1);}
+  .group{display:flex;flex-direction:column;gap:10px;}
+  .label{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--fg-3);}
+</style>
+</head>
+<body>
+<div class="group">
+  <span class="label">Text</span>
+  <div class="field"><label class="flbl">Vorname</label><input class="mw-input" value="Lena"/></div>
+  <div class="field"><label class="flbl">Telefon</label><input class="mw-input mw-input-error" value="0664-12"/><span style="font-size:12px;color:var(--danger);font-weight:600">Bitte gültige Nummer.</span></div>
+  <div class="field"><label class="flbl">Notizen</label><textarea class="mw-input" rows="3">Erdnussallergie.</textarea></div>
+</div>
+<div class="group">
+  <span class="label">Auswahl</span>
+  <div class="field">
+    <label class="flbl">Gruppe</label>
+    <div class="mw-select-wrap">
+      <select class="mw-select">
+        <option>Sonnenblume</option>
+        <option>Marienkäfer</option>
+        <option>Schmetterlinge</option>
+      </select>
+    </div>
+  </div>
+  <div class="field"><label class="flbl">Mehrere Gruppen</label>
+    <div class="mw-multi">
+      <span class="mw-chip">Sonnenblume<button class="mw-chip-x">×</button></span>
+      <span class="mw-chip">Marienkäfer<button class="mw-chip-x">×</button></span>
+      <button class="mw-chip mw-chip-add">+ Schmetterlinge</button>
+    </div>
+  </div>
+</div>
+<div class="group">
+  <span class="label">Datum & Zahl</span>
+  <div class="field"><label class="flbl">Datum</label><input type="date" class="mw-input" value="2021-09-14"/></div>
+  <div class="field"><label class="flbl">Auslastung: 60%</label><input type="range" class="mw-range" value="60"/></div>
+</div>
+<div class="group">
+  <span class="label">Optionen</span>
+  <div class="field"><label class="flbl">Checkboxen</label>
+    <label class="mw-check"><input type="checkbox" checked/> Newsletter abonnieren</label>
+    <label class="mw-check"><input type="checkbox"/> Fotos im Eltern­bereich erlauben</label>
+  </div>
+  <div class="field"><label class="flbl">Betreuung</label>
+    <label class="mw-radio"><input type="radio" name="b" checked/> Halbtags · 07:30–13:00</label>
+    <label class="mw-radio"><input type="radio" name="b"/> Ganztags · 07:30–17:00</label>
+  </div>
+  <div class="field"><label class="flbl">Push-Benachrichtigungen</label>
+    <div class="mw-toggle-row">
+      <span class="mw-toggle-text">
+        <span class="mw-toggle-text-label">Push-Benachrichtigungen</span>
+        <span class="mw-toggle-text-state">Aktiv — Sie erhalten Hinweise auf neue Mitteilungen.</span>
+      </span>
+      <label class="mw-toggle">
+        <input type="checkbox" checked/>
+        <span class="mw-toggle-track"><span class="mw-toggle-thumb"/></span>
+      </label>
+    </div>
+  </div>
+</div>
+</body>
+</html>

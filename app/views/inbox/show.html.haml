@@ -8,8 +8,7 @@
       ·
       = l(@message.created_at, format: :long)
   .mw-page-header__actions
-    = link_to inbox_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
-      Zurück
+    = link_to "Zurück", inbox_path, class: "mw-page-action"
 
 .mw-card{ style: "margin-top: 1.5rem; padding: 1.5rem;" }
   .mw-prose

@@ -1,7 +1,8 @@
 = form_with model: [@child, medical_note],
     url: medical_note.new_record? ? child_medical_notes_path(@child) : child_medical_note_path(@child, medical_note),
     method: medical_note.new_record? ? :post : :patch,
-    class: "mw-form" do |form|
+    class: "mw-form",
+    html: { id: "medical_note_form" } do |form|
   - if medical_note.errors.any?
     .mw-flash.mw-flash--error
       %ul{ style: "margin: 0; padding-left: 1.25rem;" }
@@ -20,6 +21,3 @@
     = form.text_area :content, required: true, rows: 3, class: "mw-input", style: "resize: vertical;"
     %p.mw-field__hint Diese Information wird verschlüsselt gespeichert.
 
-  .mw-form__actions
-    = form.submit medical_note.new_record? ? "Hinweis hinzufügen" : "Änderungen speichern", class: "mw-btn mw-btn--primary"
-    = link_to "Abbrechen", child_path(@child), class: "mw-btn mw-btn--ghost"

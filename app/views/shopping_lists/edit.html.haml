@@ -5,10 +5,13 @@
     %h1.mw-page-header__title Einkaufsliste bearbeiten
     %p.mw-page-header__lede Pflege Stammdaten und Einträge dieser Liste.
   .mw-page-header__actions
-    = link_to shopping_list_path(@list), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+    = link_to shopping_list_path(@list), class: "mw-page-action" do
+      = lucide_icon "image", size: 14
       Vorschau
-    = link_to shopping_lists_path, class: "mw-btn mw-btn--ghost mw-btn--sm" do
-      Zurück
+    %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit", form: "shopping_list_form" }
+      = lucide_icon "check", size: 14
+      Speichern
+    = link_to "Zurück", shopping_lists_path, class: "mw-page-action"
 
 - if notice
   .mw-flash.mw-flash--success= notice

@@ -1,4 +1,4 @@
-= form_with model: group, url: group.new_record? ? groups_path : group_path(group), class: "mw-form" do |form|
+= form_with model: group, url: group.new_record? ? groups_path : group_path(group), class: "mw-form", html: { id: "group_form" } do |form|
   - if group.errors.any?
     .mw-flash.mw-flash--error
       %ul{ style: "margin: 0; padding-left: 1.25rem;" }
@@ -19,6 +19,3 @@
     = form.label :description, "Kurzbeschreibung (optional)", class: "mw-field__label"
     = form.text_area :description, rows: 3, class: "mw-input", placeholder: "Altersgruppe, Besonderheiten, …"
 
-  .mw-form__actions
-    = form.submit group.new_record? ? "Gruppe anlegen" : "Änderungen speichern", class: "mw-btn mw-btn--primary"
-    = link_to "Abbrechen", groups_path, class: "mw-btn mw-btn--ghost"

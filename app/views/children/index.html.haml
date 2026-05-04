@@ -5,7 +5,10 @@
     %h1.mw-page-header__title Kinder
     %p.mw-page-header__lede Alle Kinder im aktiven Kindergartenjahr.
   - if current_user.staff?
-    = link_to "Kind anlegen", new_child_path, class: "mw-btn mw-btn--primary mw-btn--sm"
+    .mw-page-header__actions
+      = link_to new_child_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
+        = lucide_icon "plus", size: 16
+        Kind anlegen
 
 - if notice
   .mw-flash.mw-flash--success= notice
@@ -45,8 +48,14 @@
             - if current_user.staff?
               %td{ style: "text-align: right;" }
                 .mw-actions
-                  = link_to "Bearbeiten", edit_child_path(child), class: "mw-btn mw-btn--secondary mw-btn--sm"
-                  = button_to "Deaktivieren", deactivate_child_path(child), method: :patch, class: "mw-btn mw-btn--secondary mw-btn--sm", data: { turbo_confirm: "#{child.full_name} wirklich deaktivieren?" }
+                  = link_to edit_child_path(child), class: "mw-page-action" do
+                    = lucide_icon "pencil", size: 14
+                    Bearbeiten
+                  = button_to deactivate_child_path(child), method: :patch,
+                      class: "mw-page-action mw-page-action--danger",
+                      data: { turbo_confirm: "#{child.full_name} wirklich deaktivieren?" } do
+                    = lucide_icon "x", size: 14
+                    Deaktivieren
 - else
   .mw-empty-state
     %p.mw-text-muted Noch keine Kinder im aktiven Kindergartenjahr.
