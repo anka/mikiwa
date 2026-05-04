@@ -74,4 +74,17 @@ class ShoppingListTest < ActiveSupport::TestCase
     @list.save!
     assert_equal @group, @list.reload.group
   end
+
+  # F26: Einkaufsliste optional einem Elternteil zuordnen
+  test "F26 ShoppingList kann assigned_to setzen und laden" do
+    @list.assigned_to = @parent
+    assert @list.save, @list.errors.full_messages.inspect
+    assert_equal @parent, @list.reload.assigned_to
+  end
+
+  test "F26 ShoppingList ohne assigned_to bleibt valid" do
+    @list.assigned_to = nil
+    assert @list.save
+    assert_nil @list.reload.assigned_to
+  end
 end

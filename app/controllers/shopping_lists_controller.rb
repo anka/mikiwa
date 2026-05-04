@@ -3,7 +3,12 @@ class ShoppingListsController < ApplicationController
   before_action :require_staff!, only: %i[new create edit update destroy]
 
   def index
-    @lists = policy_scope(ShoppingList).includes(:group, :shopping_items).ordered
+    scope = policy_scope(ShoppingList).includes(:group, :assigned_to, :shopping_items)
+    if params[:assigned] == "me" && current_user
+      scope = scope.where(assigned_to_id: current_user.id)
+    end
+    @lists = scope.ordered
+    @assigned_filter = params[:assigned]
   end
 
   def show
@@ -61,15 +66,27 @@ class ShoppingListsController < ApplicationController
 
   def list_params
     permitted = params.require(:shopping_list).permit(
-      :title, :description, :event_date, :group_id, :kindergarten_year_id
+      :title, :description, :event_date, :group_id, :kindergarten_year_id, :assigned_to_id
     )
     permitted[:group_id] = nil if permitted[:group_id].blank?
+    permitted[:assigned_to_id] = nil if permitted[:assigned_to_id].blank?
     permitted
   end
 
   def load_form_collections
     @groups = Group.order(:name)
     @kindergarten_years = KindergartenYear.order(start_date: :desc)
+    @eligible_parents = eligible_parents_for(@list)
+  end
+
+  def eligible_parents_for(list)
+    parents = User.where(role: "parent").order(:last_name, :first_name, :email)
+    return parents if list.nil? || list.group_id.blank?
+
+    parent_ids = ParentChild.joins(:child)
+                            .where(children: { group_id: list.group_id, active: true })
+                            .pluck(:user_id).uniq
+    parents.where(id: parent_ids)
   end
 
   def require_staff!

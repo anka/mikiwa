@@ -12,13 +12,20 @@
 - if notice
   .mw-flash.mw-flash--success= notice
 
+.mw-shopping-list-filters{ style: "margin-top: 1rem; display: flex; gap: 0.5rem;" }
+  - all_class = @assigned_filter == "me" ? "mw-btn--secondary" : "mw-btn--primary"
+  - me_class  = @assigned_filter == "me" ? "mw-btn--primary"   : "mw-btn--secondary"
+  = link_to "Alle", shopping_lists_path, class: "mw-btn mw-btn--sm #{all_class}"
+  = link_to "Nur mir zugewiesen", shopping_lists_path(assigned: "me"), class: "mw-btn mw-btn--sm #{me_class}"
+
 - if @lists.any?
-  .mw-card{ style: "margin-top: 1.5rem;" }
+  .mw-card{ style: "margin-top: 1rem;" }
     %table.mw-table{ style: "width: 100%;" }
       %thead
         %tr
           %th Titel
           %th Gruppe
+          %th Verantwortlich
           %th Datum
           %th Einträge
           %th{ style: "text-align: right;" } Aktionen
@@ -33,6 +40,11 @@
                 %span.mw-badge.mw-badge--neutral= list.group.name
               - else
                 %span.mw-badge.mw-badge--accent Kindergarten
+            %td
+              - if list.assigned_to.present?
+                = list.assigned_to.full_name.presence || list.assigned_to.email
+              - else
+                %span.mw-badge.mw-badge--neutral Nicht zugewiesen
             %td= l(list.event_date, format: :long)
             %td
               %span{ style: done == total && total > 0 ? "color: var(--success);" : nil }

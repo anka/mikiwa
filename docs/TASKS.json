@@ -1765,7 +1765,7 @@
       "id": "F26",
       "name": "Einkaufsliste optional einem Elternteil zuordnen",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-einkaufsliste-eltern-zuordnung.json",
       "short_description": "ShoppingList erhält optionales assigned_to_user; Eltern sehen nur ihre eigenen Listen.",
       "description": "Migration ergänzt assigned_to_user_id (FK auf users). Formular bietet Eltern-Auswahl, eingeschränkt auf Eltern, deren Kinder in der zugeordneten Gruppe sind (oder alle bei Gruppe=NULL). Pundit-Scope für Eltern: ausschließlich Listen ihrer Kinder-Gruppen sichtbar; Kindergarten-weite Listen (group_id=NULL) sind staff-intern und für Eltern NICHT sichtbar. assigned_to dient als Verantwortlich-Markierung; optionaler Filter 'Nur mir zugewiesen'. Anzeige in Index/Detail. Spec: docs/spec-einkaufsliste-eltern-zuordnung.json",

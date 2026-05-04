@@ -144,4 +144,64 @@ class ShoppingListsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/Staff-KG-Einkauf/, response.body)
   end
+
+  # F26: Einkaufsliste optional einem Elternteil zuordnen
+  test "F26 Caretaker kann Liste mit assigned_to anlegen" do
+    sign_in_as(@caretaker)
+    assert_difference "ShoppingList.count", 1 do
+      post shopping_lists_path, params: {
+        shopping_list: {
+          title: "Eltern-Aufgabe",
+          event_date: "2026-07-15",
+          group_id: @group_baeren.id,
+          kindergarten_year_id: @year.id,
+          assigned_to_id: @parent.id
+        }
+      }
+    end
+    assert_equal @parent, ShoppingList.find_by(title: "Eltern-Aufgabe").assigned_to
+  end
+
+  test "F26 Index zeigt 'Nicht zugewiesen' bei fehlendem assigned_to" do
+    sign_in_as(@caretaker)
+    get shopping_lists_path
+    assert_response :success
+    assert_match(/Nicht zugewiesen/i, response.body)
+  end
+
+  test "F26 Index zeigt Verantwortlichen-Namen" do
+    sign_in_as(@caretaker)
+    @list.update!(assigned_to: @parent)
+    get shopping_lists_path
+    assert_response :success
+    assert_match @parent.email, response.body
+  end
+
+  test "F26 Form bietet assigned_to-Auswahl" do
+    sign_in_as(@caretaker)
+    get edit_shopping_list_path(@list)
+    assert_response :success
+    assert_match(/name="shopping_list\[assigned_to_id\]"/, response.body)
+  end
+
+  test "F26 Pundit-Scope: Eltern sieht KEINE KG-weite Liste" do
+    sign_in_as(@parent)
+    ShoppingList.create!(
+      title: "Eltern-Sicht-KG", event_date: Date.new(2026, 6, 22),
+      group: nil, kindergarten_year: @year, created_by: @caretaker,
+      assigned_to: @parent
+    )
+    get shopping_lists_path
+    assert_response :success
+    assert_no_match(/Eltern-Sicht-KG/, response.body)
+  end
+
+  test "F26 Filter 'Nur mir zugewiesen' beschränkt Index" do
+    sign_in_as(@caretaker)
+    @list.update!(assigned_to: @caretaker)
+    get shopping_lists_path, params: { assigned: "me" }
+    assert_response :success
+    assert_match @list.title, response.body
+    assert_no_match @other_list.title, response.body
+  end
 end

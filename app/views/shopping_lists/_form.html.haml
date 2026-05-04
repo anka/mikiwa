@@ -22,6 +22,17 @@
       %p.mw-field__hint Ohne Gruppe ist die Liste nur für Betreuer:innen sichtbar.
 
   .mw-field
+    = f.label :assigned_to_id, "Verantwortlicher Elternteil (optional)", class: "mw-field__label"
+    = f.select :assigned_to_id,
+        options_from_collection_for_select(eligible_parents, :id, ->(u) { u.full_name.presence || u.email }, list.assigned_to_id),
+        { include_blank: "— Nicht zugewiesen —" }, class: "mw-select"
+    %p.mw-field__hint
+      - if list.group_id.present?
+        Auswahl beschränkt auf Eltern dieser Gruppe.
+      - else
+        Bei Gruppen-Auswahl wird die Liste nach Speichern entsprechend gefiltert.
+
+  .mw-field
     = f.label :description, "Beschreibung (optional)", class: "mw-field__label"
     = f.text_area :description, rows: 2, class: "mw-input"
 

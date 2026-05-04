@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_04_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_04_100100) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -295,6 +295,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_100000) do
   end
 
   create_table "shopping_lists", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.string "assigned_to_id", limit: 36
     t.datetime "created_at", null: false
     t.string "created_by_id", limit: 36, null: false
     t.text "description"
@@ -304,6 +305,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_100000) do
     t.string "kindergarten_year_id", limit: 36, null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.index ["assigned_to_id"], name: "index_shopping_lists_on_assigned_to_id"
     t.index ["group_id"], name: "index_shopping_lists_on_group_id"
     t.index ["kindergarten_year_id"], name: "index_shopping_lists_on_kindergarten_year_id"
   end
