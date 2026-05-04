@@ -240,6 +240,24 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # F28: Light/Dark Mode Toggle
+  # F30: Mobile Layout – Burger-Menü
+  test "F30 Topbar enthält Burger-Button mit Drawer-Controller" do
+    sign_in_as(@staff)
+    get staff_dashboard_path
+    assert_response :success
+    assert_match(/mw-burger/, response.body)
+    assert_match(/data-drawer-target="trigger"/, response.body)
+    assert_match(/data-action="click-(>|&gt;)drawer#toggle"/, response.body)
+  end
+
+  test "F30 Drawer-Wrapper trägt data-controller='drawer'" do
+    sign_in_as(@staff)
+    get staff_dashboard_path
+    assert_response :success
+    assert_match(/data-controller="drawer"/, response.body)
+    assert_match(/mw-drawer__scrim/, response.body)
+  end
+
   test "F28 Topbar enthält Theme-Toggle Button" do
     sign_in_as(@staff)
     get staff_dashboard_path

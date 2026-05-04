@@ -31,33 +31,46 @@
     = javascript_importmap_tags
   %body
     .mw-app-shell
-      %header.mw-app-topbar
-        = link_to root_path, class: "mw-app-brand", "aria-label": "Mikiwa" do
-          = image_tag "mikiwa/logo-mikiwa.svg", class: "mw-app-brand__mark", alt: ""
-          %span.mw-app-brand__wordmark mikiwa
-        .mw-app-topbar__spacer
-        %button.mw-theme-toggle{ type: "button",
-                                 "aria-label": "Theme wechseln",
-                                 "data-controller": "theme",
-                                 "data-action": "click->theme#toggle" }
-          %span.mw-theme-toggle__icon{ "data-theme-target": "icon" }
-            %span.mw-theme-toggle__sun
-              = lucide_icon "sun", size: 18
-            %span.mw-theme-toggle__moon
-              = lucide_icon "moon", size: 18
-        - unless authenticated?
-          = link_to "Anmelden", new_session_path, class: "mw-btn mw-btn--primary mw-btn--sm"
+      .mw-drawer{ "data-controller": "drawer", "data-open": "false" }
+        %header.mw-app-topbar
+          - if authenticated?
+            %button.mw-burger{ type: "button",
+                               "aria-label": "Hauptmenü öffnen",
+                               "aria-expanded": "false",
+                               "data-drawer-target": "trigger",
+                               "data-action": "click->drawer#toggle" }
+              = lucide_icon "menu", size: 22
+          = link_to root_path, class: "mw-app-brand", "aria-label": "Mikiwa" do
+            = image_tag "mikiwa/logo-mikiwa.svg", class: "mw-app-brand__mark", alt: ""
+            %span.mw-app-brand__wordmark mikiwa
+          .mw-app-topbar__spacer
+          %button.mw-theme-toggle{ type: "button",
+                                   "aria-label": "Theme wechseln",
+                                   "data-controller": "theme",
+                                   "data-action": "click->theme#toggle" }
+            %span.mw-theme-toggle__icon{ "data-theme-target": "icon" }
+              %span.mw-theme-toggle__sun
+                = lucide_icon "sun", size: 18
+              %span.mw-theme-toggle__moon
+                = lucide_icon "moon", size: 18
+          - unless authenticated?
+            = link_to "Anmelden", new_session_path, class: "mw-btn mw-btn--primary mw-btn--sm"
 
-      .mw-app-body
-        - if authenticated?
-          = render "layouts/navigation"
+        .mw-app-body
+          - if authenticated?
+            -# Sidebar – auf Mobile als Drawer-Panel
+            .mw-drawer__panel{ "data-drawer-target": "panel",
+                               "data-action": "click->drawer#closeOnLink" }
+              = render "layouts/navigation"
+            .mw-drawer__scrim{ "data-drawer-target": "scrim",
+                               "data-action": "click->drawer#close" }
 
-        %main.mw-app-main{ id: "main-content" }
-          - if content_for?(:no_container)
-            = yield
-          - else
-            .mw-container
+          %main.mw-app-main{ id: "main-content" }
+            - if content_for?(:no_container)
               = yield
+            - else
+              .mw-container
+                = yield
 
-      - if authenticated?
-        = render "layouts/mobile_nav"
+        - if authenticated?
+          = render "layouts/mobile_nav"

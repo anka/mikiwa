@@ -1939,7 +1939,7 @@
       "id": "F30",
       "name": "Mobile Layout: Horizontal-Scroll entfernen, Burger-Menü",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-mobile-layout-scroll-burger.json",
       "short_description": "Audit + Fix für horizontalen Overflow auf Mobile; Burger-Menü in Topbar als vollständige Navigation; Bottom-Nav bleibt für Hauptpunkte.",
       "description": "Audit aller mobilen Seiten auf Overflow-Quellen, gezielte CSS/Markup-Fixes, Burger-Drawer mit allen Sidebar-Einträgen, A11y (Fokus-Trap, Esc, aria). Bottom-Nav unverändert; Burger ergänzt. agent-browser Tests auf 320-414px. Spec: docs/spec-mobile-layout-scroll-burger.json",

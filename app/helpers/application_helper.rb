@@ -125,6 +125,7 @@ module ApplicationHelper
     "arrow-right"     => '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
     "eye"             => '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
     "home"            => '<path d="M3 9.5 12 3l9 6.5V20a2 2 0 0 1-2 2h-3v-7H10v7H5a2 2 0 0 1-2-2Z"/>',
-    "moon"            => '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>'
+    "moon"            => '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>',
+    "menu"            => '<line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/>'
   }.freeze
 end
