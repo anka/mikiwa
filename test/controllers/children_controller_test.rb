@@ -155,4 +155,73 @@ class ChildrenControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/name="child\[parent_id\]"/, response.body)
   end
+
+  # BF-002: Foto-Zustimmung wird beim Kind-Edit nicht gespeichert
+  test "BF-002 caretaker can toggle photo_consent from true to false via update" do
+    sign_in_as(@caretaker)
+    @child.update!(photo_consent: true)
+
+    patch child_path(@child), params: {
+      child: {
+        first_name:           @child.first_name,
+        last_name:            @child.last_name,
+        date_of_birth:        @child.date_of_birth,
+        group_id:             @group.id,
+        kindergarten_year_id: @year.id,
+        photo_consent:        "0"
+      }
+    }
+
+    assert_redirected_to children_path
+    assert_equal false, @child.reload.photo_consent,
+                 "photo_consent muss nach Update auf false stehen"
+  end
+
+  test "BF-002 caretaker can toggle photo_consent from false to true via update" do
+    sign_in_as(@caretaker)
+    @child.update!(photo_consent: false)
+
+    patch child_path(@child), params: {
+      child: {
+        first_name:           @child.first_name,
+        last_name:            @child.last_name,
+        date_of_birth:        @child.date_of_birth,
+        group_id:             @group.id,
+        kindergarten_year_id: @year.id,
+        photo_consent:        "1"
+      }
+    }
+
+    assert_redirected_to children_path
+    assert_equal true, @child.reload.photo_consent,
+                 "photo_consent muss nach Update auf true stehen"
+  end
+
+  test "BF-002 edit form shows current photo_consent=true as selected radio" do
+    sign_in_as(@caretaker)
+    @child.update!(photo_consent: true)
+
+    get edit_child_path(@child)
+    assert_response :success
+
+    assert_match(
+      /<input[^>]*type="radio"[^>]*value="true"[^>]*checked="checked"|<input[^>]*checked="checked"[^>]*value="true"/,
+      response.body,
+      "Bei photo_consent=true muss die Ja-Option als checked gerendert sein"
+    )
+  end
+
+  test "BF-002 edit form shows current photo_consent=false as selected radio" do
+    sign_in_as(@caretaker)
+    @child.update!(photo_consent: false)
+
+    get edit_child_path(@child)
+    assert_response :success
+
+    assert_match(
+      /<input[^>]*type="radio"[^>]*value="false"[^>]*checked="checked"|<input[^>]*checked="checked"[^>]*value="false"/,
+      response.body,
+      "Bei photo_consent=false muss die Nein-Option als checked gerendert sein"
+    )
+  end
 end

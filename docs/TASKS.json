@@ -1554,7 +1554,7 @@
       "id": "BF-002",
       "name": "Foto-Zustimmung wird beim Kind-Edit nicht gespeichert",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-foto-zustimmung-bug.json",
       "short_description": "Bug: Wechsel der Foto-Zustimmung im Kind-Edit-Formular wird beim Speichern nicht in die Datenbank übernommen.",
       "description": "Im Edit-Formular eines Kindes ändert sich der Wert von photo_consent nach Submit nicht. Vermutete Ursachen: fehlende Strong-Params, falsches check_box-Setup, oder Default-Override im Controller. Bug muss isoliert, gefixt und durch System-Test abgesichert werden. Spec: docs/spec-foto-zustimmung-bug.json",
