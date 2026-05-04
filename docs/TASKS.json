@@ -1581,7 +1581,7 @@
       "id": "F20",
       "name": "Eltern-Daten von Betreuern bearbeitbar",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-eltern-bearbeitung-staff.json",
       "short_description": "Betreuer (Staff) dürfen Eltern-Stammdaten anlegen und bearbeiten. Admin/Staff bleiben getrennt von Eltern-Konten.",
       "description": "UserPolicy/ParentPolicy wird so angepasst, dass Staff create?, edit?, update? auf Eltern-User darf, aber nicht auf Admin/Staff. Sidebar-Eintrag und Index-Seite werden für Staff sichtbar. Löschen bleibt Admin-Aktion. Spec: docs/spec-eltern-bearbeitung-staff.json",

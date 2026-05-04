@@ -12,40 +12,57 @@
 - if notice
   .mw-flash.mw-flash--success= notice
 
-.mw-card{ style: "margin-top: 1.5rem;" }
-  %table.mw-table{ style: "width: 100%;" }
-    %thead
-      %tr
-        %th Name
-        %th E-Mail
-        %th Telefon
-        %th Status
-        %th{ style: "text-align: right;" } Aktionen
-    %tbody
-      - @parents.each do |parent|
+= form_with url: parents_path, method: :get, class: "mw-form mw-form--inline", html: { style: "margin-top: 1.5rem;" } do |form|
+  .mw-field{ style: "max-width: 320px;" }
+    = form.label :q, "Suche", class: "mw-field__label"
+    = form.search_field :q, value: @search_query, class: "mw-input",
+        placeholder: "Name oder E-Mail …", autocomplete: "off"
+
+.mw-card{ style: "margin-top: 1rem;" }
+  - if @parents.any?
+    %table.mw-table{ style: "width: 100%;" }
+      %thead
         %tr
-          %td= parent.full_name.presence || "–"
-          %td= parent.email
-          %td= parent.phone.presence || "–"
-          %td
-            - if parent.locked?
-              %span.mw-badge.mw-badge--danger Deaktiviert
-            - elsif parent.invitation_sent_at.present? && parent.magic_link_token_version.zero?
-              %span.mw-badge.mw-badge--warning Eingeladen
-            - else
-              %span.mw-badge.mw-badge--success Aktiv
-          %td{ style: "text-align: right;" }
-            .mw-actions
-              = button_to reinvite_parent_path(parent), method: :post, class: "mw-page-action" do
-                = lucide_icon "send", size: 14
-                Re-Einladen
+          %th Name
+          %th E-Mail
+          %th Telefon
+          %th Status
+          %th{ style: "text-align: right;" } Aktionen
+      %tbody
+        - @parents.each do |parent|
+          %tr
+            %td= parent.full_name.presence || "–"
+            %td= parent.email
+            %td= parent.phone.presence || "–"
+            %td
               - if parent.locked?
-                = button_to unlock_parent_path(parent), method: :patch, class: "mw-page-action" do
-                  = lucide_icon "check", size: 14
-                  Reaktivieren
+                %span.mw-badge.mw-badge--danger Deaktiviert
+              - elsif parent.invitation_sent_at.present? && parent.magic_link_token_version.zero?
+                %span.mw-badge.mw-badge--warning Eingeladen
               - else
-                = button_to lock_parent_path(parent), method: :patch,
-                    class: "mw-page-action mw-page-action--danger",
-                    data: { turbo_confirm: "Account von #{parent.full_name.presence || parent.email} deaktivieren?" } do
-                  = lucide_icon "x", size: 14
-                  Deaktivieren
+                %span.mw-badge.mw-badge--success Aktiv
+            %td{ style: "text-align: right;" }
+              .mw-actions
+                = link_to edit_parent_path(parent), class: "mw-page-action" do
+                  = lucide_icon "pencil", size: 14
+                  Bearbeiten
+                = button_to reinvite_parent_path(parent), method: :post, class: "mw-page-action" do
+                  = lucide_icon "send", size: 14
+                  Re-Einladen
+                - if parent.locked?
+                  = button_to unlock_parent_path(parent), method: :patch, class: "mw-page-action" do
+                    = lucide_icon "check", size: 14
+                    Reaktivieren
+                - else
+                  = button_to lock_parent_path(parent), method: :patch,
+                      class: "mw-page-action mw-page-action--danger",
+                      data: { turbo_confirm: "Account von #{parent.full_name.presence || parent.email} deaktivieren?" } do
+                    = lucide_icon "x", size: 14
+                    Deaktivieren
+  - else
+    .mw-empty-state{ style: "padding: 1.5rem;" }
+      %p.mw-text-muted{ style: "margin: 0;" }
+        - if @search_query.present?
+          Keine Eltern-Accounts gefunden für „#{@search_query}".
+        - else
+          Noch keine Eltern-Accounts vorhanden.

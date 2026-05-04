@@ -1,0 +1,14 @@
+- content_for :title, "#{(@parent.full_name.presence || @parent.email)} bearbeiten · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title= "#{(@parent.full_name.presence || @parent.email)} bearbeiten"
+    %p.mw-page-header__lede Stammdaten des Eltern-Accounts pflegen.
+  .mw-page-header__actions
+    = link_to "Abbrechen", parents_path, class: "mw-page-action"
+    %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit", form: "parent_form" }
+      = lucide_icon "check", size: 14
+      Speichern
+
+.mw-card{ style: "margin-top: 1.5rem; max-width: 480px;" }
+  = render "form", user: @parent, form_url: parent_path(@parent), form_method: :patch

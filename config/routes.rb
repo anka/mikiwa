@@ -29,7 +29,7 @@ Rails.application.routes.draw do
     resources :medical_notes, only: %i[new create edit update destroy]
   end
 
-  resources :parents, only: %i[index new create] do
+  resources :parents, only: %i[index new create edit update] do
     member do
       patch :lock
       patch :unlock

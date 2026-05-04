@@ -1,0 +1,22 @@
+= form_with model: user, url: form_url, method: form_method, class: "mw-form", html: { id: "parent_form" } do |form|
+  - if user.errors.any?
+    .mw-flash.mw-flash--error
+      %ul{ style: "margin: 0; padding-left: 1.25rem;" }
+        - user.errors.full_messages.each do |msg|
+          %li= msg
+
+  .mw-field
+    = form.label :email, "E-Mail-Adresse", class: "mw-field__label"
+    = form.email_field :email, required: true, autofocus: true, class: "mw-input", placeholder: "name@example.at"
+
+  .mw-field
+    = form.label :first_name, "Vorname", class: "mw-field__label"
+    = form.text_field :first_name, class: "mw-input"
+
+  .mw-field
+    = form.label :last_name, "Nachname", class: "mw-field__label"
+    = form.text_field :last_name, class: "mw-input"
+
+  .mw-field
+    = form.label :phone, "Telefonnummer (optional)", class: "mw-field__label"
+    = form.telephone_field :phone, class: "mw-input", placeholder: "0664 123 456"

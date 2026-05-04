@@ -1,9 +1,19 @@
 class ParentsController < ApplicationController
-  before_action :require_staff!
-  before_action :set_parent, only: %i[lock unlock reinvite]
+  before_action :require_staff!, only: %i[index new create]
+  before_action :set_parent, only: %i[edit update lock unlock reinvite]
+  before_action :authorize_parent!, only: %i[edit update lock unlock reinvite]
 
   def index
-    @parents = User.where(role: "parent").order(:last_name, :first_name)
+    scope = User.where(role: "parent")
+    if params[:q].present?
+      term = "%#{params[:q].to_s.strip}%"
+      scope = scope.where(
+        "LOWER(first_name) LIKE LOWER(:t) OR LOWER(last_name) LIKE LOWER(:t) OR LOWER(email) LIKE LOWER(:t)",
+        t: term
+      )
+    end
+    @parents = scope.order(:last_name, :first_name)
+    @search_query = params[:q].to_s
   end
 
   def new
@@ -22,6 +32,17 @@ class ParentsController < ApplicationController
       redirect_to parents_path, notice: "Eltern-Account wurde angelegt und Einladung versandt."
     else
       render :new, status: :unprocessable_entity
+    end
+  end
+
+  def edit
+  end
+
+  def update
+    if @parent.update(parent_params)
+      redirect_to parents_path, notice: "Stammdaten wurden aktualisiert."
+    else
+      render :edit, status: :unprocessable_entity
     end
   end
 
@@ -55,5 +76,9 @@ class ParentsController < ApplicationController
   def require_staff!
     return if current_user&.staff?
     render plain: "Zugriff verweigert", status: :forbidden
+  end
+
+  def authorize_parent!
+    authorize!(@parent, policy_class: UserPolicy)
   end
 end

@@ -65,4 +65,74 @@ class ParentsControllerTest < ActionDispatch::IntegrationTest
     post reinvite_parent_path(@parent)
     assert_operator @parent.reload.magic_link_token_version, :>, old_version
   end
+
+  # F20: Eltern-Daten von Betreuern bearbeitbar
+  test "F20 Betreuer kann Edit-Seite eines Eltern-Users öffnen" do
+    sign_in_as(@caretaker)
+    get edit_parent_path(@parent)
+    assert_response :success
+    assert_match @parent.email, response.body
+  end
+
+  test "F20 Betreuer kann Eltern-Stammdaten aktualisieren" do
+    sign_in_as(@caretaker)
+    patch parent_path(@parent), params: {
+      user: {
+        first_name: "Andrea",
+        last_name:  "Müller",
+        email:      "andrea.mueller@test.at",
+        phone:      "0660 111 222"
+      }
+    }
+    assert_redirected_to parents_path
+    @parent.reload
+    assert_equal "Andrea", @parent.first_name
+    assert_equal "Müller", @parent.last_name
+    assert_equal "andrea.mueller@test.at", @parent.email
+    assert_equal "0660 111 222", @parent.phone
+  end
+
+  test "F20 Betreuer kann Edit-Seite eines Admin/Staff-Users NICHT öffnen (403)" do
+    sign_in_as(@caretaker)
+    other_caretaker = User.create!(email: "andere_betreuerin@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
+    get edit_parent_path(other_caretaker)
+    assert_response :forbidden
+  end
+
+  test "F20 Eltern darf NICHT Edit-Seite eines anderen Eltern-Users aufrufen (403)" do
+    sign_in_as(@parent)
+    other = User.create!(email: "andere_eltern@mikiwa.at", password: SecureRandom.hex(20), role: "parent")
+    get edit_parent_path(other)
+    assert_response :forbidden
+  end
+
+  test "F20 Update mit ungültigen Daten zeigt edit erneut" do
+    sign_in_as(@caretaker)
+    patch parent_path(@parent), params: { user: { email: "" } }
+    assert_response :unprocessable_entity
+  end
+
+  # F20 R-P0-003: Eltern-Liste mit Suchfunktion
+  test "F20 Eltern-Liste filtert nach Suchparameter q (Name)" do
+    sign_in_as(@caretaker)
+    User.create!(email: "felix@test.at", password: SecureRandom.hex(20),
+                 role: "parent", first_name: "Felix", last_name: "Schmidt")
+    User.create!(email: "gerda@test.at", password: SecureRandom.hex(20),
+                 role: "parent", first_name: "Gerda", last_name: "Bauer")
+
+    get parents_path, params: { q: "Felix" }
+    assert_response :success
+    assert_match "Felix", response.body
+    assert_no_match "Gerda", response.body
+  end
+
+  test "F20 Eltern-Liste filtert nach E-Mail" do
+    sign_in_as(@caretaker)
+    User.create!(email: "felix@test.at", password: SecureRandom.hex(20),
+                 role: "parent", first_name: "Felix", last_name: "Schmidt")
+
+    get parents_path, params: { q: "felix@test" }
+    assert_response :success
+    assert_match "Felix", response.body
+  end
 end
