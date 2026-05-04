@@ -24,51 +24,72 @@
 
 - if @groups.any?
   .mw-card{ style: "margin-top: 1.5rem; overflow-x: auto;" }
-    %table.mw-table{ style: "width: 100%; min-width: 600px;" }
+    %table.mw-table.mw-table--cards{ style: "width: 100%; min-width: 720px;" }
       %thead
         %tr
-          %th{ style: "width: 140px;" } Gruppe
+          %th{ style: "width: 140px;" } Speiseplan
           - @week_days.each do |day|
-            %th{ style: "text-align: center;" }
-              = I18n.l(day, format: "%a")
+            %th{ style: "text-align: left;" }
+              = I18n.l(day, format: "%A").first(2)
               %br
               %span{ style: "font-weight: normal; color: var(--fg-2);" }= l(day, format: :short)
-      %tbody
-        - @groups.each do |group|
-          %tr
-            %td
-              %strong= group.name
-              %br
+
+      - @groups.each do |group|
+        - day_entries = @week_days.map { |day| [ day, @entries_by_day_group[[day, group.id]] ] }
+        - has_any_notes = day_entries.any? { |_, e| e&.notes.present? }
+
+        %tbody
+          %tr.mw-meal-row__group-header
+            %td{ colspan: 6 }
               = link_to print_meal_entries_path(group_id: group.id, week: @week_start.iso8601),
                   target: "_blank", rel: "noopener",
                   class: "mw-page-action",
                   title: "Speiseplan dieser Gruppe drucken",
-                  style: "margin-top: 0.35rem; padding: 2px 6px; font-size: var(--fs-12);" do
+                  style: "float: right; padding: 2px 8px; font-size: var(--fs-12);" do
                 = lucide_icon "printer", size: 12
                 Drucken
-            - @week_days.each do |day|
-              - entry = @entries_by_day_group[[day, group.id]]
-              %td{ style: "vertical-align: top; padding: 0.5rem;" }
-                - if entry
-                  .mw-meal-entry
-                    %div{ style: "font-size: var(--fs-14); font-weight: var(--fw-medium);" }= entry.meal
-                    - if entry.notes.present?
-                      %div{ style: "font-size: var(--fs-12); color: var(--fg-3); margin-top: 0.25rem;" }= entry.notes
-                    - if current_user.staff?
-                      .mw-actions{ style: "margin-top: 0.35rem; gap: 0.25rem;" }
-                        = link_to edit_meal_entry_path(entry), class: "mw-btn mw-btn--ghost mw-btn--xs" do
-                          = lucide_icon "pencil", size: 12
-                        = button_to meal_entry_path(entry), method: :delete,
-                            class: "mw-btn mw-btn--ghost mw-btn--xs",
-                            data: { turbo_confirm: "Eintrag löschen?" } do
-                          = lucide_icon "trash-2", size: 12
-                - elsif current_user.staff?
-                  = link_to new_meal_entry_path(date: day.iso8601, group_id: group.id),
-                      class: "mw-btn mw-btn--ghost mw-btn--xs",
-                      style: "color: var(--fg-3); width: 100%;" do
-                    = lucide_icon "plus", size: 12
-                - else
-                  %span{ style: "color: var(--fg-3); font-size: var(--fs-12);" } –
+              %strong= group.name
+
+          - MealCourse::COURSE_TYPES.each do |type|
+            %tr.mw-meal-row
+              %td.mw-meal-row__label{ "data-label": "Course" }= MealCourse::COURSE_LABELS[type]
+              - day_entries.each do |day, entry|
+                %td.mw-meal-cell{ "data-label": I18n.l(day, format: "%A") }
+                  - course = entry&.meal_courses&.detect { |c| c.course_type == type }
+                  - if course
+                    %span.mw-meal-cell__name
+                      = course.name
+                      = diet_icon(course)
+                  - else
+                    %span.mw-meal-cell__empty –
+
+          - if has_any_notes
+            %tr.mw-meal-row
+              %td.mw-meal-row__label{ "data-label": "Notiz" } Notiz
+              - day_entries.each do |day, entry|
+                %td.mw-meal-cell{ "data-label": "Notiz #{I18n.l(day, format: "%a")}" }
+                  - if entry&.notes.present?
+                    %span.mw-meal-cell__notes= entry.notes
+
+          - if current_user.staff?
+            %tr.mw-meal-row
+              %td.mw-meal-row__label{ "data-label": "Aktionen" } Aktionen
+              - day_entries.each do |day, entry|
+                %td.mw-meal-cell{ "data-label": "Aktionen #{I18n.l(day, format: "%a")}" }
+                  - if entry
+                    .mw-actions{ style: "gap: 0.25rem;" }
+                      = link_to edit_meal_entry_path(entry), class: "mw-btn mw-btn--ghost mw-btn--xs", title: "Bearbeiten" do
+                        = lucide_icon "pencil", size: 12
+                      = button_to meal_entry_path(entry), method: :delete,
+                          class: "mw-btn mw-btn--ghost mw-btn--xs", title: "Löschen",
+                          data: { turbo_confirm: "Eintrag löschen?" } do
+                        = lucide_icon "trash-2", size: 12
+                  - else
+                    = link_to new_meal_entry_path(date: day.iso8601, group_id: group.id),
+                        class: "mw-btn mw-btn--ghost mw-btn--xs",
+                        style: "color: var(--fg-3); width: 100%;",
+                        title: "Eintrag für #{l(day, format: :short)} anlegen" do
+                      = lucide_icon "plus", size: 12
 - else
   .mw-empty-state{ style: "margin-top: 2rem;" }
     %p.mw-text-muted Keine Gruppen verfügbar.

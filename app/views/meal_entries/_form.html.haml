@@ -21,13 +21,32 @@
         options_from_collection_for_select(kindergarten_years, :id, :label, meal_entry.kindergarten_year_id),
         { include_blank: "Bitte wählen" }, class: "mw-select", required: true
 
-  .mw-field
-    = f.label :meal, "Speise", class: "mw-field__label"
-    = f.text_field :meal, required: true, autofocus: true, class: "mw-input",
-        placeholder: "z. B. Nudeln mit Tomatensauce"
+  -# F34: Vier Course-Slots in fester Reihenfolge. Leere Slots werden serverseitig
+  -# via reject_if verworfen; mindestens eine Speise ist Pflicht.
+  .mw-meal-courses
+    %p.mw-field__hint{ style: "margin-bottom: 0.75rem;" }
+      Erfasse pro Tag, was es gibt. Leere Felder werden ignoriert.
+      Mindestens eine Speise ist Pflicht.
+    - meal_entry.courses_by_type.each_with_index do |course, idx|
+      = f.fields_for :meal_courses, course, child_index: idx do |course_form|
+        - if course.persisted?
+          = course_form.hidden_field :id
+        = course_form.hidden_field :course_type, value: course.course_type
+        = course_form.hidden_field :position,    value: idx
+
+        .mw-meal-course
+          .mw-meal-course__label= course.label
+          .mw-meal-course__row
+            = course_form.text_field :name, class: "mw-input mw-meal-course__name",
+                placeholder: course.starter? ? "z. B. Tomatensuppe" : (course.dessert? ? "z. B. Apfelmus" : (course.extra? ? "z. B. Vollkornbrot" : "z. B. Spaghetti Bolognese")),
+                autofocus: idx == 1
+            .mw-meal-course__diet
+              - MealCourse::DIETARY_VALUES.each do |val|
+                %label.mw-radio-pill{ class: course.dietary == val ? "mw-radio-pill--active" : nil }
+                  = course_form.radio_button :dietary, val
+                  %span= MealCourse::DIETARY_LABELS[val]
 
   .mw-field
     = f.label :notes, "Hinweise (optional)", class: "mw-field__label"
     = f.text_area :notes, rows: 2, class: "mw-input",
-        placeholder: "z. B. enthält Gluten, laktosefrei"
-
+        placeholder: "z. B. Sommerfest-Buffet, Geburtstag o. ä."

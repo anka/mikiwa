@@ -83,7 +83,9 @@
         "F29",
         "F30",
         "F31",
-        "F32"
+        "F32",
+        "F33",
+        "F34"
       ]
     }
   ],
@@ -2022,6 +2024,73 @@
       "success_criteria": [
         "Card-Pattern auf mind. 5 Index-Pages eingesetzt",
         "Konsistentes Aussehen"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F33",
+      "name": "Speiseplan pro Gruppe druckbar (A4 Querformat)",
+      "phase": 6,
+      "status": "done",
+      "short_description": "Pro Gruppe und Woche eine druckbare A4-Querformat-Ansicht des Speiseplans (kinderfreundlich, Pastell-Karten, Auto-Print).",
+      "description": "Neue Action /meal_entries/print mit dediziertem Print-Layout, A4 landscape, fünf Pastell-Karten Mo-Fr (Sonne/Wiese/Himmel/Korall/Beere), Auto-window.print(), Druck-Button pro Gruppe in der Übersicht.",
+      "acceptance_criteria": [
+        "Druck-Button pro Gruppe in der Index-Tabelle",
+        "Print-View ohne Topbar/Sidebar/Mobile-Nav",
+        "A4 Querformat via @page",
+        "Pastell-Karten Mo-Fr mit Mahlzeit + Notiz",
+        "Empty-State: 'Noch nicht geplant'",
+        "Auto-window.print() beim Öffnen",
+        "Eltern dürfen eigene Gruppen drucken; fremde 403"
+      ],
+      "test_scenarios": [],
+      "success_criteria": [
+        "Browser-Print-Dialog erscheint automatisch",
+        "Druck mit aktiviertem Hintergrund-Render"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F34",
+      "name": "Speiseplan strukturieren: Vor-/Haupt-/Nach-/Zusatzspeise mit Diät-Tag",
+      "phase": 6,
+      "status": "done",
+      "spec_file": "docs/spec-speiseplan-courses-und-diet.json",
+      "short_description": "Pro Tag und Gruppe vier optionale Course-Slots; pro Speise dietary-Tag (standard/vegetarisch/vegan) mit Lucide-Icon (sprout/leaf).",
+      "description": "Neues MealCourse-Modell (course_type enum: starter/main/dessert/extra; dietary enum: standard/vegetarian/vegan). MealEntry has_many :meal_courses. Form zeigt immer alle 4 Slots, leere werden verworfen, mind. 1 Course pflicht. Übersicht: pro Gruppe vier Sub-Reihen quer über Mo-Fr für horizontalen Course-Vergleich. Druck: nur befüllte Slots. Diät-Icons in Übersicht und Druck. Keine Migration – meal:string entfernt; Demo-Seeds neu strukturiert. Spec: docs/spec-speiseplan-courses-und-diet.json",
+      "acceptance_criteria": [
+        "MealCourse-Modell mit FK auf MealEntry, Enum course_type + dietary, position",
+        "MealEntry has_many :meal_courses dependent: :destroy + accepts_nested_attributes_for",
+        "Mindestens 1 Course pflicht; leere Slots via reject_if verworfen",
+        "New/Edit-Form zeigt immer alle 4 Slots in fester Reihenfolge mit Diät-Toggle",
+        "Übersicht: pro Gruppe Header-Reihe + 4 Course-Reihen + ggf. Notiz-Reihe + Aktionen-Reihe",
+        "Druck: nur befüllte Courses; Notiz dezent am Karten-Ende",
+        "Lucide-Icons sprout (vegetarisch) und leaf (vegan) neben betroffenen Speisen",
+        "Demo-Seeds liefern strukturierte Tagespläne mit Veg/Vegan-Beispielen"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Form mit nur Hauptspeise speichert sauber",
+          "given": "Submit mit Hauptspeise 'Spaghetti', drei leeren Slots",
+          "when": "create",
+          "then": "MealEntry hat genau 1 MealCourse vom Typ main"
+        },
+        {
+          "scenario": "Diät-Icon vegan erscheint",
+          "given": "MealCourse mit dietary=vegan",
+          "when": "Übersicht oder Druck gerendert",
+          "then": "leaf-Icon mit title='Vegan' im DOM"
+        },
+        {
+          "scenario": "Submit ohne jede Speise schlägt fehl",
+          "given": "Alle 4 Course-Namen leer",
+          "when": "create",
+          "then": "Validation-Fehler 'Mindestens eine Speise muss angegeben werden'"
+        }
+      ],
+      "success_criteria": [
+        "Volle Test-Suite grün",
+        "DEMO=1 db:seed läuft sauber, generiert Veg/Vegan-Beispiele"
       ],
       "dependencies": []
     }

@@ -22,7 +22,7 @@ print "  Bereinige bestehende Daten … "
   CalendarEventGroup, CalendarEvent,
   AttendanceEntry, AttendanceList,
   ShoppingItem, ShoppingList,
-  MealEntry,
+  MealCourse, MealEntry,
   ParentChild, MedicalNote, EmergencyContact, Child,
   Group, KindergartenYear, Session, User
 ].each(&:delete_all)
@@ -377,57 +377,107 @@ puts "  Speiseplan …"
 
 cook = User.find_by(email: "klaus@mikiwa.local") || User.staff.first
 
-# 4 Wochen mit jeweils Mo-Fr; pro Tag eine Mahlzeit (Küche kocht für alle Gruppen
-# gleich, deshalb identische Mahlzeit pro Wochentag in allen Gruppen).
+# 4 Wochen mit jeweils Mo-Fr.
+# Pro Tag bis zu vier optionale Speisen-Slots (starter / main / dessert / extra),
+# jeweils mit Diät-Tag (standard / vegetarian / vegan).
+# Format: { starter: [name, dietary], main: [name, dietary], dessert: ..., extra: ..., notes: "…" }
 weekly_menus = [
+  # ── Woche 1 ──
   [
-    [ "Spaghetti Bolognese",            "Vegetarische Variante mit Linsen-Sauce" ],
-    [ "Gemüsesuppe mit Kartoffeln",     "Mit frischem Vollkornbrot" ],
-    [ "Hühnerschnitzel mit Reis",       "Dazu gedünstete Karotten" ],
-    [ "Kärntner Kasnudeln mit Salat",   nil ],
-    [ "Fischstäbchen mit Erdäpfelpüree", "Nachtisch: Apfelmus" ]
+    { main:    [ "Spaghetti Bolognese",            "standard" ],
+      starter: [ "Tomaten-Reissuppe",              "vegan" ],
+      dessert: [ "Apfelkompott",                   "vegan" ],
+      notes:   "Vegetarische Bolognese mit Linsen auf Wunsch" },
+    { main:    [ "Cremige Gemüsesuppe mit Kartoffeln", "vegetarian" ],
+      extra:   [ "Vollkornbrot",                   "vegan" ] },
+    { main:    [ "Hühnerschnitzel mit Reis",       "standard" ],
+      starter: [ "Karottensalat",                  "vegan" ],
+      dessert: [ "Joghurt mit Honig",              "vegetarian" ] },
+    { main:    [ "Kärntner Kasnudeln",             "vegetarian" ],
+      starter: [ "Blattsalat mit Kürbiskernöl",    "vegan" ],
+      notes:   "Hausgemacht von Klaus & Tine" },
+    { main:    [ "Fischstäbchen mit Erdäpfelpüree", "standard" ],
+      dessert: [ "Apfelmus",                       "vegan" ] }
   ],
+  # ── Woche 2 ──
   [
-    [ "Cremige Karottensuppe",          "Mit Croûtons und Kresse" ],
-    [ "Erdäpfelpuffer mit Apfelmus",    nil ],
-    [ "Lasagne (vegetarisch)",          "Mit Zucchini und Spinat" ],
-    [ "Kürbis-Risotto",                 "Saisonal aus dem Bio-Garten" ],
-    [ "Pizza mit Tomaten und Mozzarella", "Pizza-Tag – immer ein Highlight" ]
+    { starter: [ "Cremige Karottensuppe",          "vegetarian" ],
+      main:    [ "Hirseauflauf mit Gemüse",        "vegetarian" ],
+      dessert: [ "Vanillepudding",                 "vegetarian" ] },
+    { main:    [ "Erdäpfelpuffer mit Apfelmus",    "vegetarian" ],
+      extra:   [ "Joghurt-Dip",                    "vegetarian" ] },
+    { starter: [ "Bunter Salat",                   "vegan" ],
+      main:    [ "Lasagne mit Zucchini und Spinat", "vegetarian" ],
+      dessert: [ "Frische Beeren",                 "vegan" ] },
+    { main:    [ "Kürbis-Risotto",                 "vegan" ],
+      notes:   "Saisonal aus dem Bio-Garten" },
+    { starter: [ "Tomaten-Mozzarella-Salat",       "vegetarian" ],
+      main:    [ "Pizza mit Tomaten und Mozzarella", "vegetarian" ],
+      dessert: [ "Eis am Stiel",                   "vegan" ],
+      notes:   "Pizza-Tag – immer ein Highlight" }
   ],
+  # ── Woche 3 ──
   [
-    [ "Grießnockerlsuppe",              "Mit Karotten- und Selleriewürfeln" ],
-    [ "Reisfleisch mit Erbsen",         nil ],
-    [ "Palatschinken mit Marmelade",    "Marillen aus eigenem Garten" ],
-    [ "Linseneintopf mit Wienerle",     "Vegetarische Wienerle auf Wunsch" ],
-    [ "Käsespätzle mit Röstzwiebeln",   "Klassiker, kommt immer gut an" ]
+    { starter: [ "Grießnockerlsuppe",              "vegetarian" ],
+      main:    [ "Reisfleisch mit Erbsen",         "standard" ] },
+    { main:    [ "Linseneintopf mit Wienerle",     "standard" ],
+      extra:   [ "Vollkornbrot",                   "vegan" ],
+      notes:   "Vegane Wiener auf Wunsch" },
+    { main:    [ "Palatschinken mit Marillenmarmelade", "vegetarian" ],
+      starter: [ "Klare Gemüsebrühe",              "vegan" ],
+      notes:   "Marillen aus eigenem Garten" },
+    { starter: [ "Karotten-Ingwer-Suppe",          "vegan" ],
+      main:    [ "Käsespätzle mit Röstzwiebeln",   "vegetarian" ],
+      dessert: [ "Topfencreme",                    "vegetarian" ] },
+    { main:    [ "Bunte Gemüsepfanne mit Quinoa",  "vegan" ],
+      dessert: [ "Bananenbrot",                    "vegetarian" ] }
   ],
+  # ── Woche 4 ──
   [
-    [ "Tomatensuppe mit Reis",          nil ],
-    [ "Hirseauflauf mit Gemüse",        "Mit Karotten, Lauch und Mais" ],
-    [ "Fischfilet mit Petersilkartoffeln", "Aus heimischer Aquakultur" ],
-    [ "Kärntner Kasnudeln",             "Hausgemacht von Klaus & Tine" ],
-    [ "Apfelkücherl mit Vanillesoße",   "Süßer Wochenausklang" ]
+    { starter: [ "Tomatensuppe",                   "vegan" ],
+      main:    [ "Hähnchen-Gemüsepfanne",          "standard" ],
+      extra:   [ "Reis",                           "vegan" ] },
+    { main:    [ "Hirseauflauf mit Karotten und Lauch", "vegetarian" ],
+      dessert: [ "Apfelstücke",                    "vegan" ] },
+    { starter: [ "Feldsalat",                      "vegan" ],
+      main:    [ "Fischfilet mit Petersilkartoffeln", "standard" ],
+      notes:   "Aus heimischer Aquakultur" },
+    { main:    [ "Kärntner Kasnudeln",             "vegetarian" ],
+      dessert: [ "Mohnnudeln",                     "vegetarian" ] },
+    { starter: [ "Bauernbrot mit Aufstrich",       "vegan" ],
+      main:    [ "Apfelkücherl mit Vanillesoße",   "vegetarian" ],
+      notes:   "Süßer Wochenausklang" }
   ]
 ]
 
 monday_this_week = Date.current.beginning_of_week(:monday)
 groups = [ sunflowers, ladybugs, butterflies ]
+course_keys = MealCourse::COURSE_TYPES.map(&:to_sym)  # [:starter, :main, :dessert, :extra]
 
 meal_count = 0
+course_count = 0
 weekly_menus.each_with_index do |menu, week_offset|
   monday = monday_this_week + (week_offset * 7).days
-  menu.each_with_index do |(meal, notes), day_offset|
+  menu.each_with_index do |day_plan, day_offset|
     date = monday + day_offset.days
     groups.each do |group|
+      courses_attrs = course_keys.each_with_index.filter_map do |key, idx|
+        spec = day_plan[key]
+        next unless spec
+        name, dietary = spec
+        { course_type: key.to_s, name: name, dietary: dietary || "standard", position: idx }
+      end
+
       MealEntry.create!(
-        date:               date,
-        meal:               meal,
-        notes:              notes,
-        group:              group,
-        kindergarten_year:  year,
-        created_by:         cook
+        date:                    date,
+        notes:                   day_plan[:notes],
+        group:                   group,
+        kindergarten_year:       year,
+        created_by:              cook,
+        meal_courses_attributes: courses_attrs
       )
-      meal_count += 1
+      meal_count   += 1
+      course_count += courses_attrs.size
     end
   end
 end
@@ -444,7 +494,8 @@ printf "  │  Gruppen           %-3s                        │\n", Group.count
 printf "  │  Kinder            %-3s                        │\n", Child.count
 printf "  │  Notfallkontakte   %-3s                        │\n", EmergencyContact.count
 printf "  │  Med. Hinweise     %-3s                        │\n", MedicalNote.count
-printf "  │  Speiseplan        %-3s                        │\n", MealEntry.count
+printf "  │  Speiseplan-Tage   %-3s                        │\n", MealEntry.count
+printf "  │  Speisen (Courses) %-3s                        │\n", MealCourse.count
 puts "  ├──────────────────────────────────────────────┤"
 puts "  │  Login  sabine@mikiwa.local                   │"
 puts "  │  PW     changeme12345678                     │"

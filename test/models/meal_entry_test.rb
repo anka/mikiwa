@@ -11,14 +11,14 @@ class MealEntryTest < ActiveSupport::TestCase
 
     @entry = MealEntry.new(
       date: Date.new(2026, 5, 4),
-      meal: "Nudeln mit Tomatensauce",
       group: @group,
       kindergarten_year: @year,
       created_by: @staff
     )
+    @entry.meal_courses.build(course_type: "main", name: "Nudeln mit Tomatensauce", dietary: "vegetarian")
   end
 
-  test "valid meal entry can be saved" do
+  test "valid meal entry with at least one course can be saved" do
     assert @entry.save, @entry.errors.full_messages.inspect
   end
 
@@ -33,10 +33,38 @@ class MealEntryTest < ActiveSupport::TestCase
     assert @entry.errors[:date].any?
   end
 
-  test "meal is required" do
-    @entry.meal = nil
+  test "F34 entry without any course is invalid" do
+    @entry.meal_courses.clear
     assert_not @entry.valid?
-    assert @entry.errors[:meal].any?
+    assert_includes @entry.errors[:base].join, "Mindestens eine Speise"
+  end
+
+  test "F34 entry with all courses blank is invalid" do
+    @entry.meal_courses.clear
+    @entry.assign_attributes(meal_courses_attributes: [
+      { course_type: "starter", name: "" },
+      { course_type: "main",    name: "" },
+      { course_type: "dessert", name: "" },
+      { course_type: "extra",   name: "" }
+    ])
+    assert_not @entry.valid?
+    assert_includes @entry.errors[:base].join, "Mindestens eine Speise"
+  end
+
+  test "F34 nested attributes verwerfen leere Slots via reject_if" do
+    new_entry = MealEntry.new(
+      date: Date.new(2026, 5, 5),
+      group: @group, kindergarten_year: @year, created_by: @staff,
+      meal_courses_attributes: [
+        { course_type: "starter", name: "" },
+        { course_type: "main",    name: "Spaghetti", dietary: "vegetarian" },
+        { course_type: "dessert", name: "" },
+        { course_type: "extra",   name: "" }
+      ]
+    )
+    assert new_entry.save, new_entry.errors.full_messages.inspect
+    assert_equal 1, new_entry.meal_courses.count
+    assert_equal "main", new_entry.meal_courses.first.course_type
   end
 
   test "group is required" do
@@ -53,9 +81,9 @@ class MealEntryTest < ActiveSupport::TestCase
   test "date is unique per group" do
     @entry.save!
     duplicate = MealEntry.new(
-      date: @entry.date, meal: "Suppe",
-      group: @group, kindergarten_year: @year, created_by: @staff
+      date: @entry.date, group: @group, kindergarten_year: @year, created_by: @staff
     )
+    duplicate.meal_courses.build(course_type: "main", name: "Suppe")
     assert_not duplicate.valid?
     assert duplicate.errors[:date].any?
   end
@@ -64,9 +92,9 @@ class MealEntryTest < ActiveSupport::TestCase
     @entry.save!
     other_group = Group.create!(name: "Andere-Gruppe")
     other_entry = MealEntry.new(
-      date: @entry.date, meal: "Suppe",
-      group: other_group, kindergarten_year: @year, created_by: @staff
+      date: @entry.date, group: other_group, kindergarten_year: @year, created_by: @staff
     )
+    other_entry.meal_courses.build(course_type: "main", name: "Suppe")
     assert other_entry.valid?
   end
 
@@ -74,13 +102,13 @@ class MealEntryTest < ActiveSupport::TestCase
     @entry.save!
     friday = MealEntry.create!(
       date: Date.new(2026, 5, 8),
-      meal: "Pizza",
-      group: @group, kindergarten_year: @year, created_by: @staff
+      group: @group, kindergarten_year: @year, created_by: @staff,
+      meal_courses_attributes: [ { course_type: "main", name: "Pizza" } ]
     )
     weekend = MealEntry.create!(
       date: Date.new(2026, 5, 9),
-      meal: "Brunch",
-      group: @group, kindergarten_year: @year, created_by: @staff
+      group: @group, kindergarten_year: @year, created_by: @staff,
+      meal_courses_attributes: [ { course_type: "main", name: "Brunch" } ]
     )
     results = MealEntry.for_week(Date.new(2026, 5, 6))
     assert_includes results, @entry
@@ -92,11 +120,35 @@ class MealEntryTest < ActiveSupport::TestCase
     @entry.save!
     other_week = MealEntry.create!(
       date: Date.new(2026, 5, 11),
-      meal: "Reis",
-      group: @group, kindergarten_year: @year, created_by: @staff
+      group: @group, kindergarten_year: @year, created_by: @staff,
+      meal_courses_attributes: [ { course_type: "main", name: "Reis" } ]
     )
     results = MealEntry.for_week(Date.new(2026, 5, 4))
     assert_includes results, @entry
     assert_not_includes results, other_week
+  end
+
+  # F34: courses_by_type liefert immer alle 4 Slots in fester Reihenfolge
+  test "F34 courses_by_type liefert vier Slots in fester Reihenfolge" do
+    @entry.save!
+    types = @entry.courses_by_type.map(&:course_type)
+    assert_equal MealCourse::COURSE_TYPES, types
+  end
+
+  test "F34 courses_by_type behält bestehende Courses" do
+    @entry.save!
+    main = @entry.meal_courses.first
+    courses = @entry.courses_by_type
+    assert_equal main, courses[1]
+    assert courses[0].new_record?
+    assert courses[2].new_record?
+    assert courses[3].new_record?
+  end
+
+  test "F34 destroy entry destroys courses (dependent destroy)" do
+    @entry.save!
+    course_id = @entry.meal_courses.first.id
+    @entry.destroy
+    assert_not MealCourse.exists?(course_id)
   end
 end

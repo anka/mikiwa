@@ -108,12 +108,12 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
   test "parent dashboard shows meal plan for today and tomorrow" do
     today = Date.today
     MealEntry.create!(
-      date: today, meal: "Nudeln mit Tomatensoße",
-      group: @group_a, kindergarten_year: @year, created_by: @staff
+      date: today, group: @group_a, kindergarten_year: @year, created_by: @staff,
+      meal_courses_attributes: [ { course_type: "main", name: "Nudeln mit Tomatensoße" } ]
     )
     MealEntry.create!(
-      date: today + 1, meal: "Gemüsesuppe",
-      group: @group_a, kindergarten_year: @year, created_by: @staff
+      date: today + 1, group: @group_a, kindergarten_year: @year, created_by: @staff,
+      meal_courses_attributes: [ { course_type: "main", name: "Gemüsesuppe" } ]
     )
 
     sign_in_as(@parent_a)

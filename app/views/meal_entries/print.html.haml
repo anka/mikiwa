@@ -27,8 +27,15 @@
           %span.mw-print-day__weekday= day_names[idx]
           %span.mw-print-day__date= day.strftime("%-d.%-m.")
         .mw-print-day__body
-          - if entry
-            %p.mw-print-day__meal= entry.meal
+          - courses = entry&.meal_courses&.ordered&.to_a || []
+          - if courses.any?
+            %ul.mw-print-course-list
+              - courses.each do |course|
+                %li.mw-print-course
+                  %span.mw-print-course__label= course.label
+                  %span.mw-print-course__name
+                    = course.name
+                    = diet_icon(course)
             - if entry.notes.present?
               %p.mw-print-day__notes= entry.notes
           - else

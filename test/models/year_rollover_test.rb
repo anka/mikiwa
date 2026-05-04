@@ -18,8 +18,9 @@ class MealEntryYearRolloverTest < ActiveSupport::TestCase
     )
 
     MealEntry.create!(
-      date: Date.new(2025, 10, 1), meal: "Menü 1",
-      group: @group, kindergarten_year: @year_2526, created_by: @staff
+      date: Date.new(2025, 10, 1),
+      group: @group, kindergarten_year: @year_2526, created_by: @staff,
+      meal_courses_attributes: [ { course_type: "main", name: "Menü 1" } ]
     )
   end
 

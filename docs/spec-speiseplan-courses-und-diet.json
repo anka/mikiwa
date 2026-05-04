@@ -1,0 +1,346 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:speiseplan-courses-und-diet",
+  "name": "Speiseplan strukturieren: Vor-/Haupt-/Nach-/Zusatzspeise mit Diät-Tag",
+  "description": "Der Speiseplan wird pro Tag und Gruppe in vier optionale Speisen-Slots (Vorspeise, Hauptspeise, Nachspeise, Zusatzspeise) zerlegt. Pro Speise wird ihre Diät-Eigenschaft erfasst (Standard, Vegetarisch, Vegan) und durch ein kleines Lucide-Icon angezeigt. New-Form, Wochen-Übersicht und Druckansicht werden entsprechend angepasst.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Der heutige MealEntry erfasst genau eine Mahlzeit als Freitext-String pro Tag und Gruppe. Damit lassen sich weder unterschiedliche Gänge noch deren Diät-Eigenschaft (vegetarisch/vegan) sauber abbilden. Eltern fragen aber im Alltag genau danach: 'Was gibt's heute zur Vorspeise?', 'Ist die Hauptspeise vegan?'. Das wird heute nur über die freie Notiz-Spalte halbwegs abgebildet – inkonsistent, schlecht durchsuchbar und nicht filterbar.",
+    "affectedUsers": "Betreuer:innen (pflegen den Plan), Eltern (lesen den Plan), Kinder mit besonderen Ernährungsformen.",
+    "costOfInaction": "Eltern müssen weiter beim Personal nachfragen, ob ihr Kind die Hauptspeise essen darf. Schlechtere Datenqualität für mögliche Ernährungs-Auswertungen."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Pro Tag und Gruppe können bis zu 4 Speisen erfasst werden (Vor-, Haupt-, Nach-, Zusatzspeise), jede optional",
+      "type": "user",
+      "target": "Form zeigt alle 4 Slots in fixer Reihenfolge; mindestens eine Speise pro Tag pflicht"
+    },
+    {
+      "description": "Pro Speise wird die Diät-Eigenschaft (Standard / Vegetarisch / Vegan) erfasst und visualisiert",
+      "type": "user",
+      "target": "Lucide-Icon (sprout = vegetarisch, leaf = vegan) neben jeder betroffenen Speise in Übersicht und Druck"
+    },
+    {
+      "description": "Wochen-Übersicht macht den horizontalen Vergleich pro Course-Typ über die Tage hinweg möglich",
+      "type": "user",
+      "target": "Pro Gruppe vier Sub-Reihen (Vorspeise/Hauptspeise/Nachspeise/Zusatzspeise) auf gleicher Höhe quer über Mo–Fr"
+    },
+    {
+      "description": "Druckansicht spiegelt die Struktur kompakt und kinderfreundlich",
+      "type": "user",
+      "target": "Pro Tag-Karte vier Speisen-Zeilen mit Diät-Icons; Notiz dezent am Ende der Karte"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Allergie-/Inhaltsstoff-Listen pro Speise (z. B. 'enthält Milch')",
+      "rationale": "Eigene Spec; aktuell nur Diät-Status (Standard/Vegetarisch/Vegan)"
+    },
+    {
+      "description": "Mehrere Notizen pro Speise / Notiz pro Course",
+      "rationale": "Notiz bleibt am Tag (MealEntry), nicht pro Course – vom Stakeholder so entschieden"
+    },
+    {
+      "description": "Reihenfolge der Slots durch Nutzer:innen sortierbar",
+      "rationale": "Vor-/Haupt-/Nach-/Zusatzspeise haben eine natürliche, fixe Reihenfolge"
+    },
+    {
+      "description": "Glutenfrei / laktosefrei als zusätzliche Tags",
+      "rationale": "Aktuell nur Vegetarisch/Vegan; Erweiterung später leicht möglich (eigenes dietary-Enum)"
+    },
+    {
+      "description": "Datenmigration aus dem alten meal-String",
+      "rationale": "Datenbank wird bewusst neu aufgebaut, keine produktiven Daten zu erhalten"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer:in",
+      "capability": "An einem Eingabe-View pro Tag und Gruppe alle vier Slots auf einmal befüllen, leere Slots werden ignoriert",
+      "benefit": "Schnelle Erfassung ohne Klick-Akkrobatik",
+      "priority": 0
+    },
+    {
+      "persona": "Eltern",
+      "capability": "In der Wochen-Übersicht erkennen, was es zur Vorspeise / Hauptspeise / Nachspeise gibt und ob die jeweilige Speise vegetarisch oder vegan ist",
+      "benefit": "Selbständige Antwort auf 'Kann mein Kind das essen?'",
+      "priority": 0
+    },
+    {
+      "persona": "Eltern (am Aushang)",
+      "capability": "Die druckbare Wochenkarte zeigt pro Tag die vier Speisen mit Diät-Icons übersichtlich",
+      "benefit": "Garderoben-Aushang ist informativ ohne Rückfrage",
+      "priority": 1
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Datenmodell: Neues MealCourse-Modell mit meal_entry_id (FK), course_type (enum: starter, main, dessert, extra), name (string, presence), dietary (enum: standard, vegetarian, vegan, default standard), position (integer für Sortierung). MealEntry hat has_many :meal_courses (dependent: :destroy), accepts_nested_attributes_for :meal_courses. Die alte Spalte meal:string wird entfernt; notes:text bleibt am MealEntry.",
+        "acceptanceCriteria": [
+          {
+            "given": "Frische DB nach db:migrate",
+            "when": "Schema geprüft",
+            "then": "Tabelle meal_courses existiert mit Indizes auf meal_entry_id und (meal_entry_id, course_type)"
+          },
+          {
+            "given": "MealEntry mit zwei MealCourses (main + dessert)",
+            "when": "save",
+            "then": "Beide Courses werden persistiert, Reihenfolge folgt position"
+          }
+        ],
+        "technicalNotes": "course_type und dietary als Rails-Enum. Eindeutigkeit (meal_entry_id, course_type) per DB-Index erzwingen, damit es pro Tag/Gruppe nur eine Vorspeise gibt usw.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Validierung: Mindestens ein MealCourse pro MealEntry. Form zeigt immer alle vier Slots; Slots ohne Namen werden via reject_if im accepts_nested_attributes_for verworfen.",
+        "acceptanceCriteria": [
+          {
+            "given": "Submit mit 4 leeren Course-Namen",
+            "when": "MealEntry.valid?",
+            "then": "false; Fehlermeldung 'Mindestens eine Speise muss angegeben werden'"
+          },
+          {
+            "given": "Submit mit nur Hauptspeisen-Name 'Spaghetti', restliche leer",
+            "when": "save",
+            "then": "Erfolgreich; MealEntry hat genau 1 MealCourse (course_type: main)"
+          }
+        ],
+        "technicalNotes": "validate :must_have_at_least_one_course; reject_if -> ->(attrs) { attrs[:name].blank? }",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-003",
+        "description": "New-/Edit-Form: vier Course-Slots untereinander in fester Reihenfolge (Vorspeise, Hauptspeise, Nachspeise, Zusatzspeise). Jeder Slot zeigt Label + Text-Input + 3-Wege-Toggle (Standard / Vegetarisch / Vegan) für dietary. Notes-Feld für den Tag bleibt am Ende.",
+        "acceptanceCriteria": [
+          {
+            "given": "Betreuer:in öffnet /meal_entries/new",
+            "when": "Form gerendert",
+            "then": "Alle vier Course-Slots mit Label, Input und Diät-Toggle sichtbar; in genau dieser Reihenfolge"
+          },
+          {
+            "given": "Edit-View eines bestehenden MealEntry mit zwei Courses",
+            "when": "Gerendert",
+            "then": "Alle vier Slots da; nur die existierenden Courses sind vorbefüllt, andere leer"
+          }
+        ],
+        "technicalNotes": "Form baut für edit fehlende Courses on-the-fly via build (controller load), damit nested_attributes alle vier Indizes bekommt. Stimulus nicht nötig – pure HTML.",
+        "dependencies": ["R-P0-001", "R-P0-002"]
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Wochen-Übersicht /meal_entries: Pro Gruppe ein eigenes tbody mit (a) erster Header-Zeile mit Gruppen-Namen, (b) vier Course-Reihen (Vorspeise/Hauptspeise/Nachspeise/Zusatzspeise) je in eigener tr quer über Mo–Fr, (c) optionalen 'Notiz'-Reihe pro Tag wenn vorhanden, (d) einer Aktionen-Reihe pro Tag mit Edit/Anlegen/Löschen-Buttons (ein Eintrag pro Tag-Spalte, da MealEntry pro Tag/Gruppe genau einer ist). Course-Zellen zeigen den Namen + ggf. Diät-Icon rechts daneben; leere Course-Zellen zeigen dezentes –.",
+        "acceptanceCriteria": [
+          {
+            "given": "Drei Gruppen, eine Woche mit Einträgen",
+            "when": "/meal_entries gerendert",
+            "then": "Pro Gruppe ein tbody-Block mit Gruppen-Header + 4 Course-Reihen (insgesamt 12 Course-Reihen für 3 Gruppen), zusätzlich Notiz-Reihe pro Gruppe (wenn min. ein Tag eine Notiz hat) und Aktionen-Reihe pro Gruppe"
+          },
+          {
+            "given": "Hauptspeise vom Mittwoch ist vegan",
+            "when": "Übersicht gerendert",
+            "then": "leaf-Icon rechts neben dem Speisennamen mit title='Vegan'"
+          },
+          {
+            "given": "MealEntry hat eine Notiz, andere Tage der gleichen Gruppe nicht",
+            "when": "Übersicht gerendert",
+            "then": "Eine Notiz-Reihe ist in dieser Gruppen-Section sichtbar; nur die Mi-Spalte enthält den Notiz-Text dezent (kursiv, --fs-12, --fg-3), andere Tag-Spalten der Notiz-Reihe sind leer"
+          },
+          {
+            "given": "Tag ohne MealEntry (z. B. Freitag noch nicht geplant)",
+            "when": "Übersicht gerendert",
+            "then": "Course-Zellen zeigen –, Aktionen-Reihe zeigt + Eintrag anlegen Button mit pre-filled date/group_id"
+          }
+        ],
+        "technicalNotes": "Tabellen-Struktur:\n```\nthead: <leere Spalte> | Mo | Di | Mi | Do | Fr\ntbody (pro Gruppe):\n  tr.gruppen-header     [Gruppe X (colspan=6)]\n  tr.course-row         [Vorspeise]   | <name>+icon | ...\n  tr.course-row         [Hauptspeise] | ...\n  tr.course-row         [Nachspeise]  | ...\n  tr.course-row         [Zusatzspeise]| ...\n  tr.notes-row          [Notiz]       | <notes pro tag>\n  tr.actions-row        []            | <edit/del oder + neu>\n```\nMobile-Card-Stack via .mw-table--cards funktioniert weiterhin (jede tr wird zur Card-Zeile).",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-005",
+        "description": "Druckansicht /meal_entries/print: Jede Tag-Karte zeigt die vier Course-Zeilen (Label + Speise + Icon) in Reihenfolge. Leere Courses werden ausgelassen (nicht als – angezeigt – auf dem Aushang stört das). Notiz dezent am Karten-Ende.",
+        "acceptanceCriteria": [
+          {
+            "given": "Tag mit nur Hauptspeise 'Spaghetti' (vegetarisch) und Nachspeise 'Apfelmus'",
+            "when": "Druckansicht gerendert",
+            "then": "Karte zeigt zwei Zeilen: 'Hauptspeise: Spaghetti [sprout]' und 'Nachspeise: Apfelmus' – keine leeren Vorspeise/Zusatz-Zeilen"
+          },
+          {
+            "given": "Tag mit Notiz 'Pizza-Tag – Highlight'",
+            "when": "Druckansicht gerendert",
+            "then": "Notiz erscheint dezent unter den Speisen, kleinere Schrift, kursiv"
+          }
+        ],
+        "technicalNotes": "Pastell-Karten-Layout bleibt; statt einer großen 'meal'-Zeile jetzt eine Liste der vorhandenen Courses. Course-Label fett klein (uppercase), Speisen-Name größer.",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-006",
+        "description": "Diät-Icons: Lucide 'sprout' für Vegetarisch (Tooltip 'Vegetarisch'), Lucide 'leaf' für Vegan (Tooltip 'Vegan'). Icons werden in --leaf-700 / --leaf-800 Tönen angezeigt (Mikiwa Wiesengrün), 12-14px. In Übersicht und Druckansicht identische Darstellung.",
+        "acceptanceCriteria": [
+          {
+            "given": "Course mit dietary=vegetarian",
+            "when": "Übersicht oder Druck gerendert",
+            "then": "<svg class='mw-diet-icon mw-diet-icon--vegetarian' title='Vegetarisch'> mit sprout-Path"
+          },
+          {
+            "given": "Course mit dietary=standard",
+            "when": "Gerendert",
+            "then": "Kein Icon"
+          }
+        ],
+        "technicalNotes": "Helper diet_icon(course) im ApplicationHelper (oder Mahlzeit-Helper). 'sprout' und 'leaf' zu LUCIDE_PATHS ergänzen falls nicht vorhanden.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-007",
+        "description": "Demo-Seeds aktualisieren: weekly_menus liefert pro Tag eine Struktur mit den vier Slots (jeder optional, mindestens main); pro Slot Name + dietary. Tages-notes bleiben.",
+        "acceptanceCriteria": [
+          {
+            "given": "DEMO=1 bin/rails db:seed",
+            "when": "Erfolgreich",
+            "then": "Mindestens 60 MealEntries existieren (4 Wochen × 5 Tage × 3 Gruppen) und insgesamt deutlich mehr MealCourses (≥ 60, z. B. 150–200 mit Suppen + Mains + Nachspeisen + Extras gemischt)"
+          },
+          {
+            "given": "Stichproben auf Seeds",
+            "when": "Geprüft",
+            "then": "Mehrere Vegetarisch- und Vegan-Beispiele vorhanden, damit Icons in der UI sichtbar werden"
+          }
+        ],
+        "technicalNotes": "delete_all-Liste bleibt; MealCourse hängt an MealEntry und wird per dependent: :destroy mitgelöscht. Zusammenfassung um MealCourse.count erweitern.",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-008",
+        "description": "Tests: Model-Tests für MealCourse (Validierungen, dependent destroy, eindeutigkeit pro course_type pro MealEntry). Controller-Tests: create/update mit nested attributes (alle 4 Slots, davon 2 leer), Übersicht zeigt Course-Reihen, Druck zeigt nur befüllte Slots, Diät-Icons gerendert.",
+        "acceptanceCriteria": [
+          {
+            "given": "Vollständige Suite",
+            "when": "bin/rails test",
+            "then": "Alle Tests grün, inkl. mind. 6 neue Tests rund um Courses und Diät"
+          }
+        ],
+        "technicalNotes": "Bestehende meal-bezogene Tests müssen ggf. von 'meal: \"Nudeln\"' auf 'meal_courses_attributes: { ... }' umgestellt werden.",
+        "dependencies": ["R-P0-002", "R-P0-003", "R-P0-004", "R-P0-005"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Quick-Filter in Übersicht: 'Nur vegetarische Hauptspeisen anzeigen' – z. B. zur Planung",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Frontend-Filter, kein DB-Query nötig",
+        "dependencies": ["R-P0-004"]
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Templates: 'Standard-Vorspeise = Tagessuppe', vorbefüllt im New-Form",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Klein, eher ein UX-Boost",
+        "dependencies": ["R-P0-003"]
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Glutenfrei / laktosefrei / etc. als zusätzliches dietary-Tag-Set",
+        "rationale": "Erweiterter Scope; aktuelles Enum (standard/vegetarian/vegan) reicht für v1"
+      },
+      {
+        "id": "R-P2-002",
+        "description": "Allergie-Aggregation: 'Welche Kinder einer Gruppe vertragen die Hauptspeise nicht?'",
+        "rationale": "Eigene Spec, braucht Allergen-Liste pro Speise"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Anteil MealEntries mit ≥2 Courses",
+        "description": "Wie viele Tage werden tatsächlich strukturiert gepflegt vs. nur Hauptspeise",
+        "target": "≥ 60% nach 30 Tagen",
+        "measurementMethod": "DB-Query MealEntry.includes(:meal_courses)",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Eltern-Rückfragen 'Was gibt's heute?'",
+        "description": "Anekdotisch / Personalrückmeldung",
+        "target": "Tendenziell sinkend",
+        "measurementMethod": "Personal-Feedback",
+        "evaluationAt": "60 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [],
+  "spec:resolvedDecisions": [
+    {
+      "question": "Datenmodell – Spalten am MealEntry, JSON-Spalte oder eigenes MealCourse-Modell?",
+      "decision": "Eigenes Modell MealCourse mit course_type/name/dietary. Sauber normalisiert, leicht erweiterbar.",
+      "decidedAt": "2026-05-04",
+      "decidedBy": "stakeholder"
+    },
+    {
+      "question": "Index-Layout – pro Zelle 4 Slots oder Tabelle mit Course-Reihen?",
+      "decision": "Tabelle mit Course-Reihen: pro Gruppe 4 Sub-Reihen quer über die Wochentage. Erlaubt horizontalen Vergleich.",
+      "decidedAt": "2026-05-04",
+      "decidedBy": "stakeholder"
+    },
+    {
+      "question": "Validierung – ist eine Speise pro Tag pflicht?",
+      "decision": "Ja, mindestens ein MealCourse pflicht. Form zeigt aber immer alle vier Slots; leere werden nicht persistiert.",
+      "decidedAt": "2026-05-04",
+      "decidedBy": "stakeholder"
+    },
+    {
+      "question": "Notiz – pro Tag, pro Speise oder beides?",
+      "decision": "Notiz bleibt am Tag (MealEntry). Wird in Übersicht und Druck dezent am Ende des Tages angezeigt.",
+      "decidedAt": "2026-05-04",
+      "decidedBy": "stakeholder"
+    },
+    {
+      "question": "Course-Bezeichnungen und Reihenfolge?",
+      "decision": "Vorspeise, Hauptspeise, Nachspeise, Zusatzspeise (DE-Labels). Interne Enum-Werte: starter, main, dessert, extra. Reihenfolge fix in dieser Folge.",
+      "decidedAt": "2026-05-04",
+      "decidedBy": "stakeholder"
+    },
+    {
+      "question": "Welche Icons für Vegetarisch / Vegan?",
+      "decision": "Lucide 'sprout' für Vegetarisch, 'leaf' für Vegan. Klein (12-14px), in Mikiwa-Wiesengrün, mit title-Tooltip für a11y.",
+      "decidedAt": "2026-05-04",
+      "decidedBy": "stakeholder"
+    },
+    {
+      "question": "Datenmigration vom alten meal-String?",
+      "decision": "Keine Migration. Datenbank wird neu aufgesetzt; meal-Spalte wird komplett entfernt; Demo-Seeds erzeugen neue Struktur.",
+      "decidedAt": "2026-05-04",
+      "decidedBy": "stakeholder"
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "Bestehendes Speiseplan-Feature (MealEntry, /meal_entries, Druckansicht F33)" },
+      { "description": "Mikiwa Design System (Lucide-Icons, Pastellfarben)" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "MealCourse-Modell, vier Slots in New/Edit, Sub-Reihen-Übersicht, Druck-Anpassung, Diät-Icons, Demo-Seeds, Tests" },
+      { "name": "v2", "scope": "Quick-Filter, Templates (vgl. niceToHave)" }
+    ]
+  }
+}

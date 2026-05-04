@@ -36,9 +36,14 @@ class MealPlanTest < ActionDispatch::IntegrationTest
         post meal_entries_path, params: {
           meal_entry: {
             date: (@monday + offset.days).iso8601,
-            meal: "Menü #{offset + 1}",
             group_id: @group.id,
-            kindergarten_year_id: @year.id
+            kindergarten_year_id: @year.id,
+            meal_courses_attributes: {
+              "0" => { course_type: "starter", name: "" },
+              "1" => { course_type: "main",    name: "Menü #{offset + 1}", dietary: "standard" },
+              "2" => { course_type: "dessert", name: "" },
+              "3" => { course_type: "extra",   name: "" }
+            }
           }
         }
       end
@@ -54,10 +59,12 @@ class MealPlanTest < ActionDispatch::IntegrationTest
     (0..4).each do |offset|
       MealEntry.create!(
         date: @monday + offset.days,
-        meal: "Menü #{offset + 1}",
         group: @group,
         kindergarten_year: @year,
-        created_by: @caretaker
+        created_by: @caretaker,
+        meal_courses_attributes: [
+          { course_type: "main", name: "Menü #{offset + 1}" }
+        ]
       )
     end
 

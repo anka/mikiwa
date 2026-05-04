@@ -18,10 +18,10 @@ class MealEntriesControllerTest < ActionDispatch::IntegrationTest
 
     @entry = MealEntry.create!(
       date: Date.new(2026, 5, 4),
-      meal: "Nudeln",
-      group: @group,
-      kindergarten_year: @year,
-      created_by: @staff
+      group: @group, kindergarten_year: @year, created_by: @staff,
+      meal_courses_attributes: [
+        { course_type: "main", name: "Nudeln", dietary: "vegetarian", position: 1 }
+      ]
     )
   end
 
@@ -58,25 +58,90 @@ class MealEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "F34 new form zeigt alle vier Course-Slots" do
+    sign_in_as(@staff)
+    get new_meal_entry_path
+    assert_response :success
+    %w[Vorspeise Hauptspeise Nachspeise Zusatzspeise].each do |label|
+      assert_match label, response.body, "Slot #{label} muss im Form sein"
+    end
+    # Text-Inputs für alle vier Course-Names
+    assert_match(/name="meal_entry\[meal_courses_attributes\]\[0\]\[name\]"/, response.body)
+    assert_match(/name="meal_entry\[meal_courses_attributes\]\[3\]\[name\]"/, response.body)
+  end
+
   test "parent cannot open new meal entry form" do
     sign_in_as(@parent)
     get new_meal_entry_path
     assert_response :forbidden
   end
 
-  test "staff can create meal entry" do
+  test "F34 staff can create meal entry mit nur Hauptspeise (andere leer)" do
     sign_in_as(@staff)
     assert_difference "MealEntry.count", 1 do
+      assert_difference "MealCourse.count", 1 do
+        post meal_entries_path, params: {
+          meal_entry: {
+            date: "2026-05-11",
+            group_id: @group.id,
+            kindergarten_year_id: @year.id,
+            meal_courses_attributes: {
+              "0" => { course_type: "starter", name: "",         dietary: "standard",   position: 0 },
+              "1" => { course_type: "main",    name: "Spaghetti",dietary: "vegetarian", position: 1 },
+              "2" => { course_type: "dessert", name: "",         dietary: "standard",   position: 2 },
+              "3" => { course_type: "extra",   name: "",         dietary: "standard",   position: 3 }
+            }
+          }
+        }
+      end
+    end
+    assert_redirected_to meal_entries_path(week: "2026-05-11")
+    new_entry = MealEntry.find_by(date: "2026-05-11", group: @group)
+    assert_equal 1, new_entry.meal_courses.count
+    course = new_entry.meal_courses.first
+    assert_equal "main", course.course_type
+    assert_equal "vegetarian", course.dietary
+  end
+
+  test "F34 staff can create meal entry mit allen vier Slots" do
+    sign_in_as(@staff)
+    post meal_entries_path, params: {
+      meal_entry: {
+        date: "2026-05-12",
+        group_id: @group.id,
+        kindergarten_year_id: @year.id,
+        meal_courses_attributes: {
+          "0" => { course_type: "starter", name: "Suppe",       dietary: "vegan",      position: 0 },
+          "1" => { course_type: "main",    name: "Spaghetti",   dietary: "vegetarian", position: 1 },
+          "2" => { course_type: "dessert", name: "Apfelmus",    dietary: "vegan",      position: 2 },
+          "3" => { course_type: "extra",   name: "Brot",        dietary: "standard",   position: 3 }
+        }
+      }
+    }
+    assert_redirected_to meal_entries_path(week: "2026-05-12")
+    new_entry = MealEntry.find_by(date: "2026-05-12", group: @group)
+    assert_equal 4, new_entry.meal_courses.count
+  end
+
+  test "F34 create mit allen vier Slots leer schlägt fehl" do
+    sign_in_as(@staff)
+    assert_no_difference "MealEntry.count" do
       post meal_entries_path, params: {
         meal_entry: {
-          date: "2026-05-11",
-          meal: "Gemüsesuppe",
+          date: "2026-05-13",
           group_id: @group.id,
-          kindergarten_year_id: @year.id
+          kindergarten_year_id: @year.id,
+          meal_courses_attributes: {
+            "0" => { course_type: "starter", name: "" },
+            "1" => { course_type: "main",    name: "" },
+            "2" => { course_type: "dessert", name: "" },
+            "3" => { course_type: "extra",   name: "" }
+          }
         }
       }
     end
-    assert_redirected_to meal_entries_path(week: "2026-05-11")
+    assert_response :unprocessable_entity
+    assert_match(/Mindestens eine Speise/i, response.body)
   end
 
   test "parent cannot create meal entry" do
@@ -85,9 +150,9 @@ class MealEntriesControllerTest < ActionDispatch::IntegrationTest
       post meal_entries_path, params: {
         meal_entry: {
           date: "2026-05-11",
-          meal: "Versuch",
           group_id: @group.id,
-          kindergarten_year_id: @year.id
+          kindergarten_year_id: @year.id,
+          meal_courses_attributes: { "0" => { course_type: "main", name: "Versuch" } }
         }
       }
     end
@@ -100,9 +165,9 @@ class MealEntriesControllerTest < ActionDispatch::IntegrationTest
       post meal_entries_path, params: {
         meal_entry: {
           date: "",
-          meal: "Suppe",
           group_id: @group.id,
-          kindergarten_year_id: @year.id
+          kindergarten_year_id: @year.id,
+          meal_courses_attributes: { "0" => { course_type: "main", name: "Suppe" } }
         }
       }
     end
@@ -117,19 +182,44 @@ class MealEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "F34 edit zeigt alle vier Slots, vorhandener Course vorbefüllt" do
+    sign_in_as(@staff)
+    get edit_meal_entry_path(@entry)
+    assert_response :success
+    assert_match "Vorspeise", response.body
+    assert_match "Hauptspeise", response.body
+    assert_match "Nachspeise", response.body
+    assert_match "Zusatzspeise", response.body
+    assert_match "Nudeln", response.body  # bestehender Hauptspeisen-Wert
+  end
+
   test "parent cannot edit meal entry" do
     sign_in_as(@parent)
     get edit_meal_entry_path(@entry)
     assert_response :forbidden
   end
 
-  test "staff can update meal entry" do
+  test "F34 staff can update meal entry und neue Courses ergänzen" do
     sign_in_as(@staff)
+    main_id = @entry.meal_courses.first.id
     patch meal_entry_path(@entry), params: {
-      meal_entry: { meal: "Überarbeitetes Gericht" }
+      meal_entry: {
+        date: @entry.date,
+        group_id: @group.id,
+        kindergarten_year_id: @year.id,
+        meal_courses_attributes: {
+          "0" => { course_type: "starter", name: "Tomatensuppe", dietary: "vegan",      position: 0 },
+          "1" => { id: main_id, course_type: "main", name: "Risotto", dietary: "vegetarian", position: 1 },
+          "2" => { course_type: "dessert", name: "",             dietary: "standard",   position: 2 },
+          "3" => { course_type: "extra",   name: "",             dietary: "standard",   position: 3 }
+        }
+      }
     }
-    assert_equal "Überarbeitetes Gericht", @entry.reload.meal
     assert_redirected_to meal_entries_path(week: @entry.date.iso8601)
+    @entry.reload
+    types = @entry.meal_courses.ordered.pluck(:course_type)
+    assert_equal %w[starter main], types
+    assert_equal "Risotto", @entry.meal_courses.find(main_id).name
   end
 
   # --- destroy ---
@@ -142,6 +232,13 @@ class MealEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to meal_entries_path(week: @entry.date.iso8601)
   end
 
+  test "F34 destroy entry cascades to courses" do
+    sign_in_as(@staff)
+    course_id = @entry.meal_courses.first.id
+    delete meal_entry_path(@entry)
+    assert_not MealCourse.exists?(course_id)
+  end
+
   test "parent cannot delete meal entry" do
     sign_in_as(@parent)
     assert_no_difference "MealEntry.count" do
@@ -150,7 +247,35 @@ class MealEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
-  # --- print (F33: Speiseplan pro Gruppe drucken) ---
+  # --- F34: Index-Layout ---
+
+  test "F34 Index zeigt Course-Sub-Reihen pro Gruppe" do
+    sign_in_as(@staff)
+    get meal_entries_path, params: { week: "2026-05-04" }
+    assert_response :success
+    %w[Vorspeise Hauptspeise Nachspeise Zusatzspeise].each do |label|
+      assert_match label, response.body
+    end
+    # Hauptspeise-Wert in der Mo-Spalte
+    assert_match "Nudeln", response.body
+  end
+
+  test "F34 Index zeigt Diät-Icon für vegetarisches Hauptgericht" do
+    sign_in_as(@staff)
+    get meal_entries_path, params: { week: "2026-05-04" }
+    assert_response :success
+    assert_match(/mw-diet-icon mw-diet-icon--vegetarian|title="Vegetarisch"/, response.body)
+  end
+
+  test "F34 Index zeigt Notiz dezent wenn vorhanden" do
+    @entry.update!(notes: "Spezial-Tag")
+    sign_in_as(@staff)
+    get meal_entries_path, params: { week: "2026-05-04" }
+    assert_response :success
+    assert_match "Spezial-Tag", response.body
+  end
+
+  # --- F33: Druckansicht (existierend, an neue Struktur angepasst) ---
 
   test "F33 staff kann Druck-Ansicht öffnen" do
     sign_in_as(@staff)
@@ -221,9 +346,31 @@ class MealEntriesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@staff)
     get meal_entries_path, params: { week: "2026-05-04" }
     assert_response :success
-    # URL-Parameter werden HTML-escaped (& → &amp;), daher beide Teile separat prüfen
     assert_match "/meal_entries/print?group_id=#{@group.id}", response.body
     assert_match "week=2026-05-04", response.body
     assert_match "Drucken", response.body
+  end
+
+  # --- F34: Druck zeigt Courses + Diät ---
+
+  test "F34 Druck zeigt nur befüllte Course-Slots, keine leeren" do
+    @entry.meal_courses.create!(course_type: "dessert", name: "Apfelmus", dietary: "vegan", position: 2)
+
+    sign_in_as(@staff)
+    get print_meal_entries_path, params: { group_id: @group.id, week: "2026-05-04" }
+    assert_response :success
+    assert_match "Hauptspeise", response.body
+    assert_match "Nachspeise", response.body
+    assert_no_match(/Vorspeise/, response.body, "Leere Vorspeise soll im Druck nicht erscheinen")
+    assert_no_match(/Zusatzspeise/, response.body, "Leere Zusatzspeise soll im Druck nicht erscheinen")
+  end
+
+  test "F34 Druck zeigt Diät-Icon für vegane Speise" do
+    @entry.meal_courses.create!(course_type: "dessert", name: "Apfelmus", dietary: "vegan", position: 2)
+
+    sign_in_as(@staff)
+    get print_meal_entries_path, params: { group_id: @group.id, week: "2026-05-04" }
+    assert_response :success
+    assert_match(/mw-diet-icon mw-diet-icon--vegan|title="Vegan"/, response.body)
   end
 end

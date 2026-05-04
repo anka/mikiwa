@@ -14,7 +14,9 @@ class MealEntriesController < ApplicationController
       Group.where(id: group_ids).order(:name)
     end
 
-    entries = MealEntry.for_week(@week_start).where(group: @groups)
+    entries = MealEntry.for_week(@week_start)
+                       .where(group: @groups)
+                       .includes(:meal_courses)
     @entries_by_day_group = entries.index_by { |e| [ e.date, e.group_id ] }
   end
 
@@ -31,6 +33,7 @@ class MealEntriesController < ApplicationController
 
     @entries_by_day = MealEntry.for_week(@week_start)
                                .where(group: @group)
+                               .includes(:meal_courses)
                                .index_by(&:date)
 
     render layout: "print"
@@ -42,8 +45,7 @@ class MealEntriesController < ApplicationController
       group_id: params[:group_id],
       kindergarten_year: active_kindergarten_year
     )
-    @groups = Group.order(:name)
-    @kindergarten_years = KindergartenYear.order(start_date: :desc)
+    load_form_collections
   end
 
   def create
@@ -54,15 +56,13 @@ class MealEntriesController < ApplicationController
       redirect_to meal_entries_path(week: @meal_entry.date.iso8601),
                   notice: "Speiseplan-Eintrag wurde gespeichert."
     else
-      @groups = Group.order(:name)
-      @kindergarten_years = KindergartenYear.order(start_date: :desc)
+      load_form_collections
       render :new, status: :unprocessable_entity
     end
   end
 
   def edit
-    @groups = Group.order(:name)
-    @kindergarten_years = KindergartenYear.order(start_date: :desc)
+    load_form_collections
   end
 
   def update
@@ -70,8 +70,7 @@ class MealEntriesController < ApplicationController
       redirect_to meal_entries_path(week: @meal_entry.date.iso8601),
                   notice: "Speiseplan-Eintrag wurde aktualisiert."
     else
-      @groups = Group.order(:name)
-      @kindergarten_years = KindergartenYear.order(start_date: :desc)
+      load_form_collections
       render :edit, status: :unprocessable_entity
     end
   end
@@ -90,7 +89,15 @@ class MealEntriesController < ApplicationController
   end
 
   def meal_entry_params
-    params.require(:meal_entry).permit(:date, :meal, :notes, :group_id, :kindergarten_year_id)
+    params.require(:meal_entry).permit(
+      :date, :notes, :group_id, :kindergarten_year_id,
+      meal_courses_attributes: [ :id, :course_type, :name, :dietary, :position, :_destroy ]
+    )
+  end
+
+  def load_form_collections
+    @groups = Group.order(:name)
+    @kindergarten_years = KindergartenYear.order(start_date: :desc)
   end
 
   def require_staff!

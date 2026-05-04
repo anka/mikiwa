@@ -108,7 +108,8 @@
               %span.mw-dashboard-item__date-day= entry.date.strftime("%-d")
               %span.mw-dashboard-item__date-month= l(entry.date, format: "%b")
             .mw-dashboard-item__body
-              %p.mw-dashboard-item__title= entry.meal
+              - main = entry.meal_courses.detect { |c| c.course_type == "main" }
+              %p.mw-dashboard-item__title= main&.name || entry.meal_courses.first&.name || "Noch nicht geplant"
               %p.mw-dashboard-item__meta= entry.group.name
 
   .mw-dashboard-quicklinks
