@@ -1843,7 +1843,7 @@
       "id": "F28",
       "name": "Light/Dark Mode Toggle",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-light-dark-mode-toggle.json",
       "short_description": "Toggle in der Topbar wechselt zwischen Light/Dark Mode; Auswahl wird persistiert; respektiert prefers-color-scheme.",
       "description": "Stimulus-Controller schaltet data-theme oder Tailwind-dark-Klasse. Persistenz in localStorage (v1) und optional User-Preference in DB (v2). Default folgt prefers-color-scheme. Dark-Mode-Tokens aus Mikiwa Design System. Spec: docs/spec-light-dark-mode-toggle.json",

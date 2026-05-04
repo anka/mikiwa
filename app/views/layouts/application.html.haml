@@ -10,6 +10,18 @@
     = csrf_meta_tags
     = csp_meta_tag
     = yield :head
+    -# F28: Theme-Boot vor Stylesheet rendern – verhindert Flash of Light Theme
+    = javascript_tag nonce: true do
+      :plain
+        (function () {
+          try {
+            var stored = localStorage.getItem("mikiwa.theme");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            var theme = stored || (prefersDark ? "dark" : "light");
+            document.documentElement.setAttribute("data-theme", theme);
+            window.__themeBoot = theme;
+          } catch (e) {}
+        })();
     %link{ rel: "icon", type: "image/png", href: "/icons/icon-192.png" }/
     %link{ rel: "icon", type: "image/svg+xml", href: "/icon.svg" }/
     %link{ rel: "apple-touch-icon", href: "/icons/icon-192.png" }/
@@ -24,6 +36,15 @@
           = image_tag "mikiwa/logo-mikiwa.svg", class: "mw-app-brand__mark", alt: ""
           %span.mw-app-brand__wordmark mikiwa
         .mw-app-topbar__spacer
+        %button.mw-theme-toggle{ type: "button",
+                                 "aria-label": "Theme wechseln",
+                                 "data-controller": "theme",
+                                 "data-action": "click->theme#toggle" }
+          %span.mw-theme-toggle__icon{ "data-theme-target": "icon" }
+            %span.mw-theme-toggle__sun
+              = lucide_icon "sun", size: 18
+            %span.mw-theme-toggle__moon
+              = lucide_icon "moon", size: 18
         - unless authenticated?
           = link_to "Anmelden", new_session_path, class: "mw-btn mw-btn--primary mw-btn--sm"
 

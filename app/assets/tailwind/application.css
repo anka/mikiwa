@@ -2622,3 +2622,31 @@ a:hover { color: var(--fg-link-hover); border-bottom-color: currentColor; }
 @media (prefers-reduced-motion: reduce) {
   .mw-confetti { display: none; }
 }
+
+/* ----- Theme toggle (F28) ----- */
+.mw-theme-toggle {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-2);
+  cursor: pointer;
+  transition: background var(--dur-micro), color var(--dur-micro), border-color var(--dur-micro);
+}
+.mw-theme-toggle:hover {
+  background: var(--surface-hover);
+  color: var(--fg-1);
+}
+.mw-theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.mw-theme-toggle__icon { display: inline-flex; }
+.mw-theme-toggle__sun  { display: none; }
+.mw-theme-toggle__moon { display: inline-flex; }
+[data-theme="dark"] .mw-theme-toggle__sun  { display: inline-flex; }
+[data-theme="dark"] .mw-theme-toggle__moon { display: none; }

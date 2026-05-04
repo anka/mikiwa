@@ -239,6 +239,24 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_select "nav.mw-sidebar a[href='#{parent_dashboard_path}']", text: /Übersicht/
   end
 
+  # F28: Light/Dark Mode Toggle
+  test "F28 Topbar enthält Theme-Toggle Button" do
+    sign_in_as(@staff)
+    get staff_dashboard_path
+    assert_response :success
+    assert_match(/data-controller="theme"/, response.body)
+    assert_match(/data-action=".*theme#toggle"/, response.body)
+  end
+
+  test "F28 HTML setzt initial data-theme über Inline-Boot-Script" do
+    sign_in_as(@staff)
+    get staff_dashboard_path
+    assert_response :success
+    # Boot-Script muss vor Tailwind-CSS geladen werden, damit kein Flash auftritt
+    assert_match(/data-theme/, response.body)
+    assert_match(/window\.__themeBoot|matchMedia.*prefers-color-scheme/, response.body)
+  end
+
   test "F27 Übersicht-Link hat aktiven Style auf Dashboard-Seite" do
     sign_in_as(@staff)
     get staff_dashboard_path
