@@ -95,6 +95,77 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to gallery_path(Gallery.order(:created_at).last)
   end
 
+  # BF-003: Galleries Validierungsfehler obwohl Gruppen ausgewählt
+  test "BF-003 caretaker can update gallery groups" do
+    sign_in_as(@caretaker)
+    patch gallery_path(@gallery), params: {
+      gallery: {
+        title:                @gallery.title,
+        kindergarten_year_id: @year.id,
+        group_ids:            [ @group_loewen.id ]
+      }
+    }
+    assert_redirected_to gallery_path(@gallery)
+    assert_equal [ @group_loewen.id ], @gallery.reload.groups.pluck(:id)
+  end
+
+  test "BF-003 create with empty group_ids zeigt Validierungsfehler (kein Bug)" do
+    sign_in_as(@caretaker)
+    assert_no_difference "Gallery.count" do
+      post galleries_path, params: {
+        gallery: {
+          title: "Ohne Gruppe",
+          kindergarten_year_id: @year.id,
+          group_ids: []
+        }
+      }
+    end
+    assert_response :unprocessable_entity
+    assert_match(/mindestens eine Gruppe/i, response.body)
+  end
+
+  test "BF-003 update mit gleicher Gruppe wirft keinen Validierungsfehler" do
+    sign_in_as(@caretaker)
+    patch gallery_path(@gallery), params: {
+      gallery: {
+        title:                @gallery.title,
+        kindergarten_year_id: @year.id,
+        group_ids:            [ @group_baeren.id ]
+      }
+    }
+    assert_redirected_to gallery_path(@gallery)
+  end
+
+  test "BF-003 update mit Validierungsfehler verliert KEINE bestehenden Gruppen (Datenintegrität)" do
+    sign_in_as(@caretaker)
+    original_group_ids = @gallery.groups.pluck(:id)
+    assert_not_empty original_group_ids
+
+    patch gallery_path(@gallery), params: {
+      gallery: {
+        title: "",  # Pflichtfeld leer → Validierung schlägt fehl
+        kindergarten_year_id: @year.id,
+        group_ids: [ @group_loewen.id ]
+      }
+    }
+    assert_response :unprocessable_entity
+    assert_equal original_group_ids.sort, @gallery.reload.groups.pluck(:id).sort
+  end
+
+  test "BF-003 update mit mehreren Gruppen funktioniert" do
+    sign_in_as(@caretaker)
+    patch gallery_path(@gallery), params: {
+      gallery: {
+        title:                @gallery.title,
+        kindergarten_year_id: @year.id,
+        group_ids:            [ @group_baeren.id, @group_loewen.id ]
+      }
+    }
+    assert_redirected_to gallery_path(@gallery)
+    assert_equal [ @group_baeren.id, @group_loewen.id ].sort,
+                 @gallery.reload.groups.pluck(:id).sort
+  end
+
   test "parent cannot create gallery (403)" do
     sign_in_as(@parent)
     post galleries_path, params: {

@@ -1878,7 +1878,7 @@
       "id": "BF-003",
       "name": "Galleries Validierungsfehler obwohl Gruppen ausgewählt",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-galleries-validierung-bug.json",
       "short_description": "Bug: Beim Erstellen/Bearbeiten einer Galerie schlägt 'mindestens eine Gruppe muss zugeordnet sein' fehl, obwohl Gruppen ausgewählt sind.",
       "description": "Reproduktion per agent-browser, Ursachenanalyse (Strong-Params / nested_attributes / Validation), Fix und Regressions-Test. Erwartet: Validierung greift nur bei tatsächlich leerer Auswahl. Spec: docs/spec-galleries-validierung-bug.json",

@@ -22,7 +22,7 @@ class GalleriesController < ApplicationController
   def create
     @gallery = Gallery.new(gallery_params)
     @gallery.created_by = current_user
-    assign_groups
+    submitted_group_ids.each { |gid| @gallery.gallery_groups.build(group_id: gid) }
 
     if @gallery.save
       handle_photo_uploads if params[:gallery][:photos].present?
@@ -42,8 +42,16 @@ class GalleriesController < ApplicationController
   end
 
   def update
-    assign_groups
-    if @gallery.update(gallery_params)
+    saved = false
+    new_group_ids = submitted_group_ids
+    @gallery.transaction do
+      @gallery.assign_attributes(gallery_params)
+      @gallery.group_ids = new_group_ids
+      saved = @gallery.save
+      raise ActiveRecord::Rollback unless saved
+    end
+
+    if saved
       handle_photo_uploads if params[:gallery][:photos].present?
       redirect_to gallery_path(@gallery), notice: "Galerie wurde aktualisiert."
     else
@@ -88,10 +96,8 @@ class GalleriesController < ApplicationController
     render plain: "Zugriff verweigert", status: :forbidden
   end
 
-  def assign_groups
-    group_ids = Array(params.dig(:gallery, :group_ids)).reject(&:blank?)
-    @gallery.gallery_groups.destroy_all if @gallery.persisted?
-    group_ids.each { |gid| @gallery.gallery_groups.build(group_id: gid) }
+  def submitted_group_ids
+    Array(params.dig(:gallery, :group_ids)).reject(&:blank?)
   end
 
   def handle_photo_uploads
