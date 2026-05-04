@@ -202,6 +202,38 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{new_child_path}']"
   end
 
+  # F24: Caretaker-Dashboard Geburtstags-Hero mit Confetti
+  test "F24 Staff-Dashboard zeigt Birthdays-Hero" do
+    sign_in_as(@staff)
+    get staff_dashboard_path
+    assert_response :success
+    assert_match(/mw-birthdays-hero/, response.body)
+  end
+
+  test "F24 Confetti-Container erscheint wenn Geburtstage in 7 Tagen anstehen" do
+    sign_in_as(@staff)
+    today = Date.current
+    Child.create!(
+      first_name: "Lina", last_name: "Geburtstag",
+      date_of_birth: today.change(year: today.year - 4) + 3.days,
+      group: @group_a, kindergarten_year: @year, photo_consent: true
+    )
+    get staff_dashboard_path
+    assert_response :success
+    assert_match(/mw-confetti/, response.body)
+    assert_match "Lina", response.body
+  end
+
+  test "F24 Kein Confetti-Container wenn keine Geburtstage in 7 Tagen" do
+    sign_in_as(@staff)
+    Child.where.not(id: nil).find_each do |c|
+      c.update_columns(date_of_birth: Date.current.change(year: c.date_of_birth.year) + 60.days)
+    end
+    get staff_dashboard_path
+    assert_response :success
+    assert_no_match(/mw-confetti/, response.body)
+  end
+
   private
 
   def build_event(title, group, date)

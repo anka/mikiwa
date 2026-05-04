@@ -28,5 +28,4 @@ class BirthdaysController < ApplicationController
     this_year = dob.change(year: today.year)
     this_year >= today ? this_year : dob.change(year: today.year + 1)
   end
-  helper_method :next_birthday
 end

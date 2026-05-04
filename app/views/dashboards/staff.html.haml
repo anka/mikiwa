@@ -7,6 +7,12 @@
       = current_user.first_name.presence || current_user.email
     %p.mw-dashboard__date= l(Date.today, format: :long)
 
+  = render "shared/birthdays_hero",
+      upcoming:      @upcoming_birthdays,
+      next_upcoming: @next_birthday_child,
+      days_ahead:    @hero_days_ahead,
+      confetti:      true
+
   .mw-dashboard-section
     .mw-dashboard-section__header
       .mw-dashboard-section__icon

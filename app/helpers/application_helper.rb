@@ -35,6 +35,15 @@ module ApplicationHelper
     )
   end
 
+  # Returns the next occurrence of a recurring birthday on or after `today`.
+  # Centralised so both BirthdaysController and the shared birthdays_hero
+  # partial use the same logic.
+  def next_birthday(date_of_birth, today = Date.today)
+    return nil unless date_of_birth
+    bday = date_of_birth.change(year: today.year)
+    bday < today ? bday.change(year: today.year + 1) : bday
+  end
+
   def whatsapp_share_url(title, page_url)
     text = "#{title} – #{page_url}"
     "https://wa.me/?text=#{CGI.escape(text)}"

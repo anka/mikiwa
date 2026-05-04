@@ -22,5 +22,8 @@ class DashboardsController < ApplicationController
     @children_without_consent = svc.children_without_consent
     @group_stats          = svc.group_statistics
     @active_year          = svc.active_year
+    @upcoming_birthdays   = svc.upcoming_birthdays
+    @next_birthday_child  = svc.next_birthday_child if @upcoming_birthdays.empty?
+    @hero_days_ahead      = StaffDashboardService::UPCOMING_BIRTHDAYS_DAYS
   end
 end

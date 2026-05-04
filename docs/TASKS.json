@@ -1701,7 +1701,7 @@
       "id": "F24",
       "name": "Caretaker-Dashboard Geburtstags-Hero mit Confetti",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-dashboard-hero-confetti.json",
       "short_description": "Dashboard für Betreuer rendert die Birthdays-Hero (F22) und ergänzt eine kurze Confetti-Animation für anstehende Geburtstage.",
       "description": "Caretaker-Dashboard bindet die wiederverwendbare Birthdays-Hero-Komponente ein. Beim Laden läuft eine kurze Confetti-Animation (canvas-confetti oder Tiny-Implementierung) wenn Geburtstage in den nächsten 7 Tagen anstehen. Animation respektiert prefers-reduced-motion. Spec: docs/spec-dashboard-hero-confetti.json",

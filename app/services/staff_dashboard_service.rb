@@ -23,6 +23,33 @@ class StaffDashboardService
     end
   end
 
+  UPCOMING_BIRTHDAYS_DAYS = 7
+
+  def upcoming_birthdays(days_ahead: UPCOMING_BIRTHDAYS_DAYS)
+    today = Date.today
+    window_end = today + days_ahead.days
+    sorted_active_children
+      .select { |c| next_birthday(c.date_of_birth, today).between?(today, window_end) }
+  end
+
+  def next_birthday_child
+    sorted_active_children.first
+  end
+
+  private
+
+  def sorted_active_children
+    @sorted_active_children ||= Child.active.includes(:group).where.not(date_of_birth: nil)
+      .sort_by { |c| next_birthday(c.date_of_birth, Date.today) }
+  end
+
+  def next_birthday(dob, today)
+    bday = dob.change(year: today.year)
+    bday < today ? bday.change(year: today.year + 1) : bday
+  end
+
+  public
+
   def events_without_gallery
     return Event.none unless @active_year
     past_event_ids = CalendarEvent.where(
