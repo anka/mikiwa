@@ -1,0 +1,199 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:mobile-layout-scroll-burger",
+  "name": "Mobile Layout: Horizontales Scrollen entfernen, Burger-Menü ergänzen",
+  "description": "Auf der mobilen Ansicht entsteht aktuell horizontales Scrolling, was UX-Schmerzen erzeugt. Zudem sind nicht alle Menüpunkte über die Bottom-Nav erreichbar – ein Burger-Menü soll als Ergänzung volle Navigation bieten.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "In der mobilen Ansicht (Betreuer und Eltern) tritt horizontales Scrolling auf (siehe docs/mobile-scrolling.png). Außerdem sind in der Bottom-Nav nicht alle relevanten Menüpunkte abgedeckt – Nutzer landen in Sackgassen, weil bestimmte Bereiche nicht erreichbar sind.",
+    "affectedUsers": "Alle mobilen Anwender (iOS Safari, Android Chrome).",
+    "costOfInaction": "Schlechte mobile Experience; Eltern und Betreuer wechseln auf Desktop oder verlieren Funktionen."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Kein horizontales Scrolling auf mobilen Viewports unter 768px",
+      "type": "user",
+      "target": "document.body.scrollWidth ≤ window.innerWidth"
+    },
+    {
+      "description": "Vollständige Navigation auf Mobile via Burger-Menü erreichbar",
+      "type": "user",
+      "target": "Burger-Icon in Topbar; Slide-In/Drawer mit allen Sidebar-Punkten"
+    },
+    {
+      "description": "Bottom-Nav bleibt für die wichtigsten 3-5 Punkte; Burger ergänzt für alles Andere",
+      "type": "user",
+      "target": "Bottom-Nav unverändert verfügbar"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Komplettes Mobile-Redesign",
+      "rationale": "Diese Spec adressiert die zwei spezifischen Schmerzen; größeres Redesign separat"
+    },
+    {
+      "description": "Native App",
+      "rationale": "Out of scope; PWA bleibt Fokus"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Mobiler Anwender",
+      "capability": "Auf der App scrollen ohne ungewollte Horizontal-Bewegung",
+      "benefit": "Saubere Lese-Experience",
+      "priority": 0
+    },
+    {
+      "persona": "Mobiler Anwender",
+      "capability": "Über ein Burger-Menü zu allen Bereichen navigieren",
+      "benefit": "Keine Sackgassen, vollständige Funktionalität",
+      "priority": 0
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Audit aller mobilen Seiten: Identifikation der Elemente, die horizontalen Overflow erzeugen",
+        "acceptanceCriteria": [
+          {
+            "given": "Audit abgeschlossen",
+            "when": "Viewport iPhone 12 (390px) und Pixel (412px) getestet",
+            "then": "Pro Seite ist dokumentiert, welches Element overflow verursacht"
+          }
+        ],
+        "technicalNotes": "agent-browser Skill für Tests; * { outline: 1px solid red } Debug-Trick; CSS overflow-x: hidden NUR als letzte Option",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Fix der identifizierten Overflow-Quellen (z.B. Tabellen, lange Strings, fixe Breiten)",
+        "acceptanceCriteria": [
+          {
+            "given": "Fix deployed",
+            "when": "Viewport 320-414px",
+            "then": "Kein horizontales Scrolling mehr auf allen Hauptseiten"
+          }
+        ],
+        "technicalNotes": "Tabellen → siehe F32 Spec; min-width-Probleme; lange Wörter mit overflow-wrap",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Burger-Menü in Topbar auf Mobile (versteckt auf Desktop)",
+        "acceptanceCriteria": [
+          {
+            "given": "Mobiler Viewport",
+            "when": "Topbar gerendert",
+            "then": "Burger-Icon links/rechts sichtbar, Tap öffnet Drawer mit allen Sidebar-Einträgen"
+          },
+          {
+            "given": "Desktop-Viewport",
+            "when": "Topbar gerendert",
+            "then": "Kein Burger; volle Sidebar sichtbar"
+          }
+        ],
+        "technicalNotes": "Stimulus-Controller; Drawer aus rechts/links; A11y: Fokus-Trap, Esc schließt, aria-expanded",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Bottom-Nav bleibt erhalten und enthält die wichtigsten Punkte je Rolle (Eltern siehe F31)",
+        "acceptanceCriteria": [
+          {
+            "given": "Mobiler Viewport mit Bottom-Nav",
+            "when": "Burger geöffnet",
+            "then": "Burger-Drawer zeigt vollständige Navigation; Bottom-Nav bleibt sichtbar oder eindeutig zweitrangig"
+          }
+        ],
+        "technicalNotes": "",
+        "dependencies": ["R-P0-003"]
+      },
+      {
+        "id": "R-P0-005",
+        "description": "agent-browser Test deckt Mobile-Viewports ab und prüft horizontalen Overflow",
+        "acceptanceCriteria": [
+          {
+            "given": "Test läuft auf 390px Viewport",
+            "when": "Hauptseiten durchgeklickt",
+            "then": "scrollWidth ≤ innerWidth; Burger-Drawer öffnet/schließt"
+          }
+        ],
+        "technicalNotes": "agent-browser",
+        "dependencies": ["R-P0-002", "R-P0-003"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Drawer mit Animation (slide-in)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Respect prefers-reduced-motion",
+        "dependencies": ["R-P0-003"]
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Schwung/Swipe-Geste zum Öffnen/Schließen",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": ["R-P0-003"]
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Native PWA-Install-Prompt mit Onboarding",
+        "rationale": "Eigene Spec"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Mobile Bounce-Rate",
+        "description": "Anteil mobiler Sessions <30 Sekunden",
+        "target": "Reduktion um 20%",
+        "measurementMethod": "Analytics",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Mobile Sessions",
+        "description": "Anzahl mobiler Sessions pro Woche",
+        "target": "Steigend",
+        "measurementMethod": "Analytics",
+        "evaluationAt": "90 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Burger links oder rechts in Topbar?",
+      "owner": "design",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "F32 Mobile Tabellen-Layout (gemeinsame Overflow-Quellen)" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Audit + Overflow-Fixes + Burger-Menü mit Drawer + Tests" }
+    ]
+  }
+}

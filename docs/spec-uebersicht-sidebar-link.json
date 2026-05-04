@@ -1,0 +1,153 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:uebersicht-sidebar-link",
+  "name": "Übersicht-Navigationspunkt in Sidebar (Dashboard-Link)",
+  "description": "Ein neuer Navigationspunkt 'Übersicht' in der Sidebar verlinkt direkt auf das Dashboard und macht es als Startpunkt explizit erreichbar.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell ist das Dashboard nur über Logo-Klick oder direkten URL-Aufruf erreichbar. Es fehlt ein dedizierter Sidebar-Eintrag, der konsistent mit den anderen Bereichen sichtbar ist.",
+    "affectedUsers": "Alle eingeloggten Benutzer (Admin, Staff, Parent).",
+    "costOfInaction": "Discoverability-Problem; Nutzer landen nicht zuverlässig auf der Übersicht."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Ein 'Übersicht'-Eintrag ist als oberster Sidebar-Punkt verfügbar",
+      "type": "user",
+      "target": "Eintrag oben, mit passendem Icon (Home/Layout)"
+    },
+    {
+      "description": "Aktiver Zustand wird korrekt angezeigt, wenn Dashboard offen ist",
+      "type": "user",
+      "target": "Active-Style auf Übersichts-Link wenn current_page?(dashboard_path)"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Re-Design der gesamten Sidebar",
+      "rationale": "Nur ein Eintrag wird ergänzt"
+    },
+    {
+      "description": "Personalisierte / sortierbare Sidebar",
+      "rationale": "Out of scope"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Beliebiger eingeloggter User",
+      "capability": "Über die Sidebar mit einem Klick zur Übersicht/Dashboard zurückkehren",
+      "benefit": "Vorhersagbare Navigation, schneller Reset-Pfad",
+      "priority": 0
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Sidebar enthält einen Eintrag 'Übersicht', der zum jeweiligen Dashboard linkt (Caretaker bzw. Parent)",
+        "acceptanceCriteria": [
+          {
+            "given": "Betreuer ist eingeloggt",
+            "when": "Sidebar gerendert",
+            "then": "Eintrag 'Übersicht' linkt zum Caretaker-Dashboard"
+          },
+          {
+            "given": "Eltern ist eingeloggt",
+            "when": "Sidebar gerendert",
+            "then": "Eintrag 'Übersicht' linkt zum Eltern-Dashboard"
+          }
+        ],
+        "technicalNotes": "app/views/shared/_sidebar.html.haml oder vergleichbar; Helper für richtigen Pfad pro Rolle",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Aktiver Zustand wird visuell angezeigt",
+        "acceptanceCriteria": [
+          {
+            "given": "Nutzer ist auf der Dashboard-Seite",
+            "when": "Sidebar gerendert",
+            "then": "Eintrag 'Übersicht' hat aktiven Style (siehe Mikiwa-Design)"
+          }
+        ],
+        "technicalNotes": "current_page? Helper",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Icon und Position folgen Mikiwa Design System",
+        "acceptanceCriteria": [
+          {
+            "given": "Sidebar gerendert",
+            "when": "Visuelle Prüfung",
+            "then": "Icon, Spacing, Typografie konsistent zu anderen Sidebar-Items"
+          }
+        ],
+        "technicalNotes": "Skill mikiwa-design konsultieren",
+        "dependencies": ["R-P0-001"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Tooltip mit kurzer Beschreibung bei eingeklappter Sidebar (sofern Sidebar-Collapse existiert)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Personalisierte Startseite konfigurierbar",
+        "rationale": "Erweiterter Scope"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Klicks auf Übersicht-Eintrag",
+        "description": "Häufigkeit der Nutzung",
+        "target": ">5/Tag pro Nutzer in den ersten 14 Tagen",
+        "measurementMethod": "Rails Logs",
+        "evaluationAt": "14 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Reduktion direkter URL-Aufrufe",
+        "description": "Indirekte Indikation",
+        "target": "Reduktion sichtbar",
+        "measurementMethod": "Rails Logs",
+        "evaluationAt": "60 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Soll der Eintrag 'Übersicht' oder 'Dashboard' heißen?",
+      "owner": "design",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [],
+    "phases": [
+      { "name": "v1", "scope": "Sidebar-Eintrag inkl. Active-Style und Icon" }
+    ]
+  }
+}

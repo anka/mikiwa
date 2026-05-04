@@ -1,0 +1,168 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:geburtstage-hero-section",
+  "name": "Geburtstags-Hero-Section auf der Geburtstagsübersicht",
+  "description": "Die Geburtstagsübersicht (/birthdays) erhält eine Hero-Section, die kommende Geburtstage der nächsten 7 Tage prominent und visuell ansprechend darstellt.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell ist die Geburtstagsübersicht unter /birthdays eine reine Liste. Anstehende Geburtstage gehen visuell unter, obwohl sie der wichtigste Teil der Information sind: Welcher Geburtstag steht in den nächsten Tagen an?",
+    "affectedUsers": "Betreuer, die Geburtstagsfeiern vorbereiten und Eltern informieren wollen. Tritt täglich auf.",
+    "costOfInaction": "Geburtstage werden übersehen, Vorbereitung fällt knapper aus, weniger persönliche Atmosphäre für die Kinder."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Die nächsten 7 Tage Geburtstage sind sofort sichtbar und visuell hervorgehoben",
+      "type": "user",
+      "target": "Hero-Section ist im sichtbaren Bereich (above the fold) auf Desktop und Mobile"
+    },
+    {
+      "description": "Wiederverwendbare Komponente, die auch im Caretaker-Dashboard eingesetzt werden kann (siehe F24)",
+      "type": "business",
+      "target": "Eigener Partial / ViewComponent, parametrisierbar (Anzahl Tage, mit/ohne Confetti)"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Push-Benachrichtigungen oder E-Mail-Reminder an Betreuer",
+      "rationale": "Eigener Channel, eigene Spec"
+    },
+    {
+      "description": "Geschenke- oder Karten-Bestellintegration",
+      "rationale": "Out of scope"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer",
+      "capability": "Auf einen Blick erkennen, wer in den nächsten 7 Tagen Geburtstag hat",
+      "benefit": "Vorbereitung von Geburtstagsfeiern und persönliche Gratulation",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Bei einem Klick auf einen Geburtstagseintrag zur Kind-Show-Seite springen",
+      "benefit": "Schneller Kontext, z.B. Foto-Zustimmung oder Eltern-Kontakt",
+      "priority": 1
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Hero-Section am Kopf der /birthdays-Seite zeigt alle Kinder mit Geburtstag in den nächsten 7 Tagen",
+        "acceptanceCriteria": [
+          {
+            "given": "Drei Kinder haben in den nächsten 7 Tagen Geburtstag",
+            "when": "Betreuer öffnet /birthdays",
+            "then": "Hero-Section zeigt drei Karten/Tiles mit Name, Datum, Wochentag, Alter (neues)"
+          },
+          {
+            "given": "Kein Kind hat in den nächsten 7 Tagen Geburtstag",
+            "when": "Betreuer öffnet /birthdays",
+            "then": "Hero zeigt freundlichen Empty-State mit nächstem anstehenden Geburtstag inkl. Datum"
+          }
+        ],
+        "technicalNotes": "Berechnung in Birthday-Query: where birthday next 7 days, gruppiert sortiert nach Datum; siehe mikiwa-design SKILL für visuelles Styling",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Komponente ist als Partial/ViewComponent extrahiert, damit sie wiederverwendet werden kann",
+        "acceptanceCriteria": [
+          {
+            "given": "Caretaker-Dashboard möchte dieselbe Hero einbinden",
+            "when": "Render-Aufruf erfolgt",
+            "then": "Komponente kann mit Parametern (z.B. days_ahead) eingebunden werden"
+          }
+        ],
+        "technicalNotes": "app/views/shared/_birthdays_hero.html.haml ODER app/components/birthdays_hero_component.rb",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Visuelles Design folgt dem Mikiwa Design System (Skill: mikiwa-design)",
+        "acceptanceCriteria": [
+          {
+            "given": "Hero ist gerendert",
+            "when": "Visuell geprüft",
+            "then": "Farben, Typografie, Abstände und Karten-Stil entsprechen dem Design-System"
+          }
+        ],
+        "technicalNotes": "Design-System Tokens aus app/assets/tailwind/application.css und Skill-Referenz nutzen",
+        "dependencies": ["R-P0-001"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Heutige Geburtstage werden visuell hervorgehoben (z.B. Akzent-Farbe, Krone-Icon)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Filter / Tab-Auswahl 7 / 14 / 30 Tage",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": ["R-P0-001"]
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Geburtstage von Mitarbeitern/Eltern getrennt anzeigbar machen",
+        "rationale": "Aktuell nur Kinder; Erweiterung später"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Aufrufe von /birthdays",
+        "description": "Page-Views auf /birthdays nach Launch",
+        "target": "+25% gegenüber Baseline",
+        "measurementMethod": "Rails Logs / Analytics",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Qualitative Rückmeldung der Betreuer",
+        "description": "Positive Nennung 'Geburtstage sehen wir jetzt direkt'",
+        "target": "≥3 positive Rückmeldungen",
+        "measurementMethod": "Feedback-Channel",
+        "evaluationAt": "90 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Hero auch auf Mobile als horizontale Scroll-Carousel oder besser als vertikale Karten-Stapel?",
+      "owner": "design",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "Mikiwa Design System (Skill mikiwa-design)" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Hero-Komponente auf /birthdays mit Empty-State und Verlinkung" }
+    ]
+  }
+}

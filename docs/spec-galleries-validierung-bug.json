@@ -1,0 +1,176 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:galleries-validierung-bug",
+  "name": "Bugfix: Galleries - 'mindestens eine Gruppe' obwohl Gruppen ausgewählt",
+  "description": "Beim Anlegen oder Bearbeiten einer Galerie schlägt die Validierung mit 'Gallery groups mindestens eine Gruppe muss zugeordnet sein' fehl, obwohl Gruppen im Formular ausgewählt sind. Der Bug muss reproduzierbar isoliert und behoben werden.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Beim Speichern einer Galerie schlägt die Validierung gallery_groups (mindestens eine Gruppe) fehl, obwohl der Nutzer im Formular eine oder mehrere Gruppen ausgewählt hat. Vermutete Ursachen: fehlende strong_params, fehlerhafte _destroy/Reject-Logik bei nested_attributes, oder Reset des Werts vor der Validierung.",
+    "affectedUsers": "Betreuer und Admins, die Galerien anlegen oder bearbeiten. Tritt zuverlässig wiederholt auf.",
+    "costOfInaction": "Galerien-Funktion ist nicht zuverlässig nutzbar; Eltern erhalten weniger Foto-Updates."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Galerien können angelegt und bearbeitet werden, sofern mindestens eine Gruppe zugeordnet wurde",
+      "type": "user",
+      "target": "100% Erfolgsrate beim Speichern bei korrekter Eingabe"
+    },
+    {
+      "description": "Reproduzierbarkeit per agent-browser dokumentiert; Fix durch Test abgesichert",
+      "type": "business",
+      "target": "Mindestens ein System- oder Integration-Test deckt Erstellen UND Bearbeiten ab"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Re-Design des Galerien-Formulars",
+      "rationale": "Nur Bug; UI-Überarbeitung ist eigene Spec"
+    },
+    {
+      "description": "Migration bestehender Galerien ohne Gruppen",
+      "rationale": "Bug-Fix selbst löst das nicht"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer",
+      "capability": "Eine Galerie mit ausgewählten Gruppen anlegen und sie wird ohne Validierungsfehler gespeichert",
+      "benefit": "Galerien-Workflow funktioniert wieder",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Eine bestehende Galerie bearbeiten (Gruppen ändern) ohne Validierungsfehler",
+      "benefit": "Pflege bleibt möglich",
+      "priority": 0
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Reproduktion per agent-browser dokumentiert (Schritt-für-Schritt + erwarteter vs. aktueller Output)",
+        "acceptanceCriteria": [
+          {
+            "given": "agent-browser navigiert zu /galleries/new",
+            "when": "Formular ausgefüllt mit Titel + 1 Gruppe und Submit",
+            "then": "Aktuell: Validierungsfehler; soll: Galerie wird gespeichert"
+          }
+        ],
+        "technicalNotes": "agent-browser Skill nutzen; Output als kurze Notiz im PR",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Ursache identifizieren (Strong-Params, nested_attributes, has_many :through Validation)",
+        "acceptanceCriteria": [
+          {
+            "given": "Code-Analyse abgeschlossen",
+            "when": "Ursache benannt",
+            "then": "Ein konkreter Code-Pfad ist als Ursache markiert"
+          }
+        ],
+        "technicalNotes": "GalleriesController, Gallery-Model, ggf. accepts_nested_attributes_for :gallery_groups",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Fix implementieren, sodass Erstellen UND Bearbeiten mit ausgewählten Gruppen funktionieren",
+        "acceptanceCriteria": [
+          {
+            "given": "Korrektur ist deployed",
+            "when": "Galerie mit 1+ Gruppen gespeichert",
+            "then": "Galerie persistiert; Validierung greift nur bei tatsächlich leerer Auswahl"
+          },
+          {
+            "given": "Korrektur deployed",
+            "when": "Galerie ohne Gruppe gespeichert",
+            "then": "Validierungsfehler erscheint mit klarer Fehlermeldung"
+          }
+        ],
+        "technicalNotes": "Mögliche Fixes: (a) Strong-Params mit group_ids: []; (b) reject_if-Bedingung; (c) inverse_of-Setup",
+        "dependencies": ["R-P0-002"]
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Regressions-Test: System- oder Integration-Test für Erstellen + Bearbeiten",
+        "acceptanceCriteria": [
+          {
+            "given": "Galerie wird angelegt mit Gruppen-IDs",
+            "when": "Test läuft",
+            "then": "Test greift; Speichern erfolgreich"
+          }
+        ],
+        "technicalNotes": "test/system/galleries_test.rb oder test/controllers/galleries_controller_test.rb",
+        "dependencies": ["R-P0-003"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Validierungsfehler-Anzeige im Formular klar zugeordnet (welches Feld)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Default-Gruppe beim Erstellen aus Kontext ableiten",
+        "rationale": "Ergänzung; nicht Bestandteil des Bugfix"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Galerien-Erstell-Erfolgsrate",
+        "description": "% der POST /galleries ohne Validierungsfehler bei gültiger Eingabe",
+        "target": "100%",
+        "measurementMethod": "Rails Logs / Test-Suite",
+        "evaluationAt": "Direkt nach Fix"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Support-Tickets zu Galerien",
+        "description": "'Kann Galerie nicht speichern' Tickets",
+        "target": "0",
+        "measurementMethod": "Support-Channel",
+        "evaluationAt": "30 Tage post-fix"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Soll bei nur einer existierenden Gruppe diese automatisch als Default vorausgewählt werden?",
+      "owner": "stakeholder",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [
+      { "description": "Blocker für Foto-Workflow – schnellstmöglich", "date": null }
+    ],
+    "dependencies": [
+      { "description": "agent-browser Skill verfügbar" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Reproduktion + Fix + Test" }
+    ]
+  }
+}

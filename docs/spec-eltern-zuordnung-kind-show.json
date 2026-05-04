@@ -1,0 +1,207 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:eltern-zuordnung-kind-show",
+  "name": "Eltern-Zuordnung in Kind-Show-View verschieben",
+  "description": "Die Mehrfach-Zuordnung von Elternteilen zu einem Kind soll von der Bearbeiten-Maske in die Detail-Ansicht (Show) eines Kindes verschoben werden, damit Pfleger und Admins die Zuordnung kontextual und unabhängig von einer kompletten Bearbeitung verwalten können.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell können Eltern (1..n) einem Kind nur in der Bearbeiten-Maske (children/edit) zugeordnet werden. Das ist umständlich, weil das Bearbeiten ein vollständiges Formular mit allen Stammdaten öffnet, obwohl oft nur die Eltern-Beziehung verändert werden soll. Die Show-Seite des Kindes zeigt die Zuordnungen nur lesend.",
+    "affectedUsers": "Betreuer und Admins, die Kindern Eltern (oder weitere Eltern, z.B. Stiefelternteile) zuordnen oder eine Zuordnung entfernen wollen. Trifft jede Familien-Konstellation, die nicht über das initiale Anlege-Formular abgedeckt ist.",
+    "costOfInaction": "Die Pflege der Eltern-Kind-Beziehungen ist unnötig aufwändig. Mitarbeiter müssen für eine kleine Beziehungsänderung das vollständige Stammdatenformular öffnen und absenden, was Fehlerrisiko und Reibung erhöht."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Eltern-Zuordnungen können direkt in der Kind-Show-View verwaltet werden",
+      "type": "user",
+      "target": "Hinzufügen und Entfernen einer Eltern-Beziehung in maximal 2 Klicks aus der Show-Seite"
+    },
+    {
+      "description": "Edit-Form wird auf reine Stammdatenpflege fokussiert",
+      "type": "business",
+      "target": "Eltern-Block aus children/edit entfernt; Tests grün"
+    },
+    {
+      "description": "Bestehende UX bleibt für Erstanlage erhalten – beim Anlegen kann weiterhin ein erstes Elternteil zugeordnet werden",
+      "type": "user",
+      "target": "Children/new Workflow unverändert"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Anlegen neuer Eltern (User-Konten) aus der Kind-Show-View heraus",
+      "rationale": "Bleibt im bestehenden Eltern-Anlegeprozess (Admin/User-Verwaltung); wir verlinken nur bestehende Eltern"
+    },
+    {
+      "description": "Beziehungstyp-Differenzierung (Mutter, Vater, Sorgeberechtigte:r etc.)",
+      "rationale": "Aktuelles Datenmodell behandelt alle Eltern gleich; Differenzierung ist eigene Aufgabe"
+    },
+    {
+      "description": "Bulk-Zuordnung mehrerer Kinder gleichzeitig",
+      "rationale": "Selten benötigter Use-Case; kann später ergänzt werden"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer",
+      "capability": "Auf der Kind-Show-Seite ein zusätzliches Elternteil zuordnen",
+      "benefit": "Schnelle Pflege der Familien-Beziehung ohne komplettes Edit-Formular zu öffnen",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Auf der Kind-Show-Seite eine bestehende Eltern-Zuordnung entfernen",
+      "benefit": "Trennungs-/Umzugs-Situationen können gepflegt werden ohne Daten-Reset",
+      "priority": 1
+    },
+    {
+      "persona": "Admin",
+      "capability": "Sehen, welche Eltern einem Kind zugeordnet sind, mit direkter Aktion zum Ändern",
+      "benefit": "Klare, kontextuelle Verwaltung an einem Ort",
+      "priority": 2
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Kind-Show-View enthält einen Abschnitt 'Eltern' mit Liste der zugeordneten Elternteile und Aktionen 'Hinzufügen' und 'Entfernen'",
+        "acceptanceCriteria": [
+          {
+            "given": "Ein Kind hat mindestens ein zugeordnetes Elternteil",
+            "when": "Betreuer öffnet die Kind-Show-Seite",
+            "then": "Alle zugeordneten Eltern werden mit Namen angezeigt, jeweils mit 'Entfernen'-Aktion"
+          },
+          {
+            "given": "Ein Kind hat keine Eltern zugeordnet",
+            "when": "Betreuer öffnet die Kind-Show-Seite",
+            "then": "Ein Hinweis 'Keine Eltern zugeordnet' und Button 'Elternteil hinzufügen' werden angezeigt"
+          }
+        ],
+        "technicalNotes": "Eigener Partial app/views/children/_parents_section.html.haml; eigene Route POST/DELETE child_parent",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Hinzufügen eines Elternteils öffnet einen Dialog/Auswahl mit Suche über bestehende Eltern-User",
+        "acceptanceCriteria": [
+          {
+            "given": "Mindestens ein Eltern-User existiert, der dem Kind noch nicht zugeordnet ist",
+            "when": "Betreuer klickt 'Elternteil hinzufügen' und wählt einen Eltern-User",
+            "then": "Die Verknüpfung wird gespeichert und ohne Reload-Sprung in der Eltern-Liste angezeigt"
+          },
+          {
+            "given": "Alle existierenden Eltern-User sind dem Kind bereits zugeordnet",
+            "when": "Betreuer öffnet den Hinzufügen-Dialog",
+            "then": "Klare Meldung 'Alle Eltern bereits zugeordnet' und Hinweis auf Anlegen über Benutzerverwaltung"
+          }
+        ],
+        "technicalNotes": "Stimulus-Controller; Server-seitige Suche per Filter-Parameter; Turbo-Frame Update der Eltern-Liste",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Eltern-Block aus children/edit-Form entfernen",
+        "acceptanceCriteria": [
+          {
+            "given": "Betreuer öffnet Edit-Formular eines bestehenden Kindes",
+            "when": "Das Formular wird gerendert",
+            "then": "Es enthält keine Felder mehr für Eltern-Zuordnung; Hinweis 'Eltern werden in der Detailansicht verwaltet' mit Link zur Show-Seite"
+          }
+        ],
+        "technicalNotes": "Eltern-Auswahl aus app/views/children/_form.html.haml entfernen; Migration der Tests",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Berechtigungen: Sowohl Admin als auch Staff dürfen Eltern hinzufügen/entfernen; Eltern selbst nicht",
+        "acceptanceCriteria": [
+          {
+            "given": "Eingeloggter Eltern-User",
+            "when": "Versuch, eine Eltern-Zuordnung zu ändern",
+            "then": "Pundit/Policy verweigert mit 403"
+          }
+        ],
+        "technicalNotes": "ChildPolicy#manage_parents? für Staff/Admin true",
+        "dependencies": []
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Bei initialem Anlegen eines Kindes (children/new) bleibt das Hinzufügen eines ersten Elternteils im Formular möglich",
+        "acceptanceCriteria": [
+          {
+            "given": "Betreuer legt neues Kind an",
+            "when": "Formular wird abgeschickt mit ausgewähltem Elternteil",
+            "then": "Verknüpfung wird gespeichert"
+          }
+        ],
+        "technicalNotes": "Children/new behält den Block; nur Children/edit wird bereinigt",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Audit-Log: Jede Hinzufügen/Entfernen-Aktion einer Eltern-Beziehung wird mit Zeitstempel und Akteur protokolliert",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Optional, falls Audit-Mechanismus bereits existiert",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Beziehungstyp (Mutter/Vater/Sorgeberechtigt) bei der Zuordnung erfassen",
+        "rationale": "Erfordert Datenmodell-Erweiterung; eigene Spec"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Klicks bis Eltern-Zuordnung geändert",
+        "description": "Anzahl Klicks vom Kind-Detail bis Beziehung geändert",
+        "target": "≤ 3 Klicks",
+        "measurementMethod": "Manuelles UX-Review und automatisierter Browser-Test",
+        "evaluationAt": "Direkt nach Deployment"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Support-Anfragen zu Eltern-Zuordnung",
+        "description": "Anzahl Anfragen 'Wie ordne ich einem Kind ein weiteres Elternteil zu?'",
+        "target": "0 Anfragen pro Quartal",
+        "measurementMethod": "Support-Channel",
+        "evaluationAt": "90 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Soll der Hinzufügen-Dialog ein Modal oder ein Inline-Auswahlbereich sein?",
+      "owner": "design",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "Bestehendes Child-Parent-Datenmodell (has_many :through)" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Show-View Eltern-Block, Hinzufügen-Dialog, Entfernen, Edit-Form bereinigt, Pundit-Policy" }
+    ]
+  }
+}

@@ -1,0 +1,226 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:galleries-multi-upload",
+  "name": "Galerien Mehrfach-Upload mit Drag & Drop",
+  "description": "Der Mehrfach-Upload von Fotos in Galerien wird verbessert: Dateien können bequem per Drag & Drop in den Browser gezogen werden, und alle ausgewählten Dateien werden zuverlässig hochgeladen.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell ist der Foto-Upload in Galerien nicht zuverlässig: Mehrfach-Upload klemmt manchmal, Drag & Drop ist nicht oder nur eingeschränkt unterstützt. Das macht das Hochladen von 20-50 Fotos pro Veranstaltung mühsam.",
+    "affectedUsers": "Betreuer, die nach Veranstaltungen größere Mengen Fotos hochladen.",
+    "costOfInaction": "Fotos werden nicht hochgeladen oder nur unvollständig; Eltern erhalten weniger Foto-Updates."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Drag & Drop in den Browser-Bereich akzeptiert eine oder mehrere Bild-Dateien",
+      "type": "user",
+      "target": "Drop-Zone visuell klar; akzeptiert *.jpg/*.png/*.heic/*.webp"
+    },
+    {
+      "description": "Mehrfach-Upload zuverlässig: alle ausgewählten/gedroppten Dateien werden hochgeladen",
+      "type": "user",
+      "target": "100% der Dateien laden hoch oder zeigen klare Fehlermeldung"
+    },
+    {
+      "description": "Fortschrittsanzeige pro Datei",
+      "type": "user",
+      "target": "Visueller Progress-Indikator pro Datei + Gesamtfortschritt"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Bild-Editor (Crop/Filter) im Browser",
+      "rationale": "Out of scope; eigene Spec falls gewünscht"
+    },
+    {
+      "description": "Auto-Tagging / KI-Erkennung",
+      "rationale": "Erweiterter Scope"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer",
+      "capability": "Mehrere Fotos per Drag & Drop in die Galerie laden",
+      "benefit": "Schneller Workflow; weniger Klicks",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Den Fortschritt jedes Uploads sehen, inkl. Fehlermeldung bei Problemen",
+      "benefit": "Transparenz, Sicherheit dass nichts fehlt",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Fehlgeschlagene Uploads gezielt erneut versuchen",
+      "benefit": "Kein komplettes Re-Upload",
+      "priority": 1
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Drop-Zone in Galerien-Show oder eigener Upload-Bereich erkennt Drag-Over und Drop",
+        "acceptanceCriteria": [
+          {
+            "given": "Betreuer zieht Dateien über die Drop-Zone",
+            "when": "Drag-Over",
+            "then": "Visuelle Hervorhebung der Drop-Zone"
+          },
+          {
+            "given": "Betreuer dropt 5 Bilder",
+            "when": "Drop erfolgt",
+            "then": "Alle 5 Dateien werden zur Upload-Queue hinzugefügt"
+          }
+        ],
+        "technicalNotes": "Stimulus-Controller mit Active Storage Direct Upload; respektiert Browser-Sicherheit",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Mehrfach-Upload: alle Dateien werden parallel/seriell hochgeladen, Fehlertoleranz pro Datei",
+        "acceptanceCriteria": [
+          {
+            "given": "10 Dateien in Queue",
+            "when": "Upload startet",
+            "then": "Alle 10 werden verarbeitet; einzelne Fehler stoppen die Queue nicht"
+          }
+        ],
+        "technicalNotes": "Direct Upload Promise.all oder begrenzte Parallelität (z.B. 3 gleichzeitig)",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Progress pro Datei und Gesamtfortschritt sichtbar",
+        "acceptanceCriteria": [
+          {
+            "given": "Upload läuft",
+            "when": "Datei hochlädt",
+            "then": "Progress-Bar zeigt %"
+          }
+        ],
+        "technicalNotes": "Active Storage progress events",
+        "dependencies": ["R-P0-002"]
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Klare Fehlermeldungen bei: zu groß (>10 MB pro Datei), falsches Format, Netzwerkfehler",
+        "acceptanceCriteria": [
+          {
+            "given": "Datei ist >10 MB",
+            "when": "Upload startet",
+            "then": "Sofortige Fehlermeldung pro Datei: 'Datei zu groß (max. 10 MB)'"
+          },
+          {
+            "given": "Datei ist >10 MB",
+            "when": "Andere Dateien <=10 MB sind in derselben Queue",
+            "then": "Andere Dateien werden trotzdem hochgeladen"
+          }
+        ],
+        "technicalNotes": "Client-seitig File.size prüfen vor Upload-Start (sofortige Reaktion); Server-seitig Active Storage validates :images, content_type: image/*, size: { less_than: 10.megabytes }; Fehlermeldungen lokalisiert",
+        "dependencies": ["R-P0-002"]
+      },
+      {
+        "id": "R-P0-005",
+        "description": "Test mit agent-browser: 10 Bilder per Drag & Drop hochladen und alle landen in Galerie",
+        "acceptanceCriteria": [
+          {
+            "given": "Test setup mit 10 Bildern",
+            "when": "Upload via Drag & Drop simuliert",
+            "then": "Alle 10 Bilder erscheinen in der Galerie"
+          }
+        ],
+        "technicalNotes": "agent-browser Skill",
+        "dependencies": ["R-P0-002"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Erneut-Versuchen-Button für fehlgeschlagene Uploads",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": ["R-P0-004"]
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Bild-Vorschau (Thumbnail) während des Uploads",
+        "acceptanceCriteria": [],
+        "technicalNotes": "URL.createObjectURL",
+        "dependencies": ["R-P0-002"]
+      },
+      {
+        "id": "R-P1-003",
+        "description": "Bilder client-seitig komprimieren bei sehr großen Dateien",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Canvas-API; nur falls Performance-relevant",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Stapel-Aktionen nach Upload (Reihenfolge ändern, Beschreibungen pro Bild)",
+        "rationale": "Eigene Spec"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Erfolgsrate Mehrfach-Upload",
+        "description": "% der Dateien, die nach Drop erfolgreich gespeichert werden",
+        "target": "≥98%",
+        "measurementMethod": "agent-browser Test + Logs",
+        "evaluationAt": "Direkt nach Launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Galerie-Größe pro Veranstaltung",
+        "description": "Durchschnittliche Anzahl Fotos pro neuer Galerie",
+        "target": "Steigend (Indikator für komfortablen Upload)",
+        "measurementMethod": "DB-Query",
+        "evaluationAt": "60 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "HEIC-Konvertierung server-seitig oder Client?",
+      "owner": "engineering",
+      "blocking": false
+    }
+  ],
+  "spec:resolvedDecisions": [
+    {
+      "question": "Maximale Datei-Größe und Maximalanzahl pro Upload-Vorgang?",
+      "decision": "Maximal 10 MB pro Datei. Keine harte Grenze für Anzahl pro Vorgang (Browser-/Server-Limits gelten).",
+      "decidedAt": "2026-05-04",
+      "decidedBy": "stakeholder"
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "Bestehende Active-Storage-Konfiguration" },
+      { "description": "BF-003 Galleries-Validierung sollte vorher gefixt sein" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Drag & Drop, Mehrfach-Upload, Progress, Fehlerbehandlung, agent-browser Test" }
+    ]
+  }
+}

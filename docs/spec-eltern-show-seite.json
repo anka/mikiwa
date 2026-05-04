@@ -1,0 +1,189 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:eltern-show-seite",
+  "name": "Eltern-Detailansicht (Show-Seite)",
+  "description": "Eine eigene Detail-View für Eltern, die alle Stammdaten sowie die zugeordneten Kinder kompakt darstellt und Aktionen wie 'Bearbeiten' und 'Kontakt' bündelt.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell gibt es für Eltern keine Show-Seite – Stammdaten sind nur im Edit-Formular sichtbar. Es fehlt eine zentrale Übersicht, die schnell zeigt, wer das Elternteil ist, welche Kinder zugeordnet sind und welche Kontaktdaten verfügbar sind.",
+    "affectedUsers": "Betreuer und Admins, die im Tagesgeschäft Eltern referenzieren (Notfall-Kontakt, Geburtstags-Übersicht, Galerie-Zustimmung). Tritt häufig auf, wenn Mitarbeiter Eltern eines Kindes identifizieren müssen.",
+    "costOfInaction": "Mitarbeiter müssen den Edit-Modus öffnen, um Daten zu lesen, was ablenkend ist und Versehen ('schon getippt, nicht gespeichert') begünstigt."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Auf der Eltern-Show-Seite sind alle relevanten Stammdaten und Beziehungen auf einen Blick sichtbar",
+      "type": "user",
+      "target": "Stammdaten + Liste aller zugeordneten Kinder ohne Klick erkennbar"
+    },
+    {
+      "description": "Die Show-Seite ist der zentrale Hub für Folgeaktionen (Bearbeiten, Kind zuordnen, Posteingang öffnen)",
+      "type": "user",
+      "target": "Mindestens 3 Folgeaktionen klar verlinkt"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Verlauf aller Interaktionen mit dem Elternteil (Aktivitäts-Timeline)",
+      "rationale": "Eigene Spec; kein MVP-Bestandteil"
+    },
+    {
+      "description": "Inline-Bearbeitung (z.B. Telefonnummer direkt klicken und ändern)",
+      "rationale": "Bleibt im Edit-Form; Show ist read-only mit Aktionen"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer",
+      "capability": "Auf der Eltern-Show-Seite alle Stammdaten und zugeordneten Kinder sehen",
+      "benefit": "Schnelle Identifikation und Kontaktaufnahme im Alltag",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Von der Eltern-Show-Seite direkt zur Show-Seite eines zugeordneten Kindes springen",
+      "benefit": "Effizientes Navigieren zwischen verbundenen Datensätzen",
+      "priority": 1
+    },
+    {
+      "persona": "Admin",
+      "capability": "Foto-Zustimmungs-Status und Notfall-Kontakte aller Kinder eines Elternteils auf einen Blick prüfen",
+      "benefit": "DSGVO- und Sicherheits-Checks gehen schneller",
+      "priority": 2
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Show-View für Eltern unter /parents/:id (eigener ParentsController#show); Stammdatenblock im Header",
+        "acceptanceCriteria": [
+          {
+            "given": "Ein Eltern-User existiert mit Name, E-Mail, Telefon",
+            "when": "Show-Seite /parents/:id geöffnet wird",
+            "then": "Alle Stammdaten werden in einem Header-Block dargestellt"
+          }
+        ],
+        "technicalNotes": "Eigener ParentsController#show; Route resources :parents, only: %i[show edit update]; ParentPolicy steuert Sichtbarkeit",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Liste aller zugeordneten Kinder mit Foto-Zustimmungs-Status und Link zur Kind-Show",
+        "acceptanceCriteria": [
+          {
+            "given": "Eltern hat 2 zugeordnete Kinder",
+            "when": "Show-Seite gerendert wird",
+            "then": "Beide Kinder werden mit Name, Geburtsdatum, Foto-Consent-Badge angezeigt; jeder Eintrag verlinkt"
+          },
+          {
+            "given": "Eltern hat keine Kinder zugeordnet",
+            "when": "Show-Seite gerendert wird",
+            "then": "Hinweis 'Keine Kinder zugeordnet' und Link zum Kind-Anlegen"
+          }
+        ],
+        "technicalNotes": "User#children Assoziation; Partial app/views/parents/_children_section.html.haml",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Aktionen: Bearbeiten, Kind zuordnen, Posteingang öffnen (sofern vorhanden)",
+        "acceptanceCriteria": [
+          {
+            "given": "Betreuer auf der Eltern-Show-Seite",
+            "when": "Aktionen sichtbar",
+            "then": "Buttons/Links für 'Bearbeiten' und 'Posteingang' erkennbar"
+          }
+        ],
+        "technicalNotes": "Action-Bar oben rechts; Pundit-bedingte Sichtbarkeit",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Berechtigung: Admin und Staff dürfen Show öffnen; Eltern selbst nur ihre eigene",
+        "acceptanceCriteria": [
+          {
+            "given": "Eltern-User ist eingeloggt",
+            "when": "Versuch, Show-Seite eines anderen Eltern-Users zu öffnen",
+            "then": "403 / Redirect"
+          }
+        ],
+        "technicalNotes": "Pundit-Scope und show?-Methode",
+        "dependencies": []
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Notfall-Kontakte (emergency_contacts) der zugeordneten Kinder aggregiert anzeigen",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Sammeln aus Children → emergency_contacts",
+        "dependencies": ["R-P0-002"]
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Letzter Login / Aktivität als Info-Block",
+        "acceptanceCriteria": [],
+        "technicalNotes": "User#last_sign_in_at falls Devise gepflegt",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Aktivitäts-Timeline (Posteingangs-Nachrichten, ausgefüllte Listen, Anwesenheits-Kommentare)",
+        "rationale": "Eigene Spec, eigenes Datenkonzept"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Eltern-Show-Aufrufe pro Woche",
+        "description": "Anzahl Aufrufe der neuen Show-Seite",
+        "target": ">10/Woche pro Kindergarten",
+        "measurementMethod": "Rails Logs / Page-View-Tracking",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Reduktion Edit-Form-Aufrufe ohne Änderung",
+        "description": "Edit-Aufrufe, die ohne Submit verlassen werden – Indikator dafür, dass Edit als 'Read' missbraucht wurde",
+        "target": "Reduktion um 50%",
+        "measurementMethod": "Rails Logs / Heuristik",
+        "evaluationAt": "60 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [],
+  "spec:resolvedDecisions": [
+    {
+      "question": "Eigene Route /parents/:id oder Erweiterung von /admin/users/:id?",
+      "decision": "Eigene Route /parents/:id mit dediziertem ParentsController",
+      "decidedAt": "2026-05-04",
+      "decidedBy": "stakeholder"
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "F20 (Eltern-Daten von Staff bearbeitbar) bzgl. Pundit-Policy" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Show-Seite mit Stammdaten, Kinder-Liste, Aktionen, Pundit" }
+    ]
+  }
+}

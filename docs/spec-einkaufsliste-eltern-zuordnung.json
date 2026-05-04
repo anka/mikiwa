@@ -1,0 +1,225 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:einkaufsliste-eltern-zuordnung",
+  "name": "Einkaufsliste optional einem Elternteil zuordnen",
+  "description": "Eine Einkaufsliste kann optional einem Elternteil zugewiesen werden, das den Einkauf erledigen soll. Eltern sehen in ihrer Ansicht ausschließlich ihnen zugeordnete Listen.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell gibt es keine klare Zuweisung 'Wer kauft ein?'. Listen werden allgemein erstellt, und Eltern sehen entweder alles oder nichts. Es fehlt der Workflow 'Elternteil X übernimmt Liste Y'.",
+    "affectedUsers": "Betreuer (vergeben Aufgaben) und Eltern (übernehmen Aufgaben).",
+    "costOfInaction": "Unklare Verantwortung; Einkäufe werden vergessen oder doppelt erledigt; Eltern werden unnötig mit Listen konfrontiert, die sie nicht betreffen."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Betreuer können beim Anlegen oder Bearbeiten einen Eltern-User zuordnen",
+      "type": "user",
+      "target": "Auswahlfeld 'Verantwortlich' im Formular"
+    },
+    {
+      "description": "Eltern sehen in /shopping_lists nur Listen, die ihnen zugeordnet sind",
+      "type": "user",
+      "target": "Pundit-Scope filtert auf assigned_to=current_user"
+    },
+    {
+      "description": "Ein-/Mehrdeutige Verantwortung wird transparent dargestellt (Avatar/Name in Listen-Index)",
+      "type": "business",
+      "target": "Anzeige in Liste und Detail"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Mehrere Eltern gleichzeitig pro Liste",
+      "rationale": "Genau ein Verantwortlicher; Klarheit bevorzugt"
+    },
+    {
+      "description": "Push-/E-Mail-Benachrichtigung bei Zuordnung",
+      "rationale": "Eigene Spec; nicht Bestandteil dieses MVP"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer",
+      "capability": "Eine Einkaufsliste einem Elternteil zuweisen",
+      "benefit": "Klare Verantwortung; weniger Koordinationsaufwand",
+      "priority": 0
+    },
+    {
+      "persona": "Eltern",
+      "capability": "Nur die mir zugeordneten Listen sehen",
+      "benefit": "Klarer Fokus auf eigene Aufgaben",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Sehen, welcher Elternteil welche Liste übernommen hat",
+      "benefit": "Schnelle Statuskontrolle",
+      "priority": 1
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "ShoppingList erhält optionales assigned_to_user_id (nullable, FK auf users)",
+        "acceptanceCriteria": [
+          {
+            "given": "Migration ist ausgeführt",
+            "when": "Liste mit assigned_to=parent_user gespeichert wird",
+            "then": "Assoziation list.assigned_to liefert den User"
+          }
+        ],
+        "technicalNotes": "Migration add_reference :shopping_lists, :assigned_to, foreign_key: { to_table: :users }, null: true; belongs_to :assigned_to, class_name: 'User', optional: true",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Formular (new/edit) bietet Auswahl 'Verantwortliches Elternteil'",
+        "acceptanceCriteria": [
+          {
+            "given": "Liste hat eine Gruppen-Zuordnung (vgl. F25)",
+            "when": "Eltern-Auswahl gerendert wird",
+            "then": "Nur Eltern dieser Gruppe sind auswählbar"
+          },
+          {
+            "given": "Liste hat keine Gruppe (gesamter Kindergarten)",
+            "when": "Eltern-Auswahl gerendert wird",
+            "then": "Alle Eltern sind auswählbar"
+          }
+        ],
+        "technicalNotes": "Vorab-Filterung in Controller; collection_select",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Pundit-Scope: Eltern sehen ausschließlich Listen, die einer Gruppe zugeordnet sind, in der eines ihrer Kinder ist. Kindergarten-weite Listen (group_id=NULL) sind für Eltern NICHT sichtbar (staff-intern). assigned_to ist Verantwortlich-Markierung, kein zusätzlicher Sichtbarkeits-Filter (filtert nicht weiter ein).",
+        "acceptanceCriteria": [
+          {
+            "given": "Lina hat ein Kind in Gruppe 'Bären'; Liste ist Bären-Gruppe zugeordnet",
+            "when": "Lina öffnet /shopping_lists",
+            "then": "Liste ist sichtbar (auch wenn assigned_to leer oder anders gesetzt)"
+          },
+          {
+            "given": "Liste hat group_id=NULL (Kindergarten-weit)",
+            "when": "Lina öffnet /shopping_lists",
+            "then": "Liste ist NICHT sichtbar"
+          },
+          {
+            "given": "Liste ist Gruppe 'Löwen' zugeordnet; Lina hat kein Kind in Löwen",
+            "when": "Lina öffnet /shopping_lists",
+            "then": "Liste ist NICHT sichtbar"
+          },
+          {
+            "given": "Staff/Admin User",
+            "when": "Index geladen",
+            "then": "Alle Listen sichtbar (inkl. group_id=NULL und alle Gruppen)"
+          }
+        ],
+        "technicalNotes": "ShoppingListPolicy::Scope für Parent: scope.where(group_id: user.children.joins(:groups).select('groups.id')); für Staff/Admin: scope.all. Tests in test/policies/",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Listen-Index und -Detail zeigen den Verantwortlichen",
+        "acceptanceCriteria": [
+          {
+            "given": "Liste hat assigned_to gesetzt",
+            "when": "Index/Detail gerendert wird",
+            "then": "Name (oder Avatar+Name) ist sichtbar"
+          },
+          {
+            "given": "Liste hat keine Zuordnung",
+            "when": "Index gerendert wird",
+            "then": "Badge 'Nicht zugewiesen'"
+          }
+        ],
+        "technicalNotes": "",
+        "dependencies": ["R-P0-001"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Filter 'Nur mir zugewiesen' für Eltern und Betreuer (filtert auf assigned_to=current_user)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Frontend-Filter zusätzlich zum Pundit-Scope",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Eltern können Liste 'erledigt'-markieren",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Falls Status-Mechanismus existiert",
+        "dependencies": ["R-P0-001"]
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Push-/E-Mail-Benachrichtigung bei Zuordnung",
+        "rationale": "Eigene Notification-Spec"
+      },
+      {
+        "id": "R-P2-002",
+        "description": "Mehrere Verantwortliche pro Liste",
+        "rationale": "Erweiterter Use-Case; aktuell ein Elternteil"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Anteil zugeordneter Listen",
+        "description": "% der Listen mit assigned_to gesetzt",
+        "target": ">50% nach 30 Tagen",
+        "measurementMethod": "DB-Query",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Verringerte Doppel-Einkäufe",
+        "description": "Anekdotisch / Feedback",
+        "target": "Tendenz zu weniger Doppel-Einkäufen",
+        "measurementMethod": "Feedback",
+        "evaluationAt": "90 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [],
+  "spec:resolvedDecisions": [
+    {
+      "question": "Soll die Eltern-Auswahl auf Eltern der zugeordneten Gruppe beschränkt werden, oder allgemein?",
+      "decision": "Beschränkt auf Eltern, deren Kinder in der zugeordneten Gruppe sind. Bei Gruppen-NULL (Kindergarten-weit) sind alle Eltern auswählbar.",
+      "decidedAt": "2026-05-04",
+      "decidedBy": "stakeholder"
+    },
+    {
+      "question": "Sehen Eltern alle Listen oder nur ihre zugeordneten?",
+      "decision": "Eltern sehen ausschließlich Listen ihrer Kinder-Gruppen. Kindergarten-weite Listen (group_id=NULL) sind staff-intern und für Eltern NICHT sichtbar. assigned_to ist nur Verantwortlich-Markierung; optionaler Filter 'Nur mir zugewiesen' möglich.",
+      "decidedAt": "2026-05-04",
+      "decidedBy": "stakeholder"
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "F25 (Gruppen-Zuordnung) für sinnvolle Filterung der Auswahl" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Migration, Formular, Pundit-Scope, Anzeige" }
+    ]
+  }
+}

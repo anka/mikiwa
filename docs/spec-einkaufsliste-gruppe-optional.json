@@ -1,0 +1,180 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:einkaufsliste-gruppe-optional",
+  "name": "Einkaufsliste optional einer Gruppe zuordnen",
+  "description": "Eine Einkaufsliste kann optional einer Gruppe zugeordnet werden. Wenn keine Gruppe ausgewählt ist, gilt die Liste für den gesamten Kindergarten.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell sind Einkaufslisten nicht gruppen-gebunden oder die Bindung ist verpflichtend. Es fehlt die klare Differenzierung 'Liste für eine bestimmte Gruppe' vs. 'Liste für den gesamten Kindergarten'.",
+    "affectedUsers": "Betreuer, die Einkäufe für ihre Gruppe oder gemeinsame Bedarfe erfassen.",
+    "costOfInaction": "Listen werden gemischt und unübersichtlich; Eltern oder Betreuer wissen nicht, ob etwas für 'ihre' Gruppe relevant ist."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Beim Anlegen / Bearbeiten kann optional eine Gruppe zugeordnet werden",
+      "type": "user",
+      "target": "Auswahlfeld 'Gruppe' mit Option '— Gesamter Kindergarten —' im Formular"
+    },
+    {
+      "description": "Listen-Übersicht zeigt klar, welcher Kontext gilt",
+      "type": "user",
+      "target": "Badge mit Gruppenname oder 'Kindergarten' bei jeder Liste"
+    },
+    {
+      "description": "Zukünftige Filterung/Berechtigung baut auf diesem Feld auf",
+      "type": "business",
+      "target": "DB-Spalte und Assoziation existieren"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Mehrfach-Zuordnung zu mehreren Gruppen",
+      "rationale": "Genau eine Gruppe oder gar keine; einfacher Use-Case"
+    },
+    {
+      "description": "Automatische Übernahme aktueller Gruppe als Default",
+      "rationale": "Optional, Phase 2"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer",
+      "capability": "Beim Anlegen einer Einkaufsliste eine Gruppe auswählen oder leer lassen",
+      "benefit": "Kontext wird klar dokumentiert, niemand wundert sich",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "In der Liste der Einkaufslisten erkennen, welche für seine Gruppe gelten und welche für den ganzen Kindergarten",
+      "benefit": "Schnelle Übersicht",
+      "priority": 1
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Datenmodell ShoppingList erhält optionales group_id (nullable)",
+        "acceptanceCriteria": [
+          {
+            "given": "Migration ist ausgeführt",
+            "when": "ShoppingList erstellt mit group_id=NULL",
+            "then": "Speichern ohne Validierungsfehler"
+          },
+          {
+            "given": "Migration ist ausgeführt",
+            "when": "ShoppingList erstellt mit gültiger group_id",
+            "then": "Assoziation list.group lädt das richtige Group-Objekt"
+          }
+        ],
+        "technicalNotes": "Migration mit add_reference :shopping_lists, :group, foreign_key: true, null: true; Model belongs_to :group, optional: true",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Formular (new/edit) zeigt Gruppen-Auswahl mit Option 'Gesamter Kindergarten' (= NULL)",
+        "acceptanceCriteria": [
+          {
+            "given": "Betreuer öffnet Formular",
+            "when": "Auswahlfeld geprüft wird",
+            "then": "Alle Gruppen + Option 'Gesamter Kindergarten' werden angezeigt"
+          }
+        ],
+        "technicalNotes": "include_blank mit Label 'Gesamter Kindergarten'",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Listen-Index zeigt für jede Liste die Gruppe oder Hinweis auf 'Kindergarten'",
+        "acceptanceCriteria": [
+          {
+            "given": "Liste hat group=NULL",
+            "when": "Index gerendert wird",
+            "then": "Badge 'Kindergarten' (oder vergleichbar) erscheint"
+          },
+          {
+            "given": "Liste hat group=Bären",
+            "when": "Index gerendert wird",
+            "then": "Badge 'Bären' erscheint"
+          }
+        ],
+        "technicalNotes": "",
+        "dependencies": ["R-P0-001"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Filter im Listen-Index nach Gruppe",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Default-Vorbelegung mit aktuell aktiver Gruppe (falls Betreuer einer Gruppe primär zugeordnet ist)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": ["R-P0-001"]
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Mehrfach-Gruppen-Zuordnung über Join-Tabelle",
+        "rationale": "Erweiterter Scope; aktueller Use-Case kommt mit 0..1 aus"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Anteil Listen mit Gruppen-Zuordnung",
+        "description": "Wie viele Listen werden Gruppen zugewiesen vs. gesamtkindergarten",
+        "target": "Aussagekräftige Verteilung erkennbar",
+        "measurementMethod": "DB-Query",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Reduktion an 'falsch zugeordnet'-Beschwerden",
+        "description": "Support-Tickets zur Listen-Zuordnung",
+        "target": "0",
+        "measurementMethod": "Support-Channel",
+        "evaluationAt": "90 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [],
+  "spec:resolvedDecisions": [
+    {
+      "question": "Sehen Eltern in der Eltern-Sicht nur Listen ihrer Kinder-Gruppen oder alle?",
+      "decision": "Eltern sehen ausschließlich Listen, die einer Gruppe zugeordnet sind, in der eines ihrer Kinder ist. Kindergarten-weite Listen (group_id=NULL) sind nur für Staff/Admin sichtbar (staff-interne Koordination).",
+      "decidedAt": "2026-05-04",
+      "decidedBy": "stakeholder"
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "Bestehendes Group-Modell" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Migration, Formular, Index-Badge" }
+    ]
+  }
+}

@@ -1,0 +1,188 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:light-dark-mode-toggle",
+  "name": "Light/Dark Mode Toggle in der Topbar",
+  "description": "Ein Schalter in der Topbar erlaubt das Umschalten zwischen Light- und Dark-Mode. Die Auswahl wird pro User gespeichert und respektiert das System-Setting (prefers-color-scheme) als Default.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell existiert keine Möglichkeit zwischen Light- und Dark-Mode zu wechseln. Nutzer in dunklen Räumen oder mit Präferenz für Dark-Mode haben keinen Komfort.",
+    "affectedUsers": "Alle Anwender; insbesondere Betreuer mit langen Tablet-/Desktop-Sessions.",
+    "costOfInaction": "Augenermüdung in dunklen Umgebungen; UI wirkt nicht zeitgemäß."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Light/Dark Mode kann mit einem Klick gewechselt werden",
+      "type": "user",
+      "target": "Toggle in Topbar, Wechsel ohne Reload"
+    },
+    {
+      "description": "Auswahl wird persistent gespeichert (Cookie/LocalStorage und/oder User-Preference in DB)",
+      "type": "user",
+      "target": "Mode bleibt nach Reload und Re-Login erhalten"
+    },
+    {
+      "description": "Standard folgt System-Preference (prefers-color-scheme) wenn keine eigene Wahl getroffen",
+      "type": "user",
+      "target": "Beim ersten Aufruf gilt System-Setting"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Mehrere Themes (Auto-Saison, High-Contrast)",
+      "rationale": "Out of scope; nur Light/Dark"
+    },
+    {
+      "description": "Pro-Komponenten-Customization der Farben",
+      "rationale": "Festes Design-System"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Beliebiger User",
+      "capability": "Mit einem Klick in der Topbar Dark-Mode aktivieren",
+      "benefit": "Komfort in dunklen Räumen",
+      "priority": 0
+    },
+    {
+      "persona": "Beliebiger User",
+      "capability": "Auf einem zweiten Gerät dieselbe Voreinstellung wiederfinden",
+      "benefit": "Konsistente Erfahrung",
+      "priority": 1
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Toggle-Element (Sun/Moon Icon) in der Topbar; Klick schaltet zwischen Light und Dark Mode um",
+        "acceptanceCriteria": [
+          {
+            "given": "Light Mode aktiv",
+            "when": "User klickt Toggle",
+            "then": "Theme wechselt zu Dark, ohne Page-Reload, Icon wechselt zu Sun"
+          }
+        ],
+        "technicalNotes": "Stimulus-Controller; setzt data-theme oder Klasse 'dark' am html-Element; Tailwind Dark-Mode-Strategie: class",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Persistierung: localStorage als minimaler Standard; User-Preference in DB falls eingeloggt",
+        "acceptanceCriteria": [
+          {
+            "given": "User wählt Dark Mode und reloaded",
+            "when": "Seite neu geladen",
+            "then": "Dark Mode bleibt aktiv ohne Flash of Light Theme"
+          },
+          {
+            "given": "User loggt sich auf zweitem Gerät ein",
+            "when": "Seite geladen",
+            "then": "Dark Mode aktiv (sofern in DB gespeichert)"
+          }
+        ],
+        "technicalNotes": "User#theme_preference Spalte (enum: system, light, dark); Server-side beim Render Klasse setzen, kein Flash",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Default 'system' respektiert prefers-color-scheme",
+        "acceptanceCriteria": [
+          {
+            "given": "User hat 'system' gewählt und Browser meldet prefers-color-scheme: dark",
+            "when": "Seite geladen",
+            "then": "Dark Mode aktiv"
+          }
+        ],
+        "technicalNotes": "matchMedia + Reaktion auf Änderung",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Dark-Mode Farben folgen Mikiwa Design System",
+        "acceptanceCriteria": [
+          {
+            "given": "Dark Mode aktiv",
+            "when": "App durchklickt",
+            "then": "Alle Hauptseiten (Dashboard, Kinder, Galerien, Listen, Sidebar, Forms) lesbar und konsistent"
+          }
+        ],
+        "technicalNotes": "Skill mikiwa-design konsultieren; ggf. fehlende Tokens ergänzen; Tailwind dark:-Klassen",
+        "dependencies": ["R-P0-001"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Drei-Wege-Toggle Light / Dark / System statt nur Light/Dark",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": ["R-P0-002"]
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Animations-Übergang beim Wechsel (sanftes Crossfade, respect prefers-reduced-motion)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": ["R-P0-001"]
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Theming je Mandant (Branding Light/Dark)",
+        "rationale": "Single-Tenant heute; Multi-Tenant erst später"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Anteil User mit Dark Mode aktiv",
+        "description": "Verteilung Light/Dark/System",
+        "target": "≥10% Dark nach 30 Tagen",
+        "measurementMethod": "DB-Query auf theme_preference",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Bug-Reports zu Dark Mode",
+        "description": "Schlecht lesbare Stellen oder kontrastarme Bereiche",
+        "target": "0 nach 60 Tagen",
+        "measurementMethod": "Bug-Tracker",
+        "evaluationAt": "60 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Persistenz nur in localStorage oder zusätzlich in DB pro User?",
+      "owner": "engineering",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "Mikiwa Design System (Skill mikiwa-design)" },
+      { "description": "Tailwind dark:-Klassen aktiviert" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Toggle, Persistenz (localStorage), prefers-color-scheme Default, Dark-Tokens für Hauptseiten" },
+      { "name": "v2", "scope": "DB-Persistenz pro User; 3-Wege-Toggle" }
+    ]
+  }
+}

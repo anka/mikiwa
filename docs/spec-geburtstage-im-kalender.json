@@ -1,0 +1,187 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:geburtstage-im-kalender",
+  "name": "Geburtstage im Kalender anzeigen",
+  "description": "Geburtstage der Kinder erscheinen automatisch in der Kalender-Ansicht (/calendar_events) als wiederkehrender, eigenständiger Eintragstyp.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Kinder-Geburtstage sind aktuell nur unter /birthdays sichtbar, nicht aber in der zentralen Kalender-Ansicht. Mitarbeiter müssen für Terminplanung in zwei Systemen schauen.",
+    "affectedUsers": "Betreuer und Eltern, die den Kalender als zentrale Übersicht nutzen.",
+    "costOfInaction": "Geburtstage werden bei Terminplanung übersehen; doppelte Wege zwischen Birthday-Liste und Kalender."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Geburtstage erscheinen automatisch im Kalender als eigener visueller Eintragstyp",
+      "type": "user",
+      "target": "100% der Kinder mit Geburtsdatum sind im Kalender-Tag sichtbar"
+    },
+    {
+      "description": "Geburtstags-Einträge sind klar von normalen Veranstaltungen unterscheidbar",
+      "type": "user",
+      "target": "Eigenes Icon und/oder eigene Farbe"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Geburtstage als reguläre CalendarEvents speichern",
+      "rationale": "Sind keine echten Veranstaltungen; sollen virtuell aus Children-Tabelle abgeleitet werden"
+    },
+    {
+      "description": "Bearbeiten / Löschen eines Geburtstags aus dem Kalender heraus",
+      "rationale": "Geburtstag entsteht aus Kind-Geburtsdatum; Pflege erfolgt im Kind-Datensatz"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer",
+      "capability": "Im Kalender Geburtstage als eigenen Eintragstyp sehen",
+      "benefit": "Vermeide Terminkollision, plane Geburtstagsfeiern bewusst",
+      "priority": 0
+    },
+    {
+      "persona": "Eltern",
+      "capability": "Geburtstage anderer Kinder im Kalender sehen",
+      "benefit": "Klassen-/Gruppenkultur und Aufmerksamkeit für andere Kinder",
+      "priority": 1
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Beim Klick auf einen Geburtstags-Eintrag zum Kind springen",
+      "benefit": "Schneller Kontext",
+      "priority": 2
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Kalender-Index-Action ergänzt Geburtstage als virtuelle Events im sichtbaren Zeitraum",
+        "acceptanceCriteria": [
+          {
+            "given": "Ein Kind hat Geburtstag im Mai 2026",
+            "when": "Kalender wird für Mai 2026 geöffnet",
+            "then": "Ein Geburtstags-Eintrag mit Kind-Name erscheint am korrekten Tag"
+          },
+          {
+            "given": "Mehrere Kinder haben am gleichen Tag Geburtstag",
+            "when": "Kalender geladen",
+            "then": "Alle erscheinen gestapelt am Tag"
+          }
+        ],
+        "technicalNotes": "Birthdays für aktuellen Anzeige-Range berechnen; im Controller mergen, kein DB-Eintrag",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Visuelle Differenzierung Geburtstag vs. Veranstaltung",
+        "acceptanceCriteria": [
+          {
+            "given": "Tag enthält Geburtstag und Veranstaltung",
+            "when": "Tag dargestellt wird",
+            "then": "Unterschiedliche Farbe und Icon klar erkennbar"
+          }
+        ],
+        "technicalNotes": "Farb-Token aus Mikiwa-Design für 'birthday'",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Klick auf Geburtstags-Eintrag öffnet Kind-Show-Seite (sofern berechtigt)",
+        "acceptanceCriteria": [
+          {
+            "given": "Betreuer klickt einen Geburtstags-Eintrag",
+            "when": "Klick erfolgt",
+            "then": "Navigation zu children/:id"
+          }
+        ],
+        "technicalNotes": "Pundit-Check vor Anzeige (Eltern sehen nur erlaubte Kinder)",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Liste-View und Monats-View des Kalenders sind beide unterstützt",
+        "acceptanceCriteria": [
+          {
+            "given": "Geburtstag liegt in Anzeigezeitraum",
+            "when": "Liste-View und Monats-View gewechselt werden",
+            "then": "In beiden erscheint der Eintrag konsistent"
+          }
+        ],
+        "technicalNotes": "_list_view.html.haml und Hauptkalender prüfen",
+        "dependencies": ["R-P0-001"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Filter 'Geburtstage ein-/ausblenden' im Kalender",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Alter im Eintrag sichtbar (z.B. 'Lina – wird 5')",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": ["R-P0-001"]
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Auch Mitarbeiter-Geburtstage anzeigen",
+        "rationale": "Datenschutz / Opt-in nötig"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Klicks auf Geburtstags-Einträge im Kalender",
+        "description": "Indikator für Sichtbarkeit und Nutzung",
+        "target": ">5/Woche pro Kindergarten",
+        "measurementMethod": "Rails Logs",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Reduktion paralleler /birthdays Aufrufe",
+        "description": "Wenn Kalender ausreicht, sinken /birthdays-Aufrufe",
+        "target": "Tendenziell sinkend",
+        "measurementMethod": "Rails Logs",
+        "evaluationAt": "60 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Sollen Geburtstage auch im iCal-Export erscheinen, falls existent?",
+      "owner": "engineering",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "Bestehende Kalender-Implementierung calendar_events" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Virtuelle Geburtstags-Einträge im Monats- und Listen-View, Visuelle Differenzierung, Click-Through" }
+    ]
+  }
+}

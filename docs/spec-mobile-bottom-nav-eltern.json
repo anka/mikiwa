@@ -1,0 +1,170 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:mobile-bottom-nav-eltern",
+  "name": "Mobile Bottom-Nav für Eltern: Einkaufsliste, Posteingang, Kalender",
+  "description": "In der mobilen Eltern-Ansicht erhält die Bottom-Nav drei kontextrelevante Hauptpunkte – Einkaufsliste, Posteingang, Kalender – ggf. plus Übersicht. Andere Bereiche bleiben über das Burger-Menü (F30) erreichbar.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell ist die mobile Bottom-Nav für alle Rollen identisch oder generisch. Eltern brauchen aber andere Schwerpunkte als Betreuer: ihre Aufgaben (Einkaufsliste), Kommunikation (Posteingang) und Termine (Kalender) sind die wichtigsten Berührungspunkte.",
+    "affectedUsers": "Eltern auf Mobile (häufigster Use-Case der App).",
+    "costOfInaction": "Eltern brauchen mehrere Klicks zu ihren Hauptaufgaben; Friction reduziert tägliche Nutzung."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Mobile Bottom-Nav für Eltern enthält Einkaufsliste, Posteingang, Kalender als Hauptpunkte",
+      "type": "user",
+      "target": "3-4 Punkte mit klaren Icons, sichtbarer aktiver Zustand"
+    },
+    {
+      "description": "Konsistent mit Burger-Menü (F30) für alle anderen Bereiche",
+      "type": "user",
+      "target": "Übersicht/sonstige Punkte über Burger erreichbar"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Pro-User Customization der Bottom-Nav",
+      "rationale": "Out of scope; rollenbasierte Konfiguration reicht"
+    },
+    {
+      "description": "Bottom-Nav für Eltern mit >5 Punkten",
+      "rationale": "UX-Empfehlung max. 3-5 Punkte"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Eltern auf Mobile",
+      "capability": "Mit einem Tap zur Einkaufsliste, dem Posteingang oder dem Kalender springen",
+      "benefit": "Schneller Zugriff auf Daily-Use-Funktionen",
+      "priority": 0
+    },
+    {
+      "persona": "Eltern auf Mobile",
+      "capability": "Erkennen, in welchem Bereich ich gerade bin",
+      "benefit": "Orientierung in der App",
+      "priority": 1
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Rollen-spezifische Bottom-Nav-Konfiguration: Eltern erhalten genau 4 Punkte: Übersicht, Einkaufsliste, Posteingang, Kalender",
+        "acceptanceCriteria": [
+          {
+            "given": "Eltern-User auf Mobile",
+            "when": "Bottom-Nav gerendert",
+            "then": "Vier Einträge erscheinen in Reihenfolge: Übersicht, Einkaufsliste, Posteingang, Kalender, jeweils mit Icon und Label"
+          },
+          {
+            "given": "Betreuer-User auf Mobile",
+            "when": "Bottom-Nav gerendert",
+            "then": "Bisherige (oder rollen-passende) Punkte erscheinen"
+          }
+        ],
+        "technicalNotes": "Helper bottom_nav_items_for(current_user) im ApplicationHelper; Eltern-Liste hardcoded auf [overview, shopping_lists, inbox, calendar_events]",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Aktiver Zustand wird klar visualisiert",
+        "acceptanceCriteria": [
+          {
+            "given": "Eltern-User öffnet /shopping_lists",
+            "when": "Bottom-Nav gerendert",
+            "then": "Einkaufsliste-Eintrag hat Active-Style"
+          }
+        ],
+        "technicalNotes": "current_page? oder controller_name-Match",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Icons folgen Mikiwa Design System (gleiche Iconfamilie)",
+        "acceptanceCriteria": [
+          {
+            "given": "Bottom-Nav gerendert",
+            "when": "Visuelle Prüfung",
+            "then": "Alle Icons sind aus derselben Familie und Größe"
+          }
+        ],
+        "technicalNotes": "Skill mikiwa-design",
+        "dependencies": ["R-P0-001"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Badge mit ungelesener Posteingangs-Anzahl",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Inbox-Counter aus current_user.unread_messages_count",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Haptic-Feedback bei Tap (sofern unterstützt)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "navigator.vibrate(10)",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Drag-Reorder durch Eltern selbst",
+        "rationale": "Out of scope"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Taps pro Bottom-Nav-Eintrag",
+        "description": "Verteilung der Bottom-Nav-Nutzung",
+        "target": "Alle 3 Hauptpunkte werden genutzt",
+        "measurementMethod": "Rails Logs / Klick-Tracking",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Mobile Eltern-Sessions",
+        "description": "Mobile Nutzung durch Eltern",
+        "target": "Steigend",
+        "measurementMethod": "Analytics",
+        "evaluationAt": "90 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [],
+  "spec:resolvedDecisions": [
+    {
+      "question": "Soll 'Übersicht' als 4. Punkt in die Bottom-Nav?",
+      "decision": "Ja. Vier Punkte: Übersicht, Einkaufsliste, Posteingang, Kalender.",
+      "decidedAt": "2026-05-04",
+      "decidedBy": "stakeholder"
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "F30 Burger-Menü stellt sicher, dass restliche Navigation erreichbar bleibt" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Rollen-Konfiguration der Bottom-Nav-Einträge, Active-State, Icons" }
+    ]
+  }
+}

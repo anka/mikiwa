@@ -1,0 +1,178 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:eltern-bearbeitung-staff",
+  "name": "Eltern-Daten von Betreuern bearbeitbar",
+  "description": "Betreuer (Staff) sollen die Stammdaten der Eltern – analog zu Admins – bearbeiten können, damit alltägliche Pflege (Telefonnummer, Adresse, E-Mail) nicht auf Admin-Eingriff warten muss.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell sind Eltern-Datensätze nur durch Admins bearbeitbar. Betreuer, die im Alltag die Eltern direkt sprechen, können Korrekturen oder Updates (z.B. neue Notfall-Telefonnummer) nicht selbst eintragen und müssen das Admin-Team einbinden.",
+    "affectedUsers": "Alle Betreuer in Mikiwa-Installationen ohne ständig erreichbares Admin-Team. Tritt regelmäßig bei Adress-/Kontaktdaten-Änderungen auf.",
+    "costOfInaction": "Stammdaten veralten oder enthalten Fehler, weil der Pflege-Aufwand zu hoch wird. Im Notfall (z.B. Erkrankung eines Kindes) kann das gefährlich werden, wenn Telefonnummern nicht aktuell sind."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Betreuer können alle Eltern-Stammdaten anlegen, bearbeiten und (de-)aktivieren",
+      "type": "user",
+      "target": "Staff-Rolle hat in der Pundit-Policy für UserPolicy/ParentPolicy update?, create? = true"
+    },
+    {
+      "description": "Berechtigungen sind sauber dokumentiert und durch Tests abgesichert",
+      "type": "business",
+      "target": "Mindestens ein Policy- und ein Controller-Test pro Aktion"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Betreuer dürfen Admin-User oder andere Betreuer bearbeiten",
+      "rationale": "Nur die Eltern-Rolle ist Gegenstand dieser Spec"
+    },
+    {
+      "description": "Betreuer dürfen Eltern-Konten löschen",
+      "rationale": "Löschen bleibt eine Admin-Aktion wegen DSGVO/Audit"
+    },
+    {
+      "description": "Eltern-Passwörter durch Betreuer ändern lassen",
+      "rationale": "Sicherheits-relevant; bleibt bei Admin oder eigenem Reset-Flow"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer",
+      "capability": "Stammdaten eines Eltern-Kontos (Name, E-Mail, Telefon, Adresse) bearbeiten",
+      "benefit": "Aktualisierungen aus Tür- und Angel-Gesprächen sofort eintragen",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Ein neues Eltern-Konto anlegen",
+      "benefit": "Bei Aufnahme eines neuen Kindes direkt Eltern-Datensatz erstellen können",
+      "priority": 1
+    },
+    {
+      "persona": "Admin",
+      "capability": "Sichergehen, dass Betreuer keine Admin-/Staff-Konten verändern können",
+      "benefit": "Klare Rollentrennung",
+      "priority": 2
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "UserPolicy/ParentPolicy erlaubt Staff create?, edit?, update? auf User-Records mit Rolle 'parent'",
+        "acceptanceCriteria": [
+          {
+            "given": "Eingeloggter Betreuer öffnet die Bearbeiten-Seite eines Eltern-Users",
+            "when": "Anfrage abgesetzt wird",
+            "then": "Antwort 200; Formular wird angezeigt"
+          },
+          {
+            "given": "Eingeloggter Betreuer öffnet die Bearbeiten-Seite eines Admin- oder Staff-Users",
+            "when": "Anfrage abgesetzt wird",
+            "then": "Pundit verweigert (403); Redirect mit Fehler"
+          }
+        ],
+        "technicalNotes": "Policy auf record.parent? prüfen statt globaler Admin-Schranke; ergänzende Tests in test/policies/",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Eltern werden in der Staff-Navigation (z.B. unter Stammdaten) auffindbar",
+        "acceptanceCriteria": [
+          {
+            "given": "Eingeloggter Betreuer öffnet die Anwendung",
+            "when": "Sidebar gerendert wird",
+            "then": "Ein Menüpunkt 'Eltern' (oder 'Familien') ist sichtbar und führt zur Eltern-Liste"
+          }
+        ],
+        "technicalNotes": "Aktuelle Sidebar prüfen, ob Eintrag schon existiert oder nur Admins angezeigt bekommen",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Eltern-Liste (index) ist für Staff sichtbar mit Such-/Filterfunktion (mind. nach Name)",
+        "acceptanceCriteria": [
+          {
+            "given": "Eingeloggter Betreuer öffnet die Eltern-Liste",
+            "when": "Liste geladen wird",
+            "then": "Alle Eltern-User werden angezeigt; Suche funktioniert"
+          }
+        ],
+        "technicalNotes": "Bestehende Admin-Index-Action wiederverwenden; Policy für Scope auf parent-Rolle",
+        "dependencies": ["R-P0-001"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Audit-Log-Eintrag bei Änderungen durch Staff (wer/wann/welche Felder)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Falls Audit-Mechanismus existiert",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Aktivieren/Deaktivieren eines Eltern-Kontos durch Staff",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Wenn 'inaktiv'-Status existiert, sonst entfällt",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Self-Service für Eltern, eigene Stammdaten zu bearbeiten",
+        "rationale": "Eigener UX-Flow; eigene Spec"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Eltern-Daten-Edits durch Staff",
+        "description": "Anzahl Updates an Eltern-Datensätzen pro Woche, ausgeführt durch Rolle Staff",
+        "target": ">0 (Funktion wird genutzt)",
+        "measurementMethod": "Audit-Log oder Rails-Logs",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Support-Anfragen 'kann Eltern nicht bearbeiten'",
+        "description": "Anfragen, die fehlende Berechtigung melden",
+        "target": "0",
+        "measurementMethod": "Support-Channel",
+        "evaluationAt": "60 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Müssen Staff auch Notfall-Kontakte (emergency_contacts) der Eltern bearbeiten oder ist das schon abgedeckt?",
+      "owner": "stakeholder",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "Bestehendes Pundit-Setup, User-Rollen" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Policies, Sidebar, Eltern-Index, Edit-Form, Tests" }
+    ]
+  }
+}

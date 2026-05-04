@@ -1,0 +1,148 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:foto-zustimmung-bug",
+  "name": "Bugfix: Foto-Zustimmung wird beim Kind-Edit nicht gespeichert",
+  "description": "Beim Bearbeiten eines Kindes wird das Setzen oder Entfernen der Zustimmung für Fotos nicht in die Datenbank übernommen. Der Wert wird nach dem Speichern auf den vorigen Stand zurückgesetzt.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Im Kind-Bearbeiten-Formular existiert ein Feld 'Zustimmung Fotos'. Wenn ein Betreuer den Wert ändert (z.B. von false auf true) und speichert, bleibt der Wert nach erfolgreichem Submit auf dem vorherigen Stand. Die Datenbank wird nicht aktualisiert.",
+    "affectedUsers": "Alle Betreuer und Admins, die für ein Kind die Foto-Zustimmung der Eltern nachpflegen oder zurückziehen müssen. Tritt bei jedem Speichern des betroffenen Feldes auf.",
+    "costOfInaction": "Datenschutz-relevantes Feature ist nicht zuverlässig. Wenn die Zustimmung nicht korrekt gepflegt werden kann, riskiert der Kindergarten DSGVO-Verstöße bei Galerie-Veröffentlichungen."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Die Foto-Zustimmung kann zuverlässig pro Kind gesetzt und gespeichert werden",
+      "type": "user",
+      "target": "100% Speicher-Erfolgsrate für photo_consent Änderungen"
+    },
+    {
+      "description": "Regression-Schutz durch Test",
+      "type": "business",
+      "target": "Mindestens ein System- oder Integration-Test deckt das Toggeln und Persistieren der Foto-Zustimmung ab"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Komplette Überarbeitung des Foto-Zustimmungs-Flows (z.B. Zwei-Faktor-Bestätigung durch Eltern)",
+      "rationale": "Nur der bestehende Bug wird gefixt; Workflow-Änderungen sind eigene Specs"
+    },
+    {
+      "description": "Migration historischer Daten, die unter dem Bug falsch erfasst wurden",
+      "rationale": "Daten sind im Zweifelsfall manuell zu validieren; Bug-Fix selbst löst das nicht rückwirkend"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer",
+      "capability": "Die Foto-Zustimmung eines Kindes ändern und sicher gespeichert wissen",
+      "benefit": "Kann der Galerie-Funktion mit Vertrauen Fotos hinzufügen, ohne unrechtmäßig zu veröffentlichen",
+      "priority": 0
+    },
+    {
+      "persona": "Admin",
+      "capability": "Bei DSGVO-Anfragen den aktuellen Stand der Zustimmung jederzeit korrekt erfassen können",
+      "benefit": "Compliance bleibt sichergestellt",
+      "priority": 1
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Ursache des Bugs identifizieren und beheben (vermutlich strong_params, Default-Override im Controller, oder fehlendes hidden_field bei Checkbox)",
+        "acceptanceCriteria": [
+          {
+            "given": "Ein Kind hat photo_consent: false",
+            "when": "Betreuer toggelt das Feld auf true und speichert",
+            "then": "Die Datenbank speichert photo_consent: true und das Formular zeigt den neuen Wert"
+          },
+          {
+            "given": "Ein Kind hat photo_consent: true",
+            "when": "Betreuer toggelt das Feld auf false und speichert",
+            "then": "Die Datenbank speichert photo_consent: false"
+          }
+        ],
+        "technicalNotes": "ChildrenController#child_params prüfen; bei Checkbox Rails-Pattern check_box mit unchecked_value sicherstellen; Strong Params müssen photo_consent enthalten",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Test deckt die Regression ab (System- oder Integration-Test)",
+        "acceptanceCriteria": [
+          {
+            "given": "Ein Kind existiert mit photo_consent: false",
+            "when": "Test simuliert Update mit photo_consent: true",
+            "then": "Test prüft, dass DB-Wert auf true gesetzt wurde"
+          }
+        ],
+        "technicalNotes": "Minitest System Test in test/system/children_test.rb",
+        "dependencies": ["R-P0-001"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Audit-Eintrag bei Änderung der Foto-Zustimmung (wer, wann, vorher/nachher)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Falls Audit-Mechanismus existiert; sonst eigene Spec",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Eltern selbst können Zustimmung ein-/ausschalten und Änderung wird Betreuern signalisiert",
+        "rationale": "Erweiterter Scope; eigene Spec"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "photo_consent Speicher-Erfolgsrate",
+        "description": "Erfolgreiche Persistierung des photo_consent Werts nach Update",
+        "target": "100%",
+        "measurementMethod": "System-Test + manueller Smoke-Test",
+        "evaluationAt": "Direkt nach Fix"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Support-Tickets zur Foto-Zustimmung",
+        "description": "Tickets in Form 'Zustimmung lässt sich nicht setzen'",
+        "target": "0 Tickets",
+        "measurementMethod": "Support-Channel Monitoring",
+        "evaluationAt": "30 Tage post-fix"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Soll bei Wechsel der Zustimmung von true → false ein Bestätigungs-Dialog erscheinen, weil dies möglicherweise das Entfernen aus existenden Galerien erfordert?",
+      "owner": "stakeholder",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [
+      { "description": "DSGVO-relevant – schnellstmöglich beheben", "date": null }
+    ],
+    "dependencies": [],
+    "phases": [
+      { "name": "v1", "scope": "Bugfix + Regressions-Test" }
+    ]
+  }
+}

@@ -63,6 +63,28 @@
       "feature_ids": [
         "BF-001"
       ]
+    },
+    {
+      "phase": 6,
+      "name": "Weiterentwicklung & Verfeinerung",
+      "feature_ids": [
+        "F19",
+        "BF-002",
+        "F20",
+        "F21",
+        "F22",
+        "F23",
+        "F24",
+        "F25",
+        "F26",
+        "F27",
+        "F28",
+        "BF-003",
+        "F29",
+        "F30",
+        "F31",
+        "F32"
+      ]
     }
   ],
   "features": [
@@ -1453,6 +1475,7 @@
       "name": "Aktives Kindergartenjahr automatisch vorausfüllen",
       "phase": 5,
       "status": "done",
+      "spec_file": "docs/spec-aktives-kindergartenjahr.json",
       "short_description": "Bugfix: Alle Erstellformulare übermitteln automatisch das aktive Kindergartenjahr – kein manueller Auswahlschritt nötig.",
       "description": "Beim Erstellen einer Einkaufsliste (und potenziell weiterer Ressourcen) erscheint der Validierungsfehler 'Kindergartenjahr muss ausgefüllt werden'. Die Ursache: Der ShoppingListsController setzt in der new-Action zwar @list = ShoppingList.new(kindergarten_year: active_year), aber das Formular enthält kein hidden field für kindergarten_year_id – der Wert geht beim Submit verloren. Lösung: (1) KindergartenYear.active Scope hinzufügen, (2) active_kindergarten_year Helper in ApplicationController zentralisieren (ersetzt lokale active_year-Duplikate in allen Controllern), (3) ShoppingList-Formular um hidden field ergänzen, (4) Fallback in Controller-Create-Actions wenn kein Jahr übergeben. Spec: docs/spec-aktives-kindergartenjahr.json",
       "acceptance_criteria": [
@@ -1490,6 +1513,517 @@
       "dependencies": [
         "T3"
       ]
+    },
+    {
+      "id": "F19",
+      "name": "Eltern-Zuordnung in Kind-Show-View verschieben",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-eltern-zuordnung-kind-show.json",
+      "short_description": "Mehrfach-Eltern-Zuordnung wird vom Edit-Formular in die Show-View des Kindes verschoben mit eigenen Hinzufügen-/Entfernen-Aktionen.",
+      "description": "Die Verwaltung der Eltern-Beziehung pro Kind soll von der Edit-Maske in die Detailansicht verschoben werden, damit Pflege ohne komplettes Stammdatenformular erfolgt. Show-View bekommt einen Block 'Eltern' mit Liste, Hinzufügen-Dialog und Entfernen-Aktion. Edit-Formular wird um Eltern-Block bereinigt. Pundit-Policy erlaubt manage_parents nur für Admin/Staff. Spec: docs/spec-eltern-zuordnung-kind-show.json",
+      "acceptance_criteria": [
+        "Show-View enthält Eltern-Block mit zugeordneten Eltern und Aktionen Hinzufügen/Entfernen",
+        "Hinzufügen-Dialog bietet Suche/Auswahl bestehender Eltern-User mit Empty-State",
+        "Edit-Formular enthält keinen Eltern-Block mehr; Hinweistext mit Link zur Show-Seite",
+        "Pundit verweigert Eltern-User die Zuordnungs-Aktionen",
+        "Children/new-Workflow bleibt unverändert"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Eltern hinzufügen aus Show-View",
+          "given": "Kind hat 1 Elternteil zugeordnet, 2 weitere Eltern existieren",
+          "when": "Betreuer klickt 'Elternteil hinzufügen' und wählt einen Elternteil",
+          "then": "Verknüpfung wird gespeichert, Eltern-Liste aktualisiert"
+        },
+        {
+          "scenario": "Eltern-User hat keine Berechtigung",
+          "given": "Eltern-User ist eingeloggt",
+          "when": "Versuch über Endpoint die Zuordnung zu ändern",
+          "then": "Pundit verweigert mit 403"
+        }
+      ],
+      "success_criteria": [
+        "Eltern-Block aus children/edit entfernt",
+        "Tests für neue Routen und Policy grün",
+        "Manuelle Smoke-Tests bestätigen Workflow"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "BF-002",
+      "name": "Foto-Zustimmung wird beim Kind-Edit nicht gespeichert",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-foto-zustimmung-bug.json",
+      "short_description": "Bug: Wechsel der Foto-Zustimmung im Kind-Edit-Formular wird beim Speichern nicht in die Datenbank übernommen.",
+      "description": "Im Edit-Formular eines Kindes ändert sich der Wert von photo_consent nach Submit nicht. Vermutete Ursachen: fehlende Strong-Params, falsches check_box-Setup, oder Default-Override im Controller. Bug muss isoliert, gefixt und durch System-Test abgesichert werden. Spec: docs/spec-foto-zustimmung-bug.json",
+      "acceptance_criteria": [
+        "photo_consent kann von false auf true und zurück gesetzt werden, Wert persistiert",
+        "Strong-Params enthalten photo_consent",
+        "Regressions-Test deckt Toggle-Verhalten ab"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Foto-Zustimmung von false auf true",
+          "given": "Kind hat photo_consent: false",
+          "when": "Betreuer setzt im Edit-Formular die Checkbox und speichert",
+          "then": "DB-Wert ist photo_consent: true"
+        }
+      ],
+      "success_criteria": [
+        "100% Speicher-Erfolgsrate für photo_consent",
+        "Mindestens ein System-Test für photo_consent-Toggle"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F20",
+      "name": "Eltern-Daten von Betreuern bearbeitbar",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-eltern-bearbeitung-staff.json",
+      "short_description": "Betreuer (Staff) dürfen Eltern-Stammdaten anlegen und bearbeiten. Admin/Staff bleiben getrennt von Eltern-Konten.",
+      "description": "UserPolicy/ParentPolicy wird so angepasst, dass Staff create?, edit?, update? auf Eltern-User darf, aber nicht auf Admin/Staff. Sidebar-Eintrag und Index-Seite werden für Staff sichtbar. Löschen bleibt Admin-Aktion. Spec: docs/spec-eltern-bearbeitung-staff.json",
+      "acceptance_criteria": [
+        "Staff darf Eltern-Datensätze CRUDen außer Löschen",
+        "Staff darf nicht auf Admin-/Staff-Konten zugreifen",
+        "Eltern-Index ist im Staff-Menü sichtbar",
+        "Policy-Tests decken positive und negative Fälle ab"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Staff bearbeitet Eltern-User",
+          "given": "Eingeloggter Staff-User",
+          "when": "Edit-Seite eines Eltern-Users wird geöffnet und gespeichert",
+          "then": "Update erfolgreich, 200 Response"
+        },
+        {
+          "scenario": "Staff hat keinen Zugriff auf Admin-User",
+          "given": "Eingeloggter Staff-User",
+          "when": "Edit-Seite eines Admin-Users geöffnet",
+          "then": "Pundit verweigert (403)"
+        }
+      ],
+      "success_criteria": [
+        "Pundit-Policies aktualisiert mit Tests",
+        "Sidebar zeigt Eltern-Eintrag für Staff"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F21",
+      "name": "Eltern-Detailansicht (Show-Seite)",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-eltern-show-seite.json",
+      "short_description": "Eigene Show-Seite für Eltern mit Stammdaten, zugeordneten Kindern und Folgeaktionen (Bearbeiten, Posteingang).",
+      "description": "Eigener ParentsController mit Show-Seite unter /parents/:id. Header mit Stammdaten, Liste zugeordneter Kinder mit Foto-Consent-Badge und Click-Through, Aktionen Bearbeiten / Kind zuordnen / Posteingang. Pundit erlaubt Admin/Staff vollen Zugriff; Eltern dürfen nur ihre eigene Show öffnen. Spec: docs/spec-eltern-show-seite.json",
+      "acceptance_criteria": [
+        "Eigener ParentsController#show unter /parents/:id lädt Stammdaten",
+        "Liste der zugeordneten Kinder mit Click-Through zur Kind-Show",
+        "Empty-State falls keine Kinder",
+        "Eltern dürfen nur ihre eigene Show öffnen (Pundit)"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Show-Seite mit Kindern",
+          "given": "Eltern-User hat 2 Kinder",
+          "when": "Show-Seite geöffnet",
+          "then": "Beide Kinder mit Name, Geburtsdatum, Foto-Consent-Badge sichtbar"
+        }
+      ],
+      "success_criteria": [
+        "Routing- und Policy-Setup vollständig",
+        "Tests für Sichtbarkeit der Kinderliste"
+      ],
+      "dependencies": [
+        "F20"
+      ]
+    },
+    {
+      "id": "F22",
+      "name": "Geburtstags-Hero-Section",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-geburtstage-hero-section.json",
+      "short_description": "Hero-Section auf /birthdays mit visualisierten Geburtstagen der nächsten 7 Tage.",
+      "description": "Geburtstagsübersicht erhält oben eine Hero-Section, die alle Kinder mit Geburtstag in den nächsten 7 Tagen als Karten zeigt. Komponente wird als wiederverwendbarer Partial / ViewComponent extrahiert (für F24). Visuelles Styling per Mikiwa-Design. Spec: docs/spec-geburtstage-hero-section.json",
+      "acceptance_criteria": [
+        "Hero zeigt Kinder mit Geburtstag in 7 Tagen als Karten (Name, Datum, Wochentag, Alter)",
+        "Empty-State zeigt nächsten anstehenden Geburtstag",
+        "Komponente wiederverwendbar (Partial oder ViewComponent)",
+        "Styling folgt Mikiwa Design System"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "3 Geburtstage in 7 Tagen",
+          "given": "3 Kinder haben Geburtstag innerhalb der nächsten 7 Tage",
+          "when": "/birthdays geöffnet",
+          "then": "3 Karten in der Hero-Section sortiert nach Datum"
+        }
+      ],
+      "success_criteria": [
+        "Komponente in mind. 2 Views (birthdays + dashboard) wiederverwendet",
+        "Styling-Review per Mikiwa Design System"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F23",
+      "name": "Geburtstage im Kalender",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-geburtstage-im-kalender.json",
+      "short_description": "Kinder-Geburtstage erscheinen im Kalender als virtueller Eintragstyp mit eigenem Style und Click-Through.",
+      "description": "Kalender-Index merge virtuelle Geburtstags-Einträge in den sichtbaren Zeitraum (kein DB-Eintrag). Visuelle Differenzierung zu Veranstaltungen (Farbe, Icon). Click-Through zur Kind-Show. Funktioniert in Listen- und Monats-View. Spec: docs/spec-geburtstage-im-kalender.json",
+      "acceptance_criteria": [
+        "Geburtstage erscheinen in Listen- und Monats-View",
+        "Eigenes Icon und/oder eigene Farbe",
+        "Click leitet zur Kind-Show (sofern Pundit erlaubt)",
+        "Kein DB-Eintrag, virtuell aus children-Daten gemerged"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Geburtstag im Mai erscheint im Kalender Mai",
+          "given": "Kind mit Geburtstag 8.5.",
+          "when": "Kalender Mai 2026 geöffnet",
+          "then": "Eintrag am 8.5. mit Geburtstags-Style sichtbar"
+        }
+      ],
+      "success_criteria": [
+        "Pundit-Check vor Click-Through-Anzeige",
+        "Kein Performance-Regress im Kalender-Render"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F24",
+      "name": "Caretaker-Dashboard Geburtstags-Hero mit Confetti",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-dashboard-hero-confetti.json",
+      "short_description": "Dashboard für Betreuer rendert die Birthdays-Hero (F22) und ergänzt eine kurze Confetti-Animation für anstehende Geburtstage.",
+      "description": "Caretaker-Dashboard bindet die wiederverwendbare Birthdays-Hero-Komponente ein. Beim Laden läuft eine kurze Confetti-Animation (canvas-confetti oder Tiny-Implementierung) wenn Geburtstage in den nächsten 7 Tagen anstehen. Animation respektiert prefers-reduced-motion. Spec: docs/spec-dashboard-hero-confetti.json",
+      "acceptance_criteria": [
+        "Hero-Section sichtbar im Dashboard above-the-fold",
+        "Confetti läuft 1× wenn Geburtstage anstehen",
+        "Keine Animation bei prefers-reduced-motion: reduce",
+        "Keine Animation wenn keine Geburtstage in 7 Tagen"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Dashboard mit Geburtstag",
+          "given": "1 Kind hat Geburtstag in 3 Tagen",
+          "when": "Betreuer öffnet Dashboard",
+          "then": "Hero zeigt Kind, Confetti läuft 2-3 Sekunden"
+        },
+        {
+          "scenario": "prefers-reduced-motion",
+          "given": "Browser meldet reduce",
+          "when": "Dashboard geladen",
+          "then": "Keine Confetti-Animation"
+        }
+      ],
+      "success_criteria": [
+        "Wiederverwendung der F22-Komponente",
+        "A11y-Check für reduced-motion bestanden"
+      ],
+      "dependencies": [
+        "F22"
+      ]
+    },
+    {
+      "id": "F25",
+      "name": "Einkaufsliste optional einer Gruppe zuordnen",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-einkaufsliste-gruppe-optional.json",
+      "short_description": "ShoppingList erhält ein optionales group_id-Feld; ohne Gruppe gilt sie für den gesamten Kindergarten (staff-intern).",
+      "description": "Migration ergänzt nullable group_id; Formular zeigt Auswahl mit Option 'Gesamter Kindergarten' (= NULL). Listen-Index kennzeichnet Kontext per Badge. Hinweis: Kindergarten-weite Listen (group_id=NULL) sind staff-intern; Eltern sehen sie nicht (siehe F26 Pundit-Scope). Spec: docs/spec-einkaufsliste-gruppe-optional.json",
+      "acceptance_criteria": [
+        "ShoppingList belongs_to :group, optional: true",
+        "Formular bietet Gruppen-Select mit Blank-Option für 'Gesamter Kindergarten'",
+        "Index-Liste zeigt Badge mit Gruppenname oder 'Kindergarten'",
+        "Kindergarten-weite Listen (group_id=NULL) sind nur für Staff/Admin sichtbar"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Liste ohne Gruppe",
+          "given": "Migration ist ausgeführt",
+          "when": "Liste mit group_id=NULL gespeichert",
+          "then": "Speichern erfolgreich, Badge 'Kindergarten' im Index"
+        }
+      ],
+      "success_criteria": [
+        "Migration idempotent",
+        "Tests für beide Code-Pfade (Gruppe vs. NULL)"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F26",
+      "name": "Einkaufsliste optional einem Elternteil zuordnen",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-einkaufsliste-eltern-zuordnung.json",
+      "short_description": "ShoppingList erhält optionales assigned_to_user; Eltern sehen nur ihre eigenen Listen.",
+      "description": "Migration ergänzt assigned_to_user_id (FK auf users). Formular bietet Eltern-Auswahl, eingeschränkt auf Eltern, deren Kinder in der zugeordneten Gruppe sind (oder alle bei Gruppe=NULL). Pundit-Scope für Eltern: ausschließlich Listen ihrer Kinder-Gruppen sichtbar; Kindergarten-weite Listen (group_id=NULL) sind staff-intern und für Eltern NICHT sichtbar. assigned_to dient als Verantwortlich-Markierung; optionaler Filter 'Nur mir zugewiesen'. Anzeige in Index/Detail. Spec: docs/spec-einkaufsliste-eltern-zuordnung.json",
+      "acceptance_criteria": [
+        "ShoppingList hat assigned_to_user_id (nullable, FK auf users)",
+        "Formular bietet Eltern-Auswahl gefiltert auf Eltern der zugeordneten Gruppe (alle bei Gruppe=NULL)",
+        "Pundit-Scope für Eltern: Liste sichtbar nur wenn group_id ∈ Gruppen der eigenen Kinder",
+        "Pundit-Scope für Eltern: Kindergarten-weite Listen (group_id=NULL) NICHT sichtbar",
+        "Pundit-Scope für Staff/Admin: alle Listen sichtbar",
+        "Index/Detail zeigt Verantwortlichen oder 'Nicht zugewiesen'",
+        "Optionaler Filter 'Nur mir zugewiesen' (assigned_to=current_user)"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Eltern sieht Liste ihrer Gruppe",
+          "given": "Lina hat Kind in Gruppe Bären; Liste ist Bären zugeordnet",
+          "when": "Lina öffnet /shopping_lists",
+          "then": "Liste sichtbar"
+        },
+        {
+          "scenario": "Eltern sieht Kindergarten-weite Liste NICHT",
+          "given": "Liste hat group_id=NULL",
+          "when": "Lina öffnet /shopping_lists",
+          "then": "Liste NICHT sichtbar"
+        },
+        {
+          "scenario": "Eltern sieht fremde Gruppen-Liste nicht",
+          "given": "Liste ist Gruppe Löwen zugeordnet; Lina hat kein Kind in Löwen",
+          "when": "Lina öffnet /shopping_lists",
+          "then": "Liste nicht sichtbar"
+        },
+        {
+          "scenario": "Staff sieht alle Listen",
+          "given": "Staff-User; gemischte Listen mit/ohne Gruppe",
+          "when": "Staff öffnet /shopping_lists",
+          "then": "Alle Listen sichtbar"
+        }
+      ],
+      "success_criteria": [
+        "Pundit-Scope-Tests grün für alle vier Sichtbarkeitsfälle",
+        "Eltern haben in keinem Fall Sicht auf group_id=NULL Listen"
+      ],
+      "dependencies": [
+        "F25"
+      ]
+    },
+    {
+      "id": "F27",
+      "name": "Übersicht-Eintrag in Sidebar (Dashboard-Link)",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-uebersicht-sidebar-link.json",
+      "short_description": "Neuer Sidebar-Eintrag 'Übersicht' verlinkt rollenabhängig auf Caretaker- oder Eltern-Dashboard.",
+      "description": "Erster Sidebar-Eintrag mit Home-/Dashboard-Icon. Active-Style auf Dashboard-Pfad. Konsistent mit Mikiwa Design System. Spec: docs/spec-uebersicht-sidebar-link.json",
+      "acceptance_criteria": [
+        "Sidebar enthält 'Übersicht' als oberster Eintrag",
+        "Rollenabhängiger Pfad (Caretaker- vs. Eltern-Dashboard)",
+        "Active-Style auf Dashboard-Seite"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Active-Style auf Dashboard",
+          "given": "Nutzer auf Dashboard-Seite",
+          "when": "Sidebar gerendert",
+          "then": "Übersicht-Eintrag hat Active-Style"
+        }
+      ],
+      "success_criteria": [
+        "Visuelles Styling konsistent",
+        "Beide Rollen testen erfolgreich"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F28",
+      "name": "Light/Dark Mode Toggle",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-light-dark-mode-toggle.json",
+      "short_description": "Toggle in der Topbar wechselt zwischen Light/Dark Mode; Auswahl wird persistiert; respektiert prefers-color-scheme.",
+      "description": "Stimulus-Controller schaltet data-theme oder Tailwind-dark-Klasse. Persistenz in localStorage (v1) und optional User-Preference in DB (v2). Default folgt prefers-color-scheme. Dark-Mode-Tokens aus Mikiwa Design System. Spec: docs/spec-light-dark-mode-toggle.json",
+      "acceptance_criteria": [
+        "Toggle in Topbar mit Sun/Moon Icon",
+        "Wechsel ohne Reload, ohne Flash of Light Theme",
+        "Persistenz in localStorage; bleibt nach Reload",
+        "prefers-color-scheme als Default für neue Sessions",
+        "Dark-Tokens auf allen Hauptseiten lesbar"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Toggle wechselt Theme",
+          "given": "Light Mode aktiv",
+          "when": "User klickt Toggle",
+          "then": "Dark Mode aktiv ohne Reload"
+        },
+        {
+          "scenario": "System-Default Dark",
+          "given": "prefers-color-scheme: dark, keine eigene Wahl",
+          "when": "Seite geladen",
+          "then": "Dark Mode aktiv"
+        }
+      ],
+      "success_criteria": [
+        "Visueller Review aller Hauptseiten in Dark Mode",
+        "A11y-Kontrastverhältnisse erfüllt"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "BF-003",
+      "name": "Galleries Validierungsfehler obwohl Gruppen ausgewählt",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-galleries-validierung-bug.json",
+      "short_description": "Bug: Beim Erstellen/Bearbeiten einer Galerie schlägt 'mindestens eine Gruppe muss zugeordnet sein' fehl, obwohl Gruppen ausgewählt sind.",
+      "description": "Reproduktion per agent-browser, Ursachenanalyse (Strong-Params / nested_attributes / Validation), Fix und Regressions-Test. Erwartet: Validierung greift nur bei tatsächlich leerer Auswahl. Spec: docs/spec-galleries-validierung-bug.json",
+      "acceptance_criteria": [
+        "Reproduktion mit agent-browser dokumentiert",
+        "Ursache identifiziert und gefixt",
+        "Galerie speichert mit 1+ Gruppen ohne Fehler",
+        "Galerie ohne Gruppe zeigt klaren Validierungsfehler",
+        "System-Test deckt Erstellen UND Bearbeiten ab"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Galerie mit Gruppe speichern",
+          "given": "Betreuer wählt eine Gruppe und füllt Pflichtfelder",
+          "when": "Submit",
+          "then": "Galerie wird gespeichert, kein Validierungsfehler"
+        }
+      ],
+      "success_criteria": [
+        "100% Erfolg bei korrekter Eingabe",
+        "Tests grün"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F29",
+      "name": "Galerien Mehrfach-Upload mit Drag & Drop",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-galleries-multi-upload.json",
+      "short_description": "Mehrere Fotos können per Drag & Drop in den Browser gezogen und zuverlässig hochgeladen werden mit Progress-Feedback.",
+      "description": "Drop-Zone akzeptiert mehrere Bilddateien; Active Storage Direct Upload; Progress pro Datei und Gesamtfortschritt; Fehlerbehandlung pro Datei. Limit: 10 MB pro Datei (client + server validiert). agent-browser Test mit 10 Bildern. Spec: docs/spec-galleries-multi-upload.json",
+      "acceptance_criteria": [
+        "Drop-Zone erkennt Drag-Over und Drop von 1..n Dateien",
+        "Alle Dateien werden hochgeladen, einzelne Fehler stoppen Queue nicht",
+        "Progress pro Datei und Gesamtfortschritt sichtbar",
+        "Limit 10 MB pro Datei wird client- und server-seitig validiert",
+        "Klare Fehlermeldungen bei zu groß / Format / Netzwerk",
+        "agent-browser Test mit 10 Bildern erfolgreich"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "10 Bilder per Drop",
+          "given": "Galerie mit 0 Bildern",
+          "when": "10 Bilder gedropt",
+          "then": "Alle 10 erscheinen in der Galerie"
+        }
+      ],
+      "success_criteria": [
+        "≥98% Erfolgsrate",
+        "Reibungsloser Workflow für >20 Bilder"
+      ],
+      "dependencies": [
+        "BF-003"
+      ]
+    },
+    {
+      "id": "F30",
+      "name": "Mobile Layout: Horizontal-Scroll entfernen, Burger-Menü",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-mobile-layout-scroll-burger.json",
+      "short_description": "Audit + Fix für horizontalen Overflow auf Mobile; Burger-Menü in Topbar als vollständige Navigation; Bottom-Nav bleibt für Hauptpunkte.",
+      "description": "Audit aller mobilen Seiten auf Overflow-Quellen, gezielte CSS/Markup-Fixes, Burger-Drawer mit allen Sidebar-Einträgen, A11y (Fokus-Trap, Esc, aria). Bottom-Nav unverändert; Burger ergänzt. agent-browser Tests auf 320-414px. Spec: docs/spec-mobile-layout-scroll-burger.json",
+      "acceptance_criteria": [
+        "Kein horizontaler Overflow auf 320-414px Viewports",
+        "Burger-Icon nur auf Mobile sichtbar; Drawer öffnet/schließt",
+        "Drawer enthält alle Sidebar-Einträge",
+        "A11y: Fokus-Trap, Esc-Schließen, aria-expanded",
+        "agent-browser Tests grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Kein Overflow auf 390px",
+          "given": "Viewport 390px",
+          "when": "Hauptseiten durchgeklickt",
+          "then": "scrollWidth ≤ innerWidth"
+        }
+      ],
+      "success_criteria": [
+        "Lighthouse Mobile-Score steigt",
+        "Visuelle Bestätigung auf realem iPhone/Android"
+      ],
+      "dependencies": [
+        "F32"
+      ]
+    },
+    {
+      "id": "F31",
+      "name": "Mobile Bottom-Nav für Eltern",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-mobile-bottom-nav-eltern.json",
+      "short_description": "Bottom-Nav für Eltern-Rolle enthält genau 4 Punkte: Übersicht, Einkaufsliste, Posteingang, Kalender.",
+      "description": "Rollen-spezifischer Helper bottom_nav_items_for(current_user). Active-State per current_page?. Icons aus Mikiwa Design System. Optional: Badge für ungelesene Posteingangs-Nachrichten. Spec: docs/spec-mobile-bottom-nav-eltern.json",
+      "acceptance_criteria": [
+        "Eltern-Bottom-Nav: Übersicht, Einkaufsliste, Posteingang, Kalender (genau 4 Punkte)",
+        "Active-State sichtbar auf passender Page",
+        "Icons konsistent mit Mikiwa Design System"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Eltern auf Posteingang",
+          "given": "Eltern-User öffnet /inbox",
+          "when": "Bottom-Nav gerendert",
+          "then": "Posteingang-Eintrag hat Active-Style"
+        }
+      ],
+      "success_criteria": [
+        "Helper testbar pro Rolle",
+        "Visuelle Bestätigung auf Mobile"
+      ],
+      "dependencies": [
+        "F30"
+      ]
+    },
+    {
+      "id": "F32",
+      "name": "Mobile Tabellen-Layout (Card-Stack)",
+      "phase": 6,
+      "status": "open",
+      "spec_file": "docs/spec-mobile-tabellen-layout.json",
+      "short_description": "Listen-/Tabellen-Index-Pages werden auf Mobile als Card-Stack dargestellt; auf Desktop bleibt Tabelle.",
+      "description": "Wiederverwendbares Card-Pattern für Hauptlisten (Kinder, Galerien, Veranstaltungen, Listen, Posteingang etc.). Tailwind hidden/md:hidden Strategie. Lange Strings umbrochen. Pro Listentyp wird das prominenteste Feld als Card-Title und 1-2 Sekundärfelder als Meta gewählt. Bei Listen ohne sinnvolles Mapping: Tabellen-Container overflow-x: auto als Fallback. agent-browser Tests auf 390px. Spec: docs/spec-mobile-tabellen-layout.json",
+      "acceptance_criteria": [
+        "Mobile (<768px): Card-Stack statt Tabelle (oder scrollbarer Container als Fallback)",
+        "Desktop (≥768px): Tabelle wie bisher",
+        "Lange Strings umbrochen oder truncated",
+        "Wiederverwendbares Card-Partial vorhanden",
+        "Card-Title/Meta-Mapping pro Listentyp dokumentiert",
+        "agent-browser Tests grün auf 390px"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Kinder-Index Mobile",
+          "given": "Viewport 390px",
+          "when": "/children geöffnet",
+          "then": "Card-Liste statt Tabelle, kein Overflow"
+        }
+      ],
+      "success_criteria": [
+        "Card-Pattern auf mind. 5 Index-Pages eingesetzt",
+        "Konsistentes Aussehen"
+      ],
+      "dependencies": []
     }
   ]
 }

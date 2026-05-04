@@ -1,0 +1,194 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:mobile-tabellen-layout",
+  "name": "Mobile Tabellen-Layout: Inhalte sprengen den Rahmen nicht",
+  "description": "In der mobilen Ansicht werden Listen und Tabellen so dargestellt, dass deren Inhalte den Tabellenrahmen nicht überschreiten. Bevorzugte Strategie: Card-/Stack-Layout auf Mobile statt klassischer Tabelle.",
+  "dateCreated": "2026-05-04",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell werden Tabellen 1:1 auf Mobile gerendert (siehe docs/mobile-tables.png). Dadurch werden Spalten zu schmal, Inhalte überschreiten Zellen, und das Layout bricht. Das verursacht u.a. das horizontale Scrolling aus F30.",
+    "affectedUsers": "Alle mobilen Anwender, die Listen-/Tabellen-Views (Kinder, Galerien, Veranstaltungen, Listen, Anwesenheit etc.) öffnen.",
+    "costOfInaction": "Listen sind unleserlich; Daten werden abgeschnitten oder erzeugen Overflow."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Auf Mobile werden Listen-/Tabellen-Views als Cards / Stacks dargestellt",
+      "type": "user",
+      "target": "Alle Listen-Views (Index-Pages) sind in <768px ohne horizontalen Overflow"
+    },
+    {
+      "description": "Wichtigste Spalten werden hervorgehoben, sekundäre Daten zweitrangig dargestellt",
+      "type": "user",
+      "target": "Pro Card eine klare Hierarchie (Titel + 1-2 Meta-Infos)"
+    },
+    {
+      "description": "Wiederverwendbares Pattern (Partial / View-Helper) für die Card-Darstellung",
+      "type": "business",
+      "target": "Mindestens ein wiederverwendbarer Mechanismus dokumentiert"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Komplettes Daten-Visualisierungs-Redesign",
+      "rationale": "Nur Listen-Pages werden behandelt"
+    },
+    {
+      "description": "Sortier-/Filter-Header auf Mobile",
+      "rationale": "Eigene Spec; aktuell reicht Default-Sortierung"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Mobiler Anwender",
+      "capability": "Listen lesen ohne abgeschnittene Inhalte oder horizontales Scrollen",
+      "benefit": "Vollständige Information am Smartphone",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer auf Tablet",
+      "capability": "Auf größeren Mobile-Viewports weiterhin tabellarische Darstellung sehen",
+      "benefit": "Effiziente Nutzung des verfügbaren Platzes",
+      "priority": 1
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Index-Views der wichtigsten Bereiche (Kinder, Galerien, Veranstaltungen, Einkaufslisten, Anwesenheitslisten, Speiseplan, Posteingang) erhalten ein Mobile-Card-Layout. Pro Listentyp wird das passendste Feld als Card-Title gewählt; sekundäre Felder gehen in die Meta-Zeile. Wenn kein sinnvolles Mapping möglich ist, erhält der Tabellen-Container overflow-x: auto als Fallback.",
+        "acceptanceCriteria": [
+          {
+            "given": "Mobile Viewport <768px",
+            "when": "Index-Page gerendert",
+            "then": "Statt einer breiten Tabelle erscheint eine Liste von Cards/Tiles mit Titel + Meta"
+          },
+          {
+            "given": "Desktop-Viewport ≥768px",
+            "when": "Index-Page gerendert",
+            "then": "Tabelle wie bisher erhalten"
+          },
+          {
+            "given": "Eine Liste hat sehr viele Spalten ohne sinnvolles Card-Mapping",
+            "when": "Mobile gerendert",
+            "then": "Tabellen-Container ist horizontal scrollbar (overflow-x: auto), aber die Page selbst (body) hat keinen Overflow"
+          }
+        ],
+        "technicalNotes": "Tailwind: hidden md:block für Tabelle; md:hidden für Card-Liste; gemeinsamer Render-Helper. Default-Mapping pro Listentyp pragmatisch wählen (siehe resolvedDecisions). Scroll-Fallback nur als letzter Ausweg.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Lange Strings werden umbrochen oder abgeschnitten ohne Layout zu sprengen",
+        "acceptanceCriteria": [
+          {
+            "given": "Eintrag mit sehr langem Namen (50+ Zeichen)",
+            "when": "Mobile gerendert",
+            "then": "Umbruch oder Truncate mit Tooltip; kein Overflow"
+          }
+        ],
+        "technicalNotes": "overflow-wrap: anywhere; truncate-Klasse",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Wiederverwendbares Card-Pattern (Partial app/views/shared/_list_card.html.haml)",
+        "acceptanceCriteria": [
+          {
+            "given": "Eine neue Index-Page benötigt Mobile-Card-Layout",
+            "when": "Entwickler integriert das Partial",
+            "then": "Konsistentes Aussehen mit anderen Mobile-Listen"
+          }
+        ],
+        "technicalNotes": "Slots/Locals für title, meta, actions",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-004",
+        "description": "agent-browser Test: scrollWidth ≤ innerWidth auf 390px Viewport für jede betroffene Index-Page",
+        "acceptanceCriteria": [
+          {
+            "given": "Test läuft mit 390px Viewport",
+            "when": "Jede Index-Page geöffnet",
+            "then": "scrollWidth ≤ innerWidth"
+          }
+        ],
+        "technicalNotes": "agent-browser-Skript",
+        "dependencies": ["R-P0-001"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Tap auf Card öffnet Show-View (statt nur kleiner Klickfläche im Titel)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Ganze Card als Link; data-turbo-frame falls nötig",
+        "dependencies": ["R-P0-001"]
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Skeleton-Loader bei langsamen Verbindungen",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Sortier-/Filter-UI auf Mobile (z.B. Bottom-Sheet)",
+        "rationale": "Eigene Spec"
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Mobile Overflow-Bugs",
+        "description": "Anzahl Index-Pages mit horizontalem Overflow auf 390px",
+        "target": "0",
+        "measurementMethod": "agent-browser Tests",
+        "evaluationAt": "Direkt nach Launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Mobile Sessions auf Listen-Pages",
+        "description": "Verweildauer und Interaktionen auf Listen-Pages",
+        "target": "Steigend",
+        "measurementMethod": "Analytics",
+        "evaluationAt": "60 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [],
+  "spec:resolvedDecisions": [
+    {
+      "question": "Welche Felder pro Listentyp gehören in den Card-Title vs. Meta-Zeile?",
+      "decision": "Implementierung wählt pragmatisch das prominenteste Feld als Title und 1-2 Sekundärfelder als Meta. Default-Mapping (kann beim Implementieren angepasst werden): Kinder → Name (Title), Geburtsdatum + Gruppe (Meta). Galerien → Titel (Title), Datum + Anzahl Fotos (Meta). Veranstaltungen → Titel (Title), Datum + Ort (Meta). Einkaufslisten → Titel (Title), Gruppe + Verantwortlich (Meta). Anwesenheitslisten → Titel (Title), Datum (Meta). Speiseplan → Tag/Mahlzeit (Title), Beschreibung (Meta). Posteingang → Betreff (Title), Absender + Datum (Meta). Bei Listen ohne sinnvolles Mapping: Tabellen-Container scrollbar machen.",
+      "decidedAt": "2026-05-04",
+      "decidedBy": "stakeholder"
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "F30 Mobile Layout (gemeinsamer Overflow-Audit)" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Card-Pattern für Hauptlisten (Kinder, Galerien, Listen, Veranstaltungen, Posteingang) + Tests" },
+      { "name": "v2", "scope": "Restliche Index-Pages, Skeleton, Tap-Card-Fullhit" }
+    ]
+  }
+}
