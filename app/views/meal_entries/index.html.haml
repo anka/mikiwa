@@ -38,6 +38,14 @@
           %tr
             %td
               %strong= group.name
+              %br
+              = link_to print_meal_entries_path(group_id: group.id, week: @week_start.iso8601),
+                  target: "_blank", rel: "noopener",
+                  class: "mw-page-action",
+                  title: "Speiseplan dieser Gruppe drucken",
+                  style: "margin-top: 0.35rem; padding: 2px 6px; font-size: var(--fs-12);" do
+                = lucide_icon "printer", size: 12
+                Drucken
             - @week_days.each do |day|
               - entry = @entries_by_day_group[[day, group.id]]
               %td{ style: "vertical-align: top; padding: 0.5rem;" }

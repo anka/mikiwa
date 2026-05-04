@@ -63,7 +63,11 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :meal_entries, only: %i[index new create edit update destroy]
+  resources :meal_entries, only: %i[index new create edit update destroy] do
+    collection do
+      get :print
+    end
+  end
   get "birthdays", to: "birthdays#index", as: :birthdays
 
   resources :calendar_events

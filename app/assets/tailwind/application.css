@@ -2810,3 +2810,233 @@ html, body { overflow-x: clip; max-width: 100%; }
   }
   .mw-table--cards td[data-label="Aktionen"]::before { display: none; }
 }
+
+/* ==========================================================================
+   F33: Print-Layout für Speiseplan (A4 Querformat)
+   ========================================================================== */
+
+/* Screen-Vorschau-Container — A4-Proportionen, zentriert auf Bildschirm */
+.mw-print-body {
+  background: var(--bg-canvas);
+  margin: 0;
+  padding: 32px 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.mw-print-sheet {
+  background: var(--surface);
+  width: 297mm;
+  max-width: 100%;
+  min-height: 210mm;
+  padding: 14mm 14mm 10mm;
+  box-shadow: 0 6px 32px rgba(80, 60, 30, 0.10);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10mm;
+  box-sizing: border-box;
+  font-family: var(--font-body);
+  color: var(--fg-1);
+}
+
+.mw-print-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: end;
+  gap: 12mm;
+  padding-bottom: 6mm;
+  border-bottom: 2px solid var(--accent);
+}
+
+.mw-print-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mw-print-header__logo { width: 56px; height: 56px; }
+
+.mw-print-header__brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.mw-print-header__wordmark {
+  font-family: var(--font-display);
+  font-weight: var(--fw-extra);
+  font-size: 22px;
+  color: var(--fg-1);
+  letter-spacing: var(--tracking-tight);
+}
+
+.mw-print-header__tagline {
+  font-size: 11px;
+  color: var(--fg-3);
+  margin-top: 2px;
+}
+
+.mw-print-header__title { text-align: center; }
+
+.mw-print-header__heading {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: var(--fw-extra);
+  margin: 0;
+  color: var(--fg-1);
+  letter-spacing: var(--tracking-tight);
+}
+
+.mw-print-header__group {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: var(--fw-semibold);
+  color: var(--fg-2);
+}
+
+.mw-print-header__week {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
+}
+
+.mw-print-header__kw {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: var(--fw-bold);
+  color: var(--accent);
+}
+
+.mw-print-header__range {
+  font-size: 13px;
+  color: var(--fg-2);
+  white-space: nowrap;
+}
+
+/* 5 gleich breite Tag-Karten nebeneinander */
+.mw-print-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5mm;
+}
+
+.mw-print-day {
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1.5px solid;
+  box-shadow: 0 2px 6px rgba(80, 60, 30, 0.05);
+  break-inside: avoid;
+}
+
+.mw-print-day__header {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+  border-bottom: 1.5px solid;
+}
+
+.mw-print-day__weekday {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: 1;
+}
+
+.mw-print-day__date {
+  font-size: 12px;
+  font-weight: var(--fw-medium);
+  opacity: 0.8;
+}
+
+.mw-print-day__body {
+  flex: 1;
+  padding: 12px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface);
+}
+
+.mw-print-day__meal {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: var(--fw-bold);
+  color: var(--fg-1);
+  line-height: 1.25;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.mw-print-day__notes {
+  font-size: 12px;
+  color: var(--fg-2);
+  line-height: 1.35;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.mw-print-day__placeholder {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--fg-3);
+  margin: 0;
+}
+
+/* Pastellfarben pro Wochentag (Header + Border) */
+.mw-print-day--sun    { border-color: var(--sun-300);   }
+.mw-print-day--sun    .mw-print-day__header { background: var(--sun-100);   color: var(--sun-800);   border-bottom-color: var(--sun-300); }
+.mw-print-day--meadow { border-color: var(--leaf-300);  }
+.mw-print-day--meadow .mw-print-day__header { background: var(--leaf-100);  color: var(--leaf-800);  border-bottom-color: var(--leaf-300); }
+.mw-print-day--sky    { border-color: var(--sky-300);   }
+.mw-print-day--sky    .mw-print-day__header { background: var(--sky-100);   color: var(--sky-800);   border-bottom-color: var(--sky-300); }
+.mw-print-day--coral  { border-color: var(--coral-300); }
+.mw-print-day--coral  .mw-print-day__header { background: var(--coral-100); color: var(--coral-800); border-bottom-color: var(--coral-300); }
+.mw-print-day--berry  { border-color: var(--berry-200); }
+.mw-print-day--berry  .mw-print-day__header { background: var(--berry-100); color: var(--berry-800); border-bottom-color: var(--berry-200); }
+
+.mw-print-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--fg-3);
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 4mm;
+}
+
+/* Druck-Optimierung */
+@media print {
+  @page { size: A4 landscape; margin: 8mm; }
+  .mw-print-body {
+    background: white;
+    padding: 0;
+    display: block;
+  }
+  .mw-print-sheet {
+    width: auto;
+    min-height: auto;
+    max-width: 100%;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    /* Wichtig damit Pastell-Backgrounds gedruckt werden */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .mw-print-day { box-shadow: none; }
+}
+
+@media (max-width: 1100px) {
+  .mw-print-sheet { padding: 10mm; }
+  .mw-print-grid { gap: 3mm; }
+  .mw-print-header { grid-template-columns: 1fr; gap: 4mm; text-align: center; }
+  .mw-print-header__week { align-items: center; text-align: center; }
+}

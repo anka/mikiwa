@@ -1,0 +1,17 @@
+!!!
+%html{ lang: "de", "data-theme": "light" }
+  %head
+    %meta{ "http-equiv": "Content-Type", content: "text/html; charset=UTF-8" }/
+    %title= content_for(:title) || "Mikiwa"
+    %meta{ name: "viewport", content: "width=device-width,initial-scale=1" }/
+    = csrf_meta_tags
+    = csp_meta_tag
+    %link{ rel: "icon", type: "image/svg+xml", href: "/icon.svg" }/
+    = stylesheet_link_tag "tailwind", "data-turbo-track": "reload"
+    = javascript_tag nonce: true do
+      :plain
+        window.addEventListener("load", function () {
+          setTimeout(function () { window.print(); }, 50);
+        });
+  %body.mw-print-body
+    = yield

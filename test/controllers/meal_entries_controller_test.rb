@@ -149,4 +149,81 @@ class MealEntriesControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :forbidden
   end
+
+  # --- print (F33: Speiseplan pro Gruppe drucken) ---
+
+  test "F33 staff kann Druck-Ansicht öffnen" do
+    sign_in_as(@staff)
+    get print_meal_entries_path, params: { group_id: @group.id, week: "2026-05-04" }
+    assert_response :success
+    assert_match @group.name, response.body
+    assert_match "Nudeln", response.body
+  end
+
+  test "F33 Druck-Ansicht zeigt alle 5 Wochentage Mo-Fr" do
+    sign_in_as(@staff)
+    get print_meal_entries_path, params: { group_id: @group.id, week: "2026-05-04" }
+    assert_response :success
+    %w[Montag Dienstag Mittwoch Donnerstag Freitag].each do |day|
+      assert_match day, response.body, "Wochentag #{day} muss im Druck-Layout vorkommen"
+    end
+  end
+
+  test "F33 Druck-Ansicht zeigt 'Noch nicht geplant' für leere Tage" do
+    sign_in_as(@staff)
+    get print_meal_entries_path, params: { group_id: @group.id, week: "2026-05-04" }
+    assert_response :success
+    assert_match(/Noch nicht geplant/i, response.body)
+  end
+
+  test "F33 Druck-Ansicht löst window.print() automatisch aus" do
+    sign_in_as(@staff)
+    get print_meal_entries_path, params: { group_id: @group.id, week: "2026-05-04" }
+    assert_response :success
+    assert_match(/window\.print\(\)/, response.body)
+  end
+
+  test "F33 Druck-Ansicht nutzt minimales print-Layout (kein Sidebar/Topbar)" do
+    sign_in_as(@staff)
+    get print_meal_entries_path, params: { group_id: @group.id, week: "2026-05-04" }
+    assert_response :success
+    assert_no_match(/mw-sidebar/, response.body, "Sidebar darf im Druck-Layout nicht erscheinen")
+    assert_no_match(/mw-mobile-nav/, response.body, "Mobile-Nav darf im Druck-Layout nicht erscheinen")
+    assert_no_match(/mw-app-topbar/, response.body, "Topbar darf im Druck-Layout nicht erscheinen")
+  end
+
+  test "F33 Eltern dürfen Druck für eigene Gruppe öffnen" do
+    sign_in_as(@parent)
+    get print_meal_entries_path, params: { group_id: @group.id, week: "2026-05-04" }
+    assert_response :success
+  end
+
+  test "F33 Eltern bekommt 403 für fremde Gruppe" do
+    sign_in_as(@parent)
+    fremde_gruppe = Group.create!(name: "Fremd-Gruppe")
+    get print_meal_entries_path, params: { group_id: fremde_gruppe.id, week: "2026-05-04" }
+    assert_response :forbidden
+  end
+
+  test "F33 Druck ohne group_id → 404" do
+    sign_in_as(@staff)
+    get print_meal_entries_path, params: { week: "2026-05-04" }
+    assert_response :not_found
+  end
+
+  test "F33 Druck mit unbekannter group_id → 404" do
+    sign_in_as(@staff)
+    get print_meal_entries_path, params: { group_id: "no-such-id", week: "2026-05-04" }
+    assert_response :not_found
+  end
+
+  test "F33 Index zeigt Druck-Button pro Gruppe mit korrekten Parametern" do
+    sign_in_as(@staff)
+    get meal_entries_path, params: { week: "2026-05-04" }
+    assert_response :success
+    # URL-Parameter werden HTML-escaped (& → &amp;), daher beide Teile separat prüfen
+    assert_match "/meal_entries/print?group_id=#{@group.id}", response.body
+    assert_match "week=2026-05-04", response.body
+    assert_match "Drucken", response.body
+  end
 end

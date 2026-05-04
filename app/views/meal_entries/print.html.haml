@@ -1,0 +1,39 @@
+- content_for :title, "Speiseplan #{@group.name} · KW #{@week_number} · Mikiwa"
+
+- day_tones = %w[sun meadow sky coral berry]
+- day_names = %w[Montag Dienstag Mittwoch Donnerstag Freitag]
+
+%article.mw-print-sheet
+  %header.mw-print-header
+    .mw-print-header__brand
+      = image_tag "mikiwa/logo-mikiwa.svg", class: "mw-print-header__logo", alt: "Mikiwa"
+      .mw-print-header__brand-text
+        %span.mw-print-header__wordmark mikiwa
+        %span.mw-print-header__tagline Mit Kindern wachsen
+    .mw-print-header__title
+      %h1.mw-print-header__heading Speiseplan
+      %p.mw-print-header__group= @group.name
+    .mw-print-header__week
+      %span.mw-print-header__kw= "KW #{@week_number}"
+      %span.mw-print-header__range
+        = "#{l(@week_start, format: '%-d. %B')} – #{l(@week_start + 4.days, format: '%-d. %B %Y')}"
+
+  .mw-print-grid
+    - @week_days.each_with_index do |day, idx|
+      - entry = @entries_by_day[day]
+      - tone  = day_tones[idx]
+      %section.mw-print-day{ class: "mw-print-day--#{tone}" }
+        %header.mw-print-day__header
+          %span.mw-print-day__weekday= day_names[idx]
+          %span.mw-print-day__date= day.strftime("%-d.%-m.")
+        .mw-print-day__body
+          - if entry
+            %p.mw-print-day__meal= entry.meal
+            - if entry.notes.present?
+              %p.mw-print-day__notes= entry.notes
+          - else
+            %p.mw-print-day__placeholder Noch nicht geplant
+
+  %footer.mw-print-footer
+    %span Mikiwa · Mit Kindern wachsen
+    %span= "Stand: #{l(Date.current, format: :long)}"
