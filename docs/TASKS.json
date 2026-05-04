@@ -1673,7 +1673,7 @@
       "id": "F23",
       "name": "Geburtstage im Kalender",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-geburtstage-im-kalender.json",
       "short_description": "Kinder-Geburtstage erscheinen im Kalender als virtueller Eintragstyp mit eigenem Style und Click-Through.",
       "description": "Kalender-Index merge virtuelle Geburtstags-Einträge in den sichtbaren Zeitraum (kein DB-Eintrag). Visuelle Differenzierung zu Veranstaltungen (Farbe, Icon). Click-Through zur Kind-Show. Funktioniert in Listen- und Monats-View. Spec: docs/spec-geburtstage-im-kalender.json",

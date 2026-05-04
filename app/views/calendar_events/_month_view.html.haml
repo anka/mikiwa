@@ -19,14 +19,21 @@
     .mw-cal-grid
       - @calendar_cells.each do |date|
         - is_today = date == Date.today
-        - day_events = date ? (@events_by_date[date] || []) : []
+        - day_events     = date ? (@events_by_date[date] || []) : []
+        - day_birthdays  = date ? (@birthdays_by_date[date] || []) : []
+        - total          = day_events.size + day_birthdays.size
         .mw-cal-cell{ class: [is_today ? "mw-cal-cell--today" : nil, date.nil? ? "mw-cal-cell--empty" : nil].compact.join(" ") }
           - if date
             .mw-cal-cell__day{ class: is_today ? "mw-cal-cell__day--today" : nil }= date.day
             .mw-cal-cell__events
-              - day_events.first(3).each do |event|
+              - day_birthdays.first(3).each do |birthday|
+                .mw-cal-event.mw-cal-event--birthday{ title: "Geburtstag: #{birthday.title}" }
+                  = link_to child_path(birthday.child), class: "mw-cal-event__link" do
+                    = lucide_icon "cake", size: 12
+                    = birthday.title.truncate(20)
+              - day_events.first([3 - day_birthdays.size, 0].max).each do |event|
                 - tone = event.event_type == "veranstaltung" ? "accent" : "info"
                 .mw-cal-event{ class: "mw-cal-event--#{tone}", title: event.title }
                   = link_to event.title.truncate(22), calendar_event_path(event), class: "mw-cal-event__link"
-              - if day_events.size > 3
-                .mw-cal-event__more= "+#{day_events.size - 3} weitere"
+              - if total > 3
+                .mw-cal-event__more= "+#{total - 3} weitere"

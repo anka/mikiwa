@@ -168,6 +168,47 @@ class CalendarEventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
+  # F23: Geburtstage im Kalender
+  test "F23 Monats-View zeigt Geburtstag am korrekten Tag" do
+    sign_in_as(@caretaker)
+    @child.update!(date_of_birth: Date.new(2021, 6, 8))
+    get calendar_events_path, params: { view: "month", month: "2026-06" }
+    assert_response :success
+    assert_match(/mw-cal-event--birthday/, response.body, "Birthday-Style muss vorhanden sein")
+    assert_match @child.full_name, response.body
+  end
+
+  test "F23 Listen-View zeigt Geburtstag mit Badge" do
+    sign_in_as(@caretaker)
+    @child.update!(date_of_birth: Date.new(2021, 6, 8))
+    get calendar_events_path, params: { view: "list" }
+    assert_response :success
+    assert_match @child.full_name, response.body
+    assert_match(/Geburtstag/i, response.body)
+  end
+
+  test "F23 Geburtstags-Chip verlinkt zur Kind-Show-Seite" do
+    sign_in_as(@caretaker)
+    @child.update!(date_of_birth: Date.new(2021, 6, 8))
+    get calendar_events_path, params: { view: "month", month: "2026-06" }
+    assert_response :success
+    assert_match child_path(@child), response.body
+  end
+
+  test "F23 Eltern sieht nur Geburtstage aus eigenen Gruppen" do
+    sign_in_as(@parent)
+    other_child = Child.create!(
+      first_name: "Sophia", last_name: "Fern",
+      date_of_birth: Date.new(2021, 6, 12),
+      group: @group_loewen, kindergarten_year: @year, photo_consent: true
+    )
+    @child.update!(date_of_birth: Date.new(2021, 6, 8))
+    get calendar_events_path, params: { view: "month", month: "2026-06" }
+    assert_response :success
+    assert_match @child.full_name, response.body
+    assert_no_match(/Sophia/, response.body)
+  end
+
   # --- Non-all-day event ---
   test "caretaker can create non-all-day event with time" do
     sign_in_as(@caretaker)

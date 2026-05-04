@@ -1456,6 +1456,14 @@ a:hover { color: var(--fg-link-hover); border-bottom-color: currentColor; }
 .mw-badge--danger  { background: var(--danger-soft);  color: var(--danger); }
 .mw-badge--warning { background: var(--warning-soft); color: var(--coral-700); }
 .mw-badge--accent  { background: var(--accent-soft);  color: var(--sun-800); }
+.mw-badge--birthday {
+  background: color-mix(in oklab, var(--success) 14%, transparent);
+  color: var(--success);
+  border: 1px solid color-mix(in oklab, var(--success) 22%, transparent);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
 .mw-badge--info    { background: var(--info-soft);    color: var(--info); }
 
 /* Flash messages */
@@ -1715,6 +1723,16 @@ a:hover { color: var(--fg-link-hover); border-bottom-color: currentColor; }
 .mw-cal-event--accent {
   background: var(--accent-soft);
   color: var(--sun-800);
+}
+.mw-cal-event--birthday {
+  background: color-mix(in oklab, var(--success) 14%, transparent);
+  color: var(--success);
+  border: 1px solid color-mix(in oklab, var(--success) 22%, transparent);
+}
+.mw-cal-event--birthday .mw-cal-event__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .mw-cal-event__link {
   display: block;

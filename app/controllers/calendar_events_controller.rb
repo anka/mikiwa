@@ -16,12 +16,17 @@ class CalendarEventsController < ApplicationController
       base_scope = base_scope.for_groups([ params[:group_id] ])
     end
 
+    birthday_resolver = CalendarBirthdayResolver.new(current_user)
+
     if @view == "month"
       @month = parse_month(params[:month])
       @events_by_date = base_scope.for_month(@month).ordered.group_by(&:start_date)
       @calendar_cells = build_calendar_cells(@month)
+      @birthdays_by_date = birthday_resolver.grouped_for_range(@month.beginning_of_month..@month.end_of_month)
     else
       @events = base_scope.ordered
+      year_range = (@filter_year&.start_date || Date.current.beginning_of_year)..(@filter_year&.end_date || Date.current.end_of_year)
+      @birthday_entries = birthday_resolver.for_range(year_range)
     end
 
     @kindergarten_years = KindergartenYear.order(start_date: :desc)
