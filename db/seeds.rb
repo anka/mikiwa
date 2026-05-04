@@ -15,8 +15,17 @@ puts ""
 
 # ── Bestehende Daten bereinigen (Reihenfolge wegen FK-Constraints) ──────────
 print "  Bereinige bestehende Daten … "
-[ ParentChild, MedicalNote, EmergencyContact, Child,
- Group, KindergartenYear, Session, User ].each(&:delete_all)
+[
+  Vote, PollOption, Poll,
+  InboxEntry, MessageGroup, Message,
+  GalleryGroup, Gallery,
+  CalendarEventGroup, CalendarEvent,
+  AttendanceEntry, AttendanceList,
+  ShoppingItem, ShoppingList,
+  MealEntry,
+  ParentChild, MedicalNote, EmergencyContact, Child,
+  Group, KindergartenYear, Session, User
+].each(&:delete_all)
 puts "✓"
 
 DEMO_PW = "changeme12345678"
@@ -363,6 +372,66 @@ demo_child(
   ]
 )
 
+# ── Speiseplan – aktuelle + nächste 3 Wochen ─────────────────────────────────
+puts "  Speiseplan …"
+
+cook = User.find_by(email: "klaus@mikiwa.local") || User.staff.first
+
+# 4 Wochen mit jeweils Mo-Fr; pro Tag eine Mahlzeit (Küche kocht für alle Gruppen
+# gleich, deshalb identische Mahlzeit pro Wochentag in allen Gruppen).
+weekly_menus = [
+  [
+    [ "Spaghetti Bolognese",            "Vegetarische Variante mit Linsen-Sauce" ],
+    [ "Gemüsesuppe mit Kartoffeln",     "Mit frischem Vollkornbrot" ],
+    [ "Hühnerschnitzel mit Reis",       "Dazu gedünstete Karotten" ],
+    [ "Kärntner Kasnudeln mit Salat",   nil ],
+    [ "Fischstäbchen mit Erdäpfelpüree", "Nachtisch: Apfelmus" ]
+  ],
+  [
+    [ "Cremige Karottensuppe",          "Mit Croûtons und Kresse" ],
+    [ "Erdäpfelpuffer mit Apfelmus",    nil ],
+    [ "Lasagne (vegetarisch)",          "Mit Zucchini und Spinat" ],
+    [ "Kürbis-Risotto",                 "Saisonal aus dem Bio-Garten" ],
+    [ "Pizza mit Tomaten und Mozzarella", "Pizza-Tag – immer ein Highlight" ]
+  ],
+  [
+    [ "Grießnockerlsuppe",              "Mit Karotten- und Selleriewürfeln" ],
+    [ "Reisfleisch mit Erbsen",         nil ],
+    [ "Palatschinken mit Marmelade",    "Marillen aus eigenem Garten" ],
+    [ "Linseneintopf mit Wienerle",     "Vegetarische Wienerle auf Wunsch" ],
+    [ "Käsespätzle mit Röstzwiebeln",   "Klassiker, kommt immer gut an" ]
+  ],
+  [
+    [ "Tomatensuppe mit Reis",          nil ],
+    [ "Hirseauflauf mit Gemüse",        "Mit Karotten, Lauch und Mais" ],
+    [ "Fischfilet mit Petersilkartoffeln", "Aus heimischer Aquakultur" ],
+    [ "Kärntner Kasnudeln",             "Hausgemacht von Klaus & Tine" ],
+    [ "Apfelkücherl mit Vanillesoße",   "Süßer Wochenausklang" ]
+  ]
+]
+
+monday_this_week = Date.current.beginning_of_week(:monday)
+groups = [ sunflowers, ladybugs, butterflies ]
+
+meal_count = 0
+weekly_menus.each_with_index do |menu, week_offset|
+  monday = monday_this_week + (week_offset * 7).days
+  menu.each_with_index do |(meal, notes), day_offset|
+    date = monday + day_offset.days
+    groups.each do |group|
+      MealEntry.create!(
+        date:               date,
+        meal:               meal,
+        notes:              notes,
+        group:              group,
+        kindergarten_year:  year,
+        created_by:         cook
+      )
+      meal_count += 1
+    end
+  end
+end
+
 # ── Zusammenfassung ──────────────────────────────────────────────────────────
 puts ""
 puts "  ┌──────────────────────────────────────────────┐"
@@ -375,6 +444,7 @@ printf "  │  Gruppen           %-3s                        │\n", Group.count
 printf "  │  Kinder            %-3s                        │\n", Child.count
 printf "  │  Notfallkontakte   %-3s                        │\n", EmergencyContact.count
 printf "  │  Med. Hinweise     %-3s                        │\n", MedicalNote.count
+printf "  │  Speiseplan        %-3s                        │\n", MealEntry.count
 puts "  ├──────────────────────────────────────────────┤"
 puts "  │  Login  sabine@mikiwa.local                   │"
 puts "  │  PW     changeme12345678                     │"
