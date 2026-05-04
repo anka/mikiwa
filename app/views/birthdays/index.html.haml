@@ -4,6 +4,11 @@
   .mw-page-header__text
     %h1.mw-page-header__title Geburtstagsübersicht
 
+= render "shared/birthdays_hero",
+    upcoming:      @upcoming_birthdays,
+    next_upcoming: @next_birthday_child,
+    days_ahead:    @hero_days_ahead
+
 - if @children.any?
   .mw-card{ style: "margin-top: 1.5rem;" }
     %table.mw-table{ style: "width: 100%;" }

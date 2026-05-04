@@ -1,0 +1,47 @@
+-# Wiederverwendbare Hero-Section für anstehende Geburtstage.
+-# Locals:
+-#   upcoming      – Array<Child> mit Geburtstag im Zeitfenster
+-#   next_upcoming – Child? mit nächstem Geburtstag (für Empty-State)
+-#   days_ahead    – Integer, Größe des Zeitfensters (z.B. 7)
+-#   confetti      – Boolean, optional, blendet Confetti-Akzent ein (F24)
+
+- days_ahead ||= 7
+- confetti ||= false
+
+%section.mw-birthdays-hero{ class: confetti ? "mw-birthdays-hero--confetti" : nil }
+  .mw-birthdays-hero__header
+    = lucide_icon "cake", size: 24, class: "mw-birthdays-hero__icon"
+    %h2.mw-birthdays-hero__title
+      Geburtstage in den nächsten #{days_ahead} Tagen
+
+  - if upcoming.present? && upcoming.any?
+    .mw-birthdays-hero__grid
+      - today = Date.current
+      - upcoming.each do |child|
+        - upcoming_date = next_birthday(child.date_of_birth, today)
+        - days_until = (upcoming_date - today).to_i
+        - new_age = upcoming_date.year - child.date_of_birth.year
+        = link_to child_path(child), class: "mw-birthday-card #{days_until.zero? ? 'mw-birthday-card--today' : ''}" do
+          .mw-birthday-card__date
+            %span.mw-birthday-card__weekday= I18n.l(upcoming_date, format: "%A")
+            %span.mw-birthday-card__day= upcoming_date.strftime("%-d. %B")
+          .mw-birthday-card__name= child.full_name
+          .mw-birthday-card__meta
+            - if days_until.zero?
+              %span.mw-badge.mw-badge--success Heute!
+            - elsif days_until == 1
+              %span.mw-badge.mw-badge--warning Morgen
+            - else
+              %span.mw-badge.mw-badge--warning= "in #{days_until} Tagen"
+            %span.mw-birthday-card__age= "wird #{new_age} Jahre"
+  - else
+    .mw-birthdays-hero__empty
+      %p.mw-birthdays-hero__empty-text
+        Keine Geburtstage in den nächsten #{days_ahead} Tagen.
+      - if next_upcoming.present?
+        - upcoming_date = next_birthday(next_upcoming.date_of_birth, Date.current)
+        - new_age = upcoming_date.year - next_upcoming.date_of_birth.year
+        %p.mw-birthdays-hero__empty-next
+          Nächster Geburtstag:
+          %strong= next_upcoming.full_name
+          %span am #{I18n.l(upcoming_date, format: "%A, %-d. %B")} (wird #{new_age} Jahre)

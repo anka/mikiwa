@@ -68,4 +68,49 @@ class BirthdaysControllerTest < ActionDispatch::IntegrationTest
     get birthdays_path
     assert_response :success
   end
+
+  # F22: Geburtstags-Hero-Section
+  test "F22 Hero zeigt Kinder mit Geburtstag in den nächsten 7 Tagen" do
+    sign_in_as(@staff)
+    get birthdays_path
+    assert_response :success
+    # @child_soon hat Geburtstag in 7 Tagen, @child_other_group in 3 Tagen
+    assert_match(/mw-birthdays-hero/, response.body, "Hero-Section muss vorhanden sein")
+    assert_match "Emma", response.body
+    assert_match "Mia", response.body
+  end
+
+  test "F22 Hero ist sortiert nach Datum (nähestes zuerst)" do
+    sign_in_as(@staff)
+    get birthdays_path
+    assert_response :success
+    # @child_other_group (Mia) in 3 Tagen kommt vor @child_soon (Emma) in 7 Tagen
+    body = response.body
+    hero_section = body[/mw-birthdays-hero.*?<\/section>/m] || body
+    mia_pos = hero_section.index("Mia")
+    emma_pos = hero_section.index("Emma")
+    assert mia_pos && emma_pos, "Beide Namen müssen im Hero auftauchen"
+    assert mia_pos < emma_pos, "Mia (3 Tage) muss vor Emma (7 Tage) erscheinen"
+  end
+
+  test "F22 Hero zeigt Karten mit Name, Datum, Wochentag und Alter" do
+    sign_in_as(@staff)
+    get birthdays_path
+    assert_response :success
+    # @child_other_group "Mia Löwen" geboren today.change(year: today.year - 3) + 3.days → wird 4
+    assert_match(/Mia/, response.body)
+    upcoming = (Date.current + 3.days)
+    assert_match(/4 Jahre|wird 4/i, response.body, "Neues Alter sollte 4 sein")
+  end
+
+  test "F22 Hero zeigt Empty-State wenn keine Geburtstage in 7 Tagen" do
+    sign_in_as(@staff)
+    @child_soon.destroy
+    @child_other_group.destroy
+    # nur @child_later (in 60 Tagen) bleibt
+    get birthdays_path
+    assert_response :success
+    assert_match(/Keine Geburtstage in den nächsten/i, response.body)
+    assert_match "Tom", response.body, "Nächster Geburtstag (Tom) muss im Empty-State stehen"
+  end
 end

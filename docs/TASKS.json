@@ -1645,7 +1645,7 @@
       "id": "F22",
       "name": "Geburtstags-Hero-Section",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-geburtstage-hero-section.json",
       "short_description": "Hero-Section auf /birthdays mit visualisierten Geburtstagen der nächsten 7 Tage.",
       "description": "Geburtstagsübersicht erhält oben eine Hero-Section, die alle Kinder mit Geburtstag in den nächsten 7 Tagen als Karten zeigt. Komponente wird als wiederverwendbarer Partial / ViewComponent extrahiert (für F24). Visuelles Styling per Mikiwa-Design. Spec: docs/spec-geburtstage-hero-section.json",
