@@ -224,6 +224,28 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Lina", response.body
   end
 
+  # F27: Übersicht-Eintrag in Sidebar
+  test "F27 Sidebar zeigt Übersicht-Eintrag für Caretaker mit Link auf Staff-Dashboard" do
+    sign_in_as(@staff)
+    get staff_dashboard_path
+    assert_response :success
+    assert_select "nav.mw-sidebar a[href='#{staff_dashboard_path}']", text: /Übersicht/
+  end
+
+  test "F27 Sidebar zeigt Übersicht-Eintrag für Eltern mit Link auf Parent-Dashboard" do
+    sign_in_as(@parent_a)
+    get parent_dashboard_path
+    assert_response :success
+    assert_select "nav.mw-sidebar a[href='#{parent_dashboard_path}']", text: /Übersicht/
+  end
+
+  test "F27 Übersicht-Link hat aktiven Style auf Dashboard-Seite" do
+    sign_in_as(@staff)
+    get staff_dashboard_path
+    assert_response :success
+    assert_match(/<a class="mw-nav-link mw-nav-link--active" href="#{Regexp.escape(staff_dashboard_path)}"/, response.body)
+  end
+
   test "F24 Kein Confetti-Container wenn keine Geburtstage in 7 Tagen" do
     sign_in_as(@staff)
     Child.where.not(id: nil).find_each do |c|

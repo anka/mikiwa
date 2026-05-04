@@ -2,6 +2,9 @@
   .mw-sidebar__inner
     .mw-nav-section
       - if current_user.parent?
+        = link_to parent_dashboard_path, class: "mw-nav-link #{nav_active?('/dashboard/parent')}" do
+          = lucide_icon "home", size: 20
+          %span Übersicht
         = link_to inbox_path, class: "mw-nav-link #{nav_active?('/inbox')}" do
           = lucide_icon "inbox", size: 20
           %span Posteingang
@@ -34,6 +37,10 @@
           %span Geburtstage
 
       - else
+        = link_to staff_dashboard_path, class: "mw-nav-link #{nav_active?('/dashboard/staff')}" do
+          = lucide_icon "home", size: 20
+          %span Übersicht
+        .mw-nav-divider
         -# Menschen & Gruppen
         = link_to children_path, class: "mw-nav-link #{nav_active?('/children')}" do
           = lucide_icon "users", size: 20

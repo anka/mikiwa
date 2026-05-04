@@ -1816,7 +1816,7 @@
       "id": "F27",
       "name": "Übersicht-Eintrag in Sidebar (Dashboard-Link)",
       "phase": 6,
-      "status": "open",
+      "status": "done",
       "spec_file": "docs/spec-uebersicht-sidebar-link.json",
       "short_description": "Neuer Sidebar-Eintrag 'Übersicht' verlinkt rollenabhängig auf Caretaker- oder Eltern-Dashboard.",
       "description": "Erster Sidebar-Eintrag mit Home-/Dashboard-Icon. Active-Style auf Dashboard-Pfad. Konsistent mit Mikiwa Design System. Spec: docs/spec-uebersicht-sidebar-link.json",

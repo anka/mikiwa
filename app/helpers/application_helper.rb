@@ -123,6 +123,7 @@ module ApplicationHelper
     "gift"            => '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>',
     "mail"            => '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
     "arrow-right"     => '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
-    "eye"             => '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>'
+    "eye"             => '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+    "home"            => '<path d="M3 9.5 12 3l9 6.5V20a2 2 0 0 1-2 2h-3v-7H10v7H5a2 2 0 0 1-2-2Z"/>'
   }.freeze
 end
