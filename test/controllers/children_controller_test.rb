@@ -334,6 +334,70 @@ class ChildrenControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # F41: Filter in /children (Gruppe, Name, Alter)
+  test "F41 Filter-Leiste ist sichtbar im Index" do
+    sign_in_as(@caretaker)
+    get children_path
+    assert_response :success
+    assert_match(/mw-children-filters/, response.body)
+    assert_match(/name="q"/, response.body)
+    assert_match(/name="group_id"/, response.body)
+    assert_match(/name="age"/, response.body)
+  end
+
+  test "F41 Name-Filter mit Umlaut findet Müller" do
+    sign_in_as(@caretaker)
+    Child.create!(first_name: "Anna", last_name: "Müller",
+      date_of_birth: 4.years.ago.to_date, group: @group, kindergarten_year: @year, photo_consent: true)
+    get children_path, params: { q: "mül" }
+    assert_response :success
+    assert_match "Müller", response.body
+    assert_no_match(/>Finn Berger</, response.body)
+  end
+
+  test "F41 Gruppe-Filter beschränkt Liste" do
+    sign_in_as(@caretaker)
+    other_group = Group.create!(name: "Bären F41")
+    Child.create!(first_name: "Bea", last_name: "Bär",
+      date_of_birth: 4.years.ago.to_date, group: other_group, kindergarten_year: @year, photo_consent: true)
+    get children_path, params: { group_id: other_group.id }
+    assert_response :success
+    assert_match "Bea Bär", response.body
+    assert_no_match(/Finn Berger/, response.body)
+  end
+
+  test "F41 Alter-Filter via Date-Range" do
+    sign_in_as(@caretaker)
+    travel_to Date.new(2026, 5, 13) do
+      Child.create!(first_name: "Drei", last_name: "Jahre",
+        date_of_birth: Date.new(2023, 1, 1), group: @group, kindergarten_year: @year, photo_consent: true)
+      get children_path, params: { age: 5 }
+      assert_response :success
+      assert_match "Finn Berger", response.body
+      assert_no_match(/Drei Jahre/, response.body)
+    end
+  end
+
+  test "F41 Kombination Gruppe + Alter" do
+    sign_in_as(@caretaker)
+    travel_to Date.new(2026, 5, 13) do
+      other_group = Group.create!(name: "Andere F41")
+      Child.create!(first_name: "Ein", last_name: "FünfJähriger",
+        date_of_birth: Date.new(2021, 1, 1), group: other_group, kindergarten_year: @year, photo_consent: true)
+      get children_path, params: { group_id: @group.id, age: 5 }
+      assert_response :success
+      assert_match "Finn Berger", response.body
+      assert_no_match(/FünfJähriger/, response.body)
+    end
+  end
+
+  test "F41 Reset-Link führt zurück zur ungefilterten Liste" do
+    sign_in_as(@caretaker)
+    get children_path, params: { q: "xyz" }
+    assert_response :success
+    assert_match(/href="\/children"[^>]*>[^<]*Filter zurücksetzen/i, response.body)
+  end
+
   test "F36 Caretaker behält vollen Edit-Umfang" do
     sign_in_as(@caretaker)
     patch child_path(@child), params: {

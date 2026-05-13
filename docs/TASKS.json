@@ -2366,7 +2366,7 @@
       "id": "F41",
       "name": "Filter in /children (Gruppe, Name, Alter)",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Filterleiste oberhalb der Kinder-Liste: Gruppe (Dropdown), Name (Textsuche), Alter (Dropdown).",
       "description": "Ziel: /children schnell auf relevante Teilmenge eingrenzen.\n\nFilter:\n  • group_id — Select aus allen Groups\n  • q — Substring-Suche über first_name+last_name (ILIKE/LOWER, deutsche Umlaute beachten)\n  • age — Dropdown mit den vorkommenden Altersstufen (dynamisch aus aktiven Kindern berechnet)\n\nImplementierung: Ransack ist im Projekt nicht in Verwendung — eigene Scope-Komposition reicht. Filter werden via GET-Params übergeben, die Form ist ein einfaches Form-Tag mit method=:get. Age-Filter ist tricky (kein DB-Wert): Server berechnet Datums-Range aus Geburtsjahr und filtert per where(date_of_birth: range).\n\nUI: Filter-Leiste mit drei Inputs nebeneinander (Desktop) bzw. gestapelt (Mobile). 'Filter zurücksetzen'-Link rechts.\n\nDefault: keine Filter → alle aktiven Kinder. Reagiert mit den Facts (F40).",
       "acceptance_criteria": [

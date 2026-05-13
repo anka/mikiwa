@@ -27,6 +27,29 @@ class Child < ApplicationRecord
   scope :active, -> { where(active: true) }
   scope :inactive, -> { where(active: false) }
 
+  scope :search_by_name, ->(query) {
+    return all if query.blank?
+    normalized = query.to_s.downcase.strip
+    where(
+      "LOWER(first_name) LIKE :q OR LOWER(last_name) LIKE :q",
+      q: "%#{normalized}%"
+    )
+  }
+
+  scope :in_group, ->(group_id) {
+    return all if group_id.blank?
+    where(group_id: group_id)
+  }
+
+  scope :with_age, ->(age) {
+    return all if age.blank?
+    today = Date.current
+    age_int = age.to_i
+    upper = today - age_int.years
+    lower = today - (age_int + 1).years + 1.day
+    where(date_of_birth: lower..upper)
+  }
+
   private
 
   def touch_photo_consent_timestamp

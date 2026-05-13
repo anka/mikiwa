@@ -1,0 +1,20 @@
+= form_with url: children_path, method: :get, local: true, class: "mw-children-filters", html: { style: "margin-top: 1.5rem;" } do
+  .mw-children-filters__row{ style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: end;" }
+    .mw-form__field
+      %label.mw-form__label{ for: "filter-q" } Name
+      = text_field_tag :q, @filter_q, id: "filter-q", placeholder: "Vor- oder Nachname", class: "mw-form__input"
+    .mw-form__field
+      %label.mw-form__label{ for: "filter-group-id" } Gruppe
+      = select_tag :group_id,
+                   options_from_collection_for_select(@filter_groups, :id, :name, @filter_group_id),
+                   include_blank: "Alle Gruppen", id: "filter-group-id", class: "mw-form__input"
+    .mw-form__field
+      %label.mw-form__label{ for: "filter-age" } Alter
+      = select_tag :age,
+                   options_for_select(@filter_ages.map { |a| [ pluralize(a, "Jahr", "Jahre"), a ] }, @filter_age),
+                   include_blank: "Alle Altersstufen", id: "filter-age", class: "mw-form__input"
+    .mw-form__field
+      = submit_tag "Filtern", class: "mw-btn mw-btn--secondary mw-btn--sm"
+  - if @filter_q.present? || @filter_group_id.present? || @filter_age.present?
+    .mw-children-filters__reset{ style: "margin-top: 8px; text-align: right;" }
+      = link_to "Filter zurücksetzen", children_path, class: "mw-page-action"

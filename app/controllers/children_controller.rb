@@ -4,7 +4,17 @@ class ChildrenController < ApplicationController
   before_action :authorize_edit_update!, only: %i[edit update]
 
   def index
-    @children = scoped_children.active.includes(:group, :parents).order(:last_name, :first_name)
+    @children = scoped_children.active
+                               .search_by_name(params[:q])
+                               .in_group(params[:group_id])
+                               .with_age(params[:age])
+                               .includes(:group, :parents)
+                               .order(:last_name, :first_name)
+    @filter_q = params[:q].to_s
+    @filter_group_id = params[:group_id]
+    @filter_age = params[:age]
+    @filter_groups = Group.order(:name)
+    @filter_ages = filter_age_options
   end
 
   def show
@@ -124,5 +134,13 @@ class ChildrenController < ApplicationController
     return unless parent_id.present?
     parent = User.find_by(id: parent_id, role: "parent")
     ParentChild.create!(user: parent, child: child) if parent
+  end
+
+  def filter_age_options
+    scoped_children.active.pluck(:date_of_birth).filter_map do |dob|
+      today = Date.current
+      years = today.year - dob.year - (today.strftime("%m%d") < dob.strftime("%m%d") ? 1 : 0)
+      years if years >= 0
+    end.uniq.sort
   end
 end

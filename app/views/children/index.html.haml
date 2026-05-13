@@ -13,6 +13,8 @@
 - if notice
   .mw-flash.mw-flash--success= notice
 
+= render "filters"
+
 - if @children.any?
   = render "facts", children: @children
   .mw-card{ style: "margin-top: 1.5rem;" }
