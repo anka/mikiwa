@@ -1,6 +1,9 @@
 - content_for :title, "#{@gallery.title} · Galerie · Mikiwa"
 
-%div{ data: { controller: ("lightbox" if @photos.any?) } }
+- controllers = []
+- controllers << "lightbox" if @photos.any?
+- controllers << "magic-slideshow" if @photos.any?
+%div{ data: { controller: controllers.join(" ").presence } }
   .mw-page-header
     .mw-page-header__text
       %h1.mw-page-header__title= @gallery.title
@@ -25,6 +28,11 @@
             title: "Galerie ansehen" }
           = lucide_icon "image", size: 14
           Galerie ansehen
+        %button.mw-page-action{ type: "button",
+            data: { action: "click->magic-slideshow#open" },
+            title: "Magic Slideshow" }
+          = lucide_icon "image", size: 14
+          Magic Slideshow
       - if current_user.staff?
         - if @gallery.released?
           = button_to withdraw_gallery_path(@gallery), method: :patch,
@@ -113,6 +121,11 @@
       -# Bild-URLs als Data-Attribute für Stimulus
       - @photos.each do |photo|
         %span.mw-lightbox__src{ data: { lightbox_src: url_for(photo.variant(:display)) } }
+
+    -# Magic-Slideshow Source-Container
+    .mw-magic-slideshow__srcs{ data: { "magic-slideshow-target": "srcs" }, hidden: true }
+      - @photos.each do |photo|
+        %span{ data: { "magic-slideshow-src": url_for(photo.variant(:display)) } }
 
   - else
     %p.mw-text-muted{ style: "padding: 1rem 0;" } Noch keine Fotos in dieser Galerie.

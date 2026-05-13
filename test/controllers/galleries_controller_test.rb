@@ -320,6 +320,24 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
     assert created.released?
   end
 
+  # F53: Magic Slideshow
+  test "F53 Show zeigt 'Magic Slideshow'-Action" do
+    sign_in_as(@caretaker)
+    @gallery.photos.attach(io: StringIO.new(minimal_jpeg), filename: "f53.jpg", content_type: "image/jpeg")
+    @gallery.save!
+    get gallery_path(@gallery)
+    assert_response :success
+    assert_match(/Magic Slideshow/, response.body)
+    assert_select 'button[title="Magic Slideshow"][data-action*="magic-slideshow#open"]'
+  end
+
+  test "F53 Show ohne Fotos zeigt keine 'Magic Slideshow'-Action" do
+    sign_in_as(@caretaker)
+    get gallery_path(@gallery)
+    assert_response :success
+    assert_no_match(/Magic Slideshow/, response.body)
+  end
+
   # F52: Lightbox nur über Action öffnen
   test "F52 Show zeigt 'Galerie ansehen'-Action mit data-action zum Öffnen" do
     sign_in_as(@caretaker)

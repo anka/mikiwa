@@ -2837,7 +2837,7 @@
       "id": "F53",
       "name": "Gallery: Magic Slideshow (Fullscreen mit Animationen)",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Aktion 'Magic Slideshow' öffnet eine eigene Fullscreen-Diashow der Galerie mit abwechslungsreichen Übergangsanimationen.",
       "description": "Ziel: Erlebnishafte Präsentation einer Galerie (z. B. bei Feiern, Kindergarten-Events).\n\nAktion: Icon-Button 'Magic Slideshow' (Lucide sparkles / play-circle) in der Aktionsleiste der Gallery-Show. Klick startet die Slideshow.\n\nLibrary: erprobte, leichtgewichtige Lösung — Empfehlung: 'Swiper' (https://swiperjs.com) ist breit eingesetzt, MIT-Lizenz, bietet EffectFade/EffectCube/EffectCoverflow/EffectFlip/EffectCards/EffectCreative, Autoplay, Keyboard, Fullscreen-Integration. Alternative wäre PhotoSwipe (eher Lightbox-Fokus) — Swiper passt besser zur Slideshow-Anforderung. Library wird via JS-Import-Map oder esbuild eingebunden.\n\nVerhalten:\n  • Klick auf 'Magic Slideshow' → Request Fullscreen via element.requestFullscreen(); Fallback: fullpage-Overlay (fixed inset-0 z-[100])\n  • Autoplay 4s pro Bild; Pause-Button im UI\n  • Bei jedem Bildwechsel zufällig anderer Effekt aus einer kuratierten Liste (z. B. fade, cube, coverflow, flip, cards, creative)\n  • Steuerung: Pfeiltasten, Klick links/rechts, Touch-Swipe, Esc beendet\n  • Begleitende Mikiwa-Bedienleiste am Bildschirmrand (auto-fade nach Inaktivität)\n\nPerformance: Bilder als optimierte Variants laden (existing ImageAttachable). Preload des nächsten Bildes.\n\nBarrierefreiheit: Pause-Möglichkeit, Reduced-Motion-Media-Query respektieren (bei prefers-reduced-motion fixed effect 'fade').",
       "acceptance_criteria": [
