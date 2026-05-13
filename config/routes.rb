@@ -110,6 +110,10 @@ Rails.application.routes.draw do
     end
   end
 
+  get  "/rollover",         to: "rollovers#new",     as: :rollover
+  post "/rollover/confirm", to: "rollovers#confirm", as: :rollover_confirm
+  post "/rollover/execute", to: "rollovers#execute", as: :rollover_execute
+
   namespace :webhooks do
     post "bounce" => "bounces#create"
   end

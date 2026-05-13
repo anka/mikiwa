@@ -1,0 +1,98 @@
+- content_for :title, "Rollover · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Rollover ins neue Kindergartenjahr
+    %p.mw-page-header__lede Wählen Sie die Kinder, die ins neue Jahr übernommen werden.
+  .mw-page-header__actions
+    = link_to "Abbrechen", kindergarten_years_path, class: "mw-page-action"
+
+- if alert
+  .mw-flash.mw-flash--error= alert
+
+- if @source_year.nil?
+  .mw-flash.mw-flash--warning Kein aktives Kindergartenjahr vorhanden. Bitte erst ein Jahr aktivieren.
+- elsif @target_years.empty?
+  .mw-flash.mw-flash--warning Kein Zieljahr in Planung vorhanden. Bitte ein neues Jahr mit Status "In Planung" anlegen.
+
+.mw-card{ style: "margin-top: 1.5rem; padding: 1.25rem;" }
+  = form_with url: rollover_confirm_path, method: :post, local: true, html: { id: "rollover_form",
+              data: { controller: "rollover-selection" } } do
+    .mw-field-row{ style: "display: grid; grid-template-columns: 1fr 1fr; gap: 12px;" }
+      .mw-form__field
+        %label.mw-form__label{ for: "rollover-source" } Quelljahr
+        = select_tag :source_year_id,
+            options_for_select(KindergartenYear.order(start_date: :desc).map { |y| [ y.label, y.id ] }, @source_year&.id),
+            id: "rollover-source", class: "mw-form__input"
+      .mw-form__field
+        %label.mw-form__label{ for: "rollover-target" } Zieljahr (Status "In Planung")
+        = select_tag :target_year_id,
+            options_for_select(@target_years.map { |y| [ y.label, y.id ] }, @target_year_id),
+            include_blank: "Bitte wählen", id: "rollover-target", class: "mw-form__input", required: true
+
+    -# Filter (analog F41)
+    .mw-rollover-filters{ style: "margin-top: 1rem;" }
+      .mw-rollover-filters__row{ style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; align-items: end;" }
+        .mw-form__field
+          %label.mw-form__label{ for: "filter-q" } Name
+          = text_field_tag :q, @filter_q, id: "filter-q", placeholder: "Vor-/Nachname", class: "mw-form__input"
+        .mw-form__field
+          %label.mw-form__label{ for: "filter-group-id" } Gruppe
+          = select_tag :group_id, options_from_collection_for_select(@filter_groups, :id, :name, @filter_group_id),
+              include_blank: "Alle Gruppen", id: "filter-group-id", class: "mw-form__input"
+        .mw-form__field
+          %label.mw-form__label{ for: "filter-age" } Alter
+          = select_tag :age, options_for_select(@filter_ages.map { |a| [ pluralize(a, "Jahr", "Jahre"), a ] }, @filter_age),
+              include_blank: "Alle Altersstufen", id: "filter-age", class: "mw-form__input"
+        .mw-form__field
+          %button.mw-btn.mw-btn--secondary.mw-btn--sm{ type: "submit", formaction: rollover_path, formmethod: "get" } Filtern
+
+    -# Hidden-Fields: Auswahl-Stabilität für nicht gerenderte Kinder
+    - shown_ids = @children.map(&:id)
+    - (@selected_ids - shown_ids).each do |hidden_id|
+      = hidden_field_tag "child_ids[]", hidden_id
+
+    -# Toolbar
+    .mw-rollover-toolbar{ style: "margin-top: 1.25rem; display: flex; gap: 8px; align-items: center;" }
+      %button.mw-btn.mw-btn--ghost.mw-btn--sm{ type: "button", data: { action: "click->rollover-selection#selectAll" } } Alle auswählen
+      %button.mw-btn.mw-btn--ghost.mw-btn--sm{ type: "button", data: { action: "click->rollover-selection#invert" } } Auswahl umkehren
+      %span.mw-text-muted{ style: "margin-left: auto;",
+          data: { "rollover-selection-target": "summaryCount" } }= "#{@selected_ids.size} ausgewählt"
+
+    - if @children.any?
+      %table.mw-table.mw-table--cards{ style: "width: 100%; margin-top: 0.75rem;" }
+        %thead
+          %tr
+            %th{ style: "width: 36px;" } &nbsp;
+            %th Name
+            %th Gruppe
+            %th Geburtsdatum
+            %th Alter
+        %tbody
+          - @children.each do |child|
+            %tr
+              %td{ "data-label": "Auswahl" }
+                = check_box_tag "child_ids[]", child.id, @selected_ids.include?(child.id),
+                    id: "child_#{child.id}",
+                    data: { "rollover-selection-target": "checkbox", action: "change->rollover-selection#updateSummary" }
+              %td{ "data-label": "Name" }
+                .mw-child-name-cell
+                  - if child.profile_photo.attached?
+                    = image_tag child.profile_photo.variant(**ImageAttachable::VARIANT_CONFIGS[:thumb]),
+                        class: "mw-child-avatar mw-child-avatar--sm", alt: ""
+                  - else
+                    .mw-child-avatar.mw-child-avatar--sm.mw-child-avatar--placeholder
+                      = child.first_name[0].upcase
+                  %label{ for: "child_#{child.id}", style: "cursor: pointer; margin-left: 6px;" }
+                    %strong= child.full_name
+              %td{ "data-label": "Gruppe" }= child.group&.name || "–"
+              %td{ "data-label": "Geburtsdatum" }= I18n.l(child.date_of_birth, format: :short)
+              %td{ "data-label": "Alter" }= child_age_label(child)
+    - else
+      .mw-empty-state{ style: "margin-top: 1rem;" }
+        %p.mw-text-muted Keine aktiven Kinder im Quelljahr.
+
+    .mw-form__actions{ style: "margin-top: 1.5rem; display: flex; gap: 8px; justify-content: flex-end;" }
+      %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit" }
+        Weiter zur Bestätigung
+        = lucide_icon "arrow-right", size: 14

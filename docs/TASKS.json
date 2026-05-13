@@ -2910,7 +2910,7 @@
       "id": "F55",
       "name": "Rollover-Ansicht als Tabelle mit Auswahl-Checkboxen",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Überarbeitung /rollover: einfache Tabelle aller aktiven Kinder; pro Zeile Checkbox, ob das Kind ins neue Jahr übernommen wird.",
       "description": "Ziel: klare, datenzentrische Übersicht über die Übernahme.\n\nView: /rollover (GET) zeigt:\n  • Auswahl Quell-Jahr (aktuelles aktives Jahr, default) und Ziel-Jahr (alle Jahre mit status=planning)\n  • Tabelle aller aktiven Kinder des Quell-Jahres mit Spalten: Checkbox / Foto / Name / Gruppe / Geburtsdatum / Alter\n  • Toolbar oberhalb: 'Alle auswählen', 'Auswahl umkehren', Filter (analog F41: Gruppe, Name, Alter — wiederverwendbar)\n  • Submit-Button 'Weiter zur Bestätigung' → führt zu /rollover/confirm (siehe F56)\n\nDefault-Auswahl: alle Kinder aktiv (Übernahme-Default). User kann gezielt abwählen.\n\nTechnik: einfaches Form mit Checkboxen (name='child_ids[]'). Stimulus für 'Alle auswählen'/'Auswahl umkehren'. Filter funktionieren ohne JS (GET-Form), Auswahl muss filter-stabil bleiben (Hidden-Fields für aktuell ausgewählte child_ids außerhalb des Filters — Standard-Pattern).",
       "acceptance_criteria": [

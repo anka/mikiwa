@@ -1,0 +1,47 @@
+- content_for :title, "Rollover bestätigen · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Bitte Auswahl bestätigen
+    %p.mw-page-header__lede
+      Übernahme #{@source_year&.label} → #{@target_year&.label}
+  .mw-page-header__actions
+    = link_to "Zurück zur Auswahl", rollover_path(source_year_id: @source_year&.id,
+        target_year_id: @target_year&.id, child_ids: @selected_ids), class: "mw-page-action"
+
+.mw-flash.mw-flash--warning{ style: "margin-top: 1rem;" }
+  Mit Bestätigen werden alle Änderungen ausgeführt. Nicht-ausgewählte Kinder werden automatisch deaktiviert.
+
+.mw-rollover-confirm{ style: "display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 1.25rem;" }
+  .mw-card{ style: "padding: 1rem 1.25rem;" }
+    %h2{ style: "margin: 0 0 0.5rem; font-size: var(--fs-14); font-weight: var(--fw-bold);" }
+      Werden übernommen
+      %span.mw-text-muted{ style: "font-weight: normal; margin-left: 4px;" }= "(#{@to_transfer.size})"
+    - if @to_transfer.any?
+      %ul{ style: "margin: 0; padding-left: 1.25rem;" }
+        - @to_transfer.each do |child|
+          %li= child.full_name
+    - else
+      %p.mw-text-muted Keine Kinder ausgewählt.
+
+  .mw-card{ style: "padding: 1rem 1.25rem;" }
+    %h2{ style: "margin: 0 0 0.5rem; font-size: var(--fs-14); font-weight: var(--fw-bold);" }
+      Werden deaktiviert
+      %span.mw-text-muted{ style: "font-weight: normal; margin-left: 4px;" }= "(#{@to_deactivate.size})"
+    - if @to_deactivate.any?
+      %ul{ style: "margin: 0; padding-left: 1.25rem;" }
+        - @to_deactivate.each do |child|
+          %li= child.full_name
+    - else
+      %p.mw-text-muted Keine Kinder werden deaktiviert.
+
+= form_with url: rollover_execute_path, method: :post, local: true do
+  = hidden_field_tag :source_year_id, @source_year&.id
+  = hidden_field_tag :target_year_id, @target_year&.id
+  - @selected_ids.each do |cid|
+    = hidden_field_tag "child_ids[]", cid
+  .mw-form__actions{ style: "margin-top: 1.5rem; display: flex; gap: 8px; justify-content: flex-end;" }
+    %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit",
+        data: { turbo_confirm: "Rollover jetzt ausführen? #{@to_transfer.size} übernehmen, #{@to_deactivate.size} deaktivieren." } }
+      = lucide_icon "check", size: 14
+      Rollover bestätigen
