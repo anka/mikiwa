@@ -34,9 +34,16 @@
         Nur offene
 
   - if @items.any?
-    %ul#shopping_items.mw-shopping-list
-      - @items.each do |item|
-        = render "shopping_items/show_item", item: item, list: @list
+    #shopping_items
+      - group_shopping_items_by_category(@items).each do |category_key, items|
+        %section.mw-shopping-category
+          %header.mw-shopping-category__header{ style: "display: flex; align-items: center; gap: 8px; margin-top: 1rem; margin-bottom: 0.25rem; color: var(--fg-2);" }
+            = lucide_icon shopping_item_category_icon(category_key), size: 16
+            %strong= shopping_item_category_label(category_key)
+            %span.mw-text-muted{ style: "font-weight: normal;" }= "(#{items.size})"
+          %ul.mw-shopping-list
+            - items.each do |item|
+              = render "shopping_items/show_item", item: item, list: @list
   - else
     .mw-empty-state
       %p.mw-text-muted

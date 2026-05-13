@@ -22,9 +22,11 @@ class CreateShoppingLists < ActiveRecord::Migration[8.1]
       t.string   :completed_by_id,  limit: 36
       t.datetime :completed_at
       t.integer  :position,         default: 0, null: false
+      t.string   :category
       t.timestamps
     end
     add_index :shopping_items, :shopping_list_id
     add_index :shopping_items, [ :shopping_list_id, :position ]
+    add_index :shopping_items, :category
   end
 end

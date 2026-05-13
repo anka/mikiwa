@@ -31,6 +31,11 @@
                    autocomplete: "off",
                    class: "mw-input mw-shopping-new__note"
 
+    = f.select :category,
+               ShoppingItem::CATEGORY_ORDER.map { |k| [ shopping_item_category_label(k), k ] },
+               { include_blank: "— keine Kategorie —" },
+               class: "mw-input mw-shopping-new__category"
+
     %label.mw-shopping-new__photo{ title: "Bild anhängen" }
       = lucide_icon "image-plus", size: 18
       %span.mw-shopping-new__photo-label Bild

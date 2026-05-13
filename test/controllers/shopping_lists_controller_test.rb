@@ -261,6 +261,54 @@ class ShoppingListsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Filter zurücksetzen/, response.body)
   end
 
+  # F51: gruppierte Anzeige nach Kategorie
+  test "F51 Show gruppiert Items in Reihenfolge fruit→dairy→hygiene→Ohne Kategorie" do
+    sign_in_as(@caretaker)
+    @list.shopping_items.destroy_all
+    @list.shopping_items.create!(name: "Apfel", category: "fruit")
+    @list.shopping_items.create!(name: "Milch", category: "dairy")
+    @list.shopping_items.create!(name: "Seife", category: "hygiene")
+    @list.shopping_items.create!(name: "Sonstiges")
+    get shopping_list_path(@list)
+    assert_response :success
+    body = response.body
+    obst_idx = body.index("Obst")
+    milch_idx = body.index("Milchprodukte")
+    hygiene_idx = body.index("Hygiene")
+    none_idx = body.index("Ohne Kategorie")
+    assert obst_idx && milch_idx && hygiene_idx && none_idx
+    assert obst_idx < milch_idx, "Obst muss vor Milchprodukten erscheinen"
+    assert milch_idx < hygiene_idx, "Milchprodukte vor Hygiene"
+    assert hygiene_idx < none_idx, "Ohne Kategorie immer am Ende"
+  end
+
+  test "F51 Show ohne ungetagte Items rendert 'Ohne Kategorie' nicht" do
+    sign_in_as(@caretaker)
+    @list.shopping_items.destroy_all
+    @list.shopping_items.create!(name: "Apfel", category: "fruit")
+    get shopping_list_path(@list)
+    assert_response :success
+    assert_no_match(/Ohne Kategorie/, response.body)
+  end
+
+  test "F51 Form bietet Kategorie-Select" do
+    sign_in_as(@caretaker)
+    get edit_shopping_list_path(@list)
+    assert_response :success
+    assert_match(/name="shopping_item\[category\]"/, response.body)
+    assert_match(/— keine Kategorie —/, response.body)
+  end
+
+  test "F51 Item ohne Kategorie wird mit category=nil gespeichert" do
+    sign_in_as(@caretaker)
+    post shopping_list_shopping_items_path(@list),
+         params: { shopping_item: { name: "Brot", category: "" } },
+         as: :turbo_stream
+    last = @list.shopping_items.order(:created_at).last
+    assert_equal "Brot", last.name
+    assert_nil last.category
+  end
+
   # F49: KW-Anzeige
   test "F49 Index zeigt KW-Spalte" do
     sign_in_as(@caretaker)

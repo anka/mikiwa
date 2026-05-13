@@ -40,6 +40,21 @@ de:
         event_date: "Einkaufstag"
         title: "Titel"
         description: "Beschreibung"
+      shopping_item:
+        category: "Kategorie"
+        categories:
+          fruit: "Obst"
+          vegetable: "Gemüse"
+          dairy: "Milchprodukte"
+          meat_fish: "Fleisch & Fisch"
+          bakery: "Backwaren"
+          beverages: "Getränke"
+          frozen: "Tiefkühl"
+          sweets: "Süßigkeiten"
+          hygiene: "Hygiene"
+          household: "Haushalt"
+          craft_supplies: "Bastelbedarf"
+          other: "Sonstiges"
     errors:
       messages:
         blank: "muss ausgefüllt werden"
@@ -79,3 +94,5 @@ de:
       year:
         one: "1 Jahr"
         other: "%{count} Jahre"
+  shopping_items:
+    uncategorized: "Ohne Kategorie"

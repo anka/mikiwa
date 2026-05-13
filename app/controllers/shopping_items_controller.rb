@@ -77,7 +77,9 @@ class ShoppingItemsController < ApplicationController
   end
 
   def item_params
-    params.require(:shopping_item).permit(:name, :quantity, :note, :photo)
+    permitted = params.require(:shopping_item).permit(:name, :quantity, :note, :photo, :category)
+    permitted[:category] = nil if permitted[:category].blank?
+    permitted
   end
 
   def next_position

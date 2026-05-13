@@ -295,6 +295,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_120000) do
   end
 
   create_table "shopping_items", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.string "category"
     t.datetime "completed_at"
     t.string "completed_by_id", limit: 36
     t.datetime "created_at", null: false
@@ -305,6 +306,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_120000) do
     t.string "quantity"
     t.string "shopping_list_id", limit: 36, null: false
     t.datetime "updated_at", null: false
+    t.index ["category"], name: "index_shopping_items_on_category"
     t.index ["shopping_list_id", "position"], name: "index_shopping_items_on_shopping_list_id_and_position"
     t.index ["shopping_list_id"], name: "index_shopping_items_on_shopping_list_id"
   end

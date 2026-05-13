@@ -2,6 +2,20 @@ class ShoppingItem < ApplicationRecord
   include UuidPrimaryKey
   include ImageAttachable
 
+  CATEGORY_ORDER = %w[
+    fruit vegetable dairy meat_fish bakery beverages
+    frozen sweets hygiene household craft_supplies other
+  ].freeze
+
+  CATEGORY_ICONS = {
+    "fruit" => "leaf", "vegetable" => "sprout", "dairy" => "image",
+    "meat_fish" => "image", "bakery" => "cake", "beverages" => "shopping-cart",
+    "frozen" => "image", "sweets" => "gift", "hygiene" => "shield-check",
+    "household" => "home", "craft_supplies" => "image-plus", "other" => "inbox"
+  }.freeze
+
+  enum :category, CATEGORY_ORDER.index_with(&:itself), prefix: true
+
   belongs_to :shopping_list
   belongs_to :completed_by, class_name: "User", optional: true
 

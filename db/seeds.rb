@@ -798,12 +798,12 @@ sl_jause = ShoppingList.create!(
   created_by:        sabine
 )
 [
-  { name: "Vollkornbrot",           quantity: "3 Laibe",       position: 0 },
-  { name: "Topfen (mager)",         quantity: "500 g",         position: 1 },
-  { name: "Karotten",               quantity: "1 kg",          position: 2 },
-  { name: "Äpfel",                  quantity: "2 kg",          position: 3 },
-  { name: "Bananen",                quantity: "1 kg",          position: 4 },
-  { name: "Hafermilch",             quantity: "4 Packungen",   position: 5, note: "laktosefrei wegen Lea Fuchs" },
+  { name: "Vollkornbrot",           quantity: "3 Laibe",       category: "bakery",    position: 0 },
+  { name: "Topfen (mager)",         quantity: "500 g",         category: "dairy",     position: 1 },
+  { name: "Karotten",               quantity: "1 kg",          category: "vegetable", position: 2 },
+  { name: "Äpfel",                  quantity: "2 kg",          category: "fruit",     position: 3 },
+  { name: "Bananen",                quantity: "1 kg",          category: "fruit",     position: 4 },
+  { name: "Hafermilch",             quantity: "4 Packungen",   category: "dairy",     position: 5, note: "laktosefrei wegen Lea Fuchs" },
 ].each { |attrs| sl_jause.shopping_items.create!(attrs) }
 
 # 4. Zoo-Ausflug Getränke (Sonnenblumen)
@@ -816,10 +816,10 @@ sl_zoo = ShoppingList.create!(
   event_id:          ausflug.id
 )
 [
-  { name: "Trinkflaschen (Ersatz)", quantity: "5 Stück",      position: 0 },
-  { name: "Müsliriegel",            quantity: "20 Stück",     position: 1 },
-  { name: "Sonnencreme LSF 50",     quantity: "2 Tuben",      position: 2 },
-  { name: "Pflaster-Set",           quantity: "1 Set",        position: 3 },
+  { name: "Trinkflaschen (Ersatz)", quantity: "5 Stück",      category: "household", position: 0 },
+  { name: "Müsliriegel",            quantity: "20 Stück",     category: "sweets",    position: 1 },
+  { name: "Sonnencreme LSF 50",     quantity: "2 Tuben",      category: "hygiene",   position: 2 },
+  { name: "Pflaster-Set",           quantity: "1 Set",        category: "hygiene",   position: 3 },
 ].each { |attrs| sl_zoo.shopping_items.create!(attrs) }
 
 # ── Zusammenfassung ──────────────────────────────────────────────────────────

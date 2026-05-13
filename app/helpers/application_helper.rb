@@ -75,6 +75,32 @@ module ApplicationHelper
     t("children.age.year", count: child.age)
   end
 
+  def shopping_item_category_label(category_key)
+    if category_key.blank?
+      t("shopping_items.uncategorized")
+    else
+      t("activerecord.attributes.shopping_item.categories.#{category_key}", default: category_key.to_s.humanize)
+    end
+  end
+
+  def shopping_item_category_icon(category_key)
+    if category_key.blank?
+      "alert-circle"
+    else
+      ShoppingItem::CATEGORY_ICONS.fetch(category_key, "inbox")
+    end
+  end
+
+  def group_shopping_items_by_category(items)
+    grouped = items.group_by { |i| i.category.presence }
+    ordered = ShoppingItem::CATEGORY_ORDER.filter_map do |key|
+      next nil unless grouped[key]
+      [ key, grouped[key] ]
+    end
+    ordered << [ nil, grouped[nil] ] if grouped[nil].present?
+    ordered
+  end
+
   def badge_tone_for(type)
     NOTE_TYPE_BADGE_TONES.fetch(type, "neutral")
   end
