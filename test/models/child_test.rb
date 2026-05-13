@@ -88,7 +88,7 @@ class ChildTest < ActiveSupport::TestCase
     assert_includes @parent.reload.children, @child
   end
 
-  test "transfer_to copies child to new year" do
+  test "BF-007 transfer_to wechselt kindergarten_year ohne neuen Child anzulegen" do
     @child.save!
     ParentChild.create!(user: @parent, child: @child)
     new_year = KindergartenYear.create!(
@@ -97,34 +97,53 @@ class ChildTest < ActiveSupport::TestCase
       end_date: Date.new(2027, 7, 31),
       active: false
     )
-    new_child = @child.transfer_to(new_year)
-    assert_equal new_year, new_child.kindergarten_year
-    assert_includes new_child.parents, @parent
+    assert_no_difference "Child.count" do
+      result = @child.transfer_to(new_year)
+      assert_equal @child.id, result.id
+    end
+    @child.reload
+    assert_equal new_year.id, @child.kindergarten_year_id
+    assert_includes @child.parents, @parent
   end
 
-  test "transfer_to copies emergency contacts to new year" do
+  test "BF-007 transfer_to behält emergency_contacts am bestehenden Child" do
     @child.save!
-    EmergencyContact.create!(child: @child, name: "Oma", relationship: "Großmutter", phone: "+43 650 111", position: 1)
-    EmergencyContact.create!(child: @child, name: "Papa", relationship: "Vater", phone: "+43 650 222", position: 2)
+    ec1 = EmergencyContact.create!(child: @child, name: "Oma", relationship: "Großmutter", phone: "+43 650 111", position: 1)
+    ec2 = EmergencyContact.create!(child: @child, name: "Papa", relationship: "Vater", phone: "+43 650 222", position: 2)
     new_year = KindergartenYear.create!(
       label: "KGJ 2026/27", start_date: Date.new(2026, 9, 1),
       end_date: Date.new(2027, 7, 31), active: false
     )
-    new_child = @child.transfer_to(new_year)
-    assert_equal 2, new_child.emergency_contacts.count
-    assert_equal "Oma", new_child.emergency_contacts.first.name
+    assert_no_difference "EmergencyContact.count" do
+      @child.transfer_to(new_year)
+    end
+    @child.reload
+    assert_equal [ ec1.id, ec2.id ].sort, @child.emergency_contacts.pluck(:id).sort
   end
 
-  test "transfer_to copies medical notes to new year" do
+  test "BF-007 transfer_to behält medical_notes am bestehenden Child" do
     @child.save!
-    MedicalNote.create!(child: @child, note_type: "allergy", content: "Erdnussallergie")
+    mn = MedicalNote.create!(child: @child, note_type: "allergy", content: "Erdnussallergie")
     new_year = KindergartenYear.create!(
       label: "KGJ 2026/27", start_date: Date.new(2026, 9, 1),
       end_date: Date.new(2027, 7, 31), active: false
     )
-    new_child = @child.transfer_to(new_year)
-    assert_equal 1, new_child.medical_notes.count
-    assert_equal "Erdnussallergie", new_child.medical_notes.first.content
+    assert_no_difference "MedicalNote.count" do
+      @child.transfer_to(new_year)
+    end
+    @child.reload
+    assert_equal [ mn.id ], @child.medical_notes.pluck(:id)
+  end
+
+  test "BF-007 transfer_to reaktiviert deaktiviertes Kind" do
+    @child.active = false
+    @child.save!
+    new_year = KindergartenYear.create!(
+      label: "KGJ 2026/27", start_date: Date.new(2026, 9, 1),
+      end_date: Date.new(2027, 7, 31), active: false
+    )
+    @child.transfer_to(new_year)
+    assert @child.reload.active?
   end
 
   test "age returns full years based on Date.current" do
@@ -159,17 +178,14 @@ class ChildTest < ActiveSupport::TestCase
     end
   end
 
-  test "transfer_to is idempotent" do
+  test "BF-007 transfer_to ist idempotent bei gleichem Zieljahr" do
     @child.save!
-    new_year = KindergartenYear.create!(
-      label: "KGJ 2026/27",
-      start_date: Date.new(2026, 9, 1),
-      end_date: Date.new(2027, 7, 31),
-      active: false
-    )
-    @child.transfer_to(new_year)
+    @child.transfer_to(@year)
+    updated_at_before = @child.reload.updated_at
     assert_no_difference "Child.count" do
-      @child.transfer_to(new_year)
+      @child.transfer_to(@year)
     end
+    assert_equal updated_at_before, @child.reload.updated_at,
+                 "Idempotenter Aufruf darf updated_at nicht ändern"
   end
 end

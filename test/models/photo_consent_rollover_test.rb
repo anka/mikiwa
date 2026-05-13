@@ -33,24 +33,18 @@ class PhotoConsentRolloverTest < ActiveSupport::TestCase
     @year_2526.destroy!
   end
 
-  # TS-072-S01: photo_consent: true wird beim Rollover übernommen
-  test "TS-072 Foto-Einwilligung true wird beim Jahresübergang kopiert" do
+  # BF-007: Beim Rollover behält das (selbe) Kind seine Foto-Einwilligung.
+  test "BF-007 Foto-Einwilligung true bleibt nach Jahresübergang am bestehenden Kind" do
     KindergartenYearRollover.new(@year_2627).execute([ @child_with_consent.id ])
-
-    new_child = Child.find_by!(
-      first_name: "ConsentTrue", last_name: "Rollover", kindergarten_year: @year_2627
-    )
-    assert new_child.photo_consent, "Foto-Einwilligung true muss im neuen Jahr vorhanden sein"
+    @child_with_consent.reload
+    assert_equal @year_2627.id, @child_with_consent.kindergarten_year_id
+    assert @child_with_consent.photo_consent
   end
 
-  # photo_consent: false wird ebenfalls korrekt übertragen
-  test "TS-072 Foto-Einwilligung false wird beim Jahresübergang kopiert" do
+  test "BF-007 Foto-Einwilligung false bleibt nach Jahresübergang am bestehenden Kind" do
     KindergartenYearRollover.new(@year_2627).execute([ @child_without_consent.id ])
-
-    new_child = Child.find_by!(
-      first_name: "ConsentFalse", last_name: "Rollover", kindergarten_year: @year_2627
-    )
-    assert_equal false, new_child.photo_consent,
-      "Foto-Einwilligung false muss im neuen Jahr vorhanden sein"
+    @child_without_consent.reload
+    assert_equal @year_2627.id, @child_without_consent.kindergarten_year_id
+    assert_equal false, @child_without_consent.photo_consent
   end
 end

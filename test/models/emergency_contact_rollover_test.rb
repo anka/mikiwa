@@ -34,27 +34,15 @@ class EmergencyContactRolloverTest < ActiveSupport::TestCase
     @year_2526.destroy!
   end
 
-  # TS-071-S01: Notfallkontakte werden beim Rollover kopiert
-  test "TS-071 Notfallkontakte werden beim Jahresübergang kopiert" do
-    KindergartenYearRollover.new(@year_2627).execute([ @child.id ])
-
-    new_child = Child.find_by!(
-      first_name: "ECRollover", last_name: "Kind", kindergarten_year: @year_2627
-    )
-    assert_equal 2, new_child.emergency_contacts.count,
-      "Neues Kind muss 2 Notfallkontakte haben"
-  end
-
-  # Kopie ist unabhängig – Änderung im neuen Jahr ändert nicht altes Jahr
-  test "TS-071 Notfallkontakte im neuen Jahr sind unabhängig vom alten Jahr" do
-    KindergartenYearRollover.new(@year_2627).execute([ @child.id ])
-
-    new_child = Child.find_by!(
-      first_name: "ECRollover", last_name: "Kind", kindergarten_year: @year_2627
-    )
-    new_child.emergency_contacts.first.update!(name: "Geändert")
-
-    assert_equal "Oma Anna", @child.emergency_contacts.first.name,
-      "Änderung im neuen Jahr darf alten Kontakt nicht ändern"
+  # BF-007: Beim Rollover bleibt das Kind dasselbe; Notfallkontakte hängen am Kind.
+  test "BF-007 Notfallkontakte bleiben nach Jahresübergang am bestehenden Kind" do
+    ec_ids_before = @child.emergency_contacts.pluck(:id).sort
+    assert_no_difference "EmergencyContact.count" do
+      KindergartenYearRollover.new(@year_2627).execute([ @child.id ])
+    end
+    @child.reload
+    assert_equal @year_2627.id, @child.kindergarten_year_id
+    assert_equal ec_ids_before, @child.emergency_contacts.pluck(:id).sort
+    assert_equal 2, @child.emergency_contacts.count
   end
 end

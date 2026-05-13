@@ -33,13 +33,15 @@ class ChildPhotoConsentTest < ActiveSupport::TestCase
     assert_equal ts_after_consent.to_i, @child.reload.photo_consent_updated_at.to_i
   end
 
-  test "transfer_to copies photo_consent flag to new year" do
+  test "BF-007 transfer_to behält photo_consent am bestehenden Kind" do
     @child.update!(photo_consent: true)
     new_year = KindergartenYear.create!(
       label: "KGJ 2026/27", start_date: Date.new(2026, 9, 1),
       end_date: Date.new(2027, 7, 31), active: false
     )
-    new_child = @child.transfer_to(new_year)
-    assert_equal true, new_child.photo_consent
+    @child.transfer_to(new_year)
+    @child.reload
+    assert_equal true, @child.photo_consent
+    assert_equal new_year.id, @child.kindergarten_year_id
   end
 end

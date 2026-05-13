@@ -84,28 +84,8 @@ class Child < ApplicationRecord
   end
 
   def transfer_to(new_year)
-    return if Child.where(last_name: last_name, first_name: first_name, date_of_birth: date_of_birth,
-                          kindergarten_year_id: new_year.id).exists?
-
-    new_child = dup
-    new_child.kindergarten_year = new_year
-    new_child.active = true
-    new_child.save!
-
-    parent_children.find_each do |pc|
-      ParentChild.create!(user_id: pc.user_id, child_id: new_child.id, note: pc.note)
-    end
-
-    emergency_contacts.find_each do |ec|
-      new_child.emergency_contacts.create!(
-        name: ec.name, relationship: ec.relationship, phone: ec.phone, position: ec.position
-      )
-    end
-
-    medical_notes.find_each do |mn|
-      new_child.medical_notes.create!(note_type: mn.note_type, content: mn.content)
-    end
-
-    new_child
+    return self if kindergarten_year_id == new_year.id
+    update!(kindergarten_year: new_year, active: true)
+    self
   end
 end
