@@ -19,10 +19,5 @@
     <circle r="14" fill="#7A4A20"></circle>
     <circle r="14" fill="none" stroke="#5A3815" stroke-width="1.5"></circle>
     
-    <circle cx="-4" cy="-4" r="1.6" fill="#F4C95D" opacity=".9"></circle>
-    <circle cx="4" cy="-3" r="1.6" fill="#F4C95D" opacity=".9"></circle>
-    <circle cx="0" cy="3" r="1.6" fill="#F4C95D" opacity=".9"></circle>
-    <circle cx="-4" cy="5" r="1.6" fill="#F4C95D" opacity=".9"></circle>
-    <circle cx="5" cy="4" r="1.6" fill="#F4C95D" opacity=".9"></circle>
   </g>
 </svg>

@@ -482,6 +482,344 @@ weekly_menus.each_with_index do |menu, week_offset|
   end
 end
 
+# ── Veranstaltungen & Kalendereinträge ───────────────────────────────────────
+puts "  Veranstaltungen …"
+
+sabine = User.find_by(email: "sabine@mikiwa.local")
+today  = Date.current
+
+# Hilfsmethode: Event/CalendarEvent mit Gruppen in einem Schritt anlegen
+def create_cal_event(model_class, groups, **attrs)
+  ev = model_class.new(attrs)
+  groups.each { |g| ev.calendar_event_groups.build(group: g) }
+  ev.save!
+  ev
+end
+
+# Veranstaltungen (event_type = "veranstaltung", über Event-Model)
+sommerfest = create_cal_event(Event, [ sunflowers, ladybugs, butterflies ],
+  title:             "Sommerfest",
+  start_date:        today + 24.days,
+  all_day:           true,
+  location:          "Kindergarten-Garten",
+  description:       "Unser großes Jahresfest mit Grillen, Spielen und Musik. " \
+                     "Alle Familien sind herzlich eingeladen!",
+  kindergarten_year: year,
+  created_by:        sabine,
+  status:            "aktiv"
+)
+
+nikolaus = create_cal_event(Event, [ sunflowers, ladybugs, butterflies ],
+  title:             "Nikolausfeier",
+  start_date:        today.change(month: 12, day: 5) > today ?
+                       today.change(month: 12, day: 5) :
+                       today.change(year: today.year + 1, month: 12, day: 5),
+  all_day:           true,
+  location:          "Gruppenraum",
+  description:       "Der Nikolaus kommt zu Besuch und bringt für jedes Kind ein kleines Päckchen.",
+  kindergarten_year: year,
+  created_by:        sabine,
+  status:            "aktiv"
+)
+
+fruehlingsfest = create_cal_event(Event, [ sunflowers, ladybugs ],
+  title:             "Frühlingsfest",
+  start_date:        today - 14.days,
+  all_day:           true,
+  location:          "Kindergarten-Garten",
+  description:       "Wir feiern den Frühling mit Tänzen, Basteln und einem bunten Buffet.",
+  kindergarten_year: year,
+  created_by:        sabine,
+  status:            "aktiv"
+)
+
+# Allgemeine Kalendereinträge (event_type = "event")
+elternsprechtag = create_cal_event(CalendarEvent, [ sunflowers, ladybugs, butterflies ],
+  title:             "Elternsprechtag",
+  event_type:        "event",
+  start_date:        today + 10.days,
+  all_day:           false,
+  start_time:        "15:30",
+  location:          "Kindergarten – Büro Sabine Gruber",
+  description:       "Individuelle Termine bitte direkt mit der Gruppenleitung vereinbaren.",
+  kindergarten_year: year,
+  created_by:        sabine,
+  status:            "aktiv"
+)
+
+ausflug = create_cal_event(CalendarEvent, [ sunflowers, ladybugs ],
+  title:             "Ausflug: Zoo Salzburg",
+  event_type:        "event",
+  start_date:        today + 7.days,
+  all_day:           true,
+  location:          "Salzburger Tiergarten Hellbrunn",
+  description:       "Ganztagesausflug für die Gruppen Sonnenblumen und Marienkäfer. " \
+                     "Bitte Jause & Regenjacke einpacken.",
+  kindergarten_year: year,
+  created_by:        sabine,
+  status:            "aktiv"
+)
+
+create_cal_event(CalendarEvent, [ butterflies ],
+  title:             "Elternabend – Gruppe Schmetterlinge",
+  event_type:        "event",
+  start_date:        today + 5.days,
+  all_day:           false,
+  start_time:        "18:30",
+  location:          "Gruppenraum Schmetterlinge",
+  description:       "Themen: Eingewöhnungsphase, Tagesablauf, Fragen der Eltern.",
+  kindergarten_year: year,
+  created_by:        sabine,
+  status:            "aktiv"
+)
+
+# ── Teilnahmelisten ───────────────────────────────────────────────────────────
+puts "  Teilnahmelisten …"
+
+# Hilfsmethode: alle (Kind, Elternteil)-Paare einer Gruppe laden
+def children_with_parents(group, year)
+  Child.where(group: group, kindergarten_year: year)
+       .includes(:parent_children => :user)
+       .filter_map do |child|
+         parent = child.parent_children.first&.user
+         [ child, parent ] if parent
+       end
+end
+
+# 1. Sommerfest-Anmeldung – allgemein, alle drei Gruppen
+[ sunflowers, ladybugs, butterflies ].each do |group|
+  al = AttendanceList.create!(
+    title:             "Anmeldung Sommerfest",
+    mode:              "general",
+    group:             group,
+    kindergarten_year: year,
+    created_by:        sabine,
+    deadline:          (sommerfest.start_date - 4.days).to_datetime.change(hour: 20),
+    event_id:          sommerfest.id,
+    description:       "Bitte meldet euer Kind bis spätestens #{(sommerfest.start_date - 4.days).strftime('%-d.%-m.')} an."
+  )
+  children_with_parents(group, year).each do |child, parent|
+    AttendanceEntry.create!(list: al, child: child, user: parent)
+  end
+end
+
+# 2. Zoo-Ausflug – pro-Datum (zwei mögliche Tage), nur Sonnenblumen
+zoo_list = AttendanceList.create!(
+  title:             "Ausflug Zoo – Datum abstimmen",
+  mode:              "per_date",
+  group:             sunflowers,
+  kindergarten_year: year,
+  created_by:        sabine,
+  deadline:          (today + 4.days).to_datetime.change(hour: 18),
+  event_id:          ausflug.id
+)
+opt_a = zoo_list.attendance_date_options.create!(date: today + 7.days)
+opt_b = zoo_list.attendance_date_options.create!(date: today + 8.days)
+
+children_with_parents(sunflowers, year).each_with_index do |(child, parent), idx|
+  entry = AttendanceEntry.create!(list: zoo_list, child: child, user: parent)
+  # Abwechselnd Tag A / Tag B
+  chosen = idx.even? ? opt_a : opt_b
+  entry.attendance_date_selections.create!(attendance_date_option: chosen)
+end
+
+# 3. Elternsprechtag – Marienkäfer, kein Deadline mehr (bereits abgelaufen)
+el_list = AttendanceList.create!(
+  title:             "Gesprächswunsch Elternsprechtag",
+  mode:              "general",
+  group:             ladybugs,
+  kindergarten_year: year,
+  created_by:        sabine,
+  deadline:          (today - 1.day).to_datetime.change(hour: 20),
+  event_id:          elternsprechtag.id,
+  description:       "Bitte anmelden, wenn ihr ein persönliches Gespräch wünscht."
+)
+children_with_parents(ladybugs, year).first(3).each do |child, parent|
+  AttendanceEntry.create!(list: el_list, child: child, user: parent)
+end
+
+# 4. Frühlingsfest (nachträglich, offene Liste für Schmetterlinge)
+AttendanceList.create!(
+  title:             "Frühlingsfest – Rückmeldung",
+  mode:              "general",
+  group:             butterflies,
+  kindergarten_year: year,
+  created_by:        sabine,
+  event_id:          fruehlingsfest.id
+)
+
+# ── Abstimmungen ──────────────────────────────────────────────────────────────
+puts "  Abstimmungen …"
+
+# Hilfsmethode: Poll mit Optionen in einem Schritt anlegen
+def create_poll(option_labels, **attrs)
+  p = Poll.new(attrs)
+  option_labels.each_with_index { |label, idx| p.poll_options.build(label: label, position: idx) }
+  p.save!
+  p
+end
+
+# 1. Elternsprechtag-Termin (Sonnenblumen, offen, Einfachauswahl)
+poll_et = create_poll(
+  ["Montag, #{(today + 10.days).strftime('%-d.%-m.')}",
+   "Dienstag, #{(today + 11.days).strftime('%-d.%-m.')}",
+   "Mittwoch, #{(today + 12.days).strftime('%-d.%-m.')}"],
+  title:             "Wunschdatum Elternsprechtag",
+  poll_type:         "single",
+  status:            "open",
+  group:             sunflowers,
+  kindergarten_year: year,
+  created_by:        sabine,
+  deadline:          (today + 6.days).to_datetime.change(hour: 20),
+  description:       "Bitte stimmt ab, welcher Termin für euch am besten passt.",
+  event_id:          elternsprechtag.id
+)
+et_opts = poll_et.poll_options.reload.to_a
+# Votes: 4 von 5 Eltern haben schon abgestimmt
+User.where(email: %w[anna.gruber@example.at stefan.gruber@example.at
+                     lisa.bauer@example.at eva.steiner@example.at]).each_with_index do |u, i|
+  Vote.create!(poll_option: et_opts[i % et_opts.size], user: u)
+end
+
+# 2. T-Shirt-Größe Sommerfest (alle Gruppen → 3 separate Polls, je eine)
+[ sunflowers, ladybugs, butterflies ].each do |group|
+  p = create_poll(
+    %w[98/104 110/116 122/128 134/140],
+    title:             "T-Shirt-Größe für das Sommerfest",
+    poll_type:         "single",
+    status:            "open",
+    group:             group,
+    kindergarten_year: year,
+    created_by:        sabine,
+    deadline:          (sommerfest.start_date - 7.days).to_datetime.change(hour: 20),
+    event_id:          sommerfest.id
+  )
+  opts = p.poll_options.reload.to_a
+  children_with_parents(group, year).first(2).each_with_index do |(_, parent), i|
+    Vote.create!(poll_option: opts[i % opts.size], user: parent)
+  end
+end
+
+# 3. Thema nächster Elternabend – Schmetterlinge (Mehrfachauswahl, offen)
+poll_ea = create_poll(
+  ["Eingewöhnung – Erfahrungen & Fragen",
+   "Tagesablauf & Rituale",
+   "Ernährung & Jause",
+   "Spielzeug von zuhause mitbringen",
+   "Ausflüge & Aktivitäten"],
+  title:             "Themen für den nächsten Elternabend",
+  poll_type:         "multiple",
+  status:            "open",
+  group:             butterflies,
+  kindergarten_year: year,
+  created_by:        sabine,
+  description:       "Ihr könnt mehrere Themen auswählen."
+)
+ea_opts = poll_ea.poll_options.reload.to_a
+User.where(email: %w[julia.hofer@example.at nina.schuster@example.at]).each do |u|
+  ea_opts.sample(2).each { |opt| Vote.create!(poll_option: opt, user: u) }
+end
+
+# 4. Geschlossene Abstimmung (Frühlingsfest-Buffet, Marienkäfer)
+poll_buf = create_poll(
+  ["Herzhafte Speise", "Süße Mehlspeise", "Salat oder Aufstrich", "Getränke"],
+  title:             "Beitrag zum Frühlingsfest-Buffet",
+  poll_type:         "single",
+  status:            "closed",
+  group:             ladybugs,
+  kindergarten_year: year,
+  created_by:        sabine,
+  event_id:          fruehlingsfest.id
+)
+buf_opts = poll_buf.poll_options.reload.to_a
+User.where(email: %w[petra.winkler@example.at markus.brunner@example.at
+                     karin.fuchs@example.at christine.huber@example.at]).each_with_index do |u, i|
+  Vote.create!(poll_option: buf_opts[i % buf_opts.size], user: u)
+end
+
+# ── Einkaufslisten ────────────────────────────────────────────────────────────
+puts "  Einkaufslisten …"
+
+mama_gruber_user = User.find_by(email: "anna.gruber@example.at")
+
+# 1. Sommerfest-Einkauf (kindergartenweit, zugewiesen an Elternteil)
+sl_sommer = ShoppingList.create!(
+  title:             "Einkauf Sommerfest",
+  event_date:        sommerfest.start_date - 1.day,
+  kindergarten_year: year,
+  created_by:        sabine,
+  assigned_to:       mama_gruber_user,
+  event_id:          sommerfest.id,
+  description:       "Einkaufsliste für das Sommerfest. Anna Gruber hat sich freiwillig gemeldet."
+)
+[
+  { name: "Limonade",              quantity: "24 Flaschen",  position: 0 },
+  { name: "Mineralwasser",         quantity: "12 Flaschen",  position: 1 },
+  { name: "Pappteller",            quantity: "100 Stück",    position: 2 },
+  { name: "Plastikbecher",         quantity: "100 Stück",    position: 3 },
+  { name: "Servietten",            quantity: "5 Packungen",  position: 4 },
+  { name: "Grillanzünder",         quantity: "1 Packung",    position: 5, done: true,
+    completed_by_id: sabine.id, completed_at: Time.current },
+  { name: "Holzkohle",             quantity: "2 Säcke",      position: 6, done: true,
+    completed_by_id: sabine.id, completed_at: Time.current },
+  { name: "Würstel (vegan)",       quantity: "2 kg",         position: 7 },
+  { name: "Würstel (Standard)",    quantity: "3 kg",         position: 8 },
+  { name: "Weckerl",               quantity: "40 Stück",     position: 9 },
+  { name: "Ketchup & Senf",        quantity: "je 2 Flaschen", position: 10 },
+].each { |attrs| sl_sommer.shopping_items.create!(attrs) }
+
+# 2. Bastelmaterialien Herbst (Sonnenblumen)
+sl_bastel = ShoppingList.create!(
+  title:             "Bastelmaterialien – Herbst",
+  event_date:        today + 3.days,
+  group:             sunflowers,
+  kindergarten_year: year,
+  created_by:        sabine
+)
+[
+  { name: "Buntpapier A4",         quantity: "5 Packungen",  position: 0, done: true,
+    completed_by_id: sabine.id, completed_at: Time.current },
+  { name: "Klebstoff (Pritt)",     quantity: "10 Stück",     position: 1, done: true,
+    completed_by_id: sabine.id, completed_at: Time.current },
+  { name: "Schere (Kinderschere)", quantity: "5 Stück",      position: 2 },
+  { name: "Pompons bunt",          quantity: "1 Beutel",     position: 3 },
+  { name: "Wackelaugen",           quantity: "2 Packungen",  position: 4 },
+  { name: "Kastanien & Zapfen",    quantity: "aus dem Garten gesammelt",  position: 5 },
+].each { |attrs| sl_bastel.shopping_items.create!(attrs) }
+
+# 3. Jause-Vorrat Marienkäfer (Gruppe)
+sl_jause = ShoppingList.create!(
+  title:             "Jause-Vorrat KW #{(today + 7.days).cweek}",
+  event_date:        today + 7.days,
+  group:             ladybugs,
+  kindergarten_year: year,
+  created_by:        sabine
+)
+[
+  { name: "Vollkornbrot",           quantity: "3 Laibe",       position: 0 },
+  { name: "Topfen (mager)",         quantity: "500 g",         position: 1 },
+  { name: "Karotten",               quantity: "1 kg",          position: 2 },
+  { name: "Äpfel",                  quantity: "2 kg",          position: 3 },
+  { name: "Bananen",                quantity: "1 kg",          position: 4 },
+  { name: "Hafermilch",             quantity: "4 Packungen",   position: 5, note: "laktosefrei wegen Lea Fuchs" },
+].each { |attrs| sl_jause.shopping_items.create!(attrs) }
+
+# 4. Zoo-Ausflug Getränke (Sonnenblumen)
+sl_zoo = ShoppingList.create!(
+  title:             "Ausflug Zoo – Getränke & Snacks",
+  event_date:        ausflug.start_date,
+  group:             sunflowers,
+  kindergarten_year: year,
+  created_by:        sabine,
+  event_id:          ausflug.id
+)
+[
+  { name: "Trinkflaschen (Ersatz)", quantity: "5 Stück",      position: 0 },
+  { name: "Müsliriegel",            quantity: "20 Stück",     position: 1 },
+  { name: "Sonnencreme LSF 50",     quantity: "2 Tuben",      position: 2 },
+  { name: "Pflaster-Set",           quantity: "1 Set",        position: 3 },
+].each { |attrs| sl_zoo.shopping_items.create!(attrs) }
+
 # ── Zusammenfassung ──────────────────────────────────────────────────────────
 puts ""
 puts "  ┌──────────────────────────────────────────────┐"
@@ -496,6 +834,10 @@ printf "  │  Notfallkontakte   %-3s                        │\n", EmergencyCo
 printf "  │  Med. Hinweise     %-3s                        │\n", MedicalNote.count
 printf "  │  Speiseplan-Tage   %-3s                        │\n", MealEntry.count
 printf "  │  Speisen (Courses) %-3s                        │\n", MealCourse.count
+printf "  │  Veranstaltungen   %-3s                        │\n", CalendarEvent.unscoped.count
+printf "  │  Teilnahmelisten   %-3s                        │\n", AttendanceList.count
+printf "  │  Abstimmungen      %-3s                        │\n", Poll.count
+printf "  │  Einkaufslisten    %-3s                        │\n", ShoppingList.count
 puts "  ├──────────────────────────────────────────────┤"
 puts "  │  Login  sabine@mikiwa.local                   │"
 puts "  │  PW     changeme12345678                     │"

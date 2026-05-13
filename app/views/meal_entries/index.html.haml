@@ -4,7 +4,7 @@
   .mw-page-header__text
     %h1.mw-page-header__title Speiseplan
     %p.mw-page-header__lede
-      Woche #{l(@week_start, format: :short)} – #{l(@week_start + 4.days, format: :short)}
+      KW #{@week_start.cweek} · #{l(@week_start, format: :short)} – #{l(@week_start + 4.days, format: :short)}
   .mw-page-header__actions
     = link_to meal_entries_path(week: (@week_start - 7).iso8601), class: "mw-page-action" do
       = lucide_icon "chevron-left", size: 14

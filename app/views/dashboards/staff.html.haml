@@ -32,12 +32,18 @@
                   · #{event.start_time}
             = lucide_icon "chevron-right", size: 16, class: "mw-dashboard-item__arrow"
       - if @today_meals.any?
-        - @today_meals.each do |entry|
-          .mw-dashboard-item.mw-dashboard-item--static
-            .mw-dashboard-item__icon
-              = lucide_icon "utensils", size: 18
-            .mw-dashboard-item__body
-              %p.mw-dashboard-item__title= entry.meal
+        .mw-dashboard-item.mw-dashboard-item--static
+          .mw-dashboard-item__icon
+            = lucide_icon "utensils", size: 18
+          .mw-dashboard-item__body
+            - @today_meals.each_with_index do |entry, idx|
+              - if idx > 0
+                %hr.mw-dashboard-meal-divider
+              .mw-meal-courses-inline
+                - entry.meal_courses.each do |course|
+                  %span.mw-meal-courses-inline__item
+                    %span.mw-meal-courses-inline__label= course.label
+                    = course.name
               %p.mw-dashboard-item__meta Speiseplan · #{entry.group.name}
       - if @today_birthdays.any?
         - @today_birthdays.each do |child|

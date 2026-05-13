@@ -743,8 +743,61 @@ html, body { overflow-x: clip; max-width: 100%; }
   transition: border-color var(--dur-micro), box-shadow var(--dur-micro);
 }
 .mw-input::placeholder { color: var(--fg-4); }
-.mw-input:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+.mw-input:focus  { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+.mw-input:hover  { border-color: var(--border-strong); }
+.mw-input:disabled { background: var(--surface-sunken); color: var(--fg-4); cursor: not-allowed; opacity: 0.65; }
+.mw-input[readonly] { background: var(--surface-sunken); color: var(--fg-2); }
 .mw-input--error { border-color: var(--danger); }
+.mw-input--error:focus { box-shadow: 0 0 0 3px oklch(60% 0.180 14 / 0.25); }
+textarea.mw-input { resize: vertical; min-height: 96px; line-height: var(--lh-relaxed); }
+
+/* Select — same visual language as mw-input; custom chevron via background-image
+   so no wrapper element is needed in templates. */
+.mw-select {
+  font-family: var(--font-body);
+  font-size: var(--fs-14);
+  font-weight: var(--fw-medium);
+  width: 100%;
+  padding: 10px 36px 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  background-color: var(--surface);
+  color: var(--fg-1);
+  outline: none;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: border-color var(--dur-micro), box-shadow var(--dur-micro);
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237b7268' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+.mw-select:hover  { border-color: var(--border-strong); }
+.mw-select:focus  { border-color: var(--accent); box-shadow: var(--shadow-focus); outline: none; }
+.mw-select:disabled { background-color: var(--surface-sunken); color: var(--fg-4); cursor: not-allowed; opacity: 0.65; }
+.mw-select--sm { font-size: var(--fs-12); padding: 6px 30px 6px 10px; background-position: right 10px center; }
+
+/* Dark-mode: lighten the chevron to match --fg-3 in dark theme */
+[data-theme="dark"] .mw-select {
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23b0a89e' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+}
+
+/* Optional wrapper — used when a CSS ::after chevron is preferred over background-image */
+.mw-select-wrap { position: relative; display: block; }
+.mw-select-wrap .mw-select { background-image: none; }
+.mw-select-wrap::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 1.75px solid var(--fg-3);
+  border-bottom: 1.75px solid var(--fg-3);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
 
 /* ----- Card ----- */
 .mw-card {
@@ -1664,6 +1717,40 @@ html, body { overflow-x: clip; max-width: 100%; }
 .mw-mh-item__body { flex: 1; min-width: 0; }
 .mw-mh-item__inhalt { font-size: var(--fs-14); color: var(--fg-1); line-height: 1.5; }
 
+/* Child avatar — circular profile photo with initials fallback */
+.mw-child-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--border-subtle);
+  background: var(--surface-sunken);
+}
+.mw-child-avatar--sm {
+  width: 36px;
+  height: 36px;
+}
+.mw-child-avatar--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  color: var(--sun-800);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-18);
+  border: 2px solid var(--border-subtle);
+  user-select: none;
+}
+.mw-child-avatar--sm.mw-child-avatar--placeholder { font-size: var(--fs-12); }
+
+/* Name cell in children index — avatar + text side by side */
+.mw-child-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 /* ==========================================================================
    CALENDAR
    ========================================================================== */
@@ -2399,6 +2486,32 @@ html, body { overflow-x: clip; max-width: 100%; }
 }
 
 .mw-dashboard-item__arrow { color: var(--fg-4); flex-shrink: 0; }
+
+.mw-meal-courses-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  align-items: baseline;
+  margin: 0 0 2px;
+}
+.mw-meal-courses-inline__item {
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  color: var(--fg-1);
+}
+.mw-meal-courses-inline__label {
+  font-size: var(--fs-11);
+  font-weight: var(--fw-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-3);
+  margin-right: 4px;
+}
+.mw-dashboard-meal-divider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 8px 0;
+}
 
 /* Date chip inside item */
 .mw-dashboard-item__date {
@@ -3222,3 +3335,101 @@ html, body { overflow-x: clip; max-width: 100%; }
   gap: 4px;
   overflow-wrap: anywhere;
 }
+
+/* ==========================================================================
+   POLLS — dynamische Optionen
+   ========================================================================== */
+
+.mw-poll-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mw-poll-option-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mw-poll-option-row .mw-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.mw-poll-option-row__remove {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--danger);
+  cursor: pointer;
+  transition: background var(--motion-quick);
+}
+
+.mw-poll-option-row__remove:hover {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+/* ==========================================================================
+   PARENTS SECTION (Kinder-Detailseite)
+   ========================================================================== */
+
+.mw-parents-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.mw-parent-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.mw-parent-item__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--sun-800);
+  flex-shrink: 0;
+}
+
+.mw-parent-item__body { flex: 1; min-width: 0; }
+.mw-parent-item__name { font-weight: var(--fw-semibold); color: var(--fg-1); font-size: var(--fs-14); }
+.mw-parent-item__email { font-size: var(--fs-13); color: var(--fg-3); }
+
+.mw-parent-item__actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.mw-parent-item__actions form { margin: 0; }
+
+.mw-parent-add {
+  border-top: 1px dashed var(--border-subtle);
+  padding-top: var(--space-3);
+}
+
+.mw-parent-add__row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.mw-parent-add__select { flex: 1; min-width: 0; }

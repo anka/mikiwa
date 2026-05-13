@@ -48,9 +48,9 @@ class IcalFeedsController < ActionController::Base
       if event.all_day
         lines << "DTSTART;VALUE=DATE:#{event.start_date.strftime('%Y%m%d')}"
       else
+        h, m = event.start_time.to_s.split(":").map(&:to_i)
         datetime = DateTime.new(event.start_date.year, event.start_date.month,
-                                event.start_date.day, event.start_time.hour,
-                                event.start_time.min, 0)
+                                event.start_date.day, h, m, 0)
         lines << "DTSTART:#{datetime.strftime('%Y%m%dT%H%M%S')}"
       end
 

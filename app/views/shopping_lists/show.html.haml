@@ -4,8 +4,9 @@
   .mw-page-header__text
     %h1.mw-page-header__title= @list.title
     %p.mw-page-header__lede
-      = @list.group.name
-      ·
+      - if @list.group
+        = @list.group.name
+        ·
       = l(@list.event_date, format: :long)
   .mw-page-header__actions
     - if current_user.staff?

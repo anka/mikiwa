@@ -1,0 +1,26 @@
+- content_for :title, "#{@message.title} · Mitteilungen · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title= @message.title
+    %p.mw-page-header__lede
+      = @message.groups.map(&:name).join(", ")
+      · #{@message.inbox_entries.count} Empfänger
+      · #{l(@message.created_at, format: :long)}
+  .mw-page-header__actions
+    = button_to message_path(@message), method: :delete,
+        class: "mw-page-action mw-page-action--danger",
+        data: { turbo_confirm: "Mitteilung \"#{@message.title}\" wirklich löschen?" } do
+      = lucide_icon "trash-2", size: 14
+      Löschen
+    = link_to "Zurück", messages_path, class: "mw-page-action"
+
+.mw-card{ style: "margin-top: 1.5rem; padding: 1.5rem; max-width: 760px;" }
+  .mw-prose
+    = simple_format(@message.body)
+  - if @message.attachment.attached?
+    %hr{ style: "margin: 1.25rem 0; border: none; border-top: 1px solid var(--border-subtle);" }
+    = link_to rails_blob_url(@message.attachment, disposition: "attachment", expires_in: 1.hour),
+        class: "mw-btn mw-btn--secondary mw-btn--sm" do
+      = lucide_icon "paperclip", size: 14
+      = @message.attachment.filename

@@ -28,10 +28,18 @@
         - @children.each do |child|
           %tr
             %td{ "data-label": "Name" }
-              = link_to child_path(child), style: "text-decoration: none; color: inherit;" do
-                %strong= child.full_name
-              - if child.nickname.present?
-                %span.mw-text-muted{ style: "font-size: var(--fs-12); margin-left: 4px;" }= "(#{child.nickname})"
+              .mw-child-name-cell
+                - if child.profile_photo.attached?
+                  = image_tag child.profile_photo.variant(**ImageAttachable::VARIANT_CONFIGS[:thumb]),
+                      class: "mw-child-avatar mw-child-avatar--sm", alt: ""
+                - else
+                  .mw-child-avatar.mw-child-avatar--sm.mw-child-avatar--placeholder
+                    = child.first_name[0].upcase
+                .mw-child-name-cell__text
+                  = link_to child_path(child), style: "text-decoration: none; color: inherit;" do
+                    %strong= child.full_name
+                  - if child.nickname.present?
+                    %span.mw-text-muted{ style: "font-size: var(--fs-12); margin-left: 4px;" }= "(#{child.nickname})"
             %td{ "data-label": "Geburtsdatum" }= I18n.l(child.date_of_birth, format: :short)
             %td{ "data-label": "Gruppe" }
               - if child.group&.color.present?

@@ -43,7 +43,7 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :messages, only: %i[index new create destroy]
+  resources :messages, only: %i[index new create show destroy]
   get  "inbox",       to: "inbox#index", as: :inbox
   get  "inbox/:id",   to: "inbox#show",  as: :inbox_message
 

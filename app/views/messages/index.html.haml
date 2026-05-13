@@ -24,7 +24,7 @@
       %tbody
         - @messages.each do |msg|
           %tr
-            %td= msg.title
+            %td= link_to msg.title, message_path(msg), class: "mw-link"
             %td= msg.groups.map(&:name).join(", ")
             %td= msg.inbox_entries.count
             %td= l(msg.created_at, format: :short)

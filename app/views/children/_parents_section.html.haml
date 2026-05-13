@@ -7,42 +7,41 @@
     %span.mw-detail-section__title Eltern
   .mw-card
     - if assigned_parents.any?
-      - assigned_parents.each do |user|
-        .mw-nk-item{ data: { test: "parent-row-#{user.id}" } }
-          .mw-nk-item__icon
-            = lucide_icon "user", size: 16
-          .mw-nk-item__body
-            .mw-nk-item__name= user.full_name.presence || user.email
-            .mw-nk-item__meta= user.email
-          - if can_manage
-            .mw-actions
-              = button_to detach_parent_child_path(child, user_id: user.id), method: :delete,
-                  class: "mw-page-action mw-page-action--danger",
-                  data: { turbo_confirm: "#{user.full_name.presence || user.email} wirklich von #{child.full_name} entfernen?" } do
-                = lucide_icon "trash-2", size: 14
-                Entfernen
+      .mw-parents-list
+        - assigned_parents.each do |user|
+          .mw-parent-item{ data: { test: "parent-row-#{user.id}" } }
+            .mw-parent-item__avatar
+              = lucide_icon "user", size: 16
+            .mw-parent-item__body
+              .mw-parent-item__name= user.full_name.presence || user.email
+              .mw-parent-item__email= user.email
+            - if can_manage
+              .mw-parent-item__actions
+                = button_to detach_parent_child_path(child, user_id: user.id), method: :delete,
+                    class: "mw-shopping-edit-item__icon-btn mw-shopping-edit-item__icon-btn--danger",
+                    data: { turbo_confirm: "#{user.full_name.presence || user.email} wirklich von #{child.full_name} entfernen?" },
+                    title: "Entfernen" do
+                  = lucide_icon "trash-2", size: 16
     - else
-      .mw-empty-state
-        %p.mw-text-muted Keine Eltern zugeordnet.
+      %p.mw-text-muted{ style: "margin: 0 0 var(--space-3) 0;" } Keine Eltern zugeordnet.
 
     - if can_manage
       - if available_parents.any?
         = form_with url: attach_parent_child_path(child), method: :post,
             data: { test: "attach-parent-form" },
-            class: "mw-form",
-            html: { style: "margin-top: 1rem; display: flex; gap: 0.5rem; align-items: flex-end; flex-wrap: wrap;" } do |f|
-          .mw-field{ style: "flex: 1 1 240px; margin: 0;" }
-            = label_tag :user_id, "Elternteil hinzufügen", class: "mw-field__label"
+            class: "mw-parent-add" do |f|
+          .mw-parent-add__row
             = select_tag :user_id,
                 options_for_select(available_parents.map { |u| [ "#{u.full_name.presence || u.email} (#{u.email})", u.id ] }),
                 prompt: "Elternteil auswählen …",
-                class: "mw-input",
+                class: "mw-select mw-parent-add__select",
                 required: true
-          %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit" }
-            = lucide_icon "plus", size: 14
-            Hinzufügen
+            %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit" }
+              = lucide_icon "plus", size: 14
+              Hinzufügen
       - else
-        %p.mw-text-muted{ style: "margin-top: 1rem;" }
-          Alle Eltern bereits zugeordnet. Neue Eltern-Konten können in der
-          = link_to "Benutzerverwaltung", parents_path, class: "mw-link"
-          angelegt werden.
+        .mw-parent-add
+          %p.mw-text-muted{ style: "margin: 0;" }
+            Alle Eltern bereits zugeordnet. Neue Eltern-Konten können in der
+            = link_to "Benutzerverwaltung", parents_path, class: "mw-link"
+            angelegt werden.

@@ -42,12 +42,26 @@
           options_from_collection_for_select(events, :id, :title, poll.event_id),
           { include_blank: "Keine" }, class: "mw-select"
 
-  .mw-field
+  .mw-field{ "data-controller": "poll-options" }
     %label.mw-field__label Optionen
-    = f.fields_for :poll_options do |opt_f|
-      .mw-shopping-form-row
-        = opt_f.text_field :label, class: "mw-input mw-input--sm", placeholder: "Bezeichnung"
-        = opt_f.hidden_field :position
-        = opt_f.check_box :_destroy, class: "mw-checkbox", id: "destroy_opt_#{opt_f.object.object_id}"
-        = opt_f.label :_destroy, "Entfernen", class: "mw-field__label mw-field__label--inline"
+    .mw-poll-options-list{ "data-poll-options-target": "list" }
+      = f.fields_for :poll_options do |opt_f|
+        .mw-poll-option-row{ "data-poll-options-row": "" }
+          - if opt_f.object.persisted?
+            = opt_f.hidden_field :id, "data-persisted": true
+            = opt_f.hidden_field :_destroy, value: "0", "data-destroy": true
+          = opt_f.hidden_field :position, "data-position": true
+          = opt_f.text_field :label, class: "mw-input mw-input--sm", placeholder: "Bezeichnung", required: true
+          %button.mw-poll-option-row__remove{ type: "button", "data-action": "poll-options#remove" }
+            = lucide_icon "x", size: 14
+    %button.mw-btn.mw-btn--secondary.mw-btn--sm{ type: "button", "data-action": "poll-options#add", style: "margin-top: 0.5rem;" }
+      = lucide_icon "plus", size: 14
+      Option hinzufügen
 
+  / Template für neue Optionen (wird nicht abgeschickt)
+  %template{ "data-poll-options-target": "template" }
+    .mw-poll-option-row{ "data-poll-options-row": "" }
+      %input{ type: "hidden", name: "poll[poll_options_attributes][NEW_RECORD_INDEX][position]", "data-position": true, value: "0" }
+      %input{ type: "text", name: "poll[poll_options_attributes][NEW_RECORD_INDEX][label]", class: "mw-input mw-input--sm", placeholder: "Bezeichnung", required: true }
+      %button.mw-poll-option-row__remove{ type: "button", "data-action": "poll-options#remove" }
+        #{lucide_icon "x", size: 14}

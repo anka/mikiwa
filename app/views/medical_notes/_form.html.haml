@@ -14,7 +14,7 @@
     = form.select :note_type,
         [["Allergie", "allergy"], ["Medikament", "medication"], ["Besonderheit", "special_note"]],
         { prompt: "Bitte wählen …" },
-        required: true, class: "mw-input"
+        required: true, class: "mw-select"
 
   .mw-field
     = form.label :content, "Beschreibung", class: "mw-field__label"

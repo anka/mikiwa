@@ -5,6 +5,10 @@ class MessagesController < ApplicationController
     @messages = Message.includes(:groups).ordered
   end
 
+  def show
+    @message = Message.includes(:groups, :sent_by, :inbox_entries).find(params[:id])
+  end
+
   def new
     @message = Message.new
     @groups = Group.order(:name)

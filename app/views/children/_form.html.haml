@@ -23,11 +23,11 @@
 
   .mw-field
     = form.label :group_id, "Gruppe", class: "mw-field__label"
-    = form.collection_select :group_id, Group.order(:name), :id, :name, { prompt: "Gruppe wählen …" }, class: "mw-input", required: true
+    = form.collection_select :group_id, Group.order(:name), :id, :name, { prompt: "Gruppe wählen …" }, class: "mw-select", required: true
 
   .mw-field
     = form.label :kindergarten_year_id, "Kindergartenjahr", class: "mw-field__label"
-    = form.collection_select :kindergarten_year_id, KindergartenYear.order(start_date: :desc), :id, :label, { prompt: "Jahr wählen …" }, class: "mw-input", required: true
+    = form.collection_select :kindergarten_year_id, KindergartenYear.order(start_date: :desc), :id, :label, { prompt: "Jahr wählen …" }, class: "mw-select", required: true
 
   .mw-field
     %p.mw-field__label Foto-Einwilligung
@@ -47,12 +47,6 @@
           { prompt: "Elternteil auswählen …" },
           class: "mw-input",
           name: "child[parent_id]"
-  - else
-    .mw-field
-      %p.mw-field__label Eltern
-      %p.mw-field__hint
-        Eltern werden in der Detailansicht verwaltet.
-        = link_to "Zur Detailansicht", child_path(child), class: "mw-link"
 
   .mw-field-row
     .mw-field
