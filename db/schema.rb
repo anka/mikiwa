@@ -191,7 +191,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_120000) do
     t.date "end_date", null: false
     t.string "label", null: false
     t.date "start_date", null: false
+    t.string "status", default: "planning", null: false
     t.datetime "updated_at", null: false
+    t.index ["status"], name: "idx_kindergarten_years_active_singleton", unique: true, where: "status = 'active'"
+    t.index ["status"], name: "index_kindergarten_years_on_status"
   end
 
   create_table "meal_courses", id: :string, force: :cascade do |t|

@@ -61,4 +61,35 @@ class KindergartenYearTest < ActiveSupport::TestCase
     year = KindergartenYear.new(valid_attributes.except(:end_date))
     assert_not year.valid?
   end
+
+  # F54: Status-Enum
+  test "F54 default status is planning" do
+    year = KindergartenYear.create!(valid_attributes.except(:active))
+    assert_equal "planning", year.status
+    assert year.planning?
+  end
+
+  test "F54 status: active triggers archiving of previous active year" do
+    a = KindergartenYear.create!(valid_attributes(label: "A", status: "active"))
+    b = KindergartenYear.create!(valid_attributes(label: "B", status: "active"))
+    a.reload
+    assert_equal "archived", a.status
+    assert b.active?
+  end
+
+  test "F54 STATUSES enthält exakt planning, active, archived" do
+    assert_equal %w[planning active archived], KindergartenYear::STATUSES
+  end
+
+  test "F54 active=true setter setzt status auf active (Backwards-Compat)" do
+    year = KindergartenYear.new(valid_attributes.except(:active))
+    year.active = true
+    assert_equal "active", year.status
+  end
+
+  test "F54 KindergartenYear.active liefert das aktive Jahr" do
+    KindergartenYear.create!(valid_attributes(label: "Pl", status: "planning"))
+    active = KindergartenYear.create!(valid_attributes(label: "Akt", status: "active"))
+    assert_equal active.id, KindergartenYear.active.id
+  end
 end

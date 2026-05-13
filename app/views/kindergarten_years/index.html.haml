@@ -27,10 +27,13 @@
             %strong= year.label
           %td= "#{I18n.l(year.start_date, format: :short)} – #{I18n.l(year.end_date, format: :short)}"
           %td
-            - if year.active?
+            - case year.status
+            - when "active"
               %span.mw-badge.mw-badge--success Aktiv
-            - else
-              %span.mw-badge.mw-badge--neutral Abgeschlossen
+            - when "planning"
+              %span.mw-badge.mw-badge--warning In Planung
+            - when "archived"
+              %span.mw-badge.mw-badge--neutral Archiviert
           %td{ style: "text-align: right;" }
             .mw-actions
               - unless year.active?

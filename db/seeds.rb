@@ -101,14 +101,21 @@ KindergartenYear.create!(
   label:      "2024/2025",
   start_date: Date.new(2024, 9, 2),
   end_date:   Date.new(2025, 7, 11),
-  active:     false
+  status:     "archived"
 )
 
 year = KindergartenYear.create!(
   label:      "2025/2026",
   start_date: Date.new(2025, 9, 1),
   end_date:   Date.new(2026, 7, 10),
-  active:     true
+  status:     "active"
+)
+
+KindergartenYear.create!(
+  label:      "2026/2027",
+  start_date: Date.new(2026, 9, 1),
+  end_date:   Date.new(2027, 7, 9),
+  status:     "planning"
 )
 
 # ── Gruppen ──────────────────────────────────────────────────────────────────

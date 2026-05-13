@@ -104,6 +104,7 @@ Rails.application.routes.draw do
   resources :kindergarten_years do
     member do
       patch :activate
+      patch :archive
       get   :rollover
       post  :execute_rollover
     end

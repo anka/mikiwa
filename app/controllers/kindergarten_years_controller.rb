@@ -1,6 +1,6 @@
 class KindergartenYearsController < ApplicationController
   before_action :require_staff!
-  before_action :set_kindergarten_year, only: %i[edit update destroy activate rollover execute_rollover]
+  before_action :set_kindergarten_year, only: %i[edit update destroy activate archive rollover execute_rollover]
 
   def index
     @kindergarten_years = KindergartenYear.order(start_date: :desc)
@@ -35,8 +35,13 @@ class KindergartenYearsController < ApplicationController
   end
 
   def activate
-    @kindergarten_year.update!(active: true)
+    @kindergarten_year.update!(status: "active")
     redirect_to kindergarten_years_path, notice: "#{@kindergarten_year.label} ist jetzt das aktive Jahr."
+  end
+
+  def archive
+    @kindergarten_year.update!(status: "archived")
+    redirect_to kindergarten_years_path, notice: "#{@kindergarten_year.label} wurde archiviert."
   end
 
   def rollover
@@ -46,7 +51,7 @@ class KindergartenYearsController < ApplicationController
   def execute_rollover
     child_ids = Array(params[:child_ids])
     KindergartenYearRollover.new(@kindergarten_year).execute(child_ids)
-    @kindergarten_year.update!(active: true)
+    @kindergarten_year.update!(status: "active")
     redirect_to kindergarten_years_path, notice: "Jahresübergang abgeschlossen. #{child_ids.size} Kind(er) übernommen."
   end
 
@@ -57,7 +62,7 @@ class KindergartenYearsController < ApplicationController
   end
 
   def kindergarten_year_params
-    params.require(:kindergarten_year).permit(:label, :start_date, :end_date, :active)
+    params.require(:kindergarten_year).permit(:label, :start_date, :end_date, :status)
   end
 
   def require_staff!

@@ -2878,7 +2878,7 @@
       "id": "F54",
       "name": "KindergartenYear: Status-Enum (planning/active/archived)",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "kindergarten_years.active:boolean wird durch status:enum (planning, active, archived) ersetzt; DB-Drop im Dev, ursprüngliche Migration angepasst.",
       "description": "Ziel: Kindergartenjahre können explizit 'in Planung' sein (Vorbereitung Rollover, noch nicht produktiv).\n\nDatenmodell: kindergarten_years.status:string (default 'planning'), enum :status, { planning: 'planning', active: 'active', archived: 'archived' }. Genau ein Jahr darf gleichzeitig status='active' sein (DB-Constraint + Modell-Validation analog zur bisherigen Logik mit active:boolean).\n\nVorgehen DB (Dev): wie F35 — ursprüngliche kindergarten_years-Migration anpassen (active:boolean entfernen, status:string null:false default:'planning' hinzufügen), schema.rb löschen, db:drop/create/migrate/seed.\n\nCode-Migration:\n  • KindergartenYear.active (Class-Method) → find_by(status: 'active') (Signatur bleibt erhalten)\n  • Alle Lese-Stellen, die year.active? prüfen, lassen sich durch das Enum-Generated-Predicate year.active? wieder gleich verwenden — checken!\n  • Form/Edit-Page bekommt Select-Feld 'Status' mit den drei Werten\n  • Index zeigt Status als Badge (Pastell-Farben: planning=hellgelb, active=mint, archived=grau)\n\nSeeds: aktuelles laufendes Jahr → active; ein zukünftiges Jahr → planning (für Rollover-Test); alte Jahre → archived.",
       "acceptance_criteria": [

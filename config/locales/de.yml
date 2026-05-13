@@ -40,6 +40,12 @@ de:
         event_date: "Einkaufstag"
         title: "Titel"
         description: "Beschreibung"
+      kindergarten_year:
+        status: "Status"
+        statuses:
+          planning: "In Planung"
+          active: "Aktiv"
+          archived: "Archiviert"
       shopping_item:
         category: "Kategorie"
         categories:

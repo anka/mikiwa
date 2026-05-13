@@ -21,3 +21,9 @@
       = form.label :end_date, "Enddatum", class: "mw-field__label"
       = form.date_field :end_date, required: true, class: "mw-input"
 
+  .mw-field
+    = form.label :status, t("activerecord.attributes.kindergarten_year.status", default: "Status"), class: "mw-field__label"
+    = form.select :status,
+        KindergartenYear::STATUSES.map { |s| [ t("activerecord.attributes.kindergarten_year.statuses.#{s}", default: s.humanize), s ] },
+        {}, class: "mw-select"
+
