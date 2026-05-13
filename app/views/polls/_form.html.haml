@@ -58,10 +58,10 @@
       = lucide_icon "plus", size: 14
       Option hinzufügen
 
-  / Template für neue Optionen (wird nicht abgeschickt)
-  %template{ "data-poll-options-target": "template" }
-    .mw-poll-option-row{ "data-poll-options-row": "" }
-      %input{ type: "hidden", name: "poll[poll_options_attributes][NEW_RECORD_INDEX][position]", "data-position": true, value: "0" }
-      %input{ type: "text", name: "poll[poll_options_attributes][NEW_RECORD_INDEX][label]", class: "mw-input mw-input--sm", placeholder: "Bezeichnung", required: true }
-      %button.mw-poll-option-row__remove{ type: "button", "data-action": "poll-options#remove" }
-        #{lucide_icon "x", size: 14}
+    / Template für neue Optionen (wird nicht abgeschickt)
+    %template{ "data-poll-options-target": "template" }
+      .mw-poll-option-row{ "data-poll-options-row": "" }
+        %input{ type: "hidden", name: "poll[poll_options_attributes][NEW_RECORD_INDEX][position]", "data-position": true, value: "0" }
+        %input{ type: "text", name: "poll[poll_options_attributes][NEW_RECORD_INDEX][label]", class: "mw-input mw-input--sm", placeholder: "Bezeichnung", required: true }
+        %button.mw-poll-option-row__remove{ type: "button", "data-action": "poll-options#remove" }
+          #{lucide_icon "x", size: 14}

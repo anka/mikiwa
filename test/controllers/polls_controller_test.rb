@@ -215,4 +215,32 @@ class PollsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :forbidden
   end
+
+  # BF-004: Polls/new — 'weitere Option hinzufügen' Button funktioniert nicht
+  test "BF-004 polls/new: template liegt im Scope des poll-options-Controllers" do
+    sign_in_as(@staff)
+    get new_poll_path
+    assert_response :success
+    assert_select 'div[data-controller="poll-options"] template[data-poll-options-target="template"]', 1,
+                  "Template muss innerhalb des poll-options-Controller-Scopes liegen"
+  end
+
+  test "BF-004 Poll mit drei poll_options lässt sich erstellen" do
+    sign_in_as(@staff)
+    assert_difference "Poll.count", 1 do
+      post polls_path, params: {
+        poll: {
+          title: "Drei-Options-Poll", poll_type: "single",
+          group_id: @group.id, kindergarten_year_id: @year.id,
+          poll_options_attributes: {
+            "0" => { label: "A", position: 1 },
+            "1" => { label: "B", position: 2 },
+            "2" => { label: "C", position: 3 }
+          }
+        }
+      }
+    end
+    last = Poll.order(:created_at).last
+    assert_equal 3, last.poll_options.count
+  end
 end

@@ -2606,7 +2606,7 @@
       "id": "BF-004",
       "name": "Bugfix: Polls/new — 'weitere Option hinzufügen' funktioniert nicht",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Der Button zum Hinzufügen einer weiteren Poll-Option in /polls/new triggert keine neue Zeile.",
       "description": "Symptom: In /polls/new bleibt der Button 'Option hinzufügen' wirkungslos — keine zusätzliche Eingabezeile, kein Konsolen-Fehler bemerkenswert im UX.\n\nVermutete Ursachen (zu prüfen):\n  • Stimulus-Controller nicht angebunden (falsches data-controller / data-action Attribut)\n  • Template-Element (<template>) fehlt oder hat falsches data-target\n  • Nested-Attributes-Index-Generierung defekt (z. B. NEW_RECORD-Platzhalter wird nicht ersetzt)\n\nFix-Ansatz:\n  1. Reproduzieren mit agent-browser auf /polls/new\n  2. Stimulus-Controller (nested_form_controller.js o. ä.) prüfen, ggf. analog zu funktionierendem Beispiel (attendance_date_options)     umsetzen\n  3. Test (System-Test) hinzufügen, der zwei Optionen nacheinander hinzufügt und Poll mit 3 Optionen erstellt\n\nAkzeptanzkriterium ist nicht die Ursache, sondern das verifizierbare Verhalten.",
       "acceptance_criteria": [
