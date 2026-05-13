@@ -36,6 +36,10 @@ de:
         relationship: "Beziehung"
         phone: "Telefon"
         position: "Reihenfolge"
+      shopping_list:
+        event_date: "Einkaufstag"
+        title: "Titel"
+        description: "Beschreibung"
     errors:
       messages:
         blank: "muss ausgefüllt werden"

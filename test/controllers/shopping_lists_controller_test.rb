@@ -205,4 +205,13 @@ class ShoppingListsControllerTest < ActionDispatch::IntegrationTest
     assert_match @list.title, response.body
     assert_no_match @other_list.title, response.body
   end
+
+  # F48: Bezugstag → Einkaufstag
+  test "F48 New-Form Label heißt 'Einkaufstag' (nicht 'Bezugstag')" do
+    sign_in_as(@caretaker)
+    get new_shopping_list_path
+    assert_response :success
+    assert_match(/Einkaufstag/, response.body)
+    assert_no_match(/Bezugstag/, response.body)
+  end
 end

@@ -26,7 +26,7 @@
           %th Titel
           %th Gruppe
           %th Verantwortlich
-          %th Datum
+          %th Einkaufstag
           %th Einträge
           %th{ style: "text-align: right;" } Aktionen
       %tbody
@@ -45,7 +45,7 @@
                 = list.assigned_to.full_name.presence || list.assigned_to.email
               - else
                 %span.mw-badge.mw-badge--neutral Nicht zugewiesen
-            %td{ "data-label": "Datum" }= l(list.event_date, format: :long)
+            %td{ "data-label": "Einkaufstag" }= l(list.event_date, format: :long)
             %td{ "data-label": "Einträge" }
               %span{ style: done == total && total > 0 ? "color: var(--success);" : nil }
                 = "#{done}/#{total} erledigt"

@@ -2634,7 +2634,7 @@
       "id": "F48",
       "name": "ShoppingList: 'Bezugstag' → 'Einkaufstag' umbenennen (UI-Label)",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "UI-Label des event_date-Felds in /shopping_lists und allen Anzeigen von 'Bezugstag' auf 'Einkaufstag' ändern.",
       "description": "Ziel: einheitliche und intuitive Bezeichnung im UI.\n\nUmfang: nur Labels/Übersetzungen (i18n) — DB-Spaltenname event_date bleibt aus Kompatibilitätsgründen unverändert. Die Änderung betrifft ausschließlich:\n  • config/locales/de.yml (activerecord.attributes.shopping_list.event_date, helpers.label.shopping_list.event_date)\n  • alle Views, die den Begriff hartcodiert verwenden (search 'Bezugstag' in app/views/**)\n  • PDF/Print/Mail-Templates (falls vorhanden)\n\nSuche nach 'Bezugstag' im Repo und konsequente Ersetzung durch 'Einkaufstag'. Keine Code-Identifier umbenennen.",
       "acceptance_criteria": [
