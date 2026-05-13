@@ -65,4 +65,57 @@ class RolloversControllerTest < ActionDispatch::IntegrationTest
     assert_match "Anna Aaron", response.body
     assert_match "Bea Berg", response.body
   end
+
+  # F56: Auto-Deaktivierung + transaktionale Ausführung
+  test "F56 Execute überträgt ausgewählte Kinder und deaktiviert die anderen" do
+    sign_in_as(@caretaker)
+    assert_no_difference "Child.count" do
+      post rollover_execute_path, params: {
+        source_year_id: @source.id, target_year_id: @target.id,
+        child_ids: [ @child_a.id ]
+      }
+    end
+    assert_redirected_to children_path
+    assert_match(/Rollover abgeschlossen: 1 übernommen, 1 deaktiviert/, flash[:notice])
+
+    @child_a.reload
+    @child_b.reload
+    assert_equal @target.id, @child_a.kindergarten_year_id
+    assert @child_a.active?
+    assert_equal @source.id, @child_b.kindergarten_year_id
+    assert_not @child_b.active?
+  end
+
+  test "F56 Execute ist idempotent bei erneutem Aufruf" do
+    sign_in_as(@caretaker)
+    post rollover_execute_path, params: {
+      source_year_id: @source.id, target_year_id: @target.id,
+      child_ids: [ @child_a.id ]
+    }
+    @child_a.reload
+
+    assert_no_difference "Child.count" do
+      post rollover_execute_path, params: {
+        source_year_id: @target.id, target_year_id: @target.id,
+        child_ids: [ @child_a.id ]
+      }
+    end
+    assert_equal @target.id, @child_a.reload.kindergarten_year_id
+  end
+
+  test "F56 Execute ohne Zieljahr scheitert mit alert" do
+    sign_in_as(@caretaker)
+    post rollover_execute_path, params: { source_year_id: @source.id, child_ids: [ @child_a.id ] }
+    assert_redirected_to rollover_path
+    assert_match(/gültiges Zieljahr/, flash[:alert])
+  end
+
+  test "F56 Eltern haben keinen Zugriff auf execute" do
+    sign_in_as(@parent)
+    post rollover_execute_path, params: {
+      source_year_id: @source.id, target_year_id: @target.id,
+      child_ids: [ @child_a.id ]
+    }
+    assert_response :forbidden
+  end
 end
