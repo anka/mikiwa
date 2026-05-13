@@ -2544,7 +2544,7 @@
       "id": "F46",
       "name": "Event: optionales address-Attribut",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "calendar_events.address (string, optional). Anzeige in Show, Eingabe in New/Edit.",
       "description": "Ziel: Veranstaltungen können eine Adresse mitführen, die für Map-Embed (F45) und Eltern-Info genutzt wird.\n\nDatenmodell: calendar_events.address:string (nullable, max ~255 Zeichen). Ursprüngliche Events-Migration anpassen, schema.rb regenerieren — wie F35.\n\nForm (events/_form): neues Textfeld 'Adresse' mit Placeholder 'z. B. Hauptstraße 5, 1010 Wien'. Single-Line, freie Eingabe, kein Autocomplete.\n\nShow: Adresse wird in der Meta-Sektion neben Datum/Uhrzeit gerendert (Icon Lucide map-pin), und ist Trigger für F45-Map.\n\nSeeds: ein paar Demo-Events bekommen Beispiel-Adressen, damit Map sofort sichtbar ist.",
       "acceptance_criteria": [

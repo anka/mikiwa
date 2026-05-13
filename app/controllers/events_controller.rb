@@ -80,7 +80,7 @@ class EventsController < ApplicationController
   def event_params
     params.require(:event).permit(
       :title, :start_date, :all_day, :start_time,
-      :location, :description, :kindergarten_year_id
+      :location, :address, :description, :kindergarten_year_id
     )
   end
 

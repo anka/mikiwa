@@ -42,6 +42,13 @@
           .mw-detail-row__label Ort
           .mw-detail-row__value= @event.location
 
+    - if @event.address.present?
+      .mw-detail-row
+        .mw-detail-row__icon= lucide_icon "map-pin", size: 18, class: "mw-icon lucide-map-pin"
+        .mw-detail-row__content
+          .mw-detail-row__label Adresse
+          .mw-detail-row__value= @event.address
+
     .mw-detail-row
       .mw-detail-row__icon= lucide_icon "layout-grid", size: 18
       .mw-detail-row__content

@@ -6,6 +6,7 @@ class CreateCalendarEvents < ActiveRecord::Migration[8.1]
       t.boolean :all_day,             null: false, default: true
       t.string  :start_time
       t.string  :location
+      t.string  :address
       t.text    :description
       t.string  :event_type,          null: false, default: "event"
       t.string  :kindergarten_year_id, limit: 36, null: false

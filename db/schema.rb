@@ -91,6 +91,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_120000) do
   end
 
   create_table "calendar_events", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.string "address"
     t.boolean "all_day", default: true, null: false
     t.datetime "created_at", null: false
     t.string "created_by_id", limit: 36, null: false

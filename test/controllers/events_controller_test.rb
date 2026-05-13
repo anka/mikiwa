@@ -173,4 +173,36 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
 
     list.destroy!
   end
+
+  # F46: address-Attribut
+  test "F46 caretaker can save event with address" do
+    sign_in_as(@caretaker)
+    post events_path, params: {
+      event: {
+        title: "Veranstaltung mit Adresse", start_date: "2026-07-15",
+        start_time: "10:00", all_day: "0",
+        address: "Musterstraße 1, 1010 Wien",
+        kindergarten_year_id: @year.id,
+        group_ids: [ @group_baeren.id ]
+      }
+    }
+    last = Event.order(:created_at).last
+    assert_equal "Musterstraße 1, 1010 Wien", last.address
+  end
+
+  test "F46 Show zeigt Adresse mit map-pin Icon" do
+    sign_in_as(@caretaker)
+    @event.update!(address: "Hauptplatz 5, 9560 Feldkirchen")
+    get event_path(@event)
+    assert_response :success
+    assert_match "Hauptplatz 5, 9560 Feldkirchen", response.body
+    assert_match(/lucide-map-pin|map-pin/i, response.body, "map-pin Icon erwartet")
+  end
+
+  test "F46 Form zeigt Adress-Feld" do
+    sign_in_as(@caretaker)
+    get new_event_path
+    assert_response :success
+    assert_match(/name="event\[address\]"/, response.body)
+  end
 end
