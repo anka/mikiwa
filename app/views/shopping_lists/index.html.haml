@@ -18,6 +18,29 @@
   = link_to "Alle", shopping_lists_path, class: "mw-btn mw-btn--sm #{all_class}"
   = link_to "Nur mir zugewiesen", shopping_lists_path(assigned: "me"), class: "mw-btn mw-btn--sm #{me_class}"
 
+= form_with url: shopping_lists_path, method: :get, local: true, class: "mw-shopping-lists-filters", html: { style: "margin-top: 1rem;" } do
+  .mw-shopping-lists-filters__row{ style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: end;" }
+    .mw-form__field
+      %label.mw-form__label{ for: "filter-group-id" } Gruppe
+      = select_tag :group_id,
+                   options_from_collection_for_select(@filter_groups, :id, :name, @filter_group_id),
+                   include_blank: "Alle Gruppen", id: "filter-group-id", class: "mw-form__input"
+    .mw-form__field
+      %label.mw-form__label{ for: "filter-month" } Monat
+      = select_tag :month,
+                   options_for_select(@filter_months.map { |m| [ I18n.l(Date.parse("#{m}-01"), format: "%B %Y"), m ] }, @filter_month),
+                   include_blank: "Alle Monate", id: "filter-month", class: "mw-form__input"
+    .mw-form__field
+      %label.mw-form__label{ for: "filter-assigned-to" } Verantwortlich
+      = select_tag :assigned_to_id,
+                   options_from_collection_for_select(@filter_assignees, :id, ->(u) { u.full_name.presence || u.email }, @filter_assigned_to_id),
+                   include_blank: "Alle", id: "filter-assigned-to", class: "mw-form__input"
+    .mw-form__field
+      = submit_tag "Filtern", class: "mw-btn mw-btn--secondary mw-btn--sm"
+  - if @filter_group_id.present? || @filter_month.present? || @filter_assigned_to_id.present?
+    .mw-shopping-lists-filters__reset{ style: "margin-top: 8px; text-align: right;" }
+      = link_to "Filter zurücksetzen", shopping_lists_path, class: "mw-page-action"
+
 - if @lists.any?
   .mw-card{ style: "margin-top: 1rem;" }
     %table.mw-table.mw-table--cards{ style: "width: 100%;" }

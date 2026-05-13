@@ -2715,7 +2715,7 @@
       "id": "F50",
       "name": "Filter in /shopping_lists (Gruppe, Monat, Verantwortlich)",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Filterleiste auf /shopping_lists: Gruppe, Monat (basierend auf event_date), Verantwortlich (assigned_to).",
       "description": "Ziel: schnelles Eingrenzen der Listen.\n\nFilter:\n  • group_id — Select aus allen Groups\n  • month — Select aus den im Bestand vorkommenden Monaten (YYYY-MM), basierend auf event_date\n  • assigned_to_id — Select aus allen Usern, die mindestens einer Liste zugewiesen sind\n\nImplementierung analog F41: GET-Form mit method=:get, kombinierbar, Reset-Link.\n\nUI: drei Inputs nebeneinander (Desktop), gestapelt (Mobile). Konsistent mit /children Filter-Leiste.",
       "acceptance_criteria": [

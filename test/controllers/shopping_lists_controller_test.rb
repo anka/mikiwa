@@ -215,6 +215,52 @@ class ShoppingListsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/Bezugstag/, response.body)
   end
 
+  # F50: Filter
+  test "F50 Index zeigt Filter-Leiste (group_id, month, assigned_to_id)" do
+    sign_in_as(@caretaker)
+    get shopping_lists_path
+    assert_response :success
+    assert_match(/mw-shopping-lists-filters/, response.body)
+    assert_match(/name="group_id"/, response.body)
+    assert_match(/name="month"/, response.body)
+    assert_match(/name="assigned_to_id"/, response.body)
+  end
+
+  test "F50 Monat-Filter zeigt nur Listen aus YYYY-MM" do
+    sign_in_as(@caretaker)
+    juli = ShoppingList.create!(title: "F50-Juli-Liste", event_date: Date.new(2026, 7, 5),
+      group: @group_baeren, kindergarten_year: @year, created_by: @caretaker)
+    get shopping_lists_path, params: { month: "2026-07" }
+    assert_response :success
+    assert_match juli.title, response.body
+    assert_no_match @other_list.title, response.body
+    assert_no_match @list.title, response.body
+  end
+
+  test "F50 Gruppe-Filter beschränkt Liste" do
+    sign_in_as(@caretaker)
+    get shopping_lists_path, params: { group_id: @group_loewen.id }
+    assert_response :success
+    assert_match @other_list.title, response.body
+    assert_no_match @list.title, response.body
+  end
+
+  test "F50 assigned_to_id-Filter beschränkt Liste" do
+    sign_in_as(@caretaker)
+    @list.update!(assigned_to: @parent)
+    get shopping_lists_path, params: { assigned_to_id: @parent.id }
+    assert_response :success
+    assert_match @list.title, response.body
+    assert_no_match @other_list.title, response.body
+  end
+
+  test "F50 Reset-Link bei aktiven Filtern" do
+    sign_in_as(@caretaker)
+    get shopping_lists_path, params: { month: "2026-06" }
+    assert_response :success
+    assert_match(/Filter zurücksetzen/, response.body)
+  end
+
   # F49: KW-Anzeige
   test "F49 Index zeigt KW-Spalte" do
     sign_in_as(@caretaker)

@@ -7,8 +7,21 @@ class ShoppingListsController < ApplicationController
     if params[:assigned] == "me" && current_user
       scope = scope.where(assigned_to_id: current_user.id)
     end
+    scope = scope.where(group_id: params[:group_id]) if params[:group_id].present?
+    scope = scope.where(assigned_to_id: params[:assigned_to_id]) if params[:assigned_to_id].present?
+    if params[:month].present? && params[:month].to_s.match?(/\A\d{4}-\d{2}\z/)
+      year, month = params[:month].split("-").map(&:to_i)
+      first_day = Date.new(year, month, 1)
+      scope = scope.where(event_date: first_day..first_day.end_of_month)
+    end
     @lists = scope.ordered
     @assigned_filter = params[:assigned]
+    @filter_group_id = params[:group_id]
+    @filter_month = params[:month]
+    @filter_assigned_to_id = params[:assigned_to_id]
+    @filter_groups = Group.order(:name)
+    @filter_assignees = User.where(id: ShoppingList.where.not(assigned_to_id: nil).distinct.pluck(:assigned_to_id)).order(:last_name, :first_name, :email)
+    @filter_months = policy_scope(ShoppingList).pluck(:event_date).compact.map { |d| d.strftime("%Y-%m") }.uniq.sort.reverse
   end
 
   def show
