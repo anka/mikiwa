@@ -127,6 +127,38 @@ class ChildTest < ActiveSupport::TestCase
     assert_equal "Erdnussallergie", new_child.medical_notes.first.content
   end
 
+  test "age returns full years based on Date.current" do
+    travel_to Date.new(2026, 5, 13) do
+      @child.date_of_birth = Date.new(2021, 5, 13)
+      @child.save!
+      assert_equal 5, @child.age
+    end
+  end
+
+  test "age does not increment when birthday is tomorrow" do
+    travel_to Date.new(2026, 5, 13) do
+      @child.date_of_birth = Date.new(2021, 5, 14)
+      @child.save!
+      assert_equal 4, @child.age
+    end
+  end
+
+  test "age increments on day before birthday is past" do
+    travel_to Date.new(2026, 5, 13) do
+      @child.date_of_birth = Date.new(2021, 5, 12)
+      @child.save!
+      assert_equal 5, @child.age
+    end
+  end
+
+  test "age handles leap-year birthdays gracefully" do
+    travel_to Date.new(2026, 3, 1) do
+      @child.date_of_birth = Date.new(2020, 2, 29)
+      @child.save!
+      assert_equal 6, @child.age
+    end
+  end
+
   test "transfer_to is idempotent" do
     @child.save!
     new_year = KindergartenYear.create!(

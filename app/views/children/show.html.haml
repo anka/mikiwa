@@ -13,6 +13,9 @@
       = @child.group.name
       ·
       = I18n.l(@child.date_of_birth, format: :short)
+      - if (age_label = child_age_label(@child))
+        ·
+        %strong= age_label
   .mw-page-header__actions
     - if current_user.staff?
       = button_to deactivate_child_path(@child), method: :patch,

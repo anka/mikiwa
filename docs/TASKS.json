@@ -2301,7 +2301,7 @@
       "id": "F39",
       "name": "Kind: Berechnetes Alter (tagesaktuell) in Liste und Detail",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Child#age berechnet das Alter in Jahren aus date_of_birth; Anzeige in /children Index und Show.",
       "description": "Ziel: Alter ist immer tagesaktuell ohne gespeicherten Wert.\n\nModell: Methode Child#age → Integer-Jahre, basierend auf Date.current. Implementierung:\n  def age\n    today = Date.current\n    today.year - date_of_birth.year - (today.strftime('%m%d') < date_of_birth.strftime('%m%d') ? 1 : 0)\n  end\n\nAnzeige Index /children: neue Spalte 'Alter' (Tabelle) bzw. Meta-Zeile (Card-Stack mobile).\nAnzeige Show /children/:id: prominente Anzeige neben Geburtsdatum, Format z. B. '5 Jahre'.\n\nPluralisierung deutsch: 1 → '1 Jahr', sonst '{n} Jahre'. i18n-fähig (de.children.age.year / age.years).",
       "acceptance_criteria": [

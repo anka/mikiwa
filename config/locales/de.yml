@@ -70,3 +70,8 @@ de:
     submit:
       create: "Anlegen"
       update: "Speichern"
+  children:
+    age:
+      year:
+        one: "1 Jahr"
+        other: "%{count} Jahre"

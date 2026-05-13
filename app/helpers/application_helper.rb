@@ -70,6 +70,11 @@ module ApplicationHelper
     NOTE_TYPE_LABELS.fetch(type, type.humanize)
   end
 
+  def child_age_label(child)
+    return nil if child.age.nil?
+    t("children.age.year", count: child.age)
+  end
+
   def badge_tone_for(type)
     NOTE_TYPE_BADGE_TONES.fetch(type, "neutral")
   end

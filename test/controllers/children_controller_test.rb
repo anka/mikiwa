@@ -278,6 +278,37 @@ class ChildrenControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Versicherung bearbeiten/i, response.body)
   end
 
+  # F39: Berechnetes Alter (tagesaktuell) in Liste & Detail
+  test "F39 Index zeigt Alter-Spalte mit pluralisierter Anzeige" do
+    sign_in_as(@caretaker)
+    travel_to Date.new(2026, 5, 13) do
+      get children_path
+      assert_response :success
+      assert_match(/Alter/, response.body, "Spaltenkopf 'Alter' muss vorhanden sein")
+      assert_match(/data-label="Alter"/, response.body, "data-label='Alter' für mobile Cards muss vorhanden sein")
+      assert_match(/5 Jahre/, response.body, "Pluralisierte Anzeige '5 Jahre' für Finn (geb. 2021-05-10) muss vorhanden sein")
+    end
+  end
+
+  test "F39 Show zeigt Alter prominent neben Geburtsdatum" do
+    sign_in_as(@caretaker)
+    travel_to Date.new(2026, 5, 13) do
+      get child_path(@child)
+      assert_response :success
+      assert_match(/5 Jahre/, response.body)
+    end
+  end
+
+  test "F39 Show zeigt '1 Jahr' für einjähriges Kind (Singular)" do
+    sign_in_as(@caretaker)
+    travel_to Date.new(2026, 5, 13) do
+      @child.update!(date_of_birth: Date.new(2025, 5, 13))
+      get child_path(@child)
+      assert_response :success
+      assert_match(/1 Jahr(?!e)/, response.body, "Singularform '1 Jahr' (nicht 'Jahre') muss verwendet werden")
+    end
+  end
+
   test "F36 Caretaker behält vollen Edit-Umfang" do
     sign_in_as(@caretaker)
     patch child_path(@child), params: {

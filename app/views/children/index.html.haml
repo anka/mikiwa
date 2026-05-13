@@ -20,6 +20,7 @@
         %tr
           %th Name
           %th Geburtsdatum
+          %th Alter
           %th Gruppe
           %th Foto-Einw.
           - if current_user.staff?
@@ -41,6 +42,7 @@
                   - if child.nickname.present?
                     %span.mw-text-muted{ style: "font-size: var(--fs-12); margin-left: 4px;" }= "(#{child.nickname})"
             %td{ "data-label": "Geburtsdatum" }= I18n.l(child.date_of_birth, format: :short)
+            %td{ "data-label": "Alter" }= child_age_label(child)
             %td{ "data-label": "Gruppe" }
               - if child.group&.color.present?
                 %span{ style: "display:inline-flex;align-items:center;gap:6px;" }

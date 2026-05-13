@@ -39,6 +39,15 @@ class Child < ApplicationRecord
     nickname.presence || first_name
   end
 
+  def age
+    return nil if date_of_birth.blank?
+
+    today = Date.current
+    years = today.year - date_of_birth.year
+    years -= 1 if today.strftime("%m%d") < date_of_birth.strftime("%m%d")
+    years
+  end
+
   def full_name
     "#{first_name} #{last_name}"
   end
