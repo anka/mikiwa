@@ -1,0 +1,146 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:shopping-item-categories",
+  "name": "ShoppingItem: optionale category mit gruppierter Anzeige",
+  "description": "ShoppingItem bekommt ein optionales Enum-Attribut category. In der Einkaufslisten-Detailansicht werden Items nach Kategorie gruppiert dargestellt; ungetagte Items erscheinen ganz am Ende. Enum-Werte werden in Englisch geführt; Lokalisierung erfolgt über config/locales/de.yml.",
+  "dateCreated": "2026-05-13",
+  "version": "1.0",
+  "spec:problemStatement": {
+    "description": "Einkaufslisten werden heute als flache Liste geführt. Beim tatsächlichen Einkauf läuft der Caretaker daher mehrfach durch dieselben Bereiche des Marktes (Obst-Regal mehrfach, Hygiene-Regal mehrfach). Eine Gruppierung nach Sortiment macht den Einkauf effizienter und reduziert Hin-und-Her.",
+    "affectedUsers": "Caretaker (führen den Einkauf durch), Eltern (lesen die Liste).",
+    "costOfInaction": "Ineffizienter Einkaufs-Workflow, längere Marktbesuche, höhere Wahrscheinlichkeit für Vergessenes."
+  },
+  "spec:goals": [
+    {
+      "description": "Optionales Kategorisieren jedes Items beim Anlegen oder Bearbeiten",
+      "type": "user",
+      "target": "Select-Feld im Item-Form mit allen verfügbaren Kategorien"
+    },
+    {
+      "description": "Gruppierte Anzeige der Items nach Kategorie in der Show-View der Liste",
+      "type": "user",
+      "target": "Pro Kategorie eine Sub-Sektion mit eigener Überschrift; ungetagte Items in einer eigenen Sektion 'Ohne Kategorie' am Ende"
+    },
+    {
+      "description": "Stabile Sortierreihenfolge der Kategorien-Sektionen, die der typischen Markt-Begehung folgt",
+      "type": "user",
+      "target": "Sektionen-Reihenfolge entspricht der Enum-Definition (Obst → Gemüse → Milchprodukte → Fleisch/Fisch → Backwaren → Getränke → Tiefkühl → Süßigkeiten → Hygiene → Haushalt → Bastelbedarf → Sonstiges → Ohne Kategorie)"
+    }
+  ],
+  "spec:nonGoals": [
+    {
+      "description": "Frei definierbare Kategorien durch den Caretaker",
+      "rationale": "Festes Enum erzwingt Konsistenz und erlaubt verlässliche Reihenfolge der Sektionen"
+    },
+    {
+      "description": "Automatische Kategorisierung anhand des Item-Namens",
+      "rationale": "Mehraufwand ohne klaren Nutzen; ein Select-Klick reicht"
+    },
+    {
+      "description": "Filter nach Kategorie in der Liste der Einkaufslisten",
+      "rationale": "Kategorie ist Eigenschaft der Items, nicht der Listen; sinnvoller Filter in F50 sind Gruppe/Monat/Verantwortlich"
+    }
+  ],
+  "spec:dataModel": {
+    "description": "Schema-Erweiterung shopping_items",
+    "fields": [
+      {
+        "name": "category",
+        "type": "string",
+        "nullable": true,
+        "indexed": true,
+        "default": null,
+        "constraints": "Wert muss aus dem definierten Enum stammen (Modell-Validation via Enum)"
+      }
+    ],
+    "migrationApproach": "Ursprüngliche shopping_items-Migration anpassen (category:string nullable + Index), schema.rb löschen, db:drop/create/migrate/seed neu (Dev-Modus)"
+  },
+  "spec:enum": {
+    "description": "Enum-Definition am Modell – Werte ENGLISCH; deutsche Anzeige ausschließlich über i18n.",
+    "definition": "enum :category, { fruit: 'fruit', vegetable: 'vegetable', dairy: 'dairy', meat_fish: 'meat_fish', bakery: 'bakery', beverages: 'beverages', frozen: 'frozen', sweets: 'sweets', hygiene: 'hygiene', household: 'household', craft_supplies: 'craft_supplies', other: 'other' }, prefix: true",
+    "values": [
+      {"key": "fruit",          "de_label": "Obst",             "icon": "apple",        "order": 1},
+      {"key": "vegetable",      "de_label": "Gemüse",           "icon": "carrot",       "order": 2},
+      {"key": "dairy",          "de_label": "Milchprodukte",    "icon": "milk",         "order": 3},
+      {"key": "meat_fish",      "de_label": "Fleisch & Fisch",  "icon": "fish",         "order": 4},
+      {"key": "bakery",         "de_label": "Backwaren",        "icon": "croissant",    "order": 5},
+      {"key": "beverages",      "de_label": "Getränke",         "icon": "cup-soda",     "order": 6},
+      {"key": "frozen",         "de_label": "Tiefkühl",         "icon": "snowflake",    "order": 7},
+      {"key": "sweets",         "de_label": "Süßigkeiten",      "icon": "candy",        "order": 8},
+      {"key": "hygiene",        "de_label": "Hygiene",          "icon": "spray-can",    "order": 9},
+      {"key": "household",      "de_label": "Haushalt",         "icon": "house",        "order": 10},
+      {"key": "craft_supplies", "de_label": "Bastelbedarf",     "icon": "scissors",     "order": 11},
+      {"key": "other",          "de_label": "Sonstiges",        "icon": "package",      "order": 12}
+    ],
+    "uncategorizedSection": {
+      "key": null,
+      "de_label": "Ohne Kategorie",
+      "icon": "circle-help",
+      "order": 13
+    }
+  },
+  "spec:i18n": {
+    "description": "Lokalisierungs-Strategie – englische Enum-Keys, deutsche Anzeige ausschließlich in config/locales/de.yml",
+    "yamlExample": "de:\n  activerecord:\n    attributes:\n      shopping_item:\n        category: \"Kategorie\"\n        categories:\n          fruit: \"Obst\"\n          vegetable: \"Gemüse\"\n          dairy: \"Milchprodukte\"\n          meat_fish: \"Fleisch & Fisch\"\n          bakery: \"Backwaren\"\n          beverages: \"Getränke\"\n          frozen: \"Tiefkühl\"\n          sweets: \"Süßigkeiten\"\n          hygiene: \"Hygiene\"\n          household: \"Haushalt\"\n          craft_supplies: \"Bastelbedarf\"\n          other: \"Sonstiges\"\n  shopping_items:\n    uncategorized: \"Ohne Kategorie\"",
+    "helperUsage": "I18n.t(\"activerecord.attributes.shopping_item.categories.#{item.category}\") bzw. einen Helper shopping_item_category_label(item)"
+  },
+  "spec:viewChanges": [
+    {
+      "view": "app/views/shopping_items/_form.html.erb (oder inline in shopping_lists/show)",
+      "change": "Select 'Kategorie' nach Name-Feld; Options aus ShoppingItem.categories.keys via i18n-Label; leerer Default-Eintrag '— keine —'"
+    },
+    {
+      "view": "app/views/shopping_lists/show.html.erb",
+      "change": "Items werden gruppiert nach category gerendert. Pro Sektion: Lucide-Icon + i18n-Label + Item-Liste. Reihenfolge gemäß spec:enum.values[].order. Sektion 'Ohne Kategorie' immer ganz am Ende, nur wenn ungetagte Items existieren."
+    },
+    {
+      "view": "Print/Druck-View (falls vorhanden)",
+      "change": "Gleiche Gruppierung wie Show; pro Sektion eine Überschrift"
+    }
+  ],
+  "spec:authorization": {
+    "description": "Keine zusätzlichen Autorisierungsregeln – Sichtbarkeit/Edit folgen den bestehenden ShoppingItem-Policies."
+  },
+  "spec:acceptanceCriteria": [
+    "shopping_items.category als nullable String mit Index",
+    "Enum am Modell mit allen 12 englischen Werten (fruit, vegetable, dairy, meat_fish, bakery, beverages, frozen, sweets, hygiene, household, craft_supplies, other)",
+    "Lokalisierung ausschließlich über config/locales/de.yml (keine deutschen Strings im Code)",
+    "Form bietet Kategorie-Select mit deutschen Labels",
+    "Show gruppiert Items nach Kategorie; Reihenfolge gemäß Enum-Definition; ungetagte Items am Ende in eigener Sektion",
+    "Pro Sektion ein passendes Lucide-Icon und i18n-Label",
+    "Sortierung innerhalb der Sektion bleibt anhand position (bestehend)",
+    "Demo-Seeds enthalten Items mit verschiedenen Kategorien (mind. 4 verschiedene Werte)",
+    "Test-Suite grün, inkl. View-Test für Gruppierung"
+  ],
+  "spec:testScenarios": [
+    {
+      "name": "Gemischte Items mit und ohne Kategorie",
+      "given": "Liste mit Items in fruit, dairy, hygiene und ohne Kategorie",
+      "when": "Show-View rendern",
+      "then": "Reihenfolge: 'Obst' → 'Milchprodukte' → 'Hygiene' → 'Ohne Kategorie'"
+    },
+    {
+      "name": "Liste ohne ungetagte Items",
+      "given": "Alle Items haben category gesetzt",
+      "when": "Show-View rendern",
+      "then": "Sektion 'Ohne Kategorie' wird NICHT gerendert"
+    },
+    {
+      "name": "Item ohne Kategorie anlegen",
+      "given": "Form mit Name 'Brot', Kategorie '— keine —'",
+      "when": "submit",
+      "then": "Item gespeichert mit category=NULL"
+    },
+    {
+      "name": "Invalides Enum-Update wird abgewiesen",
+      "given": "PATCH mit category='unknown_value'",
+      "when": "update",
+      "then": "ArgumentError / Validation-Fehler"
+    }
+  ],
+  "spec:dependencies": []
+}

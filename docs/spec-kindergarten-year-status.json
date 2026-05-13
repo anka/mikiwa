@@ -1,0 +1,165 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:kindergarten-year-status",
+  "name": "KindergartenYear: Status-Enum (planning/active/archived)",
+  "description": "Das aktuelle Boolean-Attribut active wird durch ein Status-Enum mit drei Werten ersetzt: planning, active, archived. Enum-Werte ENGLISCH; deutsche Anzeige in i18n.",
+  "dateCreated": "2026-05-13",
+  "version": "1.0",
+  "spec:problemStatement": {
+    "description": "kindergarten_years.active ist heute Boolean – jedes Jahr ist entweder aktiv oder inaktiv. Das verhindert eine sinnvolle Vorbereitung des nächsten Jahres, bevor es produktiv wird. Insbesondere für den Rollover-Workflow (Auswahl Zieljahr, Mitarbeitende vorbereiten, Plan-Daten anlegen) braucht es einen Zwischen-Status 'in Planung'.",
+    "affectedUsers": "Caretaker/Admin (Rollover-Vorbereitung), Leitung (Lifecycle-Übersicht).",
+    "costOfInaction": "Rollover kann nicht sauber im Voraus vorbereitet werden. Bestandsjahre können nicht klar als archiviert markiert werden."
+  },
+  "spec:goals": [
+    {
+      "description": "Drei klare Lifecycle-Zustände eines Kindergartenjahres",
+      "type": "data",
+      "target": "Enum status: planning, active, archived"
+    },
+    {
+      "description": "Genau ein Jahr darf gleichzeitig active sein (Invariante)",
+      "type": "data",
+      "target": "Modell-Validation + DB-Constraint (Partial-Unique-Index)"
+    },
+    {
+      "description": "Kompatibilität bestehender Helper",
+      "type": "developer",
+      "target": "KindergartenYear.active (Class-Method) → find_by(status: 'active'); year.active? (Enum-generiert) → status == 'active'"
+    },
+    {
+      "description": "Klare visuelle Auszeichnung im UI",
+      "type": "user",
+      "target": "Status-Badge in Index und Show; Pastell-Farben pro Status"
+    }
+  ],
+  "spec:nonGoals": [
+    {
+      "description": "Weitere Lifecycle-Zustände (z. B. 'paused', 'review')",
+      "rationale": "Drei Zustände decken den Bedarf vollständig ab"
+    },
+    {
+      "description": "Automatischer Wechsel von active → archived nach Jahresende",
+      "rationale": "Manuelle Aktion durch Admin – Daten müssen ggf. vor Archivierung geprüft werden"
+    }
+  ],
+  "spec:dataModel": {
+    "description": "Schema-Anpassung kindergarten_years",
+    "removedFields": [
+      {"name": "active", "type": "boolean"}
+    ],
+    "addedFields": [
+      {
+        "name": "status",
+        "type": "string",
+        "nullable": false,
+        "default": "planning",
+        "indexed": true
+      }
+    ],
+    "constraints": [
+      "Partial-Unique-Index: CREATE UNIQUE INDEX idx_kindergarten_years_active_singleton ON kindergarten_years(status) WHERE status = 'active'"
+    ],
+    "migrationApproach": "Ursprüngliche kindergarten_years-Migration anpassen (active:boolean entfernen, status:string null:false default:'planning' + Partial-Unique-Index hinzufügen). schema.rb löschen, db:drop/create/migrate/seed neu (Dev-Modus). Seeds: aktuelles Jahr → active, ein zukünftiges Jahr → planning, alte Jahre → archived."
+  },
+  "spec:modelChanges": {
+    "enumDefinition": "enum :status, { planning: 'planning', active: 'active', archived: 'archived' }",
+    "preservedClassMethods": [
+      "def self.active; find_by(status: 'active'); end (Signatur unverändert – verhindert Bruch in bestehenden Stellen)"
+    ],
+    "validations": [
+      "validates :status, presence: true, inclusion: { in: statuses.keys }",
+      "validate :only_one_active (Custom: bei status='active', prüft dass keine andere Year-Row aktiv ist – ergänzend zum DB-Constraint für klare Fehlermeldung)"
+    ],
+    "callbacks": [
+      "before_save :deactivate_others_if_active (bestehender Callback wird angepasst: KindergartenYear.where(status: 'active').where.not(id: id).update_all(status: 'archived'))"
+    ],
+    "scopes": [
+      "scope :planning, -> { where(status: 'planning') }",
+      "scope :active_scope, -> { where(status: 'active') } # umbenannt, da Class-Method 'active' existiert",
+      "scope :archived, -> { where(status: 'archived') }"
+    ]
+  },
+  "spec:i18n": {
+    "description": "Lokalisierung – Enum-Keys englisch, deutsche Anzeige in config/locales/de.yml",
+    "yamlExample": "de:\n  activerecord:\n    attributes:\n      kindergarten_year:\n        status: \"Status\"\n        statuses:\n          planning: \"In Planung\"\n          active: \"Aktiv\"\n          archived: \"Archiviert\""
+  },
+  "spec:viewChanges": [
+    {
+      "view": "app/views/kindergarten_years/_form.html.erb",
+      "change": "Select 'Status' mit drei Optionen (Labels via i18n). Default beim Erstellen: 'In Planung'."
+    },
+    {
+      "view": "app/views/kindergarten_years/index.html.erb",
+      "change": "Neue Spalte/Meta 'Status' als Badge mit Pastell-Farben: planning=hellgelb, active=mint, archived=grau. Aktion 'Aktivieren' (nur sichtbar bei status!=active)."
+    },
+    {
+      "view": "app/views/kindergarten_years/show.html.erb",
+      "change": "Status-Badge oben rechts; Hinweis-Text 'Beim Aktivieren wird das bisherige aktive Jahr automatisch archiviert.'"
+    },
+    {
+      "view": "Stellen, die year.active? verwenden",
+      "change": "Bleiben unverändert (Enum erzeugt äquivalente Predicate-Methode)"
+    }
+  ],
+  "spec:actions": {
+    "activate": {
+      "route": "PATCH /kindergarten_years/:id/activate",
+      "behavior": "Setzt status=active; bestehendes aktives Jahr wird via Callback auf archived gesetzt. Transaktional. Flash-Hinweis: 'Jahr {label} ist jetzt aktiv. {Vorheriges} wurde archiviert.'",
+      "authorization": "Admin only"
+    },
+    "archive": {
+      "route": "PATCH /kindergarten_years/:id/archive",
+      "behavior": "Setzt status=archived. Erlaubt für planning- und active-Jahre. Bei aktivem Jahr: Warnung 'Dadurch hat der Kindergarten kein aktives Jahr mehr.'",
+      "authorization": "Admin only"
+    }
+  },
+  "spec:authorization": {
+    "rules": [
+      "Lesen: Caretaker/Admin/Parent (analog heute)",
+      "Edit/Create/Status-Wechsel: Admin only"
+    ]
+  },
+  "spec:acceptanceCriteria": [
+    "kindergarten_years.status enum mit englischen Keys planning/active/archived",
+    "active:boolean entfernt; Schema sauber regeneriert",
+    "Genau ein Jahr mit status=active erlaubt (DB-Constraint + Modell-Validation)",
+    "KindergartenYear.active liefert weiterhin das aktive Jahr (Signatur unverändert)",
+    "year.active? funktioniert (Enum-Predicate)",
+    "Form bietet Status-Auswahl mit i18n-Labels",
+    "Index zeigt Status-Badge in Pastell-Farben",
+    "Aktivieren eines Jahres archiviert das bisher aktive Jahr automatisch",
+    "Seeds enthalten je ein Jahr in planning, active, archived",
+    "Test-Suite grün, inkl. Tests für Singleton-Invariante"
+  ],
+  "spec:testScenarios": [
+    {
+      "name": "Aktivieren archiviert vorheriges Jahr",
+      "given": "Jahr A status=active, Jahr B status=planning",
+      "when": "B auf active setzen",
+      "then": "B.status='active', A.status='archived'; insgesamt genau ein aktives Jahr"
+    },
+    {
+      "name": "DB-Constraint verhindert zwei Aktive",
+      "given": "Jahr A active",
+      "when": "INSERT/UPDATE versucht zweites Jahr direkt mit status='active' (Bypass des Callbacks)",
+      "then": "ActiveRecord::RecordNotUnique"
+    },
+    {
+      "name": "KindergartenYear.active Kompatibilität",
+      "given": "Bestehender Code ruft KindergartenYear.active",
+      "when": "Aufruf nach Migration",
+      "then": "Liefert das Jahr mit status='active'; keine Code-Anpassung nötig"
+    },
+    {
+      "name": "Seeds laufen sauber",
+      "given": "leere DB",
+      "when": "db:setup",
+      "then": "Mindestens je ein Jahr in jedem Status"
+    }
+  ],
+  "spec:dependencies": []
+}

@@ -87,6 +87,38 @@
         "F33",
         "F34"
       ]
+    },
+    {
+      "phase": 7,
+      "name": "Verfeinerung Eltern, Listen, Galerien & Rollover",
+      "feature_ids": [
+        "F35",
+        "F36",
+        "F37",
+        "F38",
+        "F39",
+        "F40",
+        "F41",
+        "F42",
+        "F43",
+        "F44",
+        "F45",
+        "F46",
+        "F47",
+        "BF-004",
+        "F48",
+        "BF-005",
+        "F49",
+        "F50",
+        "F51",
+        "BF-006",
+        "F52",
+        "F53",
+        "F54",
+        "BF-007",
+        "F55",
+        "F56"
+      ]
     }
   ],
   "features": [
@@ -2091,6 +2123,918 @@
       "success_criteria": [
         "Volle Test-Suite grün",
         "DEMO=1 db:seed läuft sauber, generiert Veg/Vegan-Beispiele"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F35",
+      "name": "Eltern: Telefon, Vor- und Nachname verpflichtend",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Telefonnummer, Vorname und Nachname am User-Model werden für Eltern-Rolle Pflicht; ursprüngliche Migration wird angepasst (DB-Drop im Dev).",
+      "description": "Ziel: Eltern müssen verlässliche Kontaktdaten haben. Felder first_name, last_name und phone am users-Modell werden für die Rolle 'parent' validierungspflichtig.\n\nDatenbank-Strategie (Development): Statt einer neuen Migration wird die ursprüngliche users-Migration angepasst — first_name/last_name/phone auf null:false gesetzt. Vor erneutem db:setup wird db/schema.rb gelöscht und die DB neu aufgebaut (db:drop db:create db:migrate db:seed). Seeds müssen entsprechend angepasst werden, sodass alle Parent-User die drei Pflichtfelder haben.\n\nValidation: Modell-Validation 'validates :first_name, :last_name, :phone, presence: true, if: :parent?' am User. Caretaker/Admin bleiben unverändert (Felder weiterhin optional, da Schema null:false wird → für Seeds ebenfalls befüllen).\n\nForms: Parent-Create/Edit-Form (admin/parents) markiert die drei Felder als required (HTML5 + visuelles Sternchen via Form-Helper). Profile-View für Eltern: Pflichtfelder hervorgehoben, Fehlermeldungen i18n-konform deutsch.",
+      "acceptance_criteria": [
+        "users-Migration auf null:false für first_name, last_name, phone angepasst (keine zusätzliche Migration)",
+        "db/schema.rb wird vor dem Neuaufsetzen gelöscht und durch db:migrate frisch erzeugt",
+        "Seeds erzeugen für alle Parent-User vollständige Stammdaten (first_name, last_name, phone)",
+        "Model-Validation: User mit role=parent ohne first_name/last_name/phone schlägt mit klarer deutscher Fehlermeldung fehl",
+        "Admin-Form /admin/parents/new und /admin/parents/:id/edit zeigen Pflicht-Markierung an den drei Feldern",
+        "Eltern-Profil-Form markiert Pflichtfelder",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Parent ohne Telefon scheitert an Validation",
+          "given": "Parent-User mit leerem phone",
+          "when": "save",
+          "then": "Validation-Fehler 'Telefon muss ausgefüllt werden'"
+        },
+        {
+          "scenario": "Caretaker ohne Telefon bleibt erlaubt",
+          "given": "Caretaker mit leerem phone",
+          "when": "save",
+          "then": "speichert erfolgreich"
+        },
+        {
+          "scenario": "Seeds laufen sauber",
+          "given": "leere DB",
+          "when": "db:setup mit DEMO=1",
+          "then": "alle Parent-User haben first_name, last_name, phone gesetzt"
+        }
+      ],
+      "success_criteria": [
+        "Bestandsdaten in Dev werden durch frischen Seed ersetzt",
+        "Validation greift in allen Forms (Admin & Eltern-Profil)"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F36",
+      "name": "Versicherungsdaten eines Kindes durch Eltern bearbeitbar",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Verknüpfte Eltern dürfen im Standard-Child-Edit-View die Versicherungsdaten des Kindes bearbeiten (eingeschränkter Edit-Mode).",
+      "description": "Ziel: Eltern können Versicherungsdaten des eigenen Kindes pflegen, ohne dass Caretaker-Kapazität gebunden ist.\n\nAutorisierung: ChildrenController#edit/#update erlauben Eltern (role=parent), sofern sie über parent_children mit dem Child verbunden sind. Permitted-Params werden rollenabhängig eingeschränkt: für Eltern nur insurance_number und insurance_company (falls vorhanden, sonst nur insurance_number); Caretaker/Admin behalten den vollen Set.\n\nView: Standard-Edit-View wird wiederverwendet. Felder, die der aktuelle User nicht bearbeiten darf, werden via disabled/readonly bzw. nicht gerendert (Helper child_field_editable?(user, field)). Versicherungs-Sektion bleibt sichtbar und editierbar.\n\nNavigation: In der Eltern-Übersicht des Kindes (Show) ein 'Versicherung bearbeiten'-Button, der zur eingeschränkten Edit-View führt. Fremde Kinder bleiben 403 (bestehende Policy nicht aufweichen).",
+      "acceptance_criteria": [
+        "Verknüpfte Eltern können /children/:id/edit aufrufen und Versicherungs-Felder speichern",
+        "Eltern sehen in der Edit-View nur die für sie editierbaren Felder; übrige Felder werden ausgeblendet oder disabled",
+        "Eltern, die NICHT verknüpft sind, erhalten weiterhin 403",
+        "Caretaker/Admin behalten den vollen Edit-Umfang",
+        "Show-View für Eltern zeigt einen klaren CTA 'Versicherung bearbeiten'",
+        "Permitted-Params verhindern serverseitig Manipulation anderer Felder",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Eltern speichert Versicherungsnummer",
+          "given": "Parent ist mit Child verknüpft",
+          "when": "PATCH /children/:id mit insurance_number",
+          "then": "Wert wird gespeichert, Redirect auf Show"
+        },
+        {
+          "scenario": "Eltern manipuliert Gruppe → ignoriert",
+          "given": "Parent submitet group_id im Form-Body",
+          "when": "PATCH /children/:id",
+          "then": "group_id bleibt unverändert (strong params filtern)"
+        },
+        {
+          "scenario": "Fremde Eltern → 403",
+          "given": "Parent ohne ParentChild-Verknüpfung",
+          "when": "GET /children/:id/edit",
+          "then": "HTTP 403"
+        }
+      ],
+      "success_criteria": [
+        "Eltern-UX: Versicherung pflegen ohne Caretaker",
+        "Caretaker-UX unverändert"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F37",
+      "name": "Interne Galerien mit späterer Freigabe",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Galerien haben einen Sichtbarkeits-Status (intern/freigegeben); interne Galerien sind für Eltern nicht sichtbar, können später freigegeben werden.",
+      "description": "Ziel: Caretaker können Galerien zunächst intern anlegen (Auswahl/Kuratierung) und später für Eltern freigeben.\n\nDatenmodell: Gallery bekommt ein Attribut visibility (enum: internal, released). Default beim Erstellen: internal. Ursprüngliche Galleries-Migration anpassen (kein neues Migration-File), schema.rb regenerieren — Vorgehen wie F35.\n\nAutorisierung: Eltern-Scope (Galleries::ForParentsQuery o. ä.) filtert visibility=released. Caretaker/Admin sehen beide Zustände, mit klarer visueller Markierung (Badge 'Intern' / 'Freigegeben').\n\nAktion: 'Freigeben'-Button auf Show + Index (nur für Caretaker/Admin). Bestätigungsdialog. State-Übergang internal → released ist möglich; rückwärts released → internal ebenfalls erlaubt (Caretaker kann zurückziehen).\n\nForm: Beim Erstellen kann optional via Toggle direkt 'Sofort freigeben' gewählt werden (Default aus = intern).",
+      "acceptance_criteria": [
+        "Gallery.visibility enum mit internal/released, Default internal",
+        "Eltern-Index/Show zeigt nur released-Galerien; interne sind 404 für Eltern",
+        "Caretaker/Admin sehen beide Zustände mit Badge 'Intern'/'Freigegeben'",
+        "Aktion 'Freigeben' und 'Zurückziehen' für Caretaker/Admin verfügbar",
+        "Form bietet Toggle 'Sofort freigeben'",
+        "Schema/Seeds: visibility-Werte vorhanden, ggf. Demo-Galerien als intern markiert",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Eltern sieht interne Galerie nicht",
+          "given": "Galerie visibility=internal, Parent ist Mitglied der Gruppe",
+          "when": "GET /galleries",
+          "then": "Galerie fehlt in der Liste; Detail-Aufruf liefert 404"
+        },
+        {
+          "scenario": "Freigabe macht Galerie sichtbar",
+          "given": "interne Galerie",
+          "when": "Caretaker klickt 'Freigeben'",
+          "then": "visibility=released, Eltern sehen sie ab sofort"
+        },
+        {
+          "scenario": "Caretaker zieht Freigabe zurück",
+          "given": "released Galerie",
+          "when": "Caretaker klickt 'Zurückziehen'",
+          "then": "visibility=internal, Eltern verlieren Zugriff"
+        }
+      ],
+      "success_criteria": [
+        "Klare visuelle Trennung in Caretaker-Listen",
+        "Eltern-Listen enthalten ausschließlich freigegebene Galerien"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F38",
+      "name": "Notfallkontakt mit Eltern-User verknüpfen",
+      "phase": 7,
+      "status": "open",
+      "short_description": "EmergencyContact kann optional einen verknüpften Eltern-User referenzieren; Name/Telefon werden dann live aus dem User gelesen.",
+      "description": "Ziel: Wenn ein Notfallkontakt bereits ein Eltern-User des Kindes ist, sollen seine Daten nicht redundant gepflegt werden. Stattdessen verweist der Notfallkontakt auf den User und wird bei Anzeige live aus dem User gelesen — Aktualität garantiert.\n\nDatenmodell: emergency_contacts bekommt optionalen user_id (FK → users.id, nullable). Ursprüngliche Migration anpassen, schema.rb regenerieren — wie in F35/F37. Validation: wenn user_id gesetzt → name und phone dürfen leer sein (werden ignoriert); wenn nil → name und phone weiterhin Pflicht. relationship und position bleiben in jedem Fall Pflicht.\n\nHelper am Modell:\n  def display_name = user&.full_name.presence || name\n  def display_phone = user&.phone.presence || phone\nAlle Views/Mailer/Exports rufen ausschließlich diese Helper auf, nicht mehr name/phone direkt.\n\nForm-UX: Im EmergencyContact-Form (eingebettet in Child-Edit oder eigener Action) gibt es einen Modus-Switch:\n  • 'Eltern auswählen' → Select aus den ParentChild-User des aktuellen Kindes; name/phone-Felder werden ausgeblendet; relationship bleibt.\n  • 'Manuell eingeben' → klassische Felder.\nBeim Wechsel wird der jeweils andere Modus zurückgesetzt.\n\nAnzeige: In der Liste der Notfallkontakte wird verknüpft-Status mit kleinem User-Icon angezeigt; ein Tooltip erklärt 'Verknüpft mit Eltern-User'.",
+      "acceptance_criteria": [
+        "emergency_contacts.user_id FK nullable, indexed",
+        "Validation: name und phone optional wenn user_id gesetzt; verpflichtend sonst",
+        "Auswahl im Form nur aus parent_children.users des aktuellen Child; keine fremden User möglich (serverseitig erzwungen)",
+        "display_name/display_phone werden in Show, Index, Mailer, ICS und Print verwendet",
+        "Verknüpfte Kontakte zeigen visuelles User-Icon mit Tooltip",
+        "Wenn der verknüpfte User Daten aktualisiert, ändert sich die Anzeige in den Notfallkontakten ohne weiteren Eingriff",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Verknüpfter Kontakt zeigt aktualisierten Namen",
+          "given": "EmergencyContact mit user_id=Parent X, Parent X ändert Nachname",
+          "when": "EmergencyContact-Liste rendern",
+          "then": "Neuer Nachname erscheint, kein DB-Update am Kontakt nötig"
+        },
+        {
+          "scenario": "Auswahl fremder User schlägt fehl",
+          "given": "Parent Y ist nicht mit Child Z verknüpft",
+          "when": "POST emergency_contact mit user_id=Y für Child Z",
+          "then": "Validation-Fehler / 422"
+        },
+        {
+          "scenario": "Manueller Kontakt weiterhin möglich",
+          "given": "Form mit name+phone+relationship, user_id leer",
+          "when": "save",
+          "then": "Kontakt wird gespeichert, Felder verwendet"
+        }
+      ],
+      "success_criteria": [
+        "Redundanzfreie Pflege von Eltern als Notfallkontakt",
+        "Bestehende manuelle Kontakte funktionieren unverändert"
+      ],
+      "dependencies": [
+        "F35"
+      ],
+      "spec_file": "docs/spec-emergency-contact-user-link.json"
+    },
+    {
+      "id": "F39",
+      "name": "Kind: Berechnetes Alter (tagesaktuell) in Liste und Detail",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Child#age berechnet das Alter in Jahren aus date_of_birth; Anzeige in /children Index und Show.",
+      "description": "Ziel: Alter ist immer tagesaktuell ohne gespeicherten Wert.\n\nModell: Methode Child#age → Integer-Jahre, basierend auf Date.current. Implementierung:\n  def age\n    today = Date.current\n    today.year - date_of_birth.year - (today.strftime('%m%d') < date_of_birth.strftime('%m%d') ? 1 : 0)\n  end\n\nAnzeige Index /children: neue Spalte 'Alter' (Tabelle) bzw. Meta-Zeile (Card-Stack mobile).\nAnzeige Show /children/:id: prominente Anzeige neben Geburtsdatum, Format z. B. '5 Jahre'.\n\nPluralisierung deutsch: 1 → '1 Jahr', sonst '{n} Jahre'. i18n-fähig (de.children.age.year / age.years).",
+      "acceptance_criteria": [
+        "Child#age liefert korrekte Jahre für gestern/heute/morgen Geburtstag",
+        "Index /children zeigt Alter-Spalte (Desktop) und Meta-Eintrag (Mobile)",
+        "Show /children/:id zeigt Alter prominent",
+        "Pluralisierung deutsch: '1 Jahr' / '5 Jahre'",
+        "Keine DB-Spalte, kein Cache (immer Date.current)",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Heute Geburtstag → Alter um 1 erhöht",
+          "given": "date_of_birth = vor 5 Jahren, heute Geburtstag",
+          "when": "child.age",
+          "then": "= 5"
+        },
+        {
+          "scenario": "Geburtstag morgen → Alter noch nicht erhöht",
+          "given": "date_of_birth = morgen vor 5 Jahren",
+          "when": "child.age",
+          "then": "= 4"
+        }
+      ],
+      "success_criteria": [
+        "Alter konsistent in Liste und Detail",
+        "Keine Spalte 'age' in DB"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F40",
+      "name": "Facts-Übersicht in /children",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Oberhalb der Liste in /children eine kompakte Statistik: Gesamtanzahl, Anzahl pro Alter, Anzahl pro Gruppe.",
+      "description": "Ziel: Schneller Überblick über Bestand und Verteilung der aktiven Kinder.\n\nKomponente: 'children/_facts.html.erb' Partial — drei Karten/Sektionen:\n  1. Anzahl Kinder (gesamt, aktiv)\n  2. Anzahl Kinder pro Alter (gruppiert nach Child#age, aufsteigend; z. B. '3 J.: 4, 4 J.: 7, 5 J.: 9')\n  3. Anzahl Kinder pro Gruppe (nach Gruppen-Name sortiert)\n\nPerformance: Aggregationen in Ruby auf bereits geladener Collection (keine zusätzlichen Queries auf Index, idealerweise eine includes(:group) Query). Bei aktiven Filtern (siehe F41) zeigt Facts die gefilterte Menge an, NICHT die globale.\n\nMobile: Karten untereinander, Desktop nebeneinander (3-Spalten-Grid). Konsistent mit Mikiwa Design System (Pastell-Untergrund/Karte).",
+      "acceptance_criteria": [
+        "Facts-Partial oberhalb der Kinder-Liste",
+        "Drei Sektionen: Gesamt, pro Alter, pro Gruppe",
+        "Statistiken reagieren auf aktive Filter aus F41",
+        "Responsive: 3-Spalten auf Desktop, gestapelt auf Mobile",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Facts mit aktivem Gruppen-Filter",
+          "given": "Filter group=Sonnenkinder gesetzt",
+          "when": "/children?group_id=…",
+          "then": "Facts zeigt nur Sonnenkinder-Zahlen"
+        }
+      ],
+      "success_criteria": [
+        "Sofort sichtbarer Mehrwert für Caretaker",
+        "Keine N+1 Queries"
+      ],
+      "dependencies": [
+        "F39"
+      ]
+    },
+    {
+      "id": "F41",
+      "name": "Filter in /children (Gruppe, Name, Alter)",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Filterleiste oberhalb der Kinder-Liste: Gruppe (Dropdown), Name (Textsuche), Alter (Dropdown).",
+      "description": "Ziel: /children schnell auf relevante Teilmenge eingrenzen.\n\nFilter:\n  • group_id — Select aus allen Groups\n  • q — Substring-Suche über first_name+last_name (ILIKE/LOWER, deutsche Umlaute beachten)\n  • age — Dropdown mit den vorkommenden Altersstufen (dynamisch aus aktiven Kindern berechnet)\n\nImplementierung: Ransack ist im Projekt nicht in Verwendung — eigene Scope-Komposition reicht. Filter werden via GET-Params übergeben, die Form ist ein einfaches Form-Tag mit method=:get. Age-Filter ist tricky (kein DB-Wert): Server berechnet Datums-Range aus Geburtsjahr und filtert per where(date_of_birth: range).\n\nUI: Filter-Leiste mit drei Inputs nebeneinander (Desktop) bzw. gestapelt (Mobile). 'Filter zurücksetzen'-Link rechts.\n\nDefault: keine Filter → alle aktiven Kinder. Reagiert mit den Facts (F40).",
+      "acceptance_criteria": [
+        "Filter-Leiste mit Gruppe, Name (Volltext), Alter",
+        "GET-Form, kein JS-Submit zwingend nötig",
+        "Filter wirken kombinierbar",
+        "Age-Filter via Date-Range, nicht per Ruby-Filter nach Query",
+        "Umlaute (ä/ö/ü) in Name-Suche korrekt behandelt",
+        "Reset-Link entfernt alle Params",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Name-Filter mit Umlaut",
+          "given": "Kind 'Müller'",
+          "when": "/children?q=mül",
+          "then": "Müller wird gefunden"
+        },
+        {
+          "scenario": "Kombi-Filter",
+          "given": "Filter group_id=X & age=5",
+          "when": "/children?group_id=X&age=5",
+          "then": "Liste zeigt nur 5-jährige aus Gruppe X"
+        }
+      ],
+      "success_criteria": [
+        "Klare, schnelle Filter-UX",
+        "Server-seitig effizient (DB-Filter, kein Ruby-Post-Filter auf großen Mengen)"
+      ],
+      "dependencies": [
+        "F39"
+      ]
+    },
+    {
+      "id": "F42",
+      "name": "Deaktivierte Kinder: separate Seite /children/inactive",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Eigene Index-Action für inaktive Kinder, klar abgegrenzt vom Standard-Index.",
+      "description": "Ziel: Caretaker können archivierte/deaktivierte Kinder einsehen, ohne sie in der aktiven Liste mitzuführen.\n\nRoute: get '/children/inactive', to: 'children#inactive', as: :inactive_children\nController: ChildrenController#inactive nutzt Child.inactive Scope (existiert bereits).\nView: app/views/children/inactive.html.erb — gleiche Tabellen-/Card-Komponente wie Index, jedoch mit klarer Überschrift 'Deaktivierte Kinder' und gedämpfter visueller Tonalität (grau/desaturiert).\n\nNavigation: Auf /children ein dezenter Link 'Deaktivierte Kinder anzeigen' oben rechts (nur Caretaker/Admin); auf /children/inactive ein Link zurück zur aktiven Liste.\n\nAktionen: 'Reaktivieren'-Button pro Zeile (setzt active=true). Show-Action ist erlaubt (read-only); Edit/Delete optional erlauben (analog Standard).\n\nFilter aus F41 sollen auch hier wirken (q, age — group_id ggf. eingeschränkt, da inaktive Kinder ggf. keine Gruppen-Zuordnung haben).",
+      "acceptance_criteria": [
+        "/children/inactive listet alle Kinder mit active=false",
+        "Visuell klar abgegrenzt (eigene Überschrift, gedämpfte Karten)",
+        "Reaktivieren-Button auf jeder Zeile, Caretaker/Admin",
+        "Links zwischen Aktiv-Liste und Inaktiv-Liste sichtbar",
+        "Filter (q, age, group_id) funktionieren auch dort",
+        "Eltern haben keinen Zugriff (Authorize)",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Reaktivieren",
+          "given": "Inaktives Kind",
+          "when": "Caretaker klickt Reaktivieren",
+          "then": "active=true, Kind erscheint wieder in /children"
+        },
+        {
+          "scenario": "Eltern kein Zugriff",
+          "given": "Parent",
+          "when": "GET /children/inactive",
+          "then": "403"
+        }
+      ],
+      "success_criteria": [
+        "Klare Trennung aktive vs. inaktive Kinder",
+        "Schnelles Reaktivieren in einem Klick"
+      ],
+      "dependencies": [
+        "F41"
+      ]
+    },
+    {
+      "id": "F43",
+      "name": "Eltern: knowhow & Anmerkung",
+      "phase": 7,
+      "status": "open",
+      "short_description": "User-Modell um knowhow (Beruf/Skills) und notes (Anmerkung) erweitern; in Eltern-Views sichtbar/bearbeitbar.",
+      "description": "Ziel: Caretaker/Admin und Eltern können relevante Profil-Infos pflegen (z. B. 'Tischler, kann Bastel-AGs unterstützen').\n\nDatenmodell: users-Tabelle bekommt knowhow:text und notes:text (beide nullable). Ursprüngliche Migration anpassen, schema.rb regenerieren — wie F35.\n\nSichtbarkeit/Bearbeitung: Caretaker, Admin, Parent dürfen die Felder ihres eigenen Profils lesen und bearbeiten. Caretaker/Admin sehen auch fremde Profile (admin/parents Show + Edit). Eltern dürfen ausschließlich das eigene Profil bearbeiten (Profile-Controller).\n\nForms:\n  • /profile (Eltern-Self-Service): zwei neue Felder am Ende, mit Beschreibungstext.\n  • /admin/parents/new + /edit: ebenfalls beide Felder.\n\nAnzeige:\n  • Eltern-Detail (Show in /admin/parents oder Caretaker-Sicht): knowhow + notes prominent in einer eigenen Sektion 'Über'.\n  • Eltern-Liste (/admin/parents): knowhow als zusätzliche Spalte/Meta-Zeile (truncated auf ~60 Zeichen).\n  • notes ist NICHT in der Liste (zu intern), nur im Detail.",
+      "acceptance_criteria": [
+        "users.knowhow & users.notes als nullable Text",
+        "Forms (Profile + Admin/Parents) zeigen beide Felder mit Beschriftung 'Wissen / Fähigkeiten' bzw. 'Anmerkung'",
+        "Show-Sektion 'Über' mit knowhow und notes",
+        "Eltern-Liste zeigt knowhow als zusätzliche Spalte/Meta (truncate 60 Zeichen)",
+        "Eltern können eigene Felder bearbeiten, fremde nicht (Profile-Scope)",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Eltern bearbeitet eigenes knowhow",
+          "given": "Parent eingeloggt",
+          "when": "PATCH /profile mit knowhow",
+          "then": "Wert gespeichert"
+        },
+        {
+          "scenario": "Eltern bearbeitet fremdes Profil nicht",
+          "given": "Parent A versucht /admin/parents/B zu öffnen",
+          "when": "GET",
+          "then": "403"
+        }
+      ],
+      "success_criteria": [
+        "Caretaker erkennt Skills der Eltern in der Liste",
+        "Eltern können eigene Skills/Anmerkungen pflegen"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F44",
+      "name": "Row-Actions in allen Listen ausschließlich als Icons",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Alle Listen-Row-Actions werden auf Icon-Buttons (Lucide) vereinheitlicht, analog zur /events-Liste.",
+      "description": "Ziel: Konsistente, kompakte UI in allen Index-Pages.\n\nVorlage: /events Index — Show/Edit/Cancel/Delete sind dort als Icon-Buttons mit Tooltip umgesetzt. Dieses Muster wird auf alle anderen Index-Pages (Card-Stack auf Mobile inklusive) übertragen:\n  • /children, /children/inactive\n  • /galleries\n  • /attendance_lists\n  • /shopping_lists\n  • /polls\n  • /meal_entries\n  • /admin/parents, /admin/caretakers\n  • /kindergarten_years\n  • /groups, /messages, /inbox (falls Actions vorhanden)\n\nKomponente: bestehendes Icon-Button-Partial wiederverwenden. Jeder Button hat title-Attribut + aria-label für A11y. Tooltips erscheinen on-hover/focus. Destructive Actions (Löschen) klar farblich (rot) markiert, behalten Confirm-Dialog.\n\nMobile (Card-Stack): Actions am unteren Karten-Rand als Icon-Reihe, kein Text.",
+      "acceptance_criteria": [
+        "Alle aufgeführten Index-Pages nutzen ausschließlich Icon-Buttons in Row-Actions",
+        "Tooltips (title + aria-label) für jeden Icon-Button",
+        "Destructive Actions visuell hervorgehoben + Confirm",
+        "Mobile-Card-Stack verwendet ebenfalls Icon-Reihe",
+        "Keine Mischung Text+Icon in einer einzelnen Listen-Action",
+        "Konsistenter Icon-Stil (Lucide)",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Children-Index zeigt Icons",
+          "given": "Caretaker auf /children",
+          "when": "Render",
+          "then": "Edit/Show/Delete sind reine Icon-Buttons mit Tooltip"
+        }
+      ],
+      "success_criteria": [
+        "Visuelle Konsistenz über alle Listen",
+        "Mehr Platz für Inhalt pro Zeile"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F45",
+      "name": "Google-Maps-Embed in Veranstaltungs-Details",
+      "phase": 7,
+      "status": "open",
+      "short_description": "In der Event-Show-View wird, sofern address vorhanden, eine iframe-Karte (Google Maps) auf die Adresse eingeblendet.",
+      "description": "Ziel: Eltern und Caretaker sehen die Lage einer Veranstaltung direkt im Detail.\n\nTechnik: einfaches iframe ohne API-Key, URL-Schema:\n  https://www.google.com/maps?q=<urlencoded-address>&output=embed\nEingebettet als responsive 16:9 Container (Tailwind aspect-video) mit abgerundeten Ecken und Subtitle 'Standort'.\n\nBedingungen:\n  • Anzeige NUR, wenn event.address.present?\n  • Loading lazy, referrerpolicy='no-referrer-when-downgrade'\n  • Externer 'In Google Maps öffnen'-Link unter der Karte (öffnet https://www.google.com/maps?q=…)\n\nCSP: frame-src https://www.google.com im Layout-Header ergänzen (sofern noch nicht erlaubt).",
+      "acceptance_criteria": [
+        "Map-Section sichtbar, wenn address gesetzt — sonst kein Render",
+        "iframe responsive (16:9), abgerundet",
+        "Lazy-Loading aktiv",
+        "Externer Link 'In Google Maps öffnen' unter der Karte",
+        "CSP erlaubt frame-src für google.com (ohne globale Aufweichung)",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Event ohne Adresse",
+          "given": "address leer",
+          "when": "Show",
+          "then": "Map-Section wird nicht gerendert"
+        },
+        {
+          "scenario": "Event mit Adresse",
+          "given": "address='Hauptstraße 5, 1010 Wien'",
+          "when": "Show",
+          "then": "iframe-src enthält urlencoded Adresse"
+        }
+      ],
+      "success_criteria": [
+        "Map lädt sichtbar im Browser",
+        "Keine CSP-Warnungen in der Konsole"
+      ],
+      "dependencies": [
+        "F46"
+      ]
+    },
+    {
+      "id": "F46",
+      "name": "Event: optionales address-Attribut",
+      "phase": 7,
+      "status": "open",
+      "short_description": "calendar_events.address (string, optional). Anzeige in Show, Eingabe in New/Edit.",
+      "description": "Ziel: Veranstaltungen können eine Adresse mitführen, die für Map-Embed (F45) und Eltern-Info genutzt wird.\n\nDatenmodell: calendar_events.address:string (nullable, max ~255 Zeichen). Ursprüngliche Events-Migration anpassen, schema.rb regenerieren — wie F35.\n\nForm (events/_form): neues Textfeld 'Adresse' mit Placeholder 'z. B. Hauptstraße 5, 1010 Wien'. Single-Line, freie Eingabe, kein Autocomplete.\n\nShow: Adresse wird in der Meta-Sektion neben Datum/Uhrzeit gerendert (Icon Lucide map-pin), und ist Trigger für F45-Map.\n\nSeeds: ein paar Demo-Events bekommen Beispiel-Adressen, damit Map sofort sichtbar ist.",
+      "acceptance_criteria": [
+        "calendar_events.address als optionaler String",
+        "Form New/Edit hat Feld 'Adresse'",
+        "Show zeigt Adresse mit map-pin Icon",
+        "Demo-Seeds enthalten Events mit Adresse",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Event mit Adresse speichern",
+          "given": "Form mit address='Musterstraße 1'",
+          "when": "create",
+          "then": "Event.address = 'Musterstraße 1'"
+        }
+      ],
+      "success_criteria": [
+        "Adresse persistent + sichtbar im Detail"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F47",
+      "name": "Attendance per_date: Datumsoptionen nachträglich pflegen",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Nach dem Erstellen einer per_date-Teilnahmeliste wird der Caretaker automatisch in die Datumsoptionen-Pflege geleitet; nachträgliche Bearbeitung jederzeit möglich.",
+      "description": "Ziel: AttendanceList im Modus per_date ist ohne mind. eine Datumsoption sinnlos. Daher: nach Erstellen automatisch in die Optionen-Pflege, und nachträglich bearbeitbar.\n\nFlow:\n  1. AttendanceList#create mit mode=per_date → speichert Liste, redirect auf /attendance_lists/:id/dates/edit (oder analoge Action mit     AttendanceDateOption-Nested-Form).\n  2. Edit-View zeigt mehrere Datumsfelder (dynamisch hinzufügbar/entfernbar mit Stimulus, accepts_nested_attributes_for ist bereits     konfiguriert).\n  3. Speichern → redirect auf /attendance_lists/:id (Show).\n\nEdit-Zugang: auf Show eine Aktion 'Datumsoptionen bearbeiten' (Icon-Button calendar-cog). Auf Index ebenfalls verfügbar als Row-Action.\n\nValidierung: mode=per_date ohne Datumsoption ist nach Edit zulässig (User kann Liste anlegen, später ergänzen), aber Teilnehmer-Eintragung wird blockiert, solange keine Option vorhanden → entsprechender Hinweis auf Show.\n\nMode=general bleibt unverändert (kein Datums-Edit nötig).",
+      "acceptance_criteria": [
+        "Create mit mode=per_date redirected automatisch zur Datums-Pflege",
+        "Eigene Action zum nachträglichen Pflegen der Datumsoptionen",
+        "Stimulus-gestütztes dynamisches Hinzufügen/Entfernen von Datums-Zeilen",
+        "Show zeigt Banner 'Bitte Datumsoptionen ergänzen', solange keine Option existiert",
+        "mode=general bleibt unverändert",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "per_date create-Flow",
+          "given": "Form mit mode=per_date",
+          "when": "create",
+          "then": "Redirect auf Datums-Pflege"
+        },
+        {
+          "scenario": "Datum hinzufügen nachträglich",
+          "given": "Liste ohne Optionen",
+          "when": "User pflegt 3 Datumsoptionen nach",
+          "then": "Optionen werden gespeichert"
+        }
+      ],
+      "success_criteria": [
+        "Caretaker landet automatisch im Pflege-Flow",
+        "Nachträgliche Änderungen problemlos möglich"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "BF-004",
+      "name": "Bugfix: Polls/new — 'weitere Option hinzufügen' funktioniert nicht",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Der Button zum Hinzufügen einer weiteren Poll-Option in /polls/new triggert keine neue Zeile.",
+      "description": "Symptom: In /polls/new bleibt der Button 'Option hinzufügen' wirkungslos — keine zusätzliche Eingabezeile, kein Konsolen-Fehler bemerkenswert im UX.\n\nVermutete Ursachen (zu prüfen):\n  • Stimulus-Controller nicht angebunden (falsches data-controller / data-action Attribut)\n  • Template-Element (<template>) fehlt oder hat falsches data-target\n  • Nested-Attributes-Index-Generierung defekt (z. B. NEW_RECORD-Platzhalter wird nicht ersetzt)\n\nFix-Ansatz:\n  1. Reproduzieren mit agent-browser auf /polls/new\n  2. Stimulus-Controller (nested_form_controller.js o. ä.) prüfen, ggf. analog zu funktionierendem Beispiel (attendance_date_options)     umsetzen\n  3. Test (System-Test) hinzufügen, der zwei Optionen nacheinander hinzufügt und Poll mit 3 Optionen erstellt\n\nAkzeptanzkriterium ist nicht die Ursache, sondern das verifizierbare Verhalten.",
+      "acceptance_criteria": [
+        "Klick auf 'Option hinzufügen' erzeugt eine zusätzliche Eingabezeile",
+        "Mehrfaches Klicken erzeugt entsprechend mehrere Zeilen",
+        "Poll mit ≥3 Optionen lässt sich erstellen",
+        "System-Test deckt das Szenario ab",
+        "Keine JS-Konsole-Fehler"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Drei Optionen anlegen",
+          "given": "/polls/new",
+          "when": "Zweimal 'Option hinzufügen', drei Werte eintragen, submit",
+          "then": "Poll mit 3 PollOption gespeichert"
+        }
+      ],
+      "success_criteria": [
+        "Funktion wieder benutzbar",
+        "Regressionsschutz via Test"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F48",
+      "name": "ShoppingList: 'Bezugstag' → 'Einkaufstag' umbenennen (UI-Label)",
+      "phase": 7,
+      "status": "open",
+      "short_description": "UI-Label des event_date-Felds in /shopping_lists und allen Anzeigen von 'Bezugstag' auf 'Einkaufstag' ändern.",
+      "description": "Ziel: einheitliche und intuitive Bezeichnung im UI.\n\nUmfang: nur Labels/Übersetzungen (i18n) — DB-Spaltenname event_date bleibt aus Kompatibilitätsgründen unverändert. Die Änderung betrifft ausschließlich:\n  • config/locales/de.yml (activerecord.attributes.shopping_list.event_date, helpers.label.shopping_list.event_date)\n  • alle Views, die den Begriff hartcodiert verwenden (search 'Bezugstag' in app/views/**)\n  • PDF/Print/Mail-Templates (falls vorhanden)\n\nSuche nach 'Bezugstag' im Repo und konsequente Ersetzung durch 'Einkaufstag'. Keine Code-Identifier umbenennen.",
+      "acceptance_criteria": [
+        "'Bezugstag' kommt nirgendwo mehr in den Views vor",
+        "i18n-Keys liefern 'Einkaufstag'",
+        "DB-Spalte event_date bleibt erhalten",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Index-Render",
+          "given": "/shopping_lists",
+          "when": "Render",
+          "then": "Spalte heißt 'Einkaufstag'"
+        }
+      ],
+      "success_criteria": [
+        "Konsistente Bezeichnung im UI"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "BF-005",
+      "name": "Bugfix: ShoppingItem-Eingabe — Fokus springt zurück in erstes Feld",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Beim Hinzufügen eines weiteren ShoppingItem in der Einkaufsliste springt der Fokus immer wieder ins erste Eingabefeld, weitere Einträge werden faktisch verhindert.",
+      "description": "Symptom: In der Einkaufslisten-Detailansicht (vermutlich Turbo-Stream-basierte Item-Anlage) wird nach Submit jedes neu hinzugefügten Items der Fokus auf das erste Item-Input gesetzt. Folge: der Caretaker kann faktisch keinen zweiten Eintrag tippen, da Tastatureingaben in das erste Feld wandern.\n\nWahrscheinliche Ursache: Turbo-Stream re-rendert die gesamte Liste; das Form-Reset oder autofocus an einer falschen Stelle setzt den Fokus.\n\nFix-Ansatz:\n  • Turbo-Frame oder Turbo-Stream so anpassen, dass nur das neue Item appended wird, nicht die ganze Liste re-rendert\n  • Fokus nach Append explizit auf das frisch erzeugte Input oder zurück ins 'Neu hinzufügen'-Feld setzen (Stimulus-Controller mit data-action-on-stream-render)\n  • alternative: das 'Neu hinzufügen'-Input ist ein eigenes Form außerhalb der Item-Liste; nach Submit wird das Input geleert und der Fokus dort gehalten\n\nSystem-Test (agent-browser oder Capybara): zwei Items zügig hintereinander anlegen ohne Fokus-Verlust.",
+      "acceptance_criteria": [
+        "Nach Hinzufügen eines Items bleibt der Fokus im 'Neu hinzufügen'-Feld",
+        "Mehrere Items lassen sich hintereinander ohne erneutes Klicken anlegen",
+        "Bestehende Item-Felder behalten ihre eigenen Edit-Inputs",
+        "System-Test deckt das Szenario ab",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Drei Items in Folge",
+          "given": "Einkaufsliste leer",
+          "when": "Drei Items zügig nacheinander tippen+Enter",
+          "then": "Alle drei werden korrekt angelegt, Fokus bleibt im Hinzufügen-Feld"
+        }
+      ],
+      "success_criteria": [
+        "Eingabe-Flow fluide",
+        "Regressionsschutz via Test"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F49",
+      "name": "ShoppingList: berechnete Kalenderwoche in Liste & Detail",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Methode ShoppingList#calendar_week aus event_date; Anzeige in Index und Show ('KW 18').",
+      "description": "Ziel: Kalenderwoche schnell sichtbar.\n\nModell: ShoppingList#calendar_week → Integer (event_date.cweek). Helper-Methode ShoppingList#calendar_week_label → 'KW 18'.\n\nAnzeige:\n  • Index /shopping_lists: neue Spalte 'KW' (Desktop) bzw. Meta-Zeile (Card-Stack)\n  • Show /shopping_lists/:id: prominent neben Einkaufstag\n\nAchtung: cweek liefert ISO-Wochen — gewünscht und in DE üblich.",
+      "acceptance_criteria": [
+        "ShoppingList#calendar_week liefert event_date.cweek",
+        "Helper-Label 'KW {nn}' (zweistellig nicht erzwungen)",
+        "Index zeigt KW-Spalte/Meta",
+        "Show zeigt KW prominent",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "KW-Berechnung für Jahresende",
+          "given": "event_date=2026-12-31",
+          "when": "calendar_week_label",
+          "then": "korrekte ISO-KW (53 oder 1)"
+        }
+      ],
+      "success_criteria": [
+        "Schneller KW-Überblick in der Liste"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F50",
+      "name": "Filter in /shopping_lists (Gruppe, Monat, Verantwortlich)",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Filterleiste auf /shopping_lists: Gruppe, Monat (basierend auf event_date), Verantwortlich (assigned_to).",
+      "description": "Ziel: schnelles Eingrenzen der Listen.\n\nFilter:\n  • group_id — Select aus allen Groups\n  • month — Select aus den im Bestand vorkommenden Monaten (YYYY-MM), basierend auf event_date\n  • assigned_to_id — Select aus allen Usern, die mindestens einer Liste zugewiesen sind\n\nImplementierung analog F41: GET-Form mit method=:get, kombinierbar, Reset-Link.\n\nUI: drei Inputs nebeneinander (Desktop), gestapelt (Mobile). Konsistent mit /children Filter-Leiste.",
+      "acceptance_criteria": [
+        "Filter-Leiste mit Gruppe, Monat, Verantwortlich",
+        "Monat-Filter basiert auf event_date (Year-Month-Range)",
+        "Filter kombinierbar",
+        "Reset-Link entfernt alle Params",
+        "Konsistentes UI mit /children",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Monat-Filter Mai 2026",
+          "given": "Listen mit event_date in 2026-05 und 2026-06",
+          "when": "/shopping_lists?month=2026-05",
+          "then": "nur Mai-Listen sichtbar"
+        }
+      ],
+      "success_criteria": [
+        "Schnelles Filtern in größeren Datenmengen"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F51",
+      "name": "ShoppingItem: optionale category mit gruppierter Anzeige",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Neues optionales Enum-Attribut category für ShoppingItem; Anzeige der Items gruppiert nach Kategorie, ungetagte Items am Ende.",
+      "description": "Ziel: Kategorisierung erleichtert Einkauf und Vorbereitung.\n\nDatenmodell: shopping_items.category:string (nullable). Ursprüngliche Migration anpassen, schema.rb regenerieren — wie F35.\n\nEnum-Werte (ENGLISCH, deutsche Anzeige ausschließlich über i18n):\n  fruit, vegetable, dairy, meat_fish, bakery, beverages, frozen, sweets, hygiene, household, craft_supplies, other\n\nModell:\n  enum :category, { fruit: 'fruit', vegetable: 'vegetable', dairy: 'dairy', meat_fish: 'meat_fish', bakery: 'bakery', beverages: 'beverages', frozen: 'frozen', sweets: 'sweets', hygiene: 'hygiene', household: 'household', craft_supplies: 'craft_supplies', other: 'other' }, prefix: true\nI18n-Keys in de.yml unter activerecord.attributes.shopping_item.categories.* liefern die deutschen Labels (Obst, Gemüse, Milchprodukte, Fleisch & Fisch, Backwaren, Getränke, Tiefkühl, Süßigkeiten, Hygiene, Haushalt, Bastelbedarf, Sonstiges).\n\nForm: Select-Feld 'Kategorie' im Item-Form (sowohl im 'neu hinzufügen' als auch im Edit-Inline-Form). Default: leer (nicht gesetzt).\n\nAnzeige Show /shopping_lists/:id:\n  • Items werden nach category gruppiert dargestellt; Gruppen-Reihenfolge folgt der Enum-Definition\n  • Ungetagte Items (category=nil) erscheinen ganz am Ende in einem Block 'Ohne Kategorie' (i18n)\n  • Jede Gruppe hat eine kleine Überschrift mit Icon (Lucide passend zur Kategorie)\n\nSortierung innerhalb einer Gruppe: bestehende Sortierung (position) bleibt.\n\nDruck/Print-View (falls vorhanden): gleicher Gruppen-Aufbau.",
+      "acceptance_criteria": [
+        "shopping_items.category als nullable String mit Index",
+        "Enum mit ENGLISCHEN Keys: fruit, vegetable, dairy, meat_fish, bakery, beverages, frozen, sweets, hygiene, household, craft_supplies, other",
+        "Lokalisierung ausschließlich über config/locales/de.yml (keine deutschen Strings im Code)",
+        "Form bietet Kategorie-Select mit deutschen i18n-Labels",
+        "Show gruppiert Items nach Kategorie; Reihenfolge gemäß Enum-Definition",
+        "Ungetagte Items am Ende in eigener Sektion 'Ohne Kategorie'",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Gemischte Items",
+          "given": "Items in obst, milchprodukte und ohne Kategorie",
+          "when": "Show rendern",
+          "then": "Obst-Gruppe, Milchprodukte-Gruppe, dann 'Ohne Kategorie'"
+        }
+      ],
+      "success_criteria": [
+        "Klare Gruppierung erleichtert den Einkauf"
+      ],
+      "dependencies": [],
+      "spec_file": "docs/spec-shopping-item-categories.json"
+    },
+    {
+      "id": "BF-006",
+      "name": "Bugfix: CSP-Fehler auf Gallery-Detail (style-src)",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Auf /galleries/:id meldet die Browser-Konsole 'Refused to apply a stylesheet … style-src directive'. Inline-Style oder externes Stylesheet ohne Nonce.",
+      "description": "Symptom: Auf /galleries/:id (z. B. /galleries/d61ed85d-4ba4-4e05-9cb8-a1ee2ce57225) erscheint in der Konsole:\n  'Refused to apply a stylesheet because its hash, its nonce, or unsafe-inline does not appear in the style-src directive …'\n\nWahrscheinliche Ursache: die Lightbox-Library (oder ein Vendor-CSS) injiziert <style>-Blöcke ohne Nonce zur Laufzeit. CSP ist im Projekt vermutlich strikt mit nonce konfiguriert (Rails 7 default).\n\nFix-Optionen (zu evaluieren):\n  1. Vendor-CSS in das App-CSS-Bundle integrieren (vorzuziehen — kein Inline-Style)\n  2. Lightbox-Init so anpassen, dass kein Inline-Style nötig ist\n  3. Nonce an dynamisch eingefügte Style-Tags weiterreichen (Stimulus-Hook beim Init)\n  4. (Letzte Wahl) style-src um 'unsafe-inline' erweitern — NICHT bevorzugt aus Security-Sicht\n\nHinweis: F52 (Lightbox nur über Action) ändert ohnehin das Init-Verhalten — Fix sinnvollerweise abstimmen, kann gemeinsam erfolgen.\n\nVerifikation: Keine CSP-Konsolen-Warnungen mehr auf Gallery-Show in Dev und Prod-Mode.",
+      "acceptance_criteria": [
+        "Keine CSP-Verletzungen mehr auf /galleries/:id",
+        "style-src bleibt strikt mit nonce (kein 'unsafe-inline' hinzugefügt)",
+        "Lightbox/Slideshow-Styling funktioniert visuell unverändert",
+        "Manuelle Verifikation in Chrome + Safari Console"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Galerie-Detail rendern",
+          "given": "Galerie mit ≥1 Foto",
+          "when": "GET /galleries/:id im Browser",
+          "then": "Keine CSP-Konsolenfehler"
+        }
+      ],
+      "success_criteria": [
+        "Saubere Browser-Konsole",
+        "CSP-Härte erhalten"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "F52",
+      "name": "Gallery: Lightbox-Galerie nur über Action öffnen",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Auf /galleries/:id wird die Lightbox-Komponente NICHT mehr automatisch initialisiert; stattdessen Aktion 'Galerie ansehen' in der Aktionsleiste.",
+      "description": "Ziel: Show-Seite lädt schneller, Eltern entscheiden bewusst über das Öffnen der Bildansicht.\n\nVerhalten heute: Lightbox/Carousel wird beim Rendern der Show direkt aufgebaut (ggf. mit Inline-Styles → CSP-Fehler BF-006).\n\nSoll-Verhalten:\n  • Show zeigt eine Galerie-Karte mit Titel/Meta/Thumbnail-Raster (statische Bilder, kein Lightbox-Init)\n  • In der Aktionsleiste: Icon-Button 'Galerie ansehen' (Lucide images / gallery-thumbnails)\n  • Klick öffnet die Lightbox/Carousel in einem Overlay; im Hintergrund bleibt die Show-Seite\n  • Esc oder Schließen-Button beendet die Lightbox\n\nTechnik: Lightbox-Init über Stimulus-Controller, der erst bei explizitem Trigger (data-action='click->lightbox#open') startet — kein Auto-Init beim DOMContentLoaded. CSP-konform (nonces beachten, siehe BF-006).",
+      "acceptance_criteria": [
+        "Lightbox wird NICHT mehr automatisch beim Show-Render initialisiert",
+        "Aktion 'Galerie ansehen' (Icon-Button) startet die Lightbox",
+        "Hintergrund-Show bleibt erhalten, Esc/Close beendet",
+        "Keine CSP-Verletzungen mehr (gemeinsam mit BF-006)",
+        "Mobile + Desktop verhalten sich gleich",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Lightbox erst nach Klick",
+          "given": "Show /galleries/:id frisch geladen",
+          "when": "Render",
+          "then": "Kein Lightbox-Overlay im DOM, Thumbnail-Raster sichtbar"
+        },
+        {
+          "scenario": "Action startet Lightbox",
+          "given": "Show geladen",
+          "when": "Klick auf 'Galerie ansehen'",
+          "then": "Lightbox-Overlay erscheint"
+        }
+      ],
+      "success_criteria": [
+        "Show-Seite schlanker und schneller",
+        "Klares User-Intent für Bildansicht"
+      ],
+      "dependencies": [
+        "BF-006"
+      ]
+    },
+    {
+      "id": "F53",
+      "name": "Gallery: Magic Slideshow (Fullscreen mit Animationen)",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Aktion 'Magic Slideshow' öffnet eine eigene Fullscreen-Diashow der Galerie mit abwechslungsreichen Übergangsanimationen.",
+      "description": "Ziel: Erlebnishafte Präsentation einer Galerie (z. B. bei Feiern, Kindergarten-Events).\n\nAktion: Icon-Button 'Magic Slideshow' (Lucide sparkles / play-circle) in der Aktionsleiste der Gallery-Show. Klick startet die Slideshow.\n\nLibrary: erprobte, leichtgewichtige Lösung — Empfehlung: 'Swiper' (https://swiperjs.com) ist breit eingesetzt, MIT-Lizenz, bietet EffectFade/EffectCube/EffectCoverflow/EffectFlip/EffectCards/EffectCreative, Autoplay, Keyboard, Fullscreen-Integration. Alternative wäre PhotoSwipe (eher Lightbox-Fokus) — Swiper passt besser zur Slideshow-Anforderung. Library wird via JS-Import-Map oder esbuild eingebunden.\n\nVerhalten:\n  • Klick auf 'Magic Slideshow' → Request Fullscreen via element.requestFullscreen(); Fallback: fullpage-Overlay (fixed inset-0 z-[100])\n  • Autoplay 4s pro Bild; Pause-Button im UI\n  • Bei jedem Bildwechsel zufällig anderer Effekt aus einer kuratierten Liste (z. B. fade, cube, coverflow, flip, cards, creative)\n  • Steuerung: Pfeiltasten, Klick links/rechts, Touch-Swipe, Esc beendet\n  • Begleitende Mikiwa-Bedienleiste am Bildschirmrand (auto-fade nach Inaktivität)\n\nPerformance: Bilder als optimierte Variants laden (existing ImageAttachable). Preload des nächsten Bildes.\n\nBarrierefreiheit: Pause-Möglichkeit, Reduced-Motion-Media-Query respektieren (bei prefers-reduced-motion fixed effect 'fade').",
+      "acceptance_criteria": [
+        "Icon-Button 'Magic Slideshow' in Aktionsleiste der Gallery-Show",
+        "Slideshow nutzt Browser-Fullscreen-API, Fallback fullpage-Overlay",
+        "Pro Übergang zufällig wechselnde Animation aus min. 4 unterschiedlichen Effekten",
+        "Autoplay 4s, manuelle Steuerung möglich (Tastatur, Touch, Klick)",
+        "Esc / Schließen beendet die Slideshow",
+        "Reduced-Motion respektiert (nur Fade)",
+        "Bilder via vorhandene Image-Variants (kein Originalbild)",
+        "Library-Wahl (Swiper o. Ä.) dokumentiert; CSP-konform integriert",
+        "Test-Suite grün, System-Test deckt Open/Close ab"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Slideshow starten",
+          "given": "Galerie mit ≥3 Fotos",
+          "when": "Klick auf 'Magic Slideshow'",
+          "then": "Fullscreen aktiv, Autoplay läuft"
+        },
+        {
+          "scenario": "Reduced-Motion",
+          "given": "Browser mit prefers-reduced-motion:reduce",
+          "when": "Slideshow startet",
+          "then": "ausschließlich Fade-Effekt"
+        }
+      ],
+      "success_criteria": [
+        "Wow-Effekt bei Vorführungen",
+        "Solide UX (Tastatur, Touch, Esc)"
+      ],
+      "dependencies": [
+        "F52"
+      ],
+      "spec_file": "docs/spec-gallery-magic-slideshow.json"
+    },
+    {
+      "id": "F54",
+      "name": "KindergartenYear: Status-Enum (planning/active/archived)",
+      "phase": 7,
+      "status": "open",
+      "short_description": "kindergarten_years.active:boolean wird durch status:enum (planning, active, archived) ersetzt; DB-Drop im Dev, ursprüngliche Migration angepasst.",
+      "description": "Ziel: Kindergartenjahre können explizit 'in Planung' sein (Vorbereitung Rollover, noch nicht produktiv).\n\nDatenmodell: kindergarten_years.status:string (default 'planning'), enum :status, { planning: 'planning', active: 'active', archived: 'archived' }. Genau ein Jahr darf gleichzeitig status='active' sein (DB-Constraint + Modell-Validation analog zur bisherigen Logik mit active:boolean).\n\nVorgehen DB (Dev): wie F35 — ursprüngliche kindergarten_years-Migration anpassen (active:boolean entfernen, status:string null:false default:'planning' hinzufügen), schema.rb löschen, db:drop/create/migrate/seed.\n\nCode-Migration:\n  • KindergartenYear.active (Class-Method) → find_by(status: 'active') (Signatur bleibt erhalten)\n  • Alle Lese-Stellen, die year.active? prüfen, lassen sich durch das Enum-Generated-Predicate year.active? wieder gleich verwenden — checken!\n  • Form/Edit-Page bekommt Select-Feld 'Status' mit den drei Werten\n  • Index zeigt Status als Badge (Pastell-Farben: planning=hellgelb, active=mint, archived=grau)\n\nSeeds: aktuelles laufendes Jahr → active; ein zukünftiges Jahr → planning (für Rollover-Test); alte Jahre → archived.",
+      "acceptance_criteria": [
+        "kindergarten_years.status enum mit planning/active/archived",
+        "active:boolean entfernt (DB-Schema sauber)",
+        "Genau ein Jahr mit status=active erlaubt; Wechsel deaktiviert andere automatisch (oder via Aktion 'aktivieren')",
+        "KindergartenYear.active liefert weiterhin das aktive Jahr",
+        "Form bietet Status-Auswahl",
+        "Index zeigt Status-Badge",
+        "Seeds enthalten je ein Jahr pro Status",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Aktivieren wechselt vorhandenes Aktiv-Jahr",
+          "given": "Jahr A active, Jahr B planning",
+          "when": "B auf active setzen",
+          "then": "A wird auf archived (oder planning) gesetzt; nur B ist active"
+        }
+      ],
+      "success_criteria": [
+        "Klarere Lifecycle-Semantik",
+        "Voraussetzung für sauberen Rollover"
+      ],
+      "dependencies": [],
+      "spec_file": "docs/spec-kindergarten-year-status.json"
+    },
+    {
+      "id": "F55",
+      "name": "Rollover-Ansicht als Tabelle mit Auswahl-Checkboxen",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Überarbeitung /rollover: einfache Tabelle aller aktiven Kinder; pro Zeile Checkbox, ob das Kind ins neue Jahr übernommen wird.",
+      "description": "Ziel: klare, datenzentrische Übersicht über die Übernahme.\n\nView: /rollover (GET) zeigt:\n  • Auswahl Quell-Jahr (aktuelles aktives Jahr, default) und Ziel-Jahr (alle Jahre mit status=planning)\n  • Tabelle aller aktiven Kinder des Quell-Jahres mit Spalten: Checkbox / Foto / Name / Gruppe / Geburtsdatum / Alter\n  • Toolbar oberhalb: 'Alle auswählen', 'Auswahl umkehren', Filter (analog F41: Gruppe, Name, Alter — wiederverwendbar)\n  • Submit-Button 'Weiter zur Bestätigung' → führt zu /rollover/confirm (siehe F56)\n\nDefault-Auswahl: alle Kinder aktiv (Übernahme-Default). User kann gezielt abwählen.\n\nTechnik: einfaches Form mit Checkboxen (name='child_ids[]'). Stimulus für 'Alle auswählen'/'Auswahl umkehren'. Filter funktionieren ohne JS (GET-Form), Auswahl muss filter-stabil bleiben (Hidden-Fields für aktuell ausgewählte child_ids außerhalb des Filters — Standard-Pattern).",
+      "acceptance_criteria": [
+        "/rollover zeigt eine Tabelle mit Checkbox pro aktivem Kind",
+        "Quell- und Zieljahr (planning-Status) auswählbar",
+        "Filter Gruppe/Name/Alter analog F41 funktionieren",
+        "Default: alle Kinder aktiv ausgewählt",
+        "Auswahl bleibt beim Filtern erhalten",
+        "Submit führt zur /rollover/confirm-Seite",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Filtern und Auswahl behalten",
+          "given": "Alle Kinder ausgewählt, dann Filter 'Sonnenkinder'",
+          "when": "Filter angewandt",
+          "then": "Nur Sonnenkinder sichtbar, Auswahlstatus aller Kinder bleibt erhalten"
+        }
+      ],
+      "success_criteria": [
+        "Klare datenzentrische Übersicht für Caretaker"
+      ],
+      "dependencies": [
+        "F41",
+        "F54",
+        "BF-007"
+      ],
+      "spec_file": "docs/spec-rollover-wizard.json"
+    },
+    {
+      "id": "F56",
+      "name": "Rollover-Confirm: Auto-Deaktivierung nicht übernommener Kinder + finale Bestätigung",
+      "phase": 7,
+      "status": "open",
+      "short_description": "Eigene /rollover/confirm-Seite listet die geplanten Änderungen (Übernahme + Deaktivierung); erst finale Bestätigung führt die Transaktion aus.",
+      "description": "Ziel: keine Überraschungen — Caretaker sieht vor Ausführung exakt, was passiert, und bestätigt.\n\nFlow:\n  1. /rollover (F55) → Auswahl, POST auf /rollover/confirm\n  2. /rollover/confirm (Server-Render mit POST-Body oder Session-Stash):\n     • Sektion 1 'Werden in {Zieljahr} übernommen' — Liste der ausgewählten Kinder\n     • Sektion 2 'Werden deaktiviert' — Liste der nicht-ausgewählten aktiven Kinder\n     • Hinweis-Text: 'Bitte prüfen Sie die Auswahl. Mit Klick auf Bestätigen werden die Änderungen ausgeführt.'\n     • Zwei Buttons: 'Zurück zur Auswahl' (kein Datenverlust) und 'Rollover bestätigen' (Submit POST /rollover/execute)\n  3. /rollover/execute (POST):\n     • Transaktion ActiveRecord::Base.transaction do …\n     • Für jedes ausgewählte Kind: Child#transfer_to(target_year) (bereits vorhanden) — übernimmt parent_children, emergency_contacts,        medical_notes\n     • Für jedes nicht-ausgewählte aktive Kind: child.deactivate!\n     • Bei Erfolg: Flash 'Rollover abgeschlossen: X übernommen, Y deaktiviert', Redirect /children\n     • Bei Fehler: gesamte Transaktion zurückgerollt, Flash mit Fehler\n\nSicherheit: Confirm-Action erfordert valide Token (CSRF), Auswahl wird im POST-Body übertragen (Hidden-Fields child_ids[]). Caretaker/Admin only.\n\nIdempotenz: erneutes Execute mit denselben Daten lässt bereits übernommene Kinder unberührt (Child#transfer_to ist bereits idempotent — prüft auf Existenz im Ziel).",
+      "acceptance_criteria": [
+        "/rollover/confirm rendert Übernahme- und Deaktivierungs-Liste",
+        "Nicht-ausgewählte aktive Kinder werden deaktiviert (active=false)",
+        "Ausgewählte Kinder werden in das Zieljahr kopiert (Child#transfer_to)",
+        "Gesamter Vorgang in einer Transaktion; Rollback bei Fehler",
+        "Flash zeigt Bilanz (X übernommen, Y deaktiviert)",
+        "Zurück-Button bricht ab ohne Datenänderung",
+        "Caretaker/Admin only, CSRF-geschützt",
+        "Test-Suite grün, System-Test deckt happy path und Abort ab"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Happy Path",
+          "given": "10 aktive Kinder, 7 ausgewählt",
+          "when": "Confirm → Execute",
+          "then": "7 Kinder im neuen Jahr (active=true), 3 im alten Jahr deaktiviert (active=false)"
+        },
+        {
+          "scenario": "Abbruch",
+          "given": "Auswahl getätigt",
+          "when": "Auf Confirm 'Zurück zur Auswahl'",
+          "then": "Keine Datenänderung, Auswahl bleibt erhalten"
+        },
+        {
+          "scenario": "Idempotenz",
+          "given": "Rollover bereits einmal ausgeführt für Kind A",
+          "when": "Erneut Execute mit gleicher Auswahl",
+          "then": "Keine Duplikate, kein Fehler"
+        }
+      ],
+      "success_criteria": [
+        "Klarheit vor der Ausführung",
+        "Transaktionssicher",
+        "Nicht-übernommene Kinder sauber deaktiviert"
+      ],
+      "dependencies": [
+        "F55"
+      ],
+      "spec_file": "docs/spec-rollover-wizard.json"
+    },
+    {
+      "id": "BF-007",
+      "name": "Refactor Child#transfer_to: Kind wechselt Jahre ohne Duplikation",
+      "phase": 7,
+      "status": "open",
+      "spec_file": "docs/spec-rollover-wizard.json",
+      "short_description": "Child#transfer_to legt keinen neuen Child-Datensatz mehr an; das Kind ist systemweit eindeutig und wechselt nur die kindergarten_year-Zuordnung.",
+      "description": "Ziel: Ein Kind ist im System eindeutig (eine Child-ID, eine Historie). Beim Rollover wechselt es ausschließlich seine kindergarten_year-Zuordnung; alle assoziierten Daten bleiben unverändert am bestehenden Datensatz hängen.\n\nAktuelles Verhalten (zu entfernen): Child#transfer_to dupliziert das Kind via dup, weist das neue Jahr zu und kopiert parent_children, emergency_contacts sowie medical_notes mit. Folgen: doppelte Datensätze pro Jahr, keine durchgehende Historie, Galerie-/Gruppen-Bezüge fragmentiert.\n\nNeues Verhalten:\n  def transfer_to(new_year)\n    return self if kindergarten_year_id == new_year.id\n    update!(kindergarten_year: new_year, active: true)\n    self\n  end\n\nAuswirkungen:\n  • Keine dup-Logik mehr, kein Kopieren von Assoziationen\n  • parent_children, emergency_contacts, medical_notes bleiben am bestehenden Child und bilden die Historie\n  • Galerien sind über Gruppen verknüpft – Bezug zu früheren Jahren bleibt naturgemäß erhalten\n  • Group-Zuordnung bleibt zunächst unverändert; Umgruppierungen via normales Child-Edit nach dem Rollover\n\nTests anpassen:\n  • test/models/child_test.rb: Erwartungen 'Child.count steigt um 1' → 'Child.count bleibt gleich'\n  • Erwartung 'neue EmergencyContacts werden angelegt' → 'IDs bleiben identisch'\n  • Erwartung 'neue ParentChild-Einträge' → 'Bestehende ParentChild-Einträge unverändert'\n  • Neue Tests:\n      - transfer_to ändert kindergarten_year_id, ohne neues Child anzulegen\n      - transfer_to reaktiviert deaktiviertes Kind (active wird true)\n      - transfer_to ist idempotent: bei gleichem Zieljahr keine Änderung\n      - Assoziationen (emergency_contacts/medical_notes/parent_children) sind nach transfer_to identisch (gleiche IDs)\n\nDev-DB: db:reset, damit eventuelle Duplikate aus dem alten Verhalten verschwinden. Keine Daten-Migration für Prod nötig (Projekt aktuell Dev).\n\nSpec: docs/spec-rollover-wizard.json (Abschnitt spec:childTransferRefactor).",
+      "acceptance_criteria": [
+        "Child#transfer_to dupliziert kein Child mehr (kein dup-Aufruf, kein Kopieren)",
+        "Child#transfer_to setzt kindergarten_year und active=true am bestehenden Datensatz",
+        "Bei kindergarten_year_id == new_year.id wird kein Update ausgeführt (Idempotenz)",
+        "parent_children, emergency_contacts, medical_notes bleiben unverändert am bestehenden Child",
+        "Alle bestehenden Tests, die auf Duplikation prüfen, sind angepasst",
+        "Neue Unit-Tests decken die vier neuen Verhaltensaspekte ab",
+        "Dev-DB neu aufgesetzt (db:reset), keine Restbestände aus altem Verhalten",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Kein neuer Datensatz",
+          "given": "Child A mit kindergarten_year=2024, target_year=2025",
+          "when": "A.transfer_to(target_year)",
+          "then": "Child.count unverändert; A.reload.kindergarten_year_id == target_year.id"
+        },
+        {
+          "scenario": "Assoziationen unverändert",
+          "given": "Child mit 2 emergency_contacts (IDs E1,E2), 1 medical_note (M1), 2 parent_children (P1,P2)",
+          "when": "transfer_to ausgeführt",
+          "then": "EmergencyContact.count, MedicalNote.count, ParentChild.count unverändert; IDs E1,E2,M1,P1,P2 weiterhin am selben Child"
+        },
+        {
+          "scenario": "Idempotenz",
+          "given": "Child bereits in target_year",
+          "when": "transfer_to(target_year)",
+          "then": "Kein Update, keine Änderung an Timestamps"
+        },
+        {
+          "scenario": "Reaktivierung",
+          "given": "Deaktiviertes Child (active=false)",
+          "when": "transfer_to(target_year)",
+          "then": "kindergarten_year wechselt, active wird true"
+        }
+      ],
+      "success_criteria": [
+        "Kein-Duplikat-Garantie nachweisbar in Tests",
+        "Saubere Historie über Jahre hinweg",
+        "Voraussetzung für sauberen Wizard-Flow (F55/F56)"
       ],
       "dependencies": []
     }

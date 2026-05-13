@@ -1,0 +1,251 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:rollover-wizard",
+  "name": "Rollover-Wizard: Auswahl-Tabelle, Confirm-Seite, transaktionaler Abschluss",
+  "description": "Der Rollover-Workflow wird als zweistufiger Wizard umgesetzt: (1) /rollover Tabelle mit Checkbox-Auswahl pro aktivem Kind, (2) /rollover/confirm zeigt geplante Übernahme + Deaktivierung, (3) /rollover/execute führt die Transaktion aus. Nicht-ausgewählte Kinder werden automatisch deaktiviert. WICHTIG: Beim Rollover wird KEIN neuer Child-Datensatz erzeugt – das Kind ist systemweit eindeutig und wechselt nur seine kindergarten_year-Zuordnung; alle Assoziationen (Eltern, Notfallkontakte, medizinische Notizen, Galerie-Bezüge über Gruppen) bleiben am bestehenden Child erhalten und bilden die laufende Historie.",
+  "dateCreated": "2026-05-13",
+  "version": "1.1",
+  "spec:problemStatement": {
+    "description": "Der bisherige Rollover-Flow ist unübersichtlich. Caretaker müssen zwei Dinge gleichzeitig denken: Welche Kinder werden ins neue Jahr übernommen? Welche bleiben zurück (und müssen deaktiviert werden)? Heute geschieht das in einem einzigen Schritt ohne explizite Bilanz – Fehler werden erst spät bemerkt.",
+    "affectedUsers": "Caretaker/Admin (führen Rollover am Jahresende durch), Kindergartenleitung (Kontrolle), Eltern (deren Kinder betroffen sind).",
+    "costOfInaction": "Falsche Übernahmen, vergessene Deaktivierungen, manueller Cleanup im Nachgang."
+  },
+  "spec:goals": [
+    {
+      "description": "Tabellarische, datenzentrische Auswahlübersicht",
+      "type": "user",
+      "target": "/rollover zeigt alle aktiven Kinder des Quelljahres mit Checkbox, Foto, Name, Gruppe, Geburtsdatum, Alter"
+    },
+    {
+      "description": "Filter und Bulk-Auswahl-Helfer",
+      "type": "user",
+      "target": "Gruppe-/Name-/Alter-Filter (analog F41); Aktionen 'Alle auswählen', 'Auswahl umkehren'"
+    },
+    {
+      "description": "Bestätigungs-Seite vor Ausführung mit klarer Bilanz",
+      "type": "user",
+      "target": "/rollover/confirm listet 'werden übernommen' und 'werden deaktiviert' getrennt"
+    },
+    {
+      "description": "Transaktionaler, idempotenter Abschluss",
+      "type": "data",
+      "target": "/rollover/execute führt Child#transfer_to + deactivate! in einer DB-Transaktion aus; bei Fehler vollständiger Rollback"
+    },
+    {
+      "description": "Kein Child-Duplikat – Kind wechselt das Jahr, bleibt aber derselbe Datensatz",
+      "type": "data",
+      "target": "Child#transfer_to führt update!(kindergarten_year: …) aus; parent_children, emergency_contacts, medical_notes, gallery_groups bleiben am bestehenden Child"
+    }
+  ],
+  "spec:nonGoals": [
+    {
+      "description": "Übernahme von Galerien/Listen/Speiseplänen in das neue Jahr",
+      "rationale": "Rollover bezieht sich ausschließlich auf Kinder; jahresgebundene Daten werden bewusst nicht mitgenommen"
+    },
+    {
+      "description": "Partielle Übernahme einzelner Kind-Attribute (z. B. nur Notfallkontakte)",
+      "rationale": "Da KEIN Duplikat entsteht, sind alle Assoziationen ohnehin weiterhin am Kind – feinere Kontrolle nicht im Scope und nicht erforderlich"
+    },
+    {
+      "description": "Undo-Funktion für ausgeführten Rollover",
+      "rationale": "Die Confirm-Seite ist die Sicherheitsschicht; nach Bestätigung greift die normale Wiederherstellungs-Verantwortung"
+    },
+    {
+      "description": "Eigene Gruppen-Zuweisung pro Kind im Wizard",
+      "rationale": "Das Kind behält beim Wechsel zunächst seine bisherige Gruppe; Umgruppierungen werden über das normale Kind-Edit nach dem Rollover erledigt"
+    }
+  ],
+  "spec:workflowOverview": {
+    "step1": {
+      "route": "GET /rollover",
+      "view": "rollovers/new",
+      "description": "Auswahl Quelljahr (default: aktives Jahr), Zieljahr (alle Jahre status=planning), Tabelle aller aktiven Kinder des Quelljahres mit Checkbox-Auswahl"
+    },
+    "step2": {
+      "route": "POST /rollover/confirm",
+      "view": "rollovers/confirm",
+      "description": "Server rendert Bilanz aus den POST-Params: zwei Listen (Übernahme / Deaktivierung). Buttons 'Zurück' und 'Bestätigen'."
+    },
+    "step3": {
+      "route": "POST /rollover/execute",
+      "behavior": "Transaktionale Ausführung; Redirect /children mit Flash-Bilanz"
+    }
+  },
+  "spec:routesAndController": {
+    "routes": [
+      "get '/rollover',          to: 'rollovers#new',     as: :rollover",
+      "post '/rollover/confirm', to: 'rollovers#confirm', as: :rollover_confirm",
+      "post '/rollover/execute', to: 'rollovers#execute', as: :rollover_execute"
+    ],
+    "controller": "RolloversController (Caretaker/Admin only)",
+    "actions": {
+      "new": "Lädt Quelljahr=KindergartenYear.active, Zieljahre=KindergartenYear.planning, Kinder=source_year.children.active. Verarbeitet GET-Params für Filter (group_id, q, age). Auswahl-State über Hidden-Fields stabil beim Filtern.",
+      "confirm": "Verarbeitet POST mit source_year_id, target_year_id, child_ids[]. Berechnet 'übernommen' = Child.where(id: child_ids), 'deaktiviert' = source_year.children.active.where.not(id: child_ids). Rendert confirm-View.",
+      "execute": "Erneut child_ids[], source_year_id, target_year_id aus Hidden-Fields. Transaction: Child.where(id: child_ids).find_each { |c| c.transfer_to(target_year) }; source_year.children.active.where.not(id: child_ids).find_each(&:deactivate!). Flash: 'Rollover abgeschlossen: X übernommen, Y deaktiviert.' Redirect children_path."
+    }
+  },
+  "spec:step1Selection": {
+    "description": "/rollover – Auswahl-Tabelle",
+    "elements": [
+      {"element": "Heading 'Rollover ins neue Kindergartenjahr'"},
+      {"element": "Select 'Quelljahr' (default: aktives Jahr)"},
+      {"element": "Select 'Zieljahr' (Optionen: alle status=planning); Pflicht"},
+      {"element": "Filter-Leiste: group_id, q (Name), age – analog F41"},
+      {"element": "Toolbar: Buttons 'Alle auswählen', 'Auswahl umkehren', Zähler 'X von Y ausgewählt'"},
+      {"element": "Tabelle: Spalten Checkbox / Foto / Name / Gruppe / Geburtsdatum / Alter"},
+      {"element": "Default-Auswahl: alle aktiven Kinder selected"},
+      {"element": "Submit-Button 'Weiter zur Bestätigung' (POST /rollover/confirm)"}
+    ],
+    "stateStability": "Beim Anwenden eines Filters bleiben die Checkbox-Zustände aller Kinder erhalten (Hidden-Fields für nicht angezeigte Kinder; oder JavaScript-Stimulus-Controller, der die Auswahl in localStorage bzw. Hidden-Fields hält).",
+    "stimulusController": "rollover_selection_controller.js – mit Targets: row, checkbox, summaryCount, selectAllBtn, invertBtn"
+  },
+  "spec:step2Confirm": {
+    "description": "/rollover/confirm – Bilanz vor Ausführung",
+    "elements": [
+      {"element": "Heading 'Bitte Auswahl bestätigen'"},
+      {"element": "Section 'Werden in {Zieljahr} übernommen' – Liste/Tabelle der ausgewählten Kinder mit Anzahl"},
+      {"element": "Section 'Werden deaktiviert' – Liste/Tabelle der nicht-ausgewählten aktiven Kinder mit Anzahl"},
+      {"element": "Hinweis-Box (warm/orangelich): 'Mit Bestätigen werden alle Änderungen ausgeführt. Bereits übernommene Kinder werden erkannt und nicht dupliziert.'"},
+      {"element": "Hidden-Fields source_year_id, target_year_id, child_ids[] – damit Execute exakt dasselbe ausführt wie Confirm anzeigt"},
+      {"element": "Buttons 'Zurück zur Auswahl' (GET /rollover mit erhaltenen Params) und 'Rollover bestätigen' (POST /rollover/execute)"}
+    ]
+  },
+  "spec:step3Execute": {
+    "description": "/rollover/execute – Transaktionale Ausführung",
+    "behavior": [
+      "ActiveRecord::Base.transaction do",
+      "  selected = Child.where(id: child_ids)",
+      "  to_deactivate = source_year.children.active.where.not(id: child_ids)",
+      "  selected.find_each { |c| c.transfer_to(target_year) }   # ändert kindergarten_year am bestehenden Datensatz",
+      "  to_deactivate.find_each(&:deactivate!)",
+      "end",
+      "Bei Erfolg: Flash 'Rollover abgeschlossen: X übernommen, Y deaktiviert.'",
+      "Bei Fehler (rescue ActiveRecord::Rollback / StandardError): Flash :alert mit Fehlertext, Redirect zurück auf /rollover/confirm; keine Datenänderung"
+    ],
+    "idempotency": "Child#transfer_to ist idempotent über reine Identität: ist child.kindergarten_year_id bereits target_year.id, wird kein Update ausgeführt. Wird das Execute zweimal mit derselben Auswahl aufgerufen, bleibt das Ergebnis identisch – die Methode arbeitet auf demselben Child-Datensatz, nicht durch Anlage neuer Records (siehe BF-007)."
+  },
+  "spec:authorization": {
+    "rules": [
+      "Caretaker/Admin: dürfen den Wizard nutzen",
+      "Eltern: keinerlei Zugriff (alle drei Routen 403)",
+      "CSRF-Schutz auf POST-Routen"
+    ]
+  },
+  "spec:childTransferRefactor": {
+    "description": "BF-007: Child#transfer_to wird so umgebaut, dass kein neuer Child-Datensatz entsteht. Das Kind wechselt einfach die kindergarten_year-Zuordnung und behält seine vollständige Historie.",
+    "currentBehavior": "Child#transfer_to dupliziert das Child via dup, weist ihm das neue Jahr zu und kopiert parent_children, emergency_contacts und medical_notes mit. Dadurch entstehen pro Jahr neue Datensätze – Historie ist über Jahre hinweg fragmentiert, Galerie-/Gruppen-Bezüge können nicht durchgehend gepflegt werden.",
+    "newBehavior": [
+      "Child#transfer_to(new_year) aktualisiert ausschließlich die kindergarten_year-Referenz am bestehenden Datensatz",
+      "Bei active=false wird gleichzeitig auf active=true gesetzt (Reaktivierung möglich)",
+      "Keinerlei Kopien von parent_children / emergency_contacts / medical_notes – diese sind bereits am Kind und bleiben bestehen",
+      "Galerie-Bezüge (über Group und gallery_groups) bleiben naturgemäß historisch erhalten und sind auch nach Jahr-Wechsel weiterhin auffindbar als 'Galerien aus früherem Jahr'",
+      "Group-Zuordnung bleibt zunächst unverändert (Caretaker kann nach Rollover einzelne Kinder über das normale Edit umgruppieren)"
+    ],
+    "newImplementation": "def transfer_to(new_year)\n  return self if kindergarten_year_id == new_year.id\n  update!(kindergarten_year: new_year, active: true)\n  self\nend",
+    "removedLogic": [
+      "dup-Aufruf entfällt vollständig",
+      "Existenz-Check (Child.where(last_name…)) entfällt – Identität reicht",
+      "Alle Schleifen über parent_children.find_each / emergency_contacts.find_each / medical_notes.find_each entfallen"
+    ],
+    "dataMigrationConsideration": "In Development reicht ein db:reset, sodass keine doppelten Kind-Datensätze aus dem alten Verhalten zurückbleiben. Falls produktiv bereits Duplikate existieren, wäre eine separate Daten-Bereinigung notwendig – im aktuellen Projektstand (Dev) NICHT erforderlich."
+  },
+  "spec:testUpdates": {
+    "description": "Tests, die das alte transfer_to-Verhalten prüfen, sind anzupassen",
+    "affectedTests": [
+      "test/models/child_test.rb – Tests zu transfer_to: Erwartung 'Child.count erhöht sich' wird zu 'Child.count bleibt gleich; Child#kindergarten_year hat sich geändert'",
+      "Tests, die das Kopieren von emergency_contacts/medical_notes/parent_children verifizieren, werden umgeschrieben auf 'Assoziationen bleiben unverändert am ursprünglichen Child'",
+      "Falls System-Tests für /rollover existieren: erwarten, dass dasselbe Child nach Rollover unter Quell- UND Ziel-Jahr-Filtern jeweils das richtige Verhalten zeigt (das Kind ist nur noch im Zieljahr sichtbar, da kindergarten_year_id gewechselt hat)",
+      "Neue Tests:",
+      "  - 'transfer_to ändert kindergarten_year_id, ohne neues Child anzulegen'",
+      "  - 'transfer_to reaktiviert deaktiviertes Kind (active wird true)'",
+      "  - 'transfer_to ist idempotent: bei gleichem Zieljahr keine Änderung'",
+      "  - 'emergency_contacts/medical_notes/parent_children sind nach transfer_to identisch (gleiche IDs)'"
+    ]
+  },
+  "spec:edgeCases": [
+    {
+      "case": "Kein Zieljahr in status=planning vorhanden",
+      "behavior": "Step 1 zeigt Hinweis 'Bitte zuerst ein Kindergartenjahr in Planung anlegen' mit Link zu /kindergarten_years/new"
+    },
+    {
+      "case": "Quelljahr ist nicht status=active",
+      "behavior": "Step 1 erlaubt manuell anderes Quelljahr; Hinweis 'Achtung: ungewöhnliche Quelle' wird angezeigt"
+    },
+    {
+      "case": "Alle Kinder abgewählt",
+      "behavior": "Confirm-Seite zeigt 'Werden übernommen: 0' und 'Werden deaktiviert: X' – Bestätigung möglich, aber zusätzliche Warnung 'Es werden KEINE Kinder ins neue Jahr übernommen'"
+    },
+    {
+      "case": "Kind wurde nach Step 1 deaktiviert (Race-Condition)",
+      "behavior": "Step 3 ignoriert Kinder, die zum Zeitpunkt der Ausführung bereits deactivate=false haben; Flash zählt nur tatsächlich verarbeitete Datensätze"
+    },
+    {
+      "case": "Kind ist bereits im Zieljahr",
+      "behavior": "transfer_to liefert das Kind unverändert zurück (Identitäts-Check über kindergarten_year_id); keine Fehler, keine Duplikate"
+    }
+  ],
+  "spec:acceptanceCriteria": [
+    "Drei Routen wie spezifiziert; Controller RolloversController",
+    "Step 1 zeigt Auswahl-Tabelle mit Filter, Bulk-Actions und stabiler Auswahl bei Filtern",
+    "Default-Auswahl: alle aktiven Kinder selected",
+    "Step 2 zeigt zwei Listen (Übernahme / Deaktivierung) mit Zählern",
+    "Buttons 'Zurück' und 'Bestätigen' arbeiten ohne Datenverlust",
+    "Step 3 führt Übernahme + Deaktivierung in einer Transaktion aus",
+    "Beim Übernehmen wird KEIN neuer Child-Datensatz angelegt – das Kind wechselt nur sein kindergarten_year",
+    "Alle Assoziationen (parent_children, emergency_contacts, medical_notes, gallery_groups) bleiben am bestehenden Child unverändert",
+    "Idempotenz: erneute Ausführung verändert keine Daten",
+    "Flash-Bilanz nach Erfolg",
+    "Edge-Cases (kein planning-Jahr, alle abgewählt, Kind bereits im Zieljahr) sauber behandelt",
+    "Eltern erhalten 403 auf allen drei Routen",
+    "Test-Suite grün, inkl. System-Test für Happy-Path und Abbruch sowie aktualisierte Unit-Tests für transfer_to"
+  ],
+  "spec:testScenarios": [
+    {
+      "name": "Happy Path",
+      "given": "10 aktive Kinder im Quelljahr, 1 Zieljahr in planning, 7 Kinder im Wizard ausgewählt",
+      "when": "Auswahl → Confirm → Execute",
+      "then": "Child.count bleibt unverändert; 7 Kinder haben jetzt kindergarten_year=target_year und active=true; 3 Kinder bleiben im Quelljahr mit active=false; Flash 'Rollover abgeschlossen: 7 übernommen, 3 deaktiviert'"
+    },
+    {
+      "name": "Keine Duplikate",
+      "given": "Child mit 2 emergency_contacts und 1 medical_note",
+      "when": "Rollover ins neue Jahr",
+      "then": "Child-ID bleibt gleich; EmergencyContact.count bleibt gleich; MedicalNote.count bleibt gleich – sämtliche Assoziationen referenzieren dasselbe Child"
+    },
+    {
+      "name": "Abbruch auf Confirm",
+      "given": "Auswahl getätigt, Confirm-Seite offen",
+      "when": "Klick auf 'Zurück zur Auswahl'",
+      "then": "Step-1-View mit erhaltener Auswahl; keine DB-Änderung"
+    },
+    {
+      "name": "Idempotenz",
+      "given": "Rollover wurde bereits durchgeführt; Kind A existiert bereits im Zieljahr",
+      "when": "Execute erneut mit gleicher Auswahl",
+      "then": "Kein Duplikat; Kind A im Zieljahr unverändert"
+    },
+    {
+      "name": "Filter mit Auswahl-Erhalt",
+      "given": "Alle Kinder selected, dann Filter group='Sonnenkinder'",
+      "when": "Filter anwenden",
+      "then": "Nur Sonnenkinder sichtbar, Auswahl der nicht angezeigten Kinder bleibt erhalten (Hidden-Fields)"
+    },
+    {
+      "name": "Kein Zieljahr",
+      "given": "Keine KindergartenYears mit status=planning",
+      "when": "GET /rollover",
+      "then": "Hinweis 'Bitte zuerst ein Kindergartenjahr in Planung anlegen', Submit-Button deaktiviert"
+    },
+    {
+      "name": "Eltern abgewiesen",
+      "given": "Parent-User eingeloggt",
+      "when": "GET /rollover oder POST /rollover/confirm oder POST /rollover/execute",
+      "then": "HTTP 403"
+    }
+  ],
+  "spec:dependencies": ["F41", "F54"]
+}

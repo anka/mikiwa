@@ -1,0 +1,196 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:emergency-contact-user-link",
+  "name": "Notfallkontakt mit Eltern-User verknüpfen",
+  "description": "EmergencyContact bekommt eine optionale Referenz auf einen User (Eltern-Account). Wenn gesetzt, werden Name und Telefon live aus dem User gelesen – Eingabe-Doppelpflege entfällt, Aktualität ist garantiert.",
+  "dateCreated": "2026-05-13",
+  "version": "1.0",
+  "spec:problemStatement": {
+    "description": "Aktuell werden Notfallkontakte mit Name und Telefonnummer manuell erfasst – auch dann, wenn der Kontakt bereits als Eltern-User im System existiert. Ändert sich die Telefonnummer eines Elternteils, muss sie an mehreren Stellen nachgepflegt werden. Folge: veraltete Notfallkontakte und Datenpflege-Overhead.",
+    "affectedUsers": "Caretaker (pflegen Notfallkontakte), Eltern (deren Daten oft veraltet als Notfallkontakt eingetragen sind), Kindergartenleitung (Compliance/Sicherheit).",
+    "costOfInaction": "Risiko, im Notfall veraltete Kontaktdaten zu verwenden. Permanenter Pflegeaufwand bei Änderungen."
+  },
+  "spec:goals": [
+    {
+      "description": "Optionale Verknüpfung eines EmergencyContact mit einem User (Eltern-Account)",
+      "type": "user",
+      "target": "emergency_contacts.user_id (FK, nullable)"
+    },
+    {
+      "description": "Bei verknüpftem User werden Name und Telefon nicht mehr redundant gespeichert",
+      "type": "data",
+      "target": "name/phone bleiben in der Tabelle, sind aber bei user_id != NULL nicht mehr Pflicht und werden bei Anzeige ignoriert"
+    },
+    {
+      "description": "Auswahl-Modus im Form: 'Eltern auswählen' vs. 'Manuell eingeben'",
+      "type": "user",
+      "target": "Toggle/Tabs in der Form-View; nur Eltern aus parent_children des aktuellen Child wählbar"
+    },
+    {
+      "description": "Live-Anzeige der aktuellsten User-Daten",
+      "type": "user",
+      "target": "display_name / display_phone Helper am Modell, in allen Views/Exports verwendet"
+    }
+  ],
+  "spec:nonGoals": [
+    {
+      "description": "Erweiterung um beliebige andere User (z. B. Caretaker als Notfallkontakt)",
+      "rationale": "Notfallkontakte mit User-Verknüpfung sollen ausschließlich Eltern des betreffenden Kindes referenzieren – verhindert Datenschutz-Bedenken und Verwirrung"
+    },
+    {
+      "description": "Automatische Anlage eines EmergencyContact bei Eltern-Zuordnung",
+      "rationale": "Caretaker entscheidet bewusst, welche Eltern als Notfallkontakt fungieren – nicht alle Eltern sind automatisch Notfallkontakt"
+    }
+  ],
+  "spec:dataModel": {
+    "description": "Schema-Erweiterung emergency_contacts",
+    "fields": [
+      {
+        "name": "user_id",
+        "type": "string(36) FK → users.id",
+        "nullable": true,
+        "indexed": true,
+        "deleteBehavior": "ON DELETE SET NULL (wenn ein verknüpfter User gelöscht wird, bleibt der Notfallkontakt erhalten – fällt auf manuelle Daten zurück, sofern name/phone befüllt; sonst Validation-Fehler beim nächsten Save)"
+      },
+      {
+        "name": "name",
+        "type": "string (encrypted)",
+        "nullable": true,
+        "note": "wird Pflicht, wenn user_id leer; ignoriert bei verknüpftem User"
+      },
+      {
+        "name": "phone",
+        "type": "string (encrypted)",
+        "nullable": true,
+        "note": "wird Pflicht, wenn user_id leer; ignoriert bei verknüpftem User"
+      },
+      {
+        "name": "relationship",
+        "type": "string",
+        "nullable": false,
+        "note": "immer Pflicht"
+      },
+      {
+        "name": "position",
+        "type": "integer",
+        "nullable": false,
+        "note": "immer Pflicht"
+      }
+    ],
+    "migrationApproach": "Ursprüngliche emergency_contacts-Migration anpassen (user_id ergänzen, name/phone von null:false auf null:true), schema.rb löschen, db:drop/create/migrate/seed neu (Dev-Modus)"
+  },
+  "spec:modelChanges": {
+    "associations": [
+      "belongs_to :user, optional: true"
+    ],
+    "validations": [
+      "validates :relationship, :position, presence: true",
+      "validates :name, presence: true, if: -> { user_id.blank? }",
+      "validates :phone, presence: true, if: -> { user_id.blank? }",
+      "validate :user_must_be_parent_of_child (custom: User muss in child.parents enthalten sein)"
+    ],
+    "instanceMethods": [
+      "display_name => user&.full_name.presence || name",
+      "display_phone => user&.phone.presence || phone",
+      "linked? => user_id.present?"
+    ],
+    "scopes": [
+      "default_scope { order(:position) } (bestehend)"
+    ]
+  },
+  "spec:formUX": {
+    "description": "Form-Verhalten in app/views/emergency_contacts/_form.html.erb (oder Nested-Form innerhalb Child-Edit)",
+    "elements": [
+      {
+        "element": "Modus-Switch",
+        "implementation": "Zwei Radio-Buttons oder Tab-Bar: 'Eltern auswählen' / 'Manuell eingeben'. Default beim Erstellen: 'Manuell'. Beim Edit: nach gespeichertem Zustand vorausgewählt."
+      },
+      {
+        "element": "User-Select (Modus 'Eltern auswählen')",
+        "implementation": "Select-Feld 'Eltern-Account' mit Optionen aus @child.parents.order(:last_name). Anzeige: 'Mustermann, Anna · +43 660 …'. Beim Wechsel auf diesen Modus werden name/phone-Felder ausgeblendet und auf nil gesetzt."
+      },
+      {
+        "element": "Manual-Inputs (Modus 'Manuell eingeben')",
+        "implementation": "Klassische Felder name + phone. Beim Wechsel auf diesen Modus wird user_id auf nil gesetzt."
+      },
+      {
+        "element": "relationship-Input",
+        "implementation": "Immer sichtbar (z. B. 'Mutter', 'Großvater', 'Tante')"
+      },
+      {
+        "element": "Stimulus-Controller",
+        "implementation": "emergency_contact_form_controller.js mit data-controller='emergency-contact-form'; data-emergency-contact-form-target='userSection,manualSection'; data-action='change->emergency-contact-form#switchMode'"
+      }
+    ]
+  },
+  "spec:viewChanges": [
+    {
+      "view": "app/views/emergency_contacts/_emergency_contact.html.erb (Listenzeile / Karte)",
+      "change": "Verwende contact.display_name und contact.display_phone. Bei contact.linked? ein User-Icon (Lucide 'user-check') mit Tooltip 'Verknüpft mit Eltern-Account'."
+    },
+    {
+      "view": "Child Show-View",
+      "change": "Notfallkontakt-Sektion zeigt für verknüpfte Kontakte den aktuellen User-Namen und User-Phone (kein Cache)."
+    },
+    {
+      "view": "Mailer/Exports/ICS (falls Notfallkontakte enthalten)",
+      "change": "Ausschließlich display_name/display_phone verwenden – kein direkter Zugriff mehr auf .name / .phone"
+    }
+  ],
+  "spec:authorization": {
+    "description": "Wer darf was",
+    "rules": [
+      "Caretaker/Admin: Notfallkontakte aller Kinder verwalten",
+      "Eltern: Notfallkontakte des eigenen Kindes lesen; Bearbeiten nicht erlaubt (unverändert zum heutigen Stand)",
+      "Auswahl im User-Select serverseitig auf @child.parents eingeschränkt (Zusatz-Validation am Modell und permitted_params-Filter)"
+    ]
+  },
+  "spec:acceptanceCriteria": [
+    "emergency_contacts.user_id FK nullable, mit Index",
+    "Modell-Validation greift exakt wie spezifiziert (name/phone nur Pflicht ohne user_id)",
+    "Form-Modus-Switch funktioniert ohne Page-Reload",
+    "Nur Eltern des aktuellen Kindes sind im Select wählbar (serverseitig erzwungen)",
+    "display_name/display_phone in allen relevanten Views verwendet",
+    "Verknüpfter Kontakt zeigt User-Icon mit Tooltip",
+    "Aktualisiert Parent X seinen Namen, ändert sich die Anzeige im Notfallkontakt sofort (kein Save am Kontakt nötig)",
+    "Eltern-User-Löschung setzt user_id auf NULL; Anzeige fällt auf gespeicherte name/phone zurück, falls vorhanden",
+    "Test-Suite grün, inkl. Unit-Tests für Validation-Branches und System-Test für Form-Modus-Switch"
+  ],
+  "spec:testScenarios": [
+    {
+      "name": "Verknüpfter Kontakt zeigt aktualisierten Namen",
+      "given": "EmergencyContact mit user_id=Parent X, Parent X ändert Nachname von 'Müller' zu 'Schmidt'",
+      "when": "Show-View des Kindes wird gerendert",
+      "then": "Notfallkontakt-Liste zeigt 'Schmidt' – ohne dass EmergencyContact gespeichert wurde"
+    },
+    {
+      "name": "Auswahl fremder User scheitert",
+      "given": "Parent Y ist nicht in child.parents enthalten",
+      "when": "POST /children/:child_id/emergency_contacts mit user_id=Y",
+      "then": "Validation-Fehler 'Benutzer ist nicht als Eltern dieses Kindes verknüpft'; HTTP 422"
+    },
+    {
+      "name": "Manueller Kontakt funktioniert weiterhin",
+      "given": "Form-Mode 'Manuell', name='Oma Erna', phone='+43660...', relationship='Großmutter'",
+      "when": "submit",
+      "then": "EmergencyContact angelegt mit user_id=NULL, name+phone gesetzt"
+    },
+    {
+      "name": "Wechsel von Manuell zu Eltern leert name/phone",
+      "given": "Form enthält name+phone, User schaltet auf Modus 'Eltern auswählen'",
+      "when": "submit mit user_id gesetzt",
+      "then": "name und phone werden serverseitig auf NULL gesetzt"
+    },
+    {
+      "name": "User-Löschung setzt user_id auf NULL",
+      "given": "EmergencyContact verknüpft mit User X",
+      "when": "User X wird gelöscht",
+      "then": "EmergencyContact existiert weiter, user_id=NULL; Anzeige fällt auf gespeicherte name/phone zurück, falls noch vorhanden"
+    }
+  ],
+  "spec:dependencies": ["F35"]
+}

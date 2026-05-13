@@ -1,0 +1,164 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:gallery-magic-slideshow",
+  "name": "Gallery: Magic Slideshow (Fullscreen mit Animationen)",
+  "description": "Aktion 'Magic Slideshow' öffnet die Galerie als Vollbild-Diashow mit abwechslungsreichen Übergangsanimationen. Browser-Fullscreen-API mit Overlay-Fallback. Library: Swiper.",
+  "dateCreated": "2026-05-13",
+  "version": "1.0",
+  "spec:problemStatement": {
+    "description": "Galerien werden heute statisch oder als einfache Lightbox dargestellt. Bei Vorführungen (Eltern-Café, Sommerfest, interne Events) fehlt eine erlebnishafte Vollbild-Diashow mit Übergangs-Effekten – das macht Eindruck und passt zum Charakter eines Kindergartens.",
+    "affectedUsers": "Caretaker (zeigen Galerien bei Anlässen), Eltern (sehen die Diashow), Kinder (visuelle Begleitung).",
+    "costOfInaction": "Vorführungen wirken statisch und behelfsmäßig; Galerie-Inhalte werden seltener genutzt."
+  },
+  "spec:goals": [
+    {
+      "description": "Eigene Aktion in der Aktionsleiste der Gallery-Show",
+      "type": "user",
+      "target": "Icon-Button 'Magic Slideshow' (Lucide 'sparkles' oder 'play-circle')"
+    },
+    {
+      "description": "Vollbild-Diashow mit randomisierten Übergangsanimationen",
+      "type": "user",
+      "target": "Browser-Fullscreen-API, mit Overlay-Fallback; mindestens 4 unterschiedliche Effekte; pro Bildwechsel zufälliger Effekt"
+    },
+    {
+      "description": "Solide UX – Tastatur, Touch, Esc",
+      "type": "user",
+      "target": "Pfeiltasten ←/→, Leertaste = Pause/Play, Esc = Schließen, Touch-Swipe links/rechts, Klick-Zonen links/rechts"
+    },
+    {
+      "description": "Barrierefreiheit",
+      "type": "user",
+      "target": "prefers-reduced-motion respektiert (nur Fade); pausierbar; Schließen-Button stets erreichbar"
+    }
+  ],
+  "spec:nonGoals": [
+    {
+      "description": "Musik/Audio-Begleitung",
+      "rationale": "Eigene Komplexität (Rechte, Auswahl); nicht im Scope dieser Iteration"
+    },
+    {
+      "description": "Custom-Effekt-Auswahl durch Eltern/User",
+      "rationale": "Bewusst kuratiert – einfache UX, kein Konfigurations-Overhead"
+    },
+    {
+      "description": "Export der Slideshow als Video/PDF",
+      "rationale": "Nicht im Scope"
+    }
+  ],
+  "spec:libraryChoice": {
+    "library": "Swiper",
+    "version": ">=11.0",
+    "license": "MIT",
+    "url": "https://swiperjs.com/",
+    "rationale": "Etabliert, breit eingesetzt, MIT-Lizenz, alle benötigten Effekt-Module (Fade, Cube, Coverflow, Flip, Cards, Creative). Fullscreen integriert sich nahtlos. Aktive Maintenance.",
+    "integration": "Über importmap-rails (esm.sh oder jsdelivr-CDN als pin), JS-Module per Stimulus-Controller initialisiert. CSS aus Swiper-Distribution wird ins App-CSS-Bundle integriert (vermeidet Inline-Style-Probleme – siehe BF-006).",
+    "alternativeConsidered": "PhotoSwipe – fokussiert eher Lightbox-Use-Case ohne breite Effekt-Palette; ungeeignet."
+  },
+  "spec:effects": {
+    "description": "Verfügbare Übergangs-Effekte, randomisiert pro Slide",
+    "list": [
+      {"key": "fade",      "swiperModule": "EffectFade",      "feel": "weich, dezent"},
+      {"key": "cube",      "swiperModule": "EffectCube",      "feel": "räumlich, verspielt"},
+      {"key": "coverflow", "swiperModule": "EffectCoverflow", "feel": "elegant, 3D"},
+      {"key": "flip",      "swiperModule": "EffectFlip",      "feel": "dynamisch"},
+      {"key": "cards",     "swiperModule": "EffectCards",     "feel": "playful"},
+      {"key": "creative",  "swiperModule": "EffectCreative",  "feel": "moderne Slide-Variante (z. B. zoom+fade)"}
+    ],
+    "randomizationRule": "Vor jedem Slide-Wechsel wird ein zufälliger Effekt aus der Liste gewählt; derselbe Effekt nicht zweimal in Folge (Random-mit-Memory).",
+    "reducedMotionFallback": "Wenn window.matchMedia('(prefers-reduced-motion: reduce)').matches → immer 'fade', Autoplay-Delay 6s statt 4s."
+  },
+  "spec:behavior": {
+    "trigger": "Klick auf Aktions-Button 'Magic Slideshow' in der Aktionsleiste der Gallery-Show",
+    "openSequence": [
+      "1. element.requestFullscreen() wird versucht",
+      "2. Bei Erfolg: Overlay wird im Fullscreen-Container montiert",
+      "3. Bei Fehler/ablehnen: Fullpage-Overlay (fixed inset-0 z-[100], body overflow-hidden)",
+      "4. Swiper-Instanz mit Autoplay 4000ms initialisiert, erstes Bild zeigt initialen Fade-Effekt"
+    ],
+    "controls": [
+      "Pfeiltasten ←/→ – manueller Wechsel (pausiert Autoplay temporär, resumed nach 8s Inaktivität)",
+      "Leertaste – Pause/Play",
+      "Esc – beendet Slideshow",
+      "Klick/Tap links/rechts – manueller Wechsel",
+      "Touch-Swipe – manueller Wechsel",
+      "On-Hover Toolbar mit Play/Pause/Close-Buttons; auto-fade nach 3s Inaktivität"
+    ],
+    "closeSequence": [
+      "document.exitFullscreen() bzw. Overlay-Remove",
+      "body overflow-hidden zurücksetzen",
+      "Swiper.destroy(true, true)"
+    ]
+  },
+  "spec:performance": {
+    "imageVariants": "Nutze bestehende Image-Variants aus ImageAttachable – Variante 'large' (z. B. max 1600px Kante) statt Originalgröße",
+    "preload": "Swiper-Slide-Preload auf 1 vor/1 nach dem aktiven Slide",
+    "lazyLoading": "Aktiviert für Slides außerhalb des Sichtbereichs",
+    "deviceConsideration": "Auf Mobile: zusätzlich variante 'medium' (max 1000px) für Geräte mit DPR<=2 bevorzugen"
+  },
+  "spec:cspCompliance": {
+    "description": "Slideshow darf keine CSP-Verletzungen erzeugen (vgl. BF-006)",
+    "rules": [
+      "Swiper-CSS wird gebundelt (kein inline injected style)",
+      "Inline-Styles via Stimulus erfolgen über element.style mit Nonce-Awareness (oder über CSS-Variables und Klassen)",
+      "Frame/script-src bleiben strikt; keine externen Resources zur Laufzeit"
+    ]
+  },
+  "spec:viewChanges": [
+    {
+      "view": "app/views/galleries/show.html.erb",
+      "change": "In der Aktionsleiste neuer Icon-Button 'Magic Slideshow' (Lucide 'sparkles'); Template-Element <template id='slideshow-template'> mit Slides für Stimulus"
+    },
+    {
+      "view": "app/javascript/controllers/magic_slideshow_controller.js (neu)",
+      "change": "Stimulus-Controller koordiniert Open/Close, Fullscreen, Swiper-Init, Effekt-Randomization, Reduced-Motion"
+    },
+    {
+      "view": "app/assets/stylesheets/gallery_slideshow.css (neu)",
+      "change": "Overlay-Styles, Toolbar-Auto-Fade, Reduced-Motion-Override; Swiper-Effekt-CSS importiert"
+    }
+  ],
+  "spec:acceptanceCriteria": [
+    "Aktions-Button 'Magic Slideshow' in der Aktionsleiste der Gallery-Show",
+    "Klick öffnet Vollbild-Diashow via Fullscreen-API; Fallback Overlay",
+    "Swiper-Library eingebunden und CSP-konform integriert",
+    "Mindestens 4 unterschiedliche Effekte aktiv; pro Slide-Wechsel zufällig (kein zweimal in Folge)",
+    "Autoplay 4s, Tastatur/Touch/Klick-Steuerung, Esc schließt",
+    "prefers-reduced-motion respektiert (nur Fade, 6s Delay)",
+    "Bilder über bestehende Image-Variants (kein Originalbild)",
+    "Toolbar auto-fadet nach 3s Inaktivität; Close-Button stets erreichbar",
+    "Test-Suite grün, System-Test deckt Open/Close + Reduced-Motion ab",
+    "Keine CSP-Verletzungen in der Konsole"
+  ],
+  "spec:testScenarios": [
+    {
+      "name": "Slideshow öffnet und beendet",
+      "given": "Galerie mit 5 Fotos",
+      "when": "Klick auf 'Magic Slideshow' → 2s warten → Esc",
+      "then": "Fullscreen aktiv mit Slides; nach Esc kein Overlay mehr, body overflow zurückgesetzt"
+    },
+    {
+      "name": "Reduced-Motion-Modus",
+      "given": "Browser meldet prefers-reduced-motion:reduce",
+      "when": "Slideshow startet",
+      "then": "Ausschließlich Fade-Effekt; Delay 6s"
+    },
+    {
+      "name": "Tastatur-Steuerung",
+      "given": "Slideshow läuft",
+      "when": "→ drücken",
+      "then": "Nächstes Slide; Autoplay pausiert; resumed nach 8s Inaktivität"
+    },
+    {
+      "name": "CSP-Sauberkeit",
+      "given": "Slideshow läuft 30s",
+      "when": "Browser-Konsole prüfen",
+      "then": "Keine CSP-Violation-Logs"
+    }
+  ],
+  "spec:dependencies": ["F52"]
+}
