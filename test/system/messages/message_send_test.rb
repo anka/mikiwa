@@ -9,8 +9,14 @@ class MessageSendTest < ActionDispatch::IntegrationTest
     )
     @group = Group.create!(name: "Msg-Bären")
     @caretaker = User.create!(email: "msg_caretaker@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent1 = User.create!(email: "msg_parent1@mikiwa.at", password: "sicherespasswort1234", role: "parent")
-    @parent2 = User.create!(email: "msg_parent2@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent1 = User.create!(email: "msg_parent1@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
+    @parent2 = User.create!(email: "msg_parent2@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
 
     @child1 = Child.create!(
       first_name: "MsgKind1", last_name: "A",

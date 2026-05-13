@@ -32,7 +32,7 @@ DEMO_PW = "changeme12345678"
 
 # ── Hilfsmethoden ────────────────────────────────────────────────────────────
 
-def demo_parent(email:, first_name:, last_name:, phone: nil, active: true)
+def demo_parent(email:, first_name:, last_name:, phone:, active: true)
   User.create!(
     email:                    email,
     password:                 DEMO_PW,

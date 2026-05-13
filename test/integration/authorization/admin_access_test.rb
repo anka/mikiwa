@@ -10,7 +10,10 @@ class AdminAccessTest < ActionDispatch::IntegrationTest
     @parent = User.create!(
       email: "admin_access_parent@test.de",
       password: "sicherespasswort1234",
-      role: "parent"
+      role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000"
     )
   end
 

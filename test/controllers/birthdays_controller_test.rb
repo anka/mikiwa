@@ -9,7 +9,10 @@ class BirthdaysControllerTest < ActionDispatch::IntegrationTest
       end_date: Date.new(2026, 7, 31), active: true
     )
     @staff  = User.create!(email: "staff_bday@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "parent_bday@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent = User.create!(email: "parent_bday@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
 
     today = Date.current
     @child_soon = Child.create!(

@@ -3,7 +3,8 @@ require "test_helper"
 class AttendanceListsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @caretaker = User.create!(email: "betreuer_alc@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent    = User.create!(email: "eltern_alc@mikiwa.at",   password: SecureRandom.hex(20),   role: "parent")
+    @parent    = User.create!(email: "eltern_alc@mikiwa.at",   password: SecureRandom.hex(20),   role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
     @year      = KindergartenYear.create!(
       label: "KGJ 2025/26", start_date: Date.new(2025, 9, 1),
       end_date: Date.new(2026, 7, 31), active: true
@@ -127,8 +128,10 @@ class AttendanceListsControllerTest < ActionDispatch::IntegrationTest
       date_of_birth: Date.new(2020, 7, 22),
       group: @group_baeren, kindergarten_year: @year, photo_consent: true
     )
-    parent2 = User.create!(email: "csv_p2@mikiwa.at", password: SecureRandom.hex(20), role: "parent")
-    parent3 = User.create!(email: "csv_p3@mikiwa.at", password: SecureRandom.hex(20), role: "parent")
+    parent2 = User.create!(email: "csv_p2@mikiwa.at", password: SecureRandom.hex(20), role: "parent",
+      first_name: "CSV", last_name: "Parent2", phone: "0664 000 002")
+    parent3 = User.create!(email: "csv_p3@mikiwa.at", password: SecureRandom.hex(20), role: "parent",
+      first_name: "CSV", last_name: "Parent3", phone: "0664 000 003")
     ParentChild.create!(user: parent2, child: child2)
     ParentChild.create!(user: parent3, child: child3)
 

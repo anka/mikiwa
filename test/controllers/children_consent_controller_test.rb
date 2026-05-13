@@ -8,8 +8,14 @@ class ChildrenConsentControllerTest < ActionDispatch::IntegrationTest
       end_date: Date.new(2026, 7, 31), active: true
     )
     @staff  = User.create!(email: "staff_con@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "parent_con@mikiwa.at", password: "sicherespasswort1234", role: "parent")
-    @other  = User.create!(email: "other_con@mikiwa.at",  password: "sicherespasswort1234", role: "parent")
+    @parent = User.create!(email: "parent_con@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
+    @other  = User.create!(email: "other_con@mikiwa.at",  password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
 
     @child = Child.create!(
       first_name: "Julia", last_name: "Test",

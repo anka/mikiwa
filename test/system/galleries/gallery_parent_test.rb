@@ -8,7 +8,10 @@ class GalleryParentTest < ActionDispatch::IntegrationTest
     @group_bears = Group.create!(name: "GParent-Bären")
     @group_lions = Group.create!(name: "GParent-Löwen")
     @caretaker = User.create!(email: "gparent_caretaker@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "gparent_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent = User.create!(email: "gparent_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
     @child = Child.create!(
       first_name: "GPKind", last_name: "Test",
       date_of_birth: 5.years.ago.to_date,

@@ -7,7 +7,8 @@ class ProfileControllerTest < ActionDispatch::IntegrationTest
       password: SecureRandom.hex(20),
       role: "parent",
       first_name: "Elke",
-      last_name: "Maier"
+      last_name: "Maier",
+      phone: "0664 000 100"
     )
   end
 

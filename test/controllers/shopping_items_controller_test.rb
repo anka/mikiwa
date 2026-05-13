@@ -8,8 +8,14 @@ class ShoppingItemsControllerTest < ActionDispatch::IntegrationTest
   include ActiveJob::TestHelper
   setup do
     @caretaker = User.create!(email: "betreuer_si@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent    = User.create!(email: "eltern_si@mikiwa.at",   password: "sicherespasswort1234", role: "parent")
-    @stranger  = User.create!(email: "fremd_si@mikiwa.at",    password: "sicherespasswort1234", role: "parent")
+    @parent    = User.create!(email: "eltern_si@mikiwa.at",   password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
+    @stranger  = User.create!(email: "fremd_si@mikiwa.at",    password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
     @year = KindergartenYear.create!(
       label: "KGJ SI 2025/26", start_date: Date.new(2025, 9, 1),
       end_date: Date.new(2026, 7, 31), active: true

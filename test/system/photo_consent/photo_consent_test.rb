@@ -6,8 +6,14 @@ class PhotoConsentTest < ActionDispatch::IntegrationTest
       label: "2025/26", start_date: Date.new(2025, 9, 1), end_date: Date.new(2026, 7, 31), active: true
     )
     @group = Group.create!(name: "Consent-Gruppe")
-    @parent_a = User.create!(email: "consent_parent_a@mikiwa.at", password: "sicherespasswort1234", role: "parent")
-    @parent_b = User.create!(email: "consent_parent_b@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent_a = User.create!(email: "consent_parent_a@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
+    @parent_b = User.create!(email: "consent_parent_b@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
 
     @child_a = Child.create!(
       first_name: "ConsentKind", last_name: "A",

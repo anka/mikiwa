@@ -4,7 +4,8 @@ class ChildPolicyTest < ActiveSupport::TestCase
   setup do
     @admin     = User.create!(email: "admin_cp@mikiwa.at",     password: "sicherespasswort1234", role: "admin")
     @caretaker = User.create!(email: "caretaker_cp@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent    = User.create!(email: "eltern_cp@mikiwa.at",    password: SecureRandom.hex(20),   role: "parent")
+    @parent    = User.create!(email: "eltern_cp@mikiwa.at",    password: SecureRandom.hex(20),   role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
     @group     = Group.create!(name: "Bären")
     @year      = KindergartenYear.create!(label: "KGJ 2025/26",
                                           start_date: Date.new(2025, 9, 1),

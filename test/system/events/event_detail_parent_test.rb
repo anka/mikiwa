@@ -7,7 +7,10 @@ class EventDetailParentTest < ActionDispatch::IntegrationTest
     )
     @group = Group.create!(name: "EventParent-Gruppe")
     @caretaker = User.create!(email: "evtparent_caretaker@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "evtparent_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent = User.create!(email: "evtparent_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
 
     @child = Child.create!(
       first_name: "EventKind", last_name: "A",

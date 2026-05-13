@@ -10,8 +10,14 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     @group_b = Group.create!(name: "Löwen")
 
     @staff = User.create!(email: "staff_dash@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent_a = User.create!(email: "parent_a_dash@mikiwa.at", password: "sicherespasswort1234", role: "parent")
-    @parent_b = User.create!(email: "parent_b_dash@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent_a = User.create!(email: "parent_a_dash@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
+    @parent_b = User.create!(email: "parent_b_dash@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
 
     @child_a = Child.create!(
       first_name: "Anna", last_name: "Huber",

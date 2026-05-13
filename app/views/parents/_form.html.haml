@@ -6,17 +6,25 @@
           %li= msg
 
   .mw-field
-    = form.label :email, "E-Mail-Adresse", class: "mw-field__label"
+    = form.label :email, class: "mw-field__label" do
+      | E-Mail-Adresse
+      %span.mw-field__required{ aria: { label: "Pflichtfeld" } } *
     = form.email_field :email, required: true, autofocus: true, class: "mw-input", placeholder: "name@example.at"
 
   .mw-field
-    = form.label :first_name, "Vorname", class: "mw-field__label"
-    = form.text_field :first_name, class: "mw-input"
+    = form.label :first_name, class: "mw-field__label" do
+      | Vorname
+      %span.mw-field__required{ aria: { label: "Pflichtfeld" } } *
+    = form.text_field :first_name, required: true, class: "mw-input"
 
   .mw-field
-    = form.label :last_name, "Nachname", class: "mw-field__label"
-    = form.text_field :last_name, class: "mw-input"
+    = form.label :last_name, class: "mw-field__label" do
+      | Nachname
+      %span.mw-field__required{ aria: { label: "Pflichtfeld" } } *
+    = form.text_field :last_name, required: true, class: "mw-input"
 
   .mw-field
-    = form.label :phone, "Telefonnummer (optional)", class: "mw-field__label"
-    = form.telephone_field :phone, class: "mw-input", placeholder: "0664 123 456"
+    = form.label :phone, class: "mw-field__label" do
+      | Telefonnummer
+      %span.mw-field__required{ aria: { label: "Pflichtfeld" } } *
+    = form.telephone_field :phone, required: true, class: "mw-input", placeholder: "0664 123 456"

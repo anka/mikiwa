@@ -7,7 +7,10 @@ class MealPlanTest < ActionDispatch::IntegrationTest
     )
     @group = Group.create!(name: "Meal-Gruppe")
     @caretaker = User.create!(email: "meal_caretaker@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "meal_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent = User.create!(email: "meal_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
     @child = Child.create!(
       first_name: "MealKind", last_name: "Test",
       date_of_birth: 5.years.ago.to_date,

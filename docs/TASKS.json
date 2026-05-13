@@ -2130,7 +2130,7 @@
       "id": "F35",
       "name": "Eltern: Telefon, Vor- und Nachname verpflichtend",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Telefonnummer, Vorname und Nachname am User-Model werden für Eltern-Rolle Pflicht; ursprüngliche Migration wird angepasst (DB-Drop im Dev).",
       "description": "Ziel: Eltern müssen verlässliche Kontaktdaten haben. Felder first_name, last_name und phone am users-Modell werden für die Rolle 'parent' validierungspflichtig.\n\nDatenbank-Strategie (Development): Statt einer neuen Migration wird die ursprüngliche users-Migration angepasst — first_name/last_name/phone auf null:false gesetzt. Vor erneutem db:setup wird db/schema.rb gelöscht und die DB neu aufgebaut (db:drop db:create db:migrate db:seed). Seeds müssen entsprechend angepasst werden, sodass alle Parent-User die drei Pflichtfelder haben.\n\nValidation: Modell-Validation 'validates :first_name, :last_name, :phone, presence: true, if: :parent?' am User. Caretaker/Admin bleiben unverändert (Felder weiterhin optional, da Schema null:false wird → für Seeds ebenfalls befüllen).\n\nForms: Parent-Create/Edit-Form (admin/parents) markiert die drei Felder als required (HTML5 + visuelles Sternchen via Form-Helper). Profile-View für Eltern: Pflichtfelder hervorgehoben, Fehlermeldungen i18n-konform deutsch.",
       "acceptance_criteria": [

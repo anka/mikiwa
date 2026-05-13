@@ -8,7 +8,8 @@ class ShoppingListTest < ActiveSupport::TestCase
       end_date: Date.new(2026, 7, 31), active: true
     )
     @caretaker = User.create!(email: "betreuer_sl@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent    = User.create!(email: "eltern_sl@mikiwa.at",   password: SecureRandom.hex(20), role: "parent")
+    @parent    = User.create!(email: "eltern_sl@mikiwa.at",   password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
 
     @list = ShoppingList.new(
       title: "Waldtag-Einkauf",

@@ -14,6 +14,7 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :role, inclusion: { in: ROLES }
   validates :password, length: { minimum: 16 }, allow_nil: true
+  validates :first_name, :last_name, :phone, presence: true, if: :parent?
 
   generates_token_for :magic_link, expires_in: 30.minutes do
     magic_link_token_version

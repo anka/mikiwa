@@ -8,7 +8,10 @@ class PollsControllerTest < ActionDispatch::IntegrationTest
       end_date: Date.new(2026, 7, 31), active: true
     )
     @staff  = User.create!(email: "staff_pc@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "parent_pc@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent = User.create!(email: "parent_pc@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
     @child  = Child.create!(
       first_name: "Emil", last_name: "Test",
       date_of_birth: Date.new(2021, 1, 1),
@@ -161,8 +164,8 @@ class PollsControllerTest < ActionDispatch::IntegrationTest
 
   # TS-044-S01: Betreuer exportiert Abstimmungsergebnis als CSV mit allen Stimmen
   test "TS-044 CSV-Export enthält alle 3 Stimmen" do
-    parent2 = User.create!(email: "poll_p2@mikiwa.at", password: SecureRandom.hex(20), role: "parent", first_name: "Anna", last_name: "Zwei")
-    parent3 = User.create!(email: "poll_p3@mikiwa.at", password: SecureRandom.hex(20), role: "parent", first_name: "Ben",  last_name: "Drei")
+    parent2 = User.create!(email: "poll_p2@mikiwa.at", password: SecureRandom.hex(20), role: "parent", first_name: "Anna", last_name: "Zwei", phone: "0664 000 002")
+    parent3 = User.create!(email: "poll_p3@mikiwa.at", password: SecureRandom.hex(20), role: "parent", first_name: "Ben",  last_name: "Drei", phone: "0664 000 003")
     option = @poll.poll_options.order(:created_at).first
 
     @poll.vote!(user: @parent, option_ids: [ option.id ])

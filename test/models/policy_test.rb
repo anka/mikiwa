@@ -10,7 +10,8 @@ class PolicyTest < ActiveSupport::TestCase
   end
 
   def parent_user
-    @parent ||= User.create!(email: "eltern@test.com", password: SecureRandom.hex(20), role: "parent")
+    @parent ||= User.create!(email: "eltern@test.com", password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
   end
 
   test "ApplicationPolicy: Admin darf alles" do

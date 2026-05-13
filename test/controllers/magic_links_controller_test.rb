@@ -5,7 +5,8 @@ class MagicLinksControllerTest < ActionDispatch::IntegrationTest
     @parent = User.create!(
       email: "eltern@test.com",
       password: SecureRandom.hex(20),
-      role: "parent"
+      role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000"
     )
   end
 

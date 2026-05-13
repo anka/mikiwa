@@ -5,8 +5,14 @@ class MessageTest < ActiveSupport::TestCase
     @group_a = Group.create!(name: "Mitteilungs-Bären")
     @group_b = Group.create!(name: "Mitteilungs-Löwen")
     @staff   = User.create!(email: "staff_msg@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent_a = User.create!(email: "parent_msg_a@mikiwa.at", password: "sicherespasswort1234", role: "parent")
-    @parent_b = User.create!(email: "parent_msg_b@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent_a = User.create!(email: "parent_msg_a@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
+    @parent_b = User.create!(email: "parent_msg_b@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
     @year = KindergartenYear.create!(
       label: "KGJ 2025/26", start_date: Date.new(2025, 9, 1),
       end_date: Date.new(2026, 7, 31), active: true

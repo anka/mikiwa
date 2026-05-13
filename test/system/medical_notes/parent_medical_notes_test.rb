@@ -6,7 +6,10 @@ class ParentMedicalNotesTest < ActionDispatch::IntegrationTest
       label: "2025/26", start_date: Date.new(2025, 9, 1), end_date: Date.new(2026, 7, 31), active: true
     )
     @group = Group.create!(name: "MedNotes-Gruppe")
-    @parent = User.create!(email: "mednote_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent = User.create!(email: "mednote_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
     @child = Child.create!(
       first_name: "Med-Kind", last_name: "Test",
       date_of_birth: 5.years.ago.to_date,

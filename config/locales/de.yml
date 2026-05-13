@@ -1,0 +1,72 @@
+de:
+  activerecord:
+    models:
+      user: "Benutzer"
+      child: "Kind"
+      group: "Gruppe"
+      kindergarten_year: "Kindergartenjahr"
+      emergency_contact: "Notfallkontakt"
+      medical_note: "Medizinische Information"
+      gallery: "Galerie"
+      calendar_event: "Termin"
+      attendance_list: "Anwesenheitsliste"
+      shopping_list: "Einkaufsliste"
+      poll: "Abstimmung"
+      message: "Mitteilung"
+    attributes:
+      user:
+        email: "E-Mail-Adresse"
+        password: "Passwort"
+        first_name: "Vorname"
+        last_name: "Nachname"
+        phone: "Telefon"
+        role: "Rolle"
+        locked_at: "Gesperrt am"
+      child:
+        first_name: "Vorname"
+        last_name: "Nachname"
+        date_of_birth: "Geburtsdatum"
+        photo_consent: "Foto-Einwilligung"
+        health_insurer: "Krankenversicherung"
+        insurance_number: "Versicherungsnummer"
+        group: "Gruppe"
+        kindergarten_year: "Kindergartenjahr"
+      emergency_contact:
+        name: "Name"
+        relationship: "Beziehung"
+        phone: "Telefon"
+        position: "Reihenfolge"
+    errors:
+      messages:
+        blank: "muss ausgefüllt werden"
+        taken: "ist bereits vergeben"
+        invalid: "ist ungültig"
+        too_short:
+          one: "ist zu kurz (mindestens 1 Zeichen)"
+          other: "ist zu kurz (mindestens %{count} Zeichen)"
+        too_long:
+          one: "ist zu lang (höchstens 1 Zeichen)"
+          other: "ist zu lang (höchstens %{count} Zeichen)"
+        inclusion: "ist kein gültiger Wert"
+        not_a_number: "ist keine Zahl"
+      models:
+        user:
+          attributes:
+            email:
+              blank: "muss ausgefüllt werden"
+              taken: "ist bereits vergeben"
+              invalid: "ist keine gültige E-Mail-Adresse"
+            password:
+              too_short: "muss mindestens %{count} Zeichen lang sein"
+            first_name:
+              blank: "muss ausgefüllt werden"
+            last_name:
+              blank: "muss ausgefüllt werden"
+            phone:
+              blank: "muss ausgefüllt werden"
+  errors:
+    format: "%{attribute} %{message}"
+  helpers:
+    submit:
+      create: "Anlegen"
+      update: "Speichern"

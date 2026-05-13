@@ -4,7 +4,8 @@ class AuthorizationTest < ActionDispatch::IntegrationTest
   setup do
     @admin = User.create!(email: "admin2@test.com", password: "sicherespasswort1234", role: "admin")
     @caretaker = User.create!(email: "betreuer2@test.com", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "eltern2@test.com", password: SecureRandom.hex(20), role: "parent")
+    @parent = User.create!(email: "eltern2@test.com", password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
   end
 
   def login_as(user)

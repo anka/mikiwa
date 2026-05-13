@@ -8,7 +8,10 @@ class ParentInboxTest < ActionDispatch::IntegrationTest
     @group_bears = Group.create!(name: "Inbox-Bären")
     @group_lions = Group.create!(name: "Inbox-Löwen")
     @caretaker = User.create!(email: "inbox_caretaker@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "inbox_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent = User.create!(email: "inbox_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
 
     @child = Child.create!(
       first_name: "InboxKind", last_name: "Test",

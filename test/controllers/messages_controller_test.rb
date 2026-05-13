@@ -4,7 +4,10 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
   setup do
     @group  = Group.create!(name: "Msg-Bären")
     @staff  = User.create!(email: "staff_mc@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "parent_mc@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent = User.create!(email: "parent_mc@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
     @year   = KindergartenYear.create!(
       label: "KGJ 2025/26", start_date: Date.new(2025, 9, 1),
       end_date: Date.new(2026, 7, 31), active: true

@@ -6,7 +6,10 @@ class SiblingScopingTest < ActionDispatch::IntegrationTest
       label: "2025/26", start_date: Date.new(2025, 9, 1), end_date: Date.new(2026, 7, 31), active: true
     )
     @caretaker = User.create!(email: "sibling_caretaker@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "sibling_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent = User.create!(email: "sibling_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
 
     @group_bears = Group.create!(name: "Sibling-Bären")
     @group_lions = Group.create!(name: "Sibling-Löwen")

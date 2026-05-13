@@ -8,7 +8,10 @@ class IcalFeedTest < ActionDispatch::IntegrationTest
     @group_bears = Group.create!(name: "Feed-Bären")
     @group_lions = Group.create!(name: "Feed-Löwen")
     @caretaker = User.create!(email: "feed_staff@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "feed_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent = User.create!(email: "feed_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
     @child = Child.create!(
       first_name: "FeedKind", last_name: "A",
       date_of_birth: 5.years.ago.to_date,

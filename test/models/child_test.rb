@@ -9,7 +9,8 @@ class ChildTest < ActiveSupport::TestCase
       end_date:   Date.new(2026, 7, 31),
       active:     true
     )
-    @parent = User.create!(email: "parent_c@test.at", password: SecureRandom.hex(20), role: "parent")
+    @parent = User.create!(email: "parent_c@test.at", password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
     @child = Child.new(
       first_name:        "Lena",
       last_name:         "Baum",

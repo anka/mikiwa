@@ -8,7 +8,10 @@ class PollTest < ActiveSupport::TestCase
       end_date: Date.new(2026, 7, 31), active: true
     )
     @staff  = User.create!(email: "staff_poll@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "parent_poll@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent = User.create!(email: "parent_poll@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
 
     @poll = Poll.new(
       title: "Ausflugsziel", poll_type: "single", group: @group,

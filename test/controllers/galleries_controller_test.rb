@@ -5,8 +5,10 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
 
   setup do
     @caretaker = User.create!(email: "betreuer_galc@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent    = User.create!(email: "eltern_galc@mikiwa.at",   password: SecureRandom.hex(20), role: "parent")
-    @parent2   = User.create!(email: "eltern2_galc@mikiwa.at",  password: SecureRandom.hex(20), role: "parent")
+    @parent    = User.create!(email: "eltern_galc@mikiwa.at",   password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
+    @parent2   = User.create!(email: "eltern2_galc@mikiwa.at",  password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 001")
     @year      = KindergartenYear.create!(
       label: "KGJ 2025/26", start_date: Date.new(2025, 9, 1),
       end_date: Date.new(2026, 7, 31), active: true

@@ -44,6 +44,7 @@ class ParentOnboardingTest < ActionDispatch::IntegrationTest
       email: "magic_parent@mikiwa.at",
       password: SecureRandom.hex(20),
       role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000",
       invited_by: @caretaker,
       invitation_sent_at: Time.current
     )

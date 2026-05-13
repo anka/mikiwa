@@ -10,7 +10,10 @@ class PollMultipleChoiceTest < ActionDispatch::IntegrationTest
       email: "multipoll_staff@mikiwa.at", password: "sicherespasswort1234", role: "caretaker"
     )
     @parent = User.create!(
-      email: "multipoll_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent"
+      email: "multipoll_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000"
     )
     @child = Child.create!(
       first_name: "MultiKind", last_name: "Test",

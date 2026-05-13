@@ -5,7 +5,10 @@ class ApplicationMailerTest < ActionMailer::TestCase
     @parent = User.create!(
       email: "mailer_test_parent@test.de",
       password: "sicherespasswort1234",
-      role: "parent"
+      role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000"
     )
     @admin = User.create!(
       email: "mailer_test_admin@test.de",

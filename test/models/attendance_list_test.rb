@@ -8,7 +8,8 @@ class AttendanceListTest < ActiveSupport::TestCase
       end_date: Date.new(2026, 7, 31), active: true
     )
     @caretaker = User.create!(email: "betreuer_al@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent    = User.create!(email: "eltern_al@mikiwa.at",  password: SecureRandom.hex(20),   role: "parent")
+    @parent    = User.create!(email: "eltern_al@mikiwa.at",  password: SecureRandom.hex(20),   role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
     @child     = Child.create!(
       first_name: "Mia", last_name: "Lang",
       date_of_birth: Date.new(2021, 6, 1),

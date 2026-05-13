@@ -4,8 +4,10 @@ class UserPolicyTest < ActiveSupport::TestCase
   setup do
     @admin     = User.create!(email: "admin_up@mikiwa.at",     password: "sicherespasswort1234", role: "admin")
     @caretaker = User.create!(email: "caretaker_up@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent    = User.create!(email: "eltern_up@mikiwa.at",    password: SecureRandom.hex(20),   role: "parent")
-    @other_parent = User.create!(email: "eltern2_up@mikiwa.at", password: SecureRandom.hex(20),  role: "parent")
+    @parent    = User.create!(email: "eltern_up@mikiwa.at",    password: SecureRandom.hex(20),   role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 001")
+    @other_parent = User.create!(email: "eltern2_up@mikiwa.at", password: SecureRandom.hex(20),  role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 002")
     @other_caretaker = User.create!(email: "caretaker2_up@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
   end
 

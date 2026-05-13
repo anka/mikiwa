@@ -5,9 +5,15 @@ one:
   email: one@example.com
   password_digest: <%= password_digest %>
   role: caretaker
+  first_name: "Betreuer"
+  last_name: "Eins"
+  phone: "0664 000 0001"
 
 two:
   id: "00000000-0000-0000-0000-000000000002"
   email: two@example.com
   password_digest: <%= password_digest %>
   role: caretaker
+  first_name: "Betreuer"
+  last_name: "Zwei"
+  phone: "0664 000 0002"

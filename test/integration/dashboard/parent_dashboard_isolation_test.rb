@@ -8,8 +8,14 @@ class ParentDashboardIsolationTest < ActionDispatch::IntegrationTest
     @group_a = Group.create!(name: "DashIso-Bären")
     @group_b = Group.create!(name: "DashIso-Löwen")
     @caretaker = User.create!(email: "dashiso_staff@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent_a = User.create!(email: "dashiso_pa@mikiwa.at", password: "sicherespasswort1234", role: "parent")
-    @parent_b = User.create!(email: "dashiso_pb@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent_a = User.create!(email: "dashiso_pa@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
+    @parent_b = User.create!(email: "dashiso_pb@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
 
     @child_a = Child.create!(
       first_name: "IsoKind", last_name: "A",

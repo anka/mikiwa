@@ -8,7 +8,10 @@ class WhatsappShareTest < ActionDispatch::IntegrationTest
       end_date: Date.new(2026, 7, 31), active: true
     )
     @staff  = User.create!(email: "staff_wa@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "parent_wa@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent = User.create!(email: "parent_wa@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
     @child  = Child.create!(
       first_name: "Erik", last_name: "Test",
       date_of_birth: Date.new(2021, 1, 1),

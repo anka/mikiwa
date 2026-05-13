@@ -23,7 +23,8 @@ class AdditionalCoverageTest < ActiveSupport::TestCase
   test "User admin? caretaker? parent? helpers" do
     admin    = User.create!(email: "a@t.com", password: "sicherespasswort1234", role: "admin")
     caretaker = User.create!(email: "b@t.com", password: "sicherespasswort1234", role: "caretaker")
-    parent   = User.create!(email: "c@t.com", password: SecureRandom.hex(20), role: "parent")
+    parent   = User.create!(email: "c@t.com", password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
 
     assert admin.admin?
     assert_not admin.caretaker?
@@ -53,7 +54,8 @@ class AdditionalCoverageTest < ActiveSupport::TestCase
 
   # MagicLink Mailer
   test "MagicLinkMailer login has both variants" do
-    parent = User.create!(email: "ml@test.com", password: SecureRandom.hex(20), role: "parent")
+    parent = User.create!(email: "ml@test.com", password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
     mail = MagicLinkMailer.login(parent)
     content_types = mail.parts.map { |p| p.content_type.split(";").first }
     assert_includes content_types, "text/html"
@@ -63,7 +65,8 @@ class AdditionalCoverageTest < ActiveSupport::TestCase
 
   # User invalidate_magic_link_token!
   test "invalidate_magic_link_token! increments version" do
-    user = User.create!(email: "inv@test.com", password: SecureRandom.hex(20), role: "parent")
+    user = User.create!(email: "inv@test.com", password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
     original_version = user.magic_link_token_version
     user.invalidate_magic_link_token!
     assert_equal original_version + 1, user.reload.magic_link_token_version

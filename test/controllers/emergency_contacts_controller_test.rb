@@ -3,8 +3,10 @@ require "test_helper"
 class EmergencyContactsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @caretaker    = User.create!(email: "betreuer_nk@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent       = User.create!(email: "eltern_nk@mikiwa.at",   password: SecureRandom.hex(20),   role: "parent")
-    @other_parent = User.create!(email: "other_nk@mikiwa.at",    password: SecureRandom.hex(20),   role: "parent")
+    @parent       = User.create!(email: "eltern_nk@mikiwa.at",   password: SecureRandom.hex(20),   role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
+    @other_parent = User.create!(email: "other_nk@mikiwa.at",    password: SecureRandom.hex(20),   role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 001")
     @group = Group.create!(name: "Sterne")
     @year  = KindergartenYear.create!(
       label:      "KGJ 2025/26",

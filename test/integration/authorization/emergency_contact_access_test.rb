@@ -7,8 +7,14 @@ class EmergencyContactAccessTest < ActionDispatch::IntegrationTest
     )
     @group = Group.create!(name: "EC-Access-Gruppe")
 
-    @parent_a = User.create!(email: "ec_parent_a@mikiwa.at", password: "sicherespasswort1234", role: "parent")
-    @parent_b = User.create!(email: "ec_parent_b@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent_a = User.create!(email: "ec_parent_a@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
+    @parent_b = User.create!(email: "ec_parent_b@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
 
     @child_a = Child.create!(
       first_name: "Kind", last_name: "ECA",

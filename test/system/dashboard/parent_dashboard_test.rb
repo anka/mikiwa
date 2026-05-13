@@ -7,7 +7,10 @@ class ParentDashboardTest < ActionDispatch::IntegrationTest
     )
     @group = Group.create!(name: "Dashboard-Gruppe")
     @caretaker = User.create!(email: "dash_caretaker@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "dash_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent = User.create!(email: "dash_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
     @child = Child.create!(
       first_name: "DashKind", last_name: "Test",
       date_of_birth: Date.new(2026, 5, 10),
@@ -65,7 +68,10 @@ class ParentDashboardTest < ActionDispatch::IntegrationTest
 
   # TS-056-S02: Leeres Dashboard ohne Fehler
   test "TS-056 Leeres Dashboard lädt ohne Fehler" do
-    fresh_parent = User.create!(email: "dash_fresh@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    fresh_parent = User.create!(email: "dash_fresh@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
 
     sign_in_as(fresh_parent)
     get parent_dashboard_path

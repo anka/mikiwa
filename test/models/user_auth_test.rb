@@ -29,14 +29,16 @@ class UserAuthTest < ActiveSupport::TestCase
   end
 
   test "Eltern können Magic-Link-Token generieren" do
-    user = User.create!(email: "parent@example.com", password: SecureRandom.hex(20), role: "parent")
+    user = User.create!(email: "parent@example.com", password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
     token = user.generate_token_for(:magic_link)
     assert_not_nil token
     assert_not_empty token
   end
 
   test "Magic-Link-Token ist Single-Use: nach Verbrauch ungültig" do
-    user = User.create!(email: "parent2@example.com", password: SecureRandom.hex(20), role: "parent")
+    user = User.create!(email: "parent2@example.com", password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
     token = user.generate_token_for(:magic_link)
     found = User.find_by_token_for(:magic_link, token)
     assert_equal user, found

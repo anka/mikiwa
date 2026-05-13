@@ -101,7 +101,8 @@ class ParentsControllerTest < ActionDispatch::IntegrationTest
 
   test "F20 Eltern darf NICHT Edit-Seite eines anderen Eltern-Users aufrufen (403)" do
     sign_in_as(@parent)
-    other = User.create!(email: "andere_eltern@mikiwa.at", password: SecureRandom.hex(20), role: "parent")
+    other = User.create!(email: "andere_eltern@mikiwa.at", password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
     get edit_parent_path(other)
     assert_response :forbidden
   end
@@ -116,9 +117,9 @@ class ParentsControllerTest < ActionDispatch::IntegrationTest
   test "F20 Eltern-Liste filtert nach Suchparameter q (Name)" do
     sign_in_as(@caretaker)
     User.create!(email: "felix@test.at", password: SecureRandom.hex(20),
-                 role: "parent", first_name: "Felix", last_name: "Schmidt")
+                 role: "parent", first_name: "Felix", last_name: "Schmidt", phone: "0664 000 010")
     User.create!(email: "gerda@test.at", password: SecureRandom.hex(20),
-                 role: "parent", first_name: "Gerda", last_name: "Bauer")
+                 role: "parent", first_name: "Gerda", last_name: "Bauer", phone: "0664 000 011")
 
     get parents_path, params: { q: "Felix" }
     assert_response :success
@@ -129,7 +130,7 @@ class ParentsControllerTest < ActionDispatch::IntegrationTest
   test "F20 Eltern-Liste filtert nach E-Mail" do
     sign_in_as(@caretaker)
     User.create!(email: "felix@test.at", password: SecureRandom.hex(20),
-                 role: "parent", first_name: "Felix", last_name: "Schmidt")
+                 role: "parent", first_name: "Felix", last_name: "Schmidt", phone: "0664 000 010")
 
     get parents_path, params: { q: "felix@test" }
     assert_response :success
@@ -189,7 +190,8 @@ class ParentsControllerTest < ActionDispatch::IntegrationTest
 
   test "F21 Eltern darf Show-Seite eines anderen Eltern NICHT öffnen (403)" do
     sign_in_as(@parent)
-    other = User.create!(email: "fremde_eltern@mikiwa.at", password: SecureRandom.hex(20), role: "parent")
+    other = User.create!(email: "fremde_eltern@mikiwa.at", password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
     get parent_path(other)
     assert_response :forbidden
   end

@@ -729,6 +729,12 @@ html, body { overflow-x: clip; max-width: 100%; }
   font-weight: var(--fw-semibold);
 }
 
+.mw-field__required {
+  color: var(--danger);
+  margin-left: var(--space-1);
+  font-weight: var(--fw-bold);
+}
+
 .mw-input {
   font-family: var(--font-body);
   font-size: var(--fs-14);

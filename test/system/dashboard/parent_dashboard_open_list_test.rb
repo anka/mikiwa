@@ -10,7 +10,10 @@ class ParentDashboardOpenListTest < ActionDispatch::IntegrationTest
       email: "ol_dash_staff@mikiwa.at", password: "sicherespasswort1234", role: "caretaker"
     )
     @parent = User.create!(
-      email: "ol_dash_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent"
+      email: "ol_dash_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000"
     )
     @child = Child.create!(
       first_name: "OLKind", last_name: "Test",

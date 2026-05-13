@@ -3,7 +3,8 @@ require "test_helper"
 class ChildrenControllerTest < ActionDispatch::IntegrationTest
   setup do
     @caretaker = User.create!(email: "betreuer_k@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "eltern2@mikiwa.at", password: SecureRandom.hex(20), role: "parent")
+    @parent = User.create!(email: "eltern2@mikiwa.at", password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
     @group = Group.create!(name: "Löwen")
     @year = KindergartenYear.create!(
       label:      "KGJ 2025/26",
@@ -84,7 +85,8 @@ class ChildrenControllerTest < ActionDispatch::IntegrationTest
   # F19 – Eltern-Zuordnung in Kind-Show-View
   test "caretaker can attach parent to child" do
     sign_in_as(@caretaker)
-    new_parent = User.create!(email: "neu_eltern@mikiwa.at", password: SecureRandom.hex(20), role: "parent")
+    new_parent = User.create!(email: "neu_eltern@mikiwa.at", password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
 
     assert_difference "ParentChild.count", 1 do
       post attach_parent_child_path(@child), params: { user_id: new_parent.id }
@@ -105,7 +107,8 @@ class ChildrenControllerTest < ActionDispatch::IntegrationTest
 
   test "attach_parent forbidden for parent role (403)" do
     sign_in_as(@parent)
-    other_parent = User.create!(email: "andere_eltern@mikiwa.at", password: SecureRandom.hex(20), role: "parent")
+    other_parent = User.create!(email: "andere_eltern@mikiwa.at", password: SecureRandom.hex(20), role: "parent",
+      first_name: "Test", last_name: "Parent", phone: "0664 000 000")
 
     assert_no_difference "ParentChild.count" do
       post attach_parent_child_path(@child), params: { user_id: other_parent.id }

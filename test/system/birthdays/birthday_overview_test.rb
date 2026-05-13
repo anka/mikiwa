@@ -8,7 +8,10 @@ class BirthdayOverviewTest < ActionDispatch::IntegrationTest
     @group_bears = Group.create!(name: "Bday-Bären")
     @group_lions = Group.create!(name: "Bday-Löwen")
     @caretaker = User.create!(email: "bday_caretaker@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "bday_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent")
+    @parent = User.create!(email: "bday_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent",
+      first_name: "Test",
+      last_name: "Parent",
+      phone: "0664 000 000")
 
     today = Date.new(2026, 5, 3)
 
