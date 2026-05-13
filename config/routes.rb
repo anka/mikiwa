@@ -19,8 +19,12 @@ Rails.application.routes.draw do
   get "offline" => "pages#offline", as: :offline
 
   resources :children, only: %i[index new create edit update show] do
+    collection do
+      get :inactive
+    end
     member do
       patch  :deactivate
+      patch  :reactivate
       patch  :update_consent
       post   :attach_parent
       delete :detach_parent

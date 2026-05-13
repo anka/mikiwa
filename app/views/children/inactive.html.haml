@@ -1,0 +1,72 @@
+- content_for :title, "Deaktivierte Kinder · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Deaktivierte Kinder
+    %p.mw-page-header__lede Archiv aller Kinder, die nicht mehr aktiv im Kindergartenjahr sind.
+  .mw-page-header__actions
+    = link_to children_path, class: "mw-page-action" do
+      = lucide_icon "arrow-right", size: 14
+      Aktive Kinder
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+= form_with url: inactive_children_path, method: :get, local: true, class: "mw-children-filters", html: { style: "margin-top: 1.5rem;" } do
+  .mw-children-filters__row{ style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: end;" }
+    .mw-form__field
+      %label.mw-form__label{ for: "filter-q" } Name
+      = text_field_tag :q, @filter_q, id: "filter-q", placeholder: "Vor- oder Nachname", class: "mw-form__input"
+    .mw-form__field
+      %label.mw-form__label{ for: "filter-group-id" } Gruppe
+      = select_tag :group_id,
+                   options_from_collection_for_select(@filter_groups, :id, :name, @filter_group_id),
+                   include_blank: "Alle Gruppen", id: "filter-group-id", class: "mw-form__input"
+    .mw-form__field
+      %label.mw-form__label{ for: "filter-age" } Alter
+      = select_tag :age,
+                   options_for_select(@filter_ages.map { |a| [ pluralize(a, "Jahr", "Jahre"), a ] }, @filter_age),
+                   include_blank: "Alle Altersstufen", id: "filter-age", class: "mw-form__input"
+    .mw-form__field
+      = submit_tag "Filtern", class: "mw-btn mw-btn--secondary mw-btn--sm"
+  - if @filter_q.present? || @filter_group_id.present? || @filter_age.present?
+    .mw-children-filters__reset{ style: "margin-top: 8px; text-align: right;" }
+      = link_to "Filter zurücksetzen", inactive_children_path, class: "mw-page-action"
+
+- if @children.any?
+  .mw-card.mw-card--muted{ style: "margin-top: 1.5rem; opacity: 0.92;" }
+    %table.mw-table.mw-table--cards{ style: "width: 100%;" }
+      %thead
+        %tr
+          %th Name
+          %th Geburtsdatum
+          %th Alter
+          %th Gruppe
+          %th{ style: "text-align: right;" } Aktionen
+      %tbody
+        - @children.each do |child|
+          %tr
+            %td{ "data-label": "Name" }
+              .mw-child-name-cell
+                - if child.profile_photo.attached?
+                  = image_tag child.profile_photo.variant(**ImageAttachable::VARIANT_CONFIGS[:thumb]),
+                      class: "mw-child-avatar mw-child-avatar--sm", alt: ""
+                - else
+                  .mw-child-avatar.mw-child-avatar--sm.mw-child-avatar--placeholder
+                    = child.first_name[0].upcase
+                .mw-child-name-cell__text
+                  = link_to child_path(child), style: "text-decoration: none; color: inherit;" do
+                    %strong= child.full_name
+            %td{ "data-label": "Geburtsdatum" }= I18n.l(child.date_of_birth, format: :short)
+            %td{ "data-label": "Alter" }= child_age_label(child)
+            %td{ "data-label": "Gruppe" }= child.group&.name || "–"
+            %td{ "data-label": "Aktionen", style: "text-align: right;" }
+              .mw-actions
+                = button_to reactivate_child_path(child), method: :patch,
+                    class: "mw-page-action",
+                    data: { turbo_confirm: "#{child.full_name} reaktivieren?" } do
+                  = lucide_icon "check", size: 14
+                  Reaktivieren
+- else
+  .mw-empty-state
+    %p.mw-text-muted Keine deaktivierten Kinder vorhanden.

@@ -2404,7 +2404,7 @@
       "id": "F42",
       "name": "Deaktivierte Kinder: separate Seite /children/inactive",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Eigene Index-Action für inaktive Kinder, klar abgegrenzt vom Standard-Index.",
       "description": "Ziel: Caretaker können archivierte/deaktivierte Kinder einsehen, ohne sie in der aktiven Liste mitzuführen.\n\nRoute: get '/children/inactive', to: 'children#inactive', as: :inactive_children\nController: ChildrenController#inactive nutzt Child.inactive Scope (existiert bereits).\nView: app/views/children/inactive.html.erb — gleiche Tabellen-/Card-Komponente wie Index, jedoch mit klarer Überschrift 'Deaktivierte Kinder' und gedämpfter visueller Tonalität (grau/desaturiert).\n\nNavigation: Auf /children ein dezenter Link 'Deaktivierte Kinder anzeigen' oben rechts (nur Caretaker/Admin); auf /children/inactive ein Link zurück zur aktiven Liste.\n\nAktionen: 'Reaktivieren'-Button pro Zeile (setzt active=true). Show-Action ist erlaubt (read-only); Edit/Delete optional erlauben (analog Standard).\n\nFilter aus F41 sollen auch hier wirken (q, age — group_id ggf. eingeschränkt, da inaktive Kinder ggf. keine Gruppen-Zuordnung haben).",
       "acceptance_criteria": [

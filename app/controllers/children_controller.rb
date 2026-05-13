@@ -1,6 +1,7 @@
 class ChildrenController < ApplicationController
-  before_action :set_child, only: %i[show edit update deactivate update_consent attach_parent detach_parent]
-  before_action :require_staff_for_mutations!, only: %i[new create deactivate]
+  before_action :set_child, only: %i[show edit update deactivate reactivate update_consent attach_parent detach_parent]
+  before_action :require_staff_for_mutations!, only: %i[new create deactivate reactivate]
+  before_action :require_staff!, only: %i[inactive]
   before_action :authorize_edit_update!, only: %i[edit update]
 
   def index
@@ -52,6 +53,29 @@ class ChildrenController < ApplicationController
   def deactivate
     @child.deactivate!
     redirect_to children_path, notice: "#{@child.full_name} wurde deaktiviert."
+  end
+
+  def reactivate
+    @child.update!(active: true)
+    redirect_to inactive_children_path, notice: "#{@child.full_name} wurde reaktiviert."
+  end
+
+  def inactive
+    @children = Child.inactive
+                     .search_by_name(params[:q])
+                     .in_group(params[:group_id])
+                     .with_age(params[:age])
+                     .includes(:group, :parents)
+                     .order(:last_name, :first_name)
+    @filter_q = params[:q].to_s
+    @filter_group_id = params[:group_id]
+    @filter_age = params[:age]
+    @filter_groups = Group.order(:name)
+    @filter_ages = Child.inactive.pluck(:date_of_birth).filter_map do |dob|
+      today = Date.current
+      years = today.year - dob.year - (today.strftime("%m%d") < dob.strftime("%m%d") ? 1 : 0)
+      years if years >= 0
+    end.uniq.sort
   end
 
   def update_consent
@@ -108,6 +132,11 @@ class ChildrenController < ApplicationController
   end
 
   def require_staff_for_mutations!
+    return if current_user&.staff?
+    render plain: "Zugriff verweigert", status: :forbidden
+  end
+
+  def require_staff!
     return if current_user&.staff?
     render plain: "Zugriff verweigert", status: :forbidden
   end

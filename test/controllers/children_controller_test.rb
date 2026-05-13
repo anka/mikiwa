@@ -398,6 +398,66 @@ class ChildrenControllerTest < ActionDispatch::IntegrationTest
     assert_match(/href="\/children"[^>]*>[^<]*Filter zurücksetzen/i, response.body)
   end
 
+  # F42: Deaktivierte Kinder /children/inactive
+  test "F42 Caretaker sieht /children/inactive nur mit inaktiven Kindern" do
+    sign_in_as(@caretaker)
+    inactive = Child.create!(first_name: "Old", last_name: "Kind",
+      date_of_birth: 5.years.ago.to_date, group: @group, kindergarten_year: @year,
+      photo_consent: true, active: false)
+    get inactive_children_path
+    assert_response :success
+    assert_match(/Deaktivierte Kinder/i, response.body)
+    assert_match "Old Kind", response.body
+    assert_no_match(/>Finn Berger</, response.body)
+  end
+
+  test "F42 Eltern bekommen 403 auf /children/inactive" do
+    sign_in_as(@parent)
+    get inactive_children_path
+    assert_response :forbidden
+  end
+
+  test "F42 Reaktivieren setzt active=true und redirected zurück" do
+    sign_in_as(@caretaker)
+    inactive = Child.create!(first_name: "Reha", last_name: "Kind",
+      date_of_birth: 5.years.ago.to_date, group: @group, kindergarten_year: @year,
+      photo_consent: true, active: false)
+    patch reactivate_child_path(inactive)
+    assert_redirected_to inactive_children_path
+    assert inactive.reload.active?
+  end
+
+  test "F42 Eltern können nicht reaktivieren" do
+    sign_in_as(@parent)
+    inactive = Child.create!(first_name: "Reha", last_name: "Kind",
+      date_of_birth: 5.years.ago.to_date, group: @group, kindergarten_year: @year,
+      photo_consent: true, active: false)
+    patch reactivate_child_path(inactive)
+    assert_response :forbidden
+    assert_not inactive.reload.active?
+  end
+
+  test "F42 Index zeigt Link zu /children/inactive für Caretaker" do
+    sign_in_as(@caretaker)
+    get children_path
+    assert_response :success
+    assert_match(/href="\/children\/inactive"/, response.body)
+  end
+
+  test "F42 Filter wirken auf /children/inactive" do
+    sign_in_as(@caretaker)
+    Child.create!(first_name: "Anna", last_name: "Müller",
+      date_of_birth: 5.years.ago.to_date, group: @group, kindergarten_year: @year,
+      photo_consent: true, active: false)
+    Child.create!(first_name: "Bob", last_name: "Stein",
+      date_of_birth: 5.years.ago.to_date, group: @group, kindergarten_year: @year,
+      photo_consent: true, active: false)
+    get inactive_children_path, params: { q: "mül" }
+    assert_response :success
+    assert_match "Müller", response.body
+    assert_no_match(/>Bob Stein</, response.body)
+  end
+
   test "F36 Caretaker behält vollen Edit-Umfang" do
     sign_in_as(@caretaker)
     patch child_path(@child), params: {

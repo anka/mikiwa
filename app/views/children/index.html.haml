@@ -6,6 +6,9 @@
     %p.mw-page-header__lede Alle Kinder im aktiven Kindergartenjahr.
   - if current_user.staff?
     .mw-page-header__actions
+      = link_to inactive_children_path, class: "mw-page-action" do
+        = lucide_icon "eye-off", size: 14
+        Deaktivierte Kinder
       = link_to new_child_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
         = lucide_icon "plus", size: 16
         Kind anlegen
