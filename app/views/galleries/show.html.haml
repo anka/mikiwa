@@ -105,7 +105,7 @@
       = lucide_icon "chevron-right", size: 32
     -# Bild-URLs als Data-Attribute für Stimulus
     - @photos.each do |photo|
-      %span{ style: "display:none", data: { lightbox_src: url_for(photo.variant(:display)) } }
+      %span.mw-lightbox__src{ data: { lightbox_src: url_for(photo.variant(:display)) } }
 
 - else
   %p.mw-text-muted{ style: "padding: 1rem 0;" } Noch keine Fotos in dieser Galerie.

@@ -94,7 +94,7 @@ export default class extends Controller {
     row.dataset.status = "pending"
     row.innerHTML = `
       <div class="mw-upload-row__name">${this.escape(file.name)}</div>
-      <div class="mw-upload-row__progress"><div class="mw-upload-row__bar" style="width:0%"></div></div>
+      <div class="mw-upload-row__progress"><div class="mw-upload-row__bar"></div></div>
       <div class="mw-upload-row__status">…</div>
     `
     return row

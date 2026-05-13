@@ -2336,6 +2336,7 @@ textarea.mw-input { resize: vertical; min-height: 96px; line-height: var(--lh-re
 }
 .mw-lightbox::backdrop { background: transparent; }
 .mw-lightbox[open] { display: flex; }
+.mw-lightbox__src { display: none; }
 .mw-lightbox__image-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--space-4); }
 .mw-lightbox__img { max-width: 100%; max-height: 90vh; object-fit: contain; border-radius: var(--radius-md); }
 .mw-lightbox__close {
@@ -2859,6 +2860,7 @@ textarea.mw-input { resize: vertical; min-height: 96px; line-height: var(--lh-re
 }
 .mw-upload-row__bar {
   height: 100%;
+  width: 0%;
   background: var(--accent);
   transition: width 120ms linear;
 }

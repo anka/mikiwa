@@ -2773,7 +2773,7 @@
       "id": "BF-006",
       "name": "Bugfix: CSP-Fehler auf Gallery-Detail (style-src)",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Auf /galleries/:id meldet die Browser-Konsole 'Refused to apply a stylesheet … style-src directive'. Inline-Style oder externes Stylesheet ohne Nonce.",
       "description": "Symptom: Auf /galleries/:id (z. B. /galleries/d61ed85d-4ba4-4e05-9cb8-a1ee2ce57225) erscheint in der Konsole:\n  'Refused to apply a stylesheet because its hash, its nonce, or unsafe-inline does not appear in the style-src directive …'\n\nWahrscheinliche Ursache: die Lightbox-Library (oder ein Vendor-CSS) injiziert <style>-Blöcke ohne Nonce zur Laufzeit. CSP ist im Projekt vermutlich strikt mit nonce konfiguriert (Rails 7 default).\n\nFix-Optionen (zu evaluieren):\n  1. Vendor-CSS in das App-CSS-Bundle integrieren (vorzuziehen — kein Inline-Style)\n  2. Lightbox-Init so anpassen, dass kein Inline-Style nötig ist\n  3. Nonce an dynamisch eingefügte Style-Tags weiterreichen (Stimulus-Hook beim Init)\n  4. (Letzte Wahl) style-src um 'unsafe-inline' erweitern — NICHT bevorzugt aus Security-Sicht\n\nHinweis: F52 (Lightbox nur über Action) ändert ohnehin das Init-Verhalten — Fix sinnvollerweise abstimmen, kann gemeinsam erfolgen.\n\nVerifikation: Keine CSP-Konsolen-Warnungen mehr auf Gallery-Show in Dev und Prod-Mode.",
       "acceptance_criteria": [

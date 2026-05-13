@@ -320,6 +320,18 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
     assert created.released?
   end
 
+  # BF-006: CSP-Fehler auf Gallery-Detail
+  test "BF-006 Show enthält keine inline style='display:none' Attribute (CSP)" do
+    sign_in_as(@caretaker)
+    @gallery.photos.attach(io: StringIO.new(minimal_jpeg), filename: "csp.jpg", content_type: "image/jpeg")
+    @gallery.save!
+    get gallery_path(@gallery)
+    assert_response :success
+    # data-lightbox-src spans dürfen kein inline style="display:..." haben
+    refute_match(/<span[^>]+data-lightbox-src=[^>]+style="display:\s*none"/, response.body,
+                 "Lightbox-src-Span muss CSS-Klasse statt inline style nutzen (CSP)")
+  end
+
   private
 
   def minimal_jpeg
