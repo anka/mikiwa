@@ -1,30 +1,34 @@
 ---
 name: implement-tasks
-description: Use when the user wants to implement all open tasks from docs/TASKS.json across all phases. Works through every task with status "open" sequentially, respecting dependencies and phase order. Reads optional spec_file references for deeper specifications before implementation.
+description: Use when the user wants to implement all open tasks from docs/TASKS.json across all phases. Works through every task with status "open" sequentially, respecting dependencies and phase order. Reads optional spec_file references for deeper specifications before implementation. Accepts an optional numeric argument to limit the number of tasks processed (e.g. "/implement-tasks 5" processes at most 5 open tasks).
 ---
 
 # implement-tasks
 
 ## Overview
 
-Implements **all open tasks** from `docs/TASKS.json` – sequentially, test-first, with browser validation and a git commit per task. No phase parameter required: every task with `"status": "open"` is in scope, regardless of phase.
+Implements **open tasks** from `docs/TASKS.json` – sequentially, test-first, with browser validation and a git commit per task. No phase parameter required: every task with `"status": "open"` is in scope, regardless of phase.
 
 If a task references a deeper specification via the optional `spec_file` attribute, that spec **must** be read and analysed before implementation begins.
 
-**Parameter:** none.
+**Parameter (optional):** a positive integer `N`.
+- `/implement-tasks` → implement **all** open tasks.
+- `/implement-tasks N` → implement **at most N** open tasks (e.g. `/implement-tasks 5`). If fewer than N tasks are open, all are processed.
 
 ---
 
 ## Preparation
 
-1. Read `docs/TASKS.json` completely.
-2. Collect every feature where `"status": "open"`.
-3. Build an ordered task list:
+1. Parse the optional argument `N` from the skill invocation. If no argument was given, set `N = ∞` (unlimited).
+2. Read `docs/TASKS.json` completely.
+3. Collect every feature where `"status": "open"`.
+4. Build an ordered task list:
    - Outer order follows `implementation_phases` (phase 1 → 6 …) – this is the recommended sequence.
    - Inner order follows the `feature_ids` array of each phase.
    - Tasks in higher phases wait until lower phases are clear, except when a dependency arrangement forces otherwise.
-4. Respect `dependencies`: a task may only start when **every** listed dependency ID has `"status": "done"`. If a dependency is still open, defer the task and pick the next eligible one.
-5. Announce: "Starting open-task run. [X] open tasks across phases [list]: [IDs]. First up: [ID] – [name]."
+5. Respect `dependencies`: a task may only start when **every** listed dependency ID has `"status": "done"`. If a dependency is still open, defer the task and pick the next eligible one.
+6. Determine the effective run size: `run_size = min(N, number of currently eligible open tasks)`.
+7. Announce: "Starting open-task run. [X] open tasks total; processing [run_size] in this run across phases [list]: [IDs]. First up: [ID] – [name]."
 
 If no open tasks exist, stop and report "Keine offenen Tasks in docs/TASKS.json."
 
@@ -76,7 +80,9 @@ Review new code critically: duplication, unnecessary complexity, Rails-conventio
 Recompute the eligible-task list:
 - Re-read `docs/TASKS.json` if it may have been edited externally.
 - Determine which previously-blocked tasks are now unlocked (dependencies satisfied).
-- Pick the next open task in the established order → repeat from Step 1.
+- Increment the completed-tasks counter by 1.
+- If the completed-tasks counter has reached `N` (the run limit), **stop** and output the Run Completion summary.
+- Otherwise pick the next open task in the established order → repeat from Step 1.
 
 ---
 
