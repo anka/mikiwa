@@ -205,4 +205,25 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/name="event\[address\]"/, response.body)
   end
+
+  # F45: Google-Maps-Embed
+  test "F45 Map wird nicht gerendert ohne Adresse" do
+    sign_in_as(@caretaker)
+    @event.update!(address: nil)
+    get event_path(@event)
+    assert_response :success
+    assert_no_match(/maps\?q=/, response.body)
+  end
+
+  test "F45 Map iframe enthält urlencoded Adresse" do
+    sign_in_as(@caretaker)
+    @event.update!(address: "Hauptstraße 5, 1010 Wien")
+    get event_path(@event)
+    assert_response :success
+    assert_match(/<iframe[^>]+src="https:\/\/www\.google\.com\/maps\?q=[^"]*Hauptstra%C3%9Fe[^"]*&amp;output=embed"/, response.body,
+                 "iframe-src muss urlencoded Adresse enthalten")
+    assert_match(/loading="lazy"/, response.body)
+    assert_match(/referrerpolicy="no-referrer-when-downgrade"/, response.body)
+    assert_match(/In Google Maps öffnen/i, response.body)
+  end
 end

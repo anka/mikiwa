@@ -64,3 +64,17 @@
         .mw-detail-row__content
           .mw-detail-row__label Beschreibung
           .mw-detail-row__value.mw-prose= simple_format(@event.description)
+
+- if @event.address.present?
+  - encoded_address = CGI.escape(@event.address)
+  .mw-event-map{ style: "margin-top: 1.25rem; max-width: 560px;" }
+    %p.mw-text-muted{ style: "margin-bottom: 0.5rem;" } Standort
+    .mw-event-map__frame{ style: "position: relative; padding-top: 56.25%; border-radius: var(--radius-lg, 16px); overflow: hidden; border: 1px solid var(--border-subtle);" }
+      %iframe{ src: "https://www.google.com/maps?q=#{encoded_address}&output=embed",
+               loading: "lazy", referrerpolicy: "no-referrer-when-downgrade",
+               style: "position: absolute; inset: 0; width: 100%; height: 100%; border: 0;",
+               title: "Karte zur Adresse #{@event.address}" }
+    = link_to "https://www.google.com/maps?q=#{encoded_address}", target: "_blank", rel: "noopener",
+        class: "mw-page-action", style: "margin-top: 0.5rem;" do
+      = lucide_icon "arrow-right", size: 14
+      In Google Maps öffnen

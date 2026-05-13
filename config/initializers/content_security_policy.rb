@@ -7,7 +7,7 @@ Rails.application.configure do
     policy.script_src  :self
     policy.style_src   :self
     policy.connect_src :self
-    policy.frame_src   :none
+    policy.frame_src   "https://www.google.com"
     policy.worker_src  :self, :blob
     policy.manifest_src :self
   end

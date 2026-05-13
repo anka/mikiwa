@@ -2507,7 +2507,7 @@
       "id": "F45",
       "name": "Google-Maps-Embed in Veranstaltungs-Details",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "In der Event-Show-View wird, sofern address vorhanden, eine iframe-Karte (Google Maps) auf die Adresse eingeblendet.",
       "description": "Ziel: Eltern und Caretaker sehen die Lage einer Veranstaltung direkt im Detail.\n\nTechnik: einfaches iframe ohne API-Key, URL-Schema:\n  https://www.google.com/maps?q=<urlencoded-address>&output=embed\nEingebettet als responsive 16:9 Container (Tailwind aspect-video) mit abgerundeten Ecken und Subtitle 'Standort'.\n\nBedingungen:\n  • Anzeige NUR, wenn event.address.present?\n  • Loading lazy, referrerpolicy='no-referrer-when-downgrade'\n  • Externer 'In Google Maps öffnen'-Link unter der Karte (öffnet https://www.google.com/maps?q=…)\n\nCSP: frame-src https://www.google.com im Layout-Header ergänzen (sofern noch nicht erlaubt).",
       "acceptance_criteria": [
