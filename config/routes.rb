@@ -88,7 +88,9 @@ Rails.application.routes.draw do
   end
   resources :attendance_lists do
     member do
-      get :export
+      get   :export
+      get   :edit_dates
+      patch :update_dates
     end
     resources :attendance_entries, only: %i[create destroy]
   end

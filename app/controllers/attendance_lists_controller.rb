@@ -1,8 +1,8 @@
 require "csv"
 
 class AttendanceListsController < ApplicationController
-  before_action :set_list,     only: %i[show edit update destroy export]
-  before_action :require_staff!, only: %i[new create edit update destroy export]
+  before_action :set_list,     only: %i[show edit update destroy export edit_dates update_dates]
+  before_action :require_staff!, only: %i[new create edit update destroy export edit_dates update_dates]
 
   def index
     @lists = policy_scope(AttendanceList).includes(:group, :attendance_entries).ordered
@@ -29,11 +29,28 @@ class AttendanceListsController < ApplicationController
     @list.created_by = current_user
 
     if @list.save
-      redirect_to attendance_list_path(@list), notice: "Teilnahmeliste wurde angelegt."
+      if @list.mode == "per_date" && @list.attendance_date_options.empty?
+        redirect_to edit_dates_attendance_list_path(@list),
+                    notice: "Teilnahmeliste wurde angelegt. Bitte Datumsoptionen ergänzen."
+      else
+        redirect_to attendance_list_path(@list), notice: "Teilnahmeliste wurde angelegt."
+      end
     else
       @groups = Group.order(:name)
       @kindergarten_years = KindergartenYear.order(start_date: :desc)
       render :new, status: :unprocessable_entity
+    end
+  end
+
+  def edit_dates
+    @list.attendance_date_options.build if @list.attendance_date_options.empty?
+  end
+
+  def update_dates
+    if @list.update(date_options_params)
+      redirect_to attendance_list_path(@list), notice: "Datumsoptionen wurden gespeichert."
+    else
+      render :edit_dates, status: :unprocessable_entity
     end
   end
 
@@ -96,6 +113,12 @@ class AttendanceListsController < ApplicationController
     params.require(:attendance_list).permit(
       :title, :description, :mode, :deadline,
       :group_id, :kindergarten_year_id,
+      attendance_date_options_attributes: [ :id, :date, :_destroy ]
+    )
+  end
+
+  def date_options_params
+    params.require(:attendance_list).permit(
       attendance_date_options_attributes: [ :id, :date, :_destroy ]
     )
   end

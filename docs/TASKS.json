@@ -2571,7 +2571,7 @@
       "id": "F47",
       "name": "Attendance per_date: Datumsoptionen nachträglich pflegen",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Nach dem Erstellen einer per_date-Teilnahmeliste wird der Caretaker automatisch in die Datumsoptionen-Pflege geleitet; nachträgliche Bearbeitung jederzeit möglich.",
       "description": "Ziel: AttendanceList im Modus per_date ist ohne mind. eine Datumsoption sinnlos. Daher: nach Erstellen automatisch in die Optionen-Pflege, und nachträglich bearbeitbar.\n\nFlow:\n  1. AttendanceList#create mit mode=per_date → speichert Liste, redirect auf /attendance_lists/:id/dates/edit (oder analoge Action mit     AttendanceDateOption-Nested-Form).\n  2. Edit-View zeigt mehrere Datumsfelder (dynamisch hinzufügbar/entfernbar mit Stimulus, accepts_nested_attributes_for ist bereits     konfiguriert).\n  3. Speichern → redirect auf /attendance_lists/:id (Show).\n\nEdit-Zugang: auf Show eine Aktion 'Datumsoptionen bearbeiten' (Icon-Button calendar-cog). Auf Index ebenfalls verfügbar als Row-Action.\n\nValidierung: mode=per_date ohne Datumsoption ist nach Edit zulässig (User kann Liste anlegen, später ergänzen), aber Teilnehmer-Eintragung wird blockiert, solange keine Option vorhanden → entsprechender Hinweis auf Show.\n\nMode=general bleibt unverändert (kein Datums-Edit nötig).",
       "acceptance_criteria": [

@@ -25,6 +25,11 @@
         target: "_blank", rel: "noopener", class: "mw-page-action" do
       = lucide_icon "share-2", size: 14
       Teilen
+    - if current_user.staff? && @list.mode == "per_date"
+      = link_to edit_dates_attendance_list_path(@list), class: "mw-page-action",
+          title: "Datumsoptionen bearbeiten" do
+        = lucide_icon "calendar-plus", size: 14
+        Datumsoptionen
     - if current_user.staff?
       = link_to edit_attendance_list_path(@list), class: "mw-btn mw-btn--secondary mw-btn--sm" do
         = lucide_icon "pencil", size: 14
@@ -35,6 +40,13 @@
   .mw-flash.mw-flash--success= notice
 - if alert
   .mw-flash.mw-flash--error= alert
+
+- if @list.mode == "per_date" && @date_options.empty?
+  .mw-flash.mw-flash--warning{ style: "margin-top: 1rem;" }
+    Bitte Datumsoptionen ergänzen, bevor Eltern sich eintragen können.
+    - if current_user.staff?
+      = link_to "Jetzt ergänzen", edit_dates_attendance_list_path(@list),
+          class: "mw-link", style: "margin-left: 0.5rem;"
 
 - if @list.description.present?
   .mw-card{ style: "margin-top: 1rem; padding: 1rem 1.25rem;" }

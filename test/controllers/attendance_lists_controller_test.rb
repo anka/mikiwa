@@ -171,4 +171,75 @@ class AttendanceListsControllerTest < ActionDispatch::IntegrationTest
     get export_attendance_list_path(@list, format: :csv)
     assert_response :forbidden
   end
+
+  # F47: per_date Datumsoptionen nachträglich pflegen
+  test "F47 create mit mode=per_date leitet auf Datums-Pflege weiter" do
+    sign_in_as(@caretaker)
+    post attendance_lists_path, params: {
+      attendance_list: {
+        title: "Per-Date-Liste",
+        mode: "per_date",
+        group_id: @group_baeren.id,
+        kindergarten_year_id: @year.id
+      }
+    }
+    list = AttendanceList.order(:created_at).last
+    assert_redirected_to edit_dates_attendance_list_path(list)
+  end
+
+  test "F47 Edit-Action für Datumsoptionen ist erreichbar" do
+    sign_in_as(@caretaker)
+    per_date_list = AttendanceList.create!(title: "PD", mode: "per_date",
+      kindergarten_year: @year, group: @group_baeren, created_by: @caretaker)
+    get edit_dates_attendance_list_path(per_date_list)
+    assert_response :success
+    assert_match(/Datumsoptionen/i, response.body)
+    assert_match(/name="attendance_list\[attendance_date_options_attributes\]\[\d+\]\[date\]"/, response.body)
+  end
+
+  test "F47 Datumsoptionen können nachträglich gespeichert werden" do
+    sign_in_as(@caretaker)
+    per_date_list = AttendanceList.create!(title: "PD", mode: "per_date",
+      kindergarten_year: @year, group: @group_baeren, created_by: @caretaker)
+    patch update_dates_attendance_list_path(per_date_list), params: {
+      attendance_list: {
+        attendance_date_options_attributes: {
+          "0" => { date: "2026-06-01" },
+          "1" => { date: "2026-06-08" },
+          "2" => { date: "2026-06-15" }
+        }
+      }
+    }
+    assert_redirected_to attendance_list_path(per_date_list)
+    assert_equal 3, per_date_list.reload.attendance_date_options.count
+  end
+
+  test "F47 Show zeigt Banner ohne Datumsoptionen bei per_date" do
+    sign_in_as(@caretaker)
+    per_date_list = AttendanceList.create!(title: "PD", mode: "per_date",
+      kindergarten_year: @year, group: @group_baeren, created_by: @caretaker)
+    get attendance_list_path(per_date_list)
+    assert_response :success
+    assert_match(/Bitte Datumsoptionen ergänzen/i, response.body)
+  end
+
+  test "F47 mode=general bleibt unverändert (kein Redirect zu edit_dates)" do
+    sign_in_as(@caretaker)
+    post attendance_lists_path, params: {
+      attendance_list: {
+        title: "Allgemein-Liste", mode: "general",
+        group_id: @group_baeren.id, kindergarten_year_id: @year.id
+      }
+    }
+    list = AttendanceList.order(:created_at).last
+    assert_redirected_to attendance_list_path(list)
+  end
+
+  test "F47 Eltern haben keinen Zugriff auf Datums-Pflege" do
+    sign_in_as(@parent)
+    per_date_list = AttendanceList.create!(title: "PD", mode: "per_date",
+      kindergarten_year: @year, group: @group_baeren, created_by: @caretaker)
+    get edit_dates_attendance_list_path(per_date_list)
+    assert_response :forbidden
+  end
 end

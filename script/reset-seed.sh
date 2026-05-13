@@ -9,5 +9,5 @@ RAILS_ENV="${RAILS_ENV:-development}"
 export RAILS_ENV
 
 echo "Resetting database with seeds (RAILS_ENV=$RAILS_ENV)..."
-bin/rails db:drop db:create db:migrate db:seed
+DEMO=1 bin/rails db:drop db:create db:migrate db:seed
 echo "Done. Database is seeded."

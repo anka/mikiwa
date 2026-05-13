@@ -1,0 +1,48 @@
+- content_for :title, "Datumsoptionen · #{@list.title} · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Datumsoptionen
+    %p.mw-page-header__lede= @list.title
+  .mw-page-header__actions
+    = link_to attendance_list_path(@list), class: "mw-page-action" do
+      Abbrechen
+
+- if @list.errors.any?
+  .mw-flash.mw-flash--error
+    %ul{ style: "margin: 0; padding-left: 1.25rem;" }
+      - @list.errors.full_messages.each do |msg|
+        %li= msg
+
+.mw-card{ style: "margin-top: 1.5rem; padding: 1.25rem; max-width: 560px;" }
+  = form_with model: @list, url: update_dates_attendance_list_path(@list),
+              method: :patch, class: "mw-form",
+              data: { controller: "date-options" } do |f|
+    .mw-form__hint{ style: "margin-bottom: 0.75rem;" } Mindestens ein Datum erforderlich.
+    %div{ data: { "date-options-target": "list" } }
+      = f.fields_for :attendance_date_options do |opt|
+        .mw-form__row{ "data-date-options-row": "", style: "display: flex; gap: 8px; align-items: center; margin-bottom: 8px;" }
+          - if opt.object.persisted?
+            = opt.hidden_field :id, data: { persisted: "" }
+            = opt.hidden_field :_destroy, data: { destroy: "" }
+          = opt.date_field :date, required: true, class: "mw-input", style: "flex: 1;"
+          %button.mw-page-action.mw-page-action--danger{ type: "button",
+              data: { action: "click->date-options#remove" },
+              title: "Entfernen", "aria-label": "Entfernen" }
+            = lucide_icon "trash-2", size: 14
+
+    %template{ data: { "date-options-target": "template" } }
+      .mw-form__row{ "data-date-options-row": "", style: "display: flex; gap: 8px; align-items: center; margin-bottom: 8px;" }
+        %input{ type: "date", required: true, class: "mw-input", style: "flex: 1;",
+                name: "attendance_list[attendance_date_options_attributes][NEW_RECORD_INDEX][date]" }
+        %button.mw-page-action.mw-page-action--danger{ type: "button",
+            data: { action: "click->date-options#remove" },
+            title: "Entfernen", "aria-label": "Entfernen" }
+          = lucide_icon "trash-2", size: 14
+
+    .mw-form__actions{ style: "display: flex; gap: 8px; margin-top: 1rem; align-items: center;" }
+      %button.mw-btn.mw-btn--secondary.mw-btn--sm{ type: "button",
+          data: { action: "click->date-options#add" } }
+        = lucide_icon "plus", size: 14
+        Datum hinzufügen
+      = f.submit "Speichern", class: "mw-btn mw-btn--primary mw-btn--sm"
