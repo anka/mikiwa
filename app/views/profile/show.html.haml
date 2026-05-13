@@ -44,6 +44,17 @@
           %span.mw-field__required{ aria: { label: "Pflichtfeld" } } *
       = form.telephone_field :phone, required: current_user.parent?, class: "mw-input", placeholder: "0664 123 456"
 
+    .mw-field
+      = form.label :knowhow, "Wissen / Fähigkeiten", class: "mw-field__label"
+      = form.text_area :knowhow, class: "mw-input", rows: 3,
+          placeholder: "z. B. Tischler, kann Bastel-AGs unterstützen"
+      %p.mw-field__hint Optional, hilft Betreuer:innen bei der Planung gemeinsamer Aktivitäten.
+
+    .mw-field
+      = form.label :notes, "Anmerkung", class: "mw-field__label"
+      = form.text_area :notes, class: "mw-input", rows: 3,
+          placeholder: "Persönliche Notizen"
+
 
 .mw-card{ style: "margin-top: 1.5rem; max-width: 480px;" }
   %h2.mw-section-title{ style: "padding: 1rem 1.25rem 0; font-size: var(--fs-14); font-weight: var(--fw-bold); color: var(--fg-2);" } Kalender-Abonnement

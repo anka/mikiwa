@@ -26,6 +26,7 @@
           %th Name
           %th E-Mail
           %th Telefon
+          %th Wissen / Fähigkeiten
           %th Status
           %th{ style: "text-align: right;" } Aktionen
       %tbody
@@ -35,6 +36,7 @@
               = link_to (parent.full_name.presence || "–"), parent_path(parent), class: "mw-link"
             %td{ "data-label": "E-Mail" }= parent.email
             %td{ "data-label": "Telefon" }= parent.phone.presence || "–"
+            %td{ "data-label": "Wissen / Fähigkeiten" }= parent.knowhow.present? ? truncate(parent.knowhow, length: 60) : "–"
             %td{ "data-label": "Status" }
               - if parent.locked?
                 %span.mw-badge.mw-badge--danger Deaktiviert

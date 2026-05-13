@@ -202,4 +202,46 @@ class ParentsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match edit_parent_path(@parent), response.body
   end
+
+  # F43: knowhow & notes
+  test "F43 Caretaker kann knowhow und notes setzen" do
+    sign_in_as(@caretaker)
+    patch parent_path(@parent), params: {
+      user: { email: @parent.email, first_name: @parent.first_name, last_name: @parent.last_name,
+              phone: @parent.phone, knowhow: "Bauer, Traktor-Fahrten", notes: "Sehr engagiert" }
+    }
+    assert_redirected_to parents_path
+    @parent.reload
+    assert_equal "Bauer, Traktor-Fahrten", @parent.knowhow
+    assert_equal "Sehr engagiert", @parent.notes
+  end
+
+  test "F43 Show zeigt Über-Sektion mit knowhow und notes" do
+    sign_in_as(@caretaker)
+    @parent.update!(knowhow: "Bäcker", notes: "Hilft sehr gerne")
+    get parent_path(@parent)
+    assert_response :success
+    assert_match(/Über/, response.body)
+    assert_match "Bäcker", response.body
+    assert_match "Hilft sehr gerne", response.body
+  end
+
+  test "F43 Liste zeigt knowhow-Spalte (truncate 60)" do
+    sign_in_as(@caretaker)
+    long_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor"
+    @parent.update!(knowhow: long_text)
+    get parents_path
+    assert_response :success
+    assert_match(/Wissen|Fähigkeiten/i, response.body)
+    assert_match(/Lorem ipsum/, response.body)
+    assert_no_match(/eiusmod tempor/, response.body, "Knowhow muss truncated sein (60 Zeichen)")
+  end
+
+  test "F43 New-Form zeigt knowhow- und notes-Felder" do
+    sign_in_as(@caretaker)
+    get new_parent_path
+    assert_response :success
+    assert_match(/name="user\[knowhow\]"/, response.body)
+    assert_match(/name="user\[notes\]"/, response.body)
+  end
 end

@@ -53,4 +53,26 @@ class ProfileControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to profile_path
     assert_not_equal old_token, @parent.reload.ical_token
   end
+
+  # F43: knowhow & notes
+  test "F43 Elternteil kann knowhow ändern" do
+    sign_in_as(@parent)
+    patch profile_path, params: { user: { knowhow: "Tischler, Bastel-AGs" } }
+    assert_equal "Tischler, Bastel-AGs", @parent.reload.knowhow
+    assert_redirected_to profile_path
+  end
+
+  test "F43 Elternteil kann notes ändern" do
+    sign_in_as(@parent)
+    patch profile_path, params: { user: { notes: "Kind hat Pollenallergie" } }
+    assert_equal "Kind hat Pollenallergie", @parent.reload.notes
+  end
+
+  test "F43 Profilformular zeigt knowhow- und notes-Felder" do
+    sign_in_as(@parent)
+    get profile_path
+    assert_response :success
+    assert_match(/name="user\[knowhow\]"/, response.body)
+    assert_match(/name="user\[notes\]"/, response.body)
+  end
 end

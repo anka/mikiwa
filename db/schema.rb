@@ -332,9 +332,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_120000) do
     t.string "ical_token"
     t.datetime "invitation_sent_at"
     t.string "invited_by_id"
+    t.text "knowhow"
     t.string "last_name"
     t.datetime "locked_at"
     t.integer "magic_link_token_version", default: 0, null: false
+    t.text "notes"
     t.string "password_digest", null: false
     t.string "phone"
     t.string "role", default: "caretaker", null: false

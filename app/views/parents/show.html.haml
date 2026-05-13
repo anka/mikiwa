@@ -40,6 +40,21 @@
         .mw-detail-list-row__label Eingeladen am
         .mw-detail-list-row__value= l(@parent.invitation_sent_at, format: :long)
 
+/ Über
+- if @parent.knowhow.present? || @parent.notes.present?
+  .mw-detail-section
+    .mw-detail-section__header
+      %span.mw-detail-section__title Über
+    .mw-card{ style: "padding: 16px 20px;" }
+      - if @parent.knowhow.present?
+        .mw-detail-list-row
+          .mw-detail-list-row__label Wissen / Fähigkeiten
+          .mw-detail-list-row__value{ style: "white-space: pre-line;" }= @parent.knowhow
+      - if @parent.notes.present?
+        .mw-detail-list-row
+          .mw-detail-list-row__label Anmerkung
+          .mw-detail-list-row__value{ style: "white-space: pre-line;" }= @parent.notes
+
 / Zugeordnete Kinder
 .mw-detail-section
   .mw-detail-section__header

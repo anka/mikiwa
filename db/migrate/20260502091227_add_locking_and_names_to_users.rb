@@ -6,5 +6,7 @@ class AddLockingAndNamesToUsers < ActiveRecord::Migration[8.1]
     add_column :users, :invited_by_id, :string
     add_index :users, :invited_by_id
     add_column :users, :invitation_sent_at, :datetime
+    add_column :users, :knowhow, :text
+    add_column :users, :notes, :text
   end
 end

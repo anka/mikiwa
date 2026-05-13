@@ -2442,7 +2442,7 @@
       "id": "F43",
       "name": "Eltern: knowhow & Anmerkung",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "User-Modell um knowhow (Beruf/Skills) und notes (Anmerkung) erweitern; in Eltern-Views sichtbar/bearbeitbar.",
       "description": "Ziel: Caretaker/Admin und Eltern können relevante Profil-Infos pflegen (z. B. 'Tischler, kann Bastel-AGs unterstützen').\n\nDatenmodell: users-Tabelle bekommt knowhow:text und notes:text (beide nullable). Ursprüngliche Migration anpassen, schema.rb regenerieren — wie F35.\n\nSichtbarkeit/Bearbeitung: Caretaker, Admin, Parent dürfen die Felder ihres eigenen Profils lesen und bearbeiten. Caretaker/Admin sehen auch fremde Profile (admin/parents Show + Edit). Eltern dürfen ausschließlich das eigene Profil bearbeiten (Profile-Controller).\n\nForms:\n  • /profile (Eltern-Self-Service): zwei neue Felder am Ende, mit Beschreibungstext.\n  • /admin/parents/new + /edit: ebenfalls beide Felder.\n\nAnzeige:\n  • Eltern-Detail (Show in /admin/parents oder Caretaker-Sicht): knowhow + notes prominent in einer eigenen Sektion 'Über'.\n  • Eltern-Liste (/admin/parents): knowhow als zusätzliche Spalte/Meta-Zeile (truncated auf ~60 Zeichen).\n  • notes ist NICHT in der Liste (zu intern), nur im Detail.",
       "acceptance_criteria": [
