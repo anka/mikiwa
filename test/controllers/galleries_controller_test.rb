@@ -320,6 +320,24 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
     assert created.released?
   end
 
+  # F52: Lightbox nur über Action öffnen
+  test "F52 Show zeigt 'Galerie ansehen'-Action mit data-action zum Öffnen" do
+    sign_in_as(@caretaker)
+    @gallery.photos.attach(io: StringIO.new(minimal_jpeg), filename: "f52.jpg", content_type: "image/jpeg")
+    @gallery.save!
+    get gallery_path(@gallery)
+    assert_response :success
+    assert_match(/Galerie ansehen/, response.body)
+    assert_select 'button[title="Galerie ansehen"][data-action*="lightbox#open"][data-lightbox-index-param="0"]'
+  end
+
+  test "F52 Show ohne Fotos zeigt keine 'Galerie ansehen'-Action" do
+    sign_in_as(@caretaker)
+    get gallery_path(@gallery)
+    assert_response :success
+    assert_no_match(/Galerie ansehen/, response.body)
+  end
+
   # BF-006: CSP-Fehler auf Gallery-Detail
   test "BF-006 Show enthält keine inline style='display:none' Attribute (CSP)" do
     sign_in_as(@caretaker)

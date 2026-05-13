@@ -2800,7 +2800,7 @@
       "id": "F52",
       "name": "Gallery: Lightbox-Galerie nur über Action öffnen",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Auf /galleries/:id wird die Lightbox-Komponente NICHT mehr automatisch initialisiert; stattdessen Aktion 'Galerie ansehen' in der Aktionsleiste.",
       "description": "Ziel: Show-Seite lädt schneller, Eltern entscheiden bewusst über das Öffnen der Bildansicht.\n\nVerhalten heute: Lightbox/Carousel wird beim Rendern der Show direkt aufgebaut (ggf. mit Inline-Styles → CSP-Fehler BF-006).\n\nSoll-Verhalten:\n  • Show zeigt eine Galerie-Karte mit Titel/Meta/Thumbnail-Raster (statische Bilder, kein Lightbox-Init)\n  • In der Aktionsleiste: Icon-Button 'Galerie ansehen' (Lucide images / gallery-thumbnails)\n  • Klick öffnet die Lightbox/Carousel in einem Overlay; im Hintergrund bleibt die Show-Seite\n  • Esc oder Schließen-Button beendet die Lightbox\n\nTechnik: Lightbox-Init über Stimulus-Controller, der erst bei explizitem Trigger (data-action='click->lightbox#open') startet — kein Auto-Init beim DOMContentLoaded. CSP-konform (nonces beachten, siehe BF-006).",
       "acceptance_criteria": [

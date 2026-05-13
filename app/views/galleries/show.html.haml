@@ -1,111 +1,118 @@
 - content_for :title, "#{@gallery.title} · Galerie · Mikiwa"
 
-.mw-page-header
-  .mw-page-header__text
-    %h1.mw-page-header__title= @gallery.title
-    %p.mw-page-header__lede
-      = @gallery.groups.map(&:name).join(", ")
-      - if @gallery.event_date.present?
+%div{ data: { controller: ("lightbox" if @photos.any?) } }
+  .mw-page-header
+    .mw-page-header__text
+      %h1.mw-page-header__title= @gallery.title
+      %p.mw-page-header__lede
+        = @gallery.groups.map(&:name).join(", ")
+        - if @gallery.event_date.present?
+          ·
+          = l(@gallery.event_date, format: :long)
         ·
-        = l(@gallery.event_date, format: :long)
-      ·
-      = @photos.count
-      = @photos.count == 1 ? "Bild" : "Bilder"
+        = @photos.count
+        = @photos.count == 1 ? "Bild" : "Bilder"
+        - if current_user.staff?
+          ·
+          - if @gallery.released?
+            %span.mw-badge.mw-badge--success Freigegeben
+          - else
+            %span.mw-badge.mw-badge--warning Intern
+    .mw-page-header__actions
+      - if @photos.any?
+        %button.mw-page-action{ type: "button",
+            data: { action: "click->lightbox#open", "lightbox-index-param": 0 },
+            title: "Galerie ansehen" }
+          = lucide_icon "image", size: 14
+          Galerie ansehen
       - if current_user.staff?
-        ·
         - if @gallery.released?
-          %span.mw-badge.mw-badge--success Freigegeben
+          = button_to withdraw_gallery_path(@gallery), method: :patch,
+              class: "mw-page-action",
+              data: { turbo_confirm: "Galerie zurückziehen? Sie wird für Eltern ausgeblendet." } do
+            = lucide_icon "eye-off", size: 14
+            Zurückziehen
         - else
-          %span.mw-badge.mw-badge--warning Intern
-  .mw-page-header__actions
-    - if current_user.staff?
-      - if @gallery.released?
-        = button_to withdraw_gallery_path(@gallery), method: :patch,
-            class: "mw-page-action",
-            data: { turbo_confirm: "Galerie zurückziehen? Sie wird für Eltern ausgeblendet." } do
-          = lucide_icon "eye-off", size: 14
-          Zurückziehen
-      - else
-        = button_to release_gallery_path(@gallery), method: :patch,
-            class: "mw-btn mw-btn--primary mw-btn--sm",
-            data: { turbo_confirm: "Galerie für Eltern freigeben?" } do
-          = lucide_icon "eye", size: 14
-          Freigeben
-      = link_to edit_gallery_path(@gallery), class: "mw-btn mw-btn--secondary mw-btn--sm" do
-        = lucide_icon "pencil", size: 14
-        Bearbeiten
-    = link_to "Zurück", galleries_path, class: "mw-page-action"
+          = button_to release_gallery_path(@gallery), method: :patch,
+              class: "mw-btn mw-btn--primary mw-btn--sm",
+              data: { turbo_confirm: "Galerie für Eltern freigeben?" } do
+            = lucide_icon "eye", size: 14
+            Freigeben
+        = link_to edit_gallery_path(@gallery), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+          = lucide_icon "pencil", size: 14
+          Bearbeiten
+      = link_to "Zurück", galleries_path, class: "mw-page-action"
 
-- if notice
-  .mw-flash.mw-flash--success= notice
+  - if notice
+    .mw-flash.mw-flash--success= notice
 
--# Einwilligungs-Hinweis
-- if @consent_warnings.any?
-  .mw-flash.mw-flash--warning{ style: "margin-top: 1rem;" }
-    %strong Hinweis: Kein Einverständnis zur Foto-Verwendung für:
-    %ul{ style: "margin: 0.5rem 0 0 1.25rem;" }
-      - @consent_warnings.each do |child|
-        %li= child.full_name
+  -# Einwilligungs-Hinweis
+  - if @consent_warnings.any?
+    .mw-flash.mw-flash--warning{ style: "margin-top: 1rem;" }
+      %strong Hinweis: Kein Einverständnis zur Foto-Verwendung für:
+      %ul{ style: "margin: 0.5rem 0 0 1.25rem;" }
+        - @consent_warnings.each do |child|
+          %li= child.full_name
 
-- if @gallery.description.present?
-  .mw-card{ style: "margin-top: 1rem; padding: 1rem 1.25rem;" }
-    %p.mw-prose= @gallery.description
+  - if @gallery.description.present?
+    .mw-card{ style: "margin-top: 1rem; padding: 1rem 1.25rem;" }
+      %p.mw-prose= @gallery.description
 
--# Upload-Bereich für Betreuer (F29: Drag&Drop + Per-File-Progress)
-- if current_user.staff?
-  .mw-card{ style: "margin-top: 1.5rem;" }
-    %h2{ style: "padding: 1rem 1.25rem 0; font-size: var(--fs-14); font-weight: var(--fw-bold); color: var(--fg-2);" }
-      Fotos hochladen
-    .mw-gallery-dropzone{ style: "margin: 1rem 1.25rem 1.25rem;",
-                          data: { controller: "gallery-upload",
-                                  gallery_upload_endpoint_value: add_photo_gallery_path(@gallery),
-                                  gallery_upload_csrf_token_value: form_authenticity_token } }
-      %label.mw-gallery-dropzone__hint{ for: "gallery_photos_input" }
-        = lucide_icon "image", size: 24
-        %span Dateien auswählen oder hierher ziehen
-        %small JPEG, PNG, HEIC, WebP · max. 10 MB pro Bild
-      = file_field_tag "photos", multiple: true,
-          accept: "image/jpeg,image/png,image/webp,image/heic",
-          id: "gallery_photos_input",
-          class: "mw-gallery-dropzone__input",
-          data: { gallery_upload_target: "input", action: "change->gallery-upload#pick" }
-      .mw-upload-queue{ data: { gallery_upload_target: "queue" } }
-      %p.mw-upload-summary{ data: { gallery_upload_target: "summary" } }
+  -# Upload-Bereich für Betreuer (F29: Drag&Drop + Per-File-Progress)
+  - if current_user.staff?
+    .mw-card{ style: "margin-top: 1.5rem;" }
+      %h2{ style: "padding: 1rem 1.25rem 0; font-size: var(--fs-14); font-weight: var(--fw-bold); color: var(--fg-2);" }
+        Fotos hochladen
+      .mw-gallery-dropzone{ style: "margin: 1rem 1.25rem 1.25rem;",
+                            data: { controller: "gallery-upload",
+                                    gallery_upload_endpoint_value: add_photo_gallery_path(@gallery),
+                                    gallery_upload_csrf_token_value: form_authenticity_token } }
+        %label.mw-gallery-dropzone__hint{ for: "gallery_photos_input" }
+          = lucide_icon "image", size: 24
+          %span Dateien auswählen oder hierher ziehen
+          %small JPEG, PNG, HEIC, WebP · max. 10 MB pro Bild
+        = file_field_tag "photos", multiple: true,
+            accept: "image/jpeg,image/png,image/webp,image/heic",
+            id: "gallery_photos_input",
+            class: "mw-gallery-dropzone__input",
+            data: { gallery_upload_target: "input", action: "change->gallery-upload#pick" }
+        .mw-upload-queue{ data: { gallery_upload_target: "queue" } }
+        %p.mw-upload-summary{ data: { gallery_upload_target: "summary" } }
 
--# Foto-Grid mit Lightbox
-.mw-page-header{ style: "margin-top: 2rem;" }
-  %h2{ style: "font-size: var(--fs-18); font-weight: var(--fw-bold);" } Fotos
+  -# Foto-Grid (statisches Thumbnail-Raster; Lightbox erst per Action)
+  .mw-page-header{ style: "margin-top: 2rem;" }
+    %h2{ style: "font-size: var(--fs-18); font-weight: var(--fw-bold);" } Fotos
 
-- if @photos.any?
-  .mw-photo-grid{ data: { controller: "lightbox" } }
-    - @photos.each_with_index do |photo, idx|
-      .mw-photo-grid__item
-        %button.mw-photo-grid__thumb{ type: "button",
-            data: { action: "click->lightbox#open", lightbox_index_param: idx } }
-          = image_tag photo.variant(:thumb), loading: "lazy", alt: "", class: "mw-photo-grid__img"
-        .mw-photo-grid__actions
-          = link_to download_gallery_path(@gallery, photo_id: photo.id),
-              class: "mw-btn mw-btn--ghost mw-btn--sm", title: "Herunterladen" do
-            = lucide_icon "download", size: 14
-          - if current_user.staff?
-            = button_to remove_photo_gallery_path(@gallery, photo_id: photo.id), method: :delete,
-                class: "mw-btn mw-btn--ghost mw-btn--sm", title: "Entfernen",
-                data: { turbo_confirm: "Bild entfernen?" } do
-              = lucide_icon "trash-2", size: 14
+  - if @photos.any?
+    .mw-photo-grid
+      - @photos.each_with_index do |photo, idx|
+        .mw-photo-grid__item
+          %button.mw-photo-grid__thumb{ type: "button",
+              data: { action: "click->lightbox#open", lightbox_index_param: idx } }
+            = image_tag photo.variant(:thumb), loading: "lazy", alt: "", class: "mw-photo-grid__img"
+          .mw-photo-grid__actions
+            = link_to download_gallery_path(@gallery, photo_id: photo.id),
+                class: "mw-btn mw-btn--ghost mw-btn--sm", title: "Herunterladen" do
+              = lucide_icon "download", size: 14
+            - if current_user.staff?
+              = button_to remove_photo_gallery_path(@gallery, photo_id: photo.id), method: :delete,
+                  class: "mw-btn mw-btn--ghost mw-btn--sm", title: "Entfernen",
+                  data: { turbo_confirm: "Bild entfernen?" } do
+                = lucide_icon "trash-2", size: 14
 
-  -# Lightbox-Dialog
-  %dialog.mw-lightbox{ data: { lightbox_target: "dialog" } }
-    %button.mw-lightbox__close{ type: "button", data: { action: "click->lightbox#close" } }
-      = lucide_icon "x", size: 24
-    %button.mw-lightbox__prev{ type: "button", data: { action: "click->lightbox#prev" } }
-      = lucide_icon "chevron-left", size: 32
-    .mw-lightbox__image-wrap
-      %img.mw-lightbox__img{ src: "", alt: "", data: { lightbox_target: "image" } }/
-    %button.mw-lightbox__next{ type: "button", data: { action: "click->lightbox#next" } }
-      = lucide_icon "chevron-right", size: 32
-    -# Bild-URLs als Data-Attribute für Stimulus
-    - @photos.each do |photo|
-      %span.mw-lightbox__src{ data: { lightbox_src: url_for(photo.variant(:display)) } }
+    -# Lightbox-Dialog (geschlossen bis Action triggert)
+    %dialog.mw-lightbox{ data: { lightbox_target: "dialog" } }
+      %button.mw-lightbox__close{ type: "button", data: { action: "click->lightbox#close" } }
+        = lucide_icon "x", size: 24
+      %button.mw-lightbox__prev{ type: "button", data: { action: "click->lightbox#prev" } }
+        = lucide_icon "chevron-left", size: 32
+      .mw-lightbox__image-wrap
+        %img.mw-lightbox__img{ src: "", alt: "", data: { lightbox_target: "image" } }/
+      %button.mw-lightbox__next{ type: "button", data: { action: "click->lightbox#next" } }
+        = lucide_icon "chevron-right", size: 32
+      -# Bild-URLs als Data-Attribute für Stimulus
+      - @photos.each do |photo|
+        %span.mw-lightbox__src{ data: { lightbox_src: url_for(photo.variant(:display)) } }
 
-- else
-  %p.mw-text-muted{ style: "padding: 1rem 0;" } Noch keine Fotos in dieser Galerie.
+  - else
+    %p.mw-text-muted{ style: "padding: 1rem 0;" } Noch keine Fotos in dieser Galerie.
