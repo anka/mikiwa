@@ -64,14 +64,13 @@
             - if current_user.staff?
               %td{ "data-label": "Aktionen", style: "text-align: right;" }
                 .mw-actions
-                  = link_to edit_child_path(child), class: "mw-page-action" do
+                  = link_to edit_child_path(child), class: "mw-page-action", title: "Bearbeiten", "aria-label": "Bearbeiten" do
                     = lucide_icon "pencil", size: 14
-                    Bearbeiten
                   = button_to deactivate_child_path(child), method: :patch,
                       class: "mw-page-action mw-page-action--danger",
+                      title: "Deaktivieren", "aria-label": "Deaktivieren",
                       data: { turbo_confirm: "#{child.full_name} wirklich deaktivieren?" } do
                     = lucide_icon "x", size: 14
-                    Deaktivieren
 - else
   .mw-empty-state
     %p.mw-text-muted Noch keine Kinder im aktiven Kindergartenjahr.

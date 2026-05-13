@@ -2477,7 +2477,7 @@
       "id": "F44",
       "name": "Row-Actions in allen Listen ausschließlich als Icons",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Alle Listen-Row-Actions werden auf Icon-Buttons (Lucide) vereinheitlicht, analog zur /events-Liste.",
       "description": "Ziel: Konsistente, kompakte UI in allen Index-Pages.\n\nVorlage: /events Index — Show/Edit/Cancel/Delete sind dort als Icon-Buttons mit Tooltip umgesetzt. Dieses Muster wird auf alle anderen Index-Pages (Card-Stack auf Mobile inklusive) übertragen:\n  • /children, /children/inactive\n  • /galleries\n  • /attendance_lists\n  • /shopping_lists\n  • /polls\n  • /meal_entries\n  • /admin/parents, /admin/caretakers\n  • /kindergarten_years\n  • /groups, /messages, /inbox (falls Actions vorhanden)\n\nKomponente: bestehendes Icon-Button-Partial wiederverwenden. Jeder Button hat title-Attribut + aria-label für A11y. Tooltips erscheinen on-hover/focus. Destructive Actions (Löschen) klar farblich (rot) markiert, behalten Confirm-Dialog.\n\nMobile (Card-Stack): Actions am unteren Karten-Rand als Icon-Reihe, kein Text.",
       "acceptance_criteria": [

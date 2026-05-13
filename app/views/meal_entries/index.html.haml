@@ -78,10 +78,13 @@
                 %td.mw-meal-cell{ "data-label": "Aktionen #{I18n.l(day, format: "%a")}" }
                   - if entry
                     .mw-actions{ style: "gap: 0.25rem;" }
-                      = link_to edit_meal_entry_path(entry), class: "mw-btn mw-btn--ghost mw-btn--xs", title: "Bearbeiten" do
+                      = link_to edit_meal_entry_path(entry),
+                          class: "mw-btn mw-btn--ghost mw-btn--xs",
+                          title: "Bearbeiten", "aria-label": "Bearbeiten" do
                         = lucide_icon "pencil", size: 12
                       = button_to meal_entry_path(entry), method: :delete,
-                          class: "mw-btn mw-btn--ghost mw-btn--xs", title: "Löschen",
+                          class: "mw-btn mw-btn--ghost mw-btn--xs",
+                          title: "Löschen", "aria-label": "Löschen",
                           data: { turbo_confirm: "Eintrag löschen?" } do
                         = lucide_icon "trash-2", size: 12
                   - else

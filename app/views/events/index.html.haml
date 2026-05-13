@@ -63,15 +63,18 @@
             - if current_user.staff?
               %td{ style: "text-align: right;" }
                 .mw-actions
-                  = link_to edit_event_path(event), class: "mw-page-action", title: "Bearbeiten" do
+                  = link_to edit_event_path(event), class: "mw-page-action",
+                      title: "Bearbeiten", "aria-label": "Bearbeiten" do
                     = lucide_icon "pencil", size: 14
                   - unless event.cancelled?
                     = button_to cancel_event_path(event), method: :patch,
-                        class: "mw-page-action mw-page-action--danger", title: "Absagen",
+                        class: "mw-page-action mw-page-action--danger",
+                        title: "Absagen", "aria-label": "Absagen",
                         data: { turbo_confirm: "Veranstaltung \"#{event.title}\" wirklich absagen?" } do
                       = lucide_icon "x", size: 14
                   = button_to event_path(event), method: :delete,
-                      class: "mw-page-action mw-page-action--danger", title: "Löschen",
+                      class: "mw-page-action mw-page-action--danger",
+                      title: "Löschen", "aria-label": "Löschen",
                       data: { turbo_confirm: "Veranstaltung \"#{event.title}\" wirklich löschen?" } do
                     = lucide_icon "trash-2", size: 14
 - else

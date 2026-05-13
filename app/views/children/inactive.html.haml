@@ -64,9 +64,9 @@
               .mw-actions
                 = button_to reactivate_child_path(child), method: :patch,
                     class: "mw-page-action",
+                    title: "Reaktivieren", "aria-label": "Reaktivieren",
                     data: { turbo_confirm: "#{child.full_name} reaktivieren?" } do
                   = lucide_icon "check", size: 14
-                  Reaktivieren
 - else
   .mw-empty-state
     %p.mw-text-muted Keine deaktivierten Kinder vorhanden.

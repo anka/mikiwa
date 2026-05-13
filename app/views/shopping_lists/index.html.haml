@@ -51,11 +51,12 @@
                 = "#{done}/#{total} erledigt"
             %td{ "data-label": "Aktionen", style: "text-align: right;" }
               .mw-actions
-                = link_to shopping_list_path(list), class: "mw-btn mw-btn--secondary mw-btn--sm" do
-                  Öffnen
+                = link_to shopping_list_path(list), class: "mw-page-action", title: "Öffnen", "aria-label": "Öffnen" do
+                  = lucide_icon "eye", size: 14
                 - if current_user.staff?
                   = button_to shopping_list_path(list), method: :delete,
-                      class: "mw-page-action mw-page-action--danger", title: "Löschen",
+                      class: "mw-page-action mw-page-action--danger",
+                      title: "Löschen", "aria-label": "Löschen",
                       data: { turbo_confirm: "Liste \"#{list.title}\" wirklich löschen?" } do
                     = lucide_icon "trash-2", size: 14
 - else

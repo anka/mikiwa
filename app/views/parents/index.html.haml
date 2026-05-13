@@ -46,22 +46,21 @@
                 %span.mw-badge.mw-badge--success Aktiv
             %td{ "data-label": "Aktionen", style: "text-align: right;" }
               .mw-actions
-                = link_to edit_parent_path(parent), class: "mw-page-action" do
+                = link_to edit_parent_path(parent), class: "mw-page-action", title: "Bearbeiten", "aria-label": "Bearbeiten" do
                   = lucide_icon "pencil", size: 14
-                  Bearbeiten
-                = button_to reinvite_parent_path(parent), method: :post, class: "mw-page-action" do
+                = button_to reinvite_parent_path(parent), method: :post,
+                    class: "mw-page-action", title: "Re-Einladen", "aria-label": "Re-Einladen" do
                   = lucide_icon "send", size: 14
-                  Re-Einladen
                 - if parent.locked?
-                  = button_to unlock_parent_path(parent), method: :patch, class: "mw-page-action" do
+                  = button_to unlock_parent_path(parent), method: :patch,
+                      class: "mw-page-action", title: "Reaktivieren", "aria-label": "Reaktivieren" do
                     = lucide_icon "check", size: 14
-                    Reaktivieren
                 - else
                   = button_to lock_parent_path(parent), method: :patch,
                       class: "mw-page-action mw-page-action--danger",
+                      title: "Deaktivieren", "aria-label": "Deaktivieren",
                       data: { turbo_confirm: "Account von #{parent.full_name.presence || parent.email} deaktivieren?" } do
                     = lucide_icon "x", size: 14
-                    Deaktivieren
   - else
     .mw-empty-state{ style: "padding: 1.5rem;" }
       %p.mw-text-muted{ style: "margin: 0;" }

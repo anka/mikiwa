@@ -30,7 +30,8 @@
             %td= l(msg.created_at, format: :short)
             %td{ style: "text-align: right;" }
               = button_to message_path(msg), method: :delete,
-                  class: "mw-page-action mw-page-action--danger", title: "Löschen",
+                  class: "mw-page-action mw-page-action--danger",
+                  title: "Löschen", "aria-label": "Löschen",
                   data: { turbo_confirm: "Mitteilung \"#{msg.title}\" wirklich löschen?" } do
                 = lucide_icon "trash-2", size: 14
 - else

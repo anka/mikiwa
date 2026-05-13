@@ -309,6 +309,35 @@ class ChildrenControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # F44: Row-Actions als Icons
+  test "F44 Children-Index Row-Action 'Bearbeiten' ist Icon-only mit Tooltip" do
+    sign_in_as(@caretaker)
+    get children_path
+    assert_response :success
+    assert_match(/<a[^>]*href="#{Regexp.escape(edit_child_path(@child))}"[^>]*>/, response.body,
+                 "Bearbeiten-Link muss gerendert sein")
+    assert_match(/<a[^>]*title="Bearbeiten"[^>]*href="#{Regexp.escape(edit_child_path(@child))}"|<a[^>]*href="#{Regexp.escape(edit_child_path(@child))}"[^>]*title="Bearbeiten"/, response.body,
+                 "Bearbeiten muss title='Bearbeiten' haben")
+    edit_link = response.body.match(/<a[^>]+href="#{edit_child_path(@child)}"[^>]*>(.*?)<\/a>/m)
+    assert edit_link, "Bearbeiten-Link nicht gefunden"
+    inner = edit_link[1].gsub(/<svg.*?<\/svg>/m, "").strip
+    assert_no_match(/Bearbeiten/, inner,
+                    "Bearbeiten-Link darf keinen sichtbaren Text 'Bearbeiten' enthalten (außer in Attributen)")
+  end
+
+  test "F44 Children-Index Deaktivieren-Action ist Icon-only" do
+    sign_in_as(@caretaker)
+    get children_path
+    deactivate_form = response.body.match(/<form[^>]+action="#{Regexp.escape(deactivate_child_path(@child))}"[^>]*>.*?<\/form>/m)
+    assert deactivate_form, "Deaktivieren-Form nicht gefunden"
+    assert_match(/title="Deaktivieren"/, deactivate_form[0])
+    inner_button = deactivate_form[0].match(/<button[^>]*>(.*?)<\/button>/m)
+    assert inner_button, "Deaktivieren-Button nicht gefunden"
+    inner = inner_button[1].gsub(/<svg.*?<\/svg>/m, "").strip
+    assert_no_match(/Deaktivieren/, inner,
+                    "Deaktivieren-Button darf keinen sichtbaren Text 'Deaktivieren' enthalten")
+  end
+
   # F40: Facts-Übersicht in /children
   test "F40 Index zeigt Facts-Übersicht mit Gesamtanzahl" do
     sign_in_as(@caretaker)

@@ -34,14 +34,14 @@
             %td= group.description.presence || "–"
             %td{ style: "text-align: right;" }
               .mw-actions
-                = link_to edit_group_path(group), class: "mw-page-action" do
+                = link_to edit_group_path(group), class: "mw-page-action",
+                    title: "Bearbeiten", "aria-label": "Bearbeiten" do
                   = lucide_icon "pencil", size: 14
-                  Bearbeiten
                 = button_to group_path(group), method: :delete,
                     class: "mw-page-action mw-page-action--danger",
+                    title: "Löschen", "aria-label": "Löschen",
                     data: { turbo_confirm: "Gruppe \"#{group.name}\" wirklich löschen?" } do
                   = lucide_icon "trash-2", size: 14
-                  Löschen
 - else
   .mw-empty-state
     %p.mw-text-muted Noch keine Gruppen angelegt.
