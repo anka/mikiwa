@@ -1,6 +1,6 @@
 class GalleriesController < ApplicationController
-  before_action :set_gallery,     only: %i[show edit update destroy add_photo remove_photo download]
-  before_action :require_staff!,  only: %i[new create edit update destroy add_photo remove_photo]
+  before_action :set_gallery,     only: %i[show edit update destroy add_photo remove_photo download release withdraw]
+  before_action :require_staff!,  only: %i[new create edit update destroy add_photo remove_photo release withdraw]
 
   def index
     @galleries = policy_scope(Gallery).includes(:groups, :created_by).ordered
@@ -67,6 +67,16 @@ class GalleriesController < ApplicationController
     redirect_to galleries_path, notice: "Galerie wurde gelöscht."
   end
 
+  def release
+    @gallery.update!(visibility: :released)
+    redirect_to gallery_path(@gallery), notice: "Galerie wurde freigegeben."
+  end
+
+  def withdraw
+    @gallery.update!(visibility: :internal)
+    redirect_to gallery_path(@gallery), notice: "Galerie wurde zurückgezogen."
+  end
+
   def add_photo
     authorize!(@gallery, policy_class: GalleryPolicy)
     photo = params[:photo]
@@ -113,7 +123,7 @@ class GalleriesController < ApplicationController
   end
 
   def gallery_params
-    params.require(:gallery).permit(:title, :description, :event_date, :kindergarten_year_id, :event_id)
+    params.require(:gallery).permit(:title, :description, :event_date, :kindergarten_year_id, :event_id, :visibility)
   end
 
   def require_staff!

@@ -75,4 +75,21 @@ class GalleryTest < ActiveSupport::TestCase
     @gallery.save!
     assert_equal 0, @gallery.photos.count
   end
+
+  # F37 – visibility enum
+  test "F37 neue Galerie hat visibility internal als Default" do
+    @gallery.save!
+    assert @gallery.internal?
+    assert_not @gallery.released?
+  end
+
+  test "F37 Galerie kann auf released gesetzt werden" do
+    @gallery.save!
+    @gallery.update!(visibility: :released)
+    assert @gallery.released?
+  end
+
+  test "F37 visibility-Enum hat die Werte internal und released" do
+    assert_equal({ "internal" => 0, "released" => 1 }, Gallery.visibilities)
+  end
 end

@@ -52,6 +52,8 @@ Rails.application.routes.draw do
       post   :add_photo
       delete :remove_photo
       get    :download
+      patch  :release
+      patch  :withdraw
     end
   end
 

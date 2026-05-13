@@ -11,8 +11,26 @@
       ·
       = @photos.count
       = @photos.count == 1 ? "Bild" : "Bilder"
+      - if current_user.staff?
+        ·
+        - if @gallery.released?
+          %span.mw-badge.mw-badge--success Freigegeben
+        - else
+          %span.mw-badge.mw-badge--warning Intern
   .mw-page-header__actions
     - if current_user.staff?
+      - if @gallery.released?
+        = button_to withdraw_gallery_path(@gallery), method: :patch,
+            class: "mw-page-action",
+            data: { turbo_confirm: "Galerie zurückziehen? Sie wird für Eltern ausgeblendet." } do
+          = lucide_icon "eye-off", size: 14
+          Zurückziehen
+      - else
+        = button_to release_gallery_path(@gallery), method: :patch,
+            class: "mw-btn mw-btn--primary mw-btn--sm",
+            data: { turbo_confirm: "Galerie für Eltern freigeben?" } do
+          = lucide_icon "eye", size: 14
+          Freigeben
       = link_to edit_gallery_path(@gallery), class: "mw-btn mw-btn--secondary mw-btn--sm" do
         = lucide_icon "pencil", size: 14
         Bearbeiten

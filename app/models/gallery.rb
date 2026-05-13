@@ -24,7 +24,10 @@ class Gallery < ApplicationRecord
   validate  :photos_within_limit
   validate  :photos_valid_types_and_sizes
 
-  scope :ordered, -> { order(created_at: :desc) }
+  enum :visibility, { internal: 0, released: 1 }, default: :internal
+
+  scope :ordered,  -> { order(created_at: :desc) }
+  scope :released, -> { where(visibility: :released) }
 
   def consent_warnings(group)
     group.children

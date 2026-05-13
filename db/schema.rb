@@ -146,6 +146,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_120000) do
     t.string "event_id", limit: 36
     t.string "kindergarten_year_id", limit: 36, null: false
     t.string "title", null: false
+    t.integer "visibility", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_galleries_on_created_by_id"
     t.index ["event_id"], name: "index_galleries_on_event_id"

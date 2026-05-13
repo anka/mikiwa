@@ -1,6 +1,6 @@
 class GalleryPolicy < ApplicationPolicy
   def index?    = true
-  def show?     = staff? || parent_in_any_group?
+  def show?     = staff? || (parent_in_any_group? && record.released?)
   def new?      = staff?
   def create?   = staff?
   def edit?     = staff?
@@ -8,14 +8,19 @@ class GalleryPolicy < ApplicationPolicy
   def destroy?  = staff?
   def add_photo?    = staff?
   def remove_photo? = staff?
-  def download? = staff? || parent_in_any_group?
+  def download? = staff? || (parent_in_any_group? && record.released?)
+  def release?  = staff?
+  def withdraw? = staff?
 
   class Scope < ApplicationPolicy::Scope
     def resolve
       return scope.all if user.staff?
 
       group_ids = user.children.active.pluck(:group_id)
-      scope.joins(:gallery_groups).where(gallery_groups: { group_id: group_ids }).distinct
+      scope.released
+           .joins(:gallery_groups)
+           .where(gallery_groups: { group_id: group_ids })
+           .distinct
     end
   end
 

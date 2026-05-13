@@ -30,6 +30,12 @@
             ·
             = gallery.photos.count
             = gallery.photos.count == 1 ? "Bild" : "Bilder"
+            - if current_user.staff?
+              ·
+              - if gallery.released?
+                %span.mw-badge.mw-badge--success Freigegeben
+              - else
+                %span.mw-badge.mw-badge--warning Intern
           .mw-gallery-card__actions
             = link_to gallery_path(gallery), class: "mw-btn mw-btn--secondary mw-btn--sm" do
               Öffnen

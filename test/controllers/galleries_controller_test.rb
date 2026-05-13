@@ -60,7 +60,8 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
     assert_match "Löwen-Ausflug", response.body
   end
 
-  test "parent sees only galleries for own group" do
+  test "parent sees only released galleries for own group" do
+    @gallery.update!(visibility: :released)
     sign_in_as(@parent)
     get galleries_path
     assert_response :success
@@ -69,7 +70,8 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   # --- Show ---
-  test "authenticated user can view gallery" do
+  test "authenticated user can view released gallery" do
+    @gallery.update!(visibility: :released)
     sign_in_as(@parent)
     get gallery_path(@gallery)
     assert_response :success
@@ -242,10 +244,80 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
-  test "parent in group gets 404 downloading non-existent photo" do
+  test "parent in group gets 404 downloading non-existent photo from released gallery" do
+    @gallery.update!(visibility: :released)
     sign_in_as(@parent)
     get download_gallery_path(@gallery, photo_id: "99999999")
     assert_response :not_found
+  end
+
+  # F37 – visibility / Freigabe
+  test "F37 parent sieht nur freigegebene Galerien im Index" do
+    @gallery.update!(visibility: :internal)
+    sign_in_as(@parent)
+    get galleries_path
+    assert_response :success
+    assert_no_match "Sommerfest", response.body
+  end
+
+  test "F37 parent sieht freigegebene Galerie im Index" do
+    @gallery.update!(visibility: :released)
+    sign_in_as(@parent)
+    get galleries_path
+    assert_response :success
+    assert_match "Sommerfest", response.body
+  end
+
+  test "F37 parent bekommt 403 beim Aufruf einer internen Galerie" do
+    @gallery.update!(visibility: :internal)
+    sign_in_as(@parent)
+    get gallery_path(@gallery)
+    assert_response :forbidden
+  end
+
+  test "F37 Betreuer sieht interne und freigegebene Galerien im Index" do
+    @gallery.update!(visibility: :internal)
+    sign_in_as(@caretaker)
+    get galleries_path
+    assert_response :success
+    assert_match "Sommerfest", response.body
+  end
+
+  test "F37 Betreuer kann Galerie freigeben" do
+    @gallery.update!(visibility: :internal)
+    sign_in_as(@caretaker)
+    patch release_gallery_path(@gallery)
+    assert_redirected_to gallery_path(@gallery)
+    assert @gallery.reload.released?
+  end
+
+  test "F37 Betreuer kann freigegebene Galerie zurückziehen" do
+    @gallery.update!(visibility: :released)
+    sign_in_as(@caretaker)
+    patch withdraw_gallery_path(@gallery)
+    assert_redirected_to gallery_path(@gallery)
+    assert @gallery.reload.internal?
+  end
+
+  test "F37 parent kann Galerie nicht freigeben (403)" do
+    @gallery.update!(visibility: :internal)
+    sign_in_as(@parent)
+    patch release_gallery_path(@gallery)
+    assert_response :forbidden
+  end
+
+  test "F37 Galerie mit sofort_freigeben=true wird released erstellt" do
+    sign_in_as(@caretaker)
+    post galleries_path, params: {
+      gallery: {
+        title: "Sofort-Galerie",
+        kindergarten_year_id: @year.id,
+        group_ids: [ @group_baeren.id ],
+        visibility: "released"
+      }
+    }
+    created = Gallery.order(:created_at).last
+    assert created.released?
   end
 
   private

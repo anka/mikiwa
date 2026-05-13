@@ -40,3 +40,9 @@
           options_from_collection_for_select(events, :id, :title, gallery.event_id),
           { include_blank: "Keine" }, class: "mw-select"
 
+  .mw-field
+    .mw-checkbox-row
+      = f.check_box :visibility, { id: "gallery_visibility_released", class: "mw-checkbox" },
+          "released", "internal"
+      = f.label :visibility, "Sofort freigeben (für Eltern sichtbar)", class: "mw-field__label mw-field__label--inline", for: "gallery_visibility_released"
+

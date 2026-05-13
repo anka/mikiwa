@@ -2214,7 +2214,7 @@
       "id": "F37",
       "name": "Interne Galerien mit späterer Freigabe",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Galerien haben einen Sichtbarkeits-Status (intern/freigegeben); interne Galerien sind für Eltern nicht sichtbar, können später freigegeben werden.",
       "description": "Ziel: Caretaker können Galerien zunächst intern anlegen (Auswahl/Kuratierung) und später für Eltern freigeben.\n\nDatenmodell: Gallery bekommt ein Attribut visibility (enum: internal, released). Default beim Erstellen: internal. Ursprüngliche Galleries-Migration anpassen (kein neues Migration-File), schema.rb regenerieren — Vorgehen wie F35.\n\nAutorisierung: Eltern-Scope (Galleries::ForParentsQuery o. ä.) filtert visibility=released. Caretaker/Admin sehen beide Zustände, mit klarer visueller Markierung (Badge 'Intern' / 'Freigegeben').\n\nAktion: 'Freigeben'-Button auf Show + Index (nur für Caretaker/Admin). Bestätigungsdialog. State-Übergang internal → released ist möglich; rückwärts released → internal ebenfalls erlaubt (Caretaker kann zurückziehen).\n\nForm: Beim Erstellen kann optional via Toggle direkt 'Sofort freigeben' gewählt werden (Default aus = intern).",
       "acceptance_criteria": [
