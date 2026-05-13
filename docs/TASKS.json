@@ -2688,7 +2688,7 @@
       "id": "F49",
       "name": "ShoppingList: berechnete Kalenderwoche in Liste & Detail",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Methode ShoppingList#calendar_week aus event_date; Anzeige in Index und Show ('KW 18').",
       "description": "Ziel: Kalenderwoche schnell sichtbar.\n\nModell: ShoppingList#calendar_week → Integer (event_date.cweek). Helper-Methode ShoppingList#calendar_week_label → 'KW 18'.\n\nAnzeige:\n  • Index /shopping_lists: neue Spalte 'KW' (Desktop) bzw. Meta-Zeile (Card-Stack)\n  • Show /shopping_lists/:id: prominent neben Einkaufstag\n\nAchtung: cweek liefert ISO-Wochen — gewünscht und in DE üblich.",
       "acceptance_criteria": [

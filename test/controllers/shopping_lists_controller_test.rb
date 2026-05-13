@@ -215,6 +215,23 @@ class ShoppingListsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/Bezugstag/, response.body)
   end
 
+  # F49: KW-Anzeige
+  test "F49 Index zeigt KW-Spalte" do
+    sign_in_as(@caretaker)
+    get shopping_lists_path
+    assert_response :success
+    expected_kw = @list.event_date.cweek
+    assert_match(/>KW</, response.body, "Spaltenkopf 'KW' muss vorhanden sein")
+    assert_match(/KW #{expected_kw}/, response.body)
+  end
+
+  test "F49 Show zeigt KW prominent" do
+    sign_in_as(@caretaker)
+    get shopping_list_path(@list)
+    assert_response :success
+    assert_match(/KW #{@list.event_date.cweek}/, response.body)
+  end
+
   # BF-005: ShoppingItem-Eingabe — Fokus-Bug nach Append
   test "BF-005 Create-Response trägt Marker zum Re-Fokus auf das neue Form" do
     sign_in_as(@caretaker)

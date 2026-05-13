@@ -15,4 +15,13 @@ class ShoppingList < ApplicationRecord
   validates :created_by, presence: true
 
   scope :ordered, -> { order(event_date: :desc) }
+
+  def calendar_week
+    event_date&.cweek
+  end
+
+  def calendar_week_label
+    return nil if event_date.blank?
+    "KW #{event_date.cweek}"
+  end
 end

@@ -8,6 +8,8 @@
         = @list.group.name
         ·
       = l(@list.event_date, format: :long)
+      ·
+      %strong= @list.calendar_week_label
   .mw-page-header__actions
     - if current_user.staff?
       = link_to edit_shopping_list_path(@list), class: "mw-btn mw-btn--secondary mw-btn--sm" do

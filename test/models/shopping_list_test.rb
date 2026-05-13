@@ -88,4 +88,23 @@ class ShoppingListTest < ActiveSupport::TestCase
     assert @list.save
     assert_nil @list.reload.assigned_to
   end
+
+  # F49: berechnete Kalenderwoche
+  test "F49 calendar_week liefert ISO-Woche aus event_date" do
+    @list.event_date = Date.new(2026, 5, 4)
+    @list.save!
+    assert_equal Date.new(2026, 5, 4).cweek, @list.calendar_week
+  end
+
+  test "F49 calendar_week_label liefert 'KW {n}' Format" do
+    @list.event_date = Date.new(2026, 5, 4)
+    @list.save!
+    assert_equal "KW #{Date.new(2026, 5, 4).cweek}", @list.calendar_week_label
+  end
+
+  test "F49 calendar_week_label für Jahresende (ISO-KW)" do
+    @list.event_date = Date.new(2026, 12, 31)
+    @list.save!
+    assert_equal "KW #{Date.new(2026, 12, 31).cweek}", @list.calendar_week_label
+  end
 end

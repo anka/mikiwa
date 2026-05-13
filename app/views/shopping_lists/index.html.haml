@@ -27,6 +27,7 @@
           %th Gruppe
           %th Verantwortlich
           %th Einkaufstag
+          %th KW
           %th Einträge
           %th{ style: "text-align: right;" } Aktionen
       %tbody
@@ -46,6 +47,7 @@
               - else
                 %span.mw-badge.mw-badge--neutral Nicht zugewiesen
             %td{ "data-label": "Einkaufstag" }= l(list.event_date, format: :long)
+            %td{ "data-label": "KW" }= list.calendar_week_label
             %td{ "data-label": "Einträge" }
               %span{ style: done == total && total > 0 ? "color: var(--success);" : nil }
                 = "#{done}/#{total} erledigt"
