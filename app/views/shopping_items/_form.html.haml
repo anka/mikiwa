@@ -1,12 +1,14 @@
 -# Inline-Form zum Hinzufügen eines neuen Eintrags. Wird nach erfolgreichem
 -# Submit per Turbo-Stream durch eine frische Instanz ersetzt.
+- focus_on_connect = local_assigns.fetch(:focus_on_connect, false)
+- form_data = { controller: "shopping-new-item" }
+- form_data["focus-on-connect"] = "true" if focus_on_connect
 = form_with model: item,
             url: shopping_list_shopping_items_path(list),
             method: :post,
             multipart: true,
             html: { class: "mw-shopping-new",
-                    data: { controller: "shopping-new-item",
-                            action: "turbo:submit-end->shopping-new-item#focusName" } } do |f|
+                    data: form_data } do |f|
   - if item.errors.any?
     .mw-shopping-new__errors
       = item.errors.full_messages.to_sentence

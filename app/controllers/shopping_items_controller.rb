@@ -89,7 +89,9 @@ class ShoppingItemsController < ApplicationController
       turbo_stream.append("shopping_items", partial: "shopping_items/item",
                                              locals: { item: @item }),
       turbo_stream.replace("new_shopping_item", partial: "shopping_items/form",
-                                                  locals: { list: @list, item: @list.shopping_items.build }),
+                                                  locals: { list: @list,
+                                                            item: @list.shopping_items.build,
+                                                            focus_on_connect: true }),
       summary_stream
     ]
   end

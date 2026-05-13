@@ -6,9 +6,11 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["name", "photo", "preview", "previewImg"]
 
-  focusName(event) {
-    if (!event.detail.success) return
-    if (this.hasNameTarget) this.nameTarget.focus()
+  connect() {
+    if (this.element.dataset.focusOnConnect === "true") {
+      queueMicrotask(() => this.nameTarget?.focus())
+      delete this.element.dataset.focusOnConnect
+    }
   }
 
   previewPhoto() {

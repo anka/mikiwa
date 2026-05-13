@@ -2660,7 +2660,7 @@
       "id": "BF-005",
       "name": "Bugfix: ShoppingItem-Eingabe — Fokus springt zurück in erstes Feld",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Beim Hinzufügen eines weiteren ShoppingItem in der Einkaufsliste springt der Fokus immer wieder ins erste Eingabefeld, weitere Einträge werden faktisch verhindert.",
       "description": "Symptom: In der Einkaufslisten-Detailansicht (vermutlich Turbo-Stream-basierte Item-Anlage) wird nach Submit jedes neu hinzugefügten Items der Fokus auf das erste Item-Input gesetzt. Folge: der Caretaker kann faktisch keinen zweiten Eintrag tippen, da Tastatureingaben in das erste Feld wandern.\n\nWahrscheinliche Ursache: Turbo-Stream re-rendert die gesamte Liste; das Form-Reset oder autofocus an einer falschen Stelle setzt den Fokus.\n\nFix-Ansatz:\n  • Turbo-Frame oder Turbo-Stream so anpassen, dass nur das neue Item appended wird, nicht die ganze Liste re-rendert\n  • Fokus nach Append explizit auf das frisch erzeugte Input oder zurück ins 'Neu hinzufügen'-Feld setzen (Stimulus-Controller mit data-action-on-stream-render)\n  • alternative: das 'Neu hinzufügen'-Input ist ein eigenes Form außerhalb der Item-Liste; nach Submit wird das Input geleert und der Fokus dort gehalten\n\nSystem-Test (agent-browser oder Capybara): zwei Items zügig hintereinander anlegen ohne Fokus-Verlust.",
       "acceptance_criteria": [

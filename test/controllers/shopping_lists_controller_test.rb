@@ -214,4 +214,15 @@ class ShoppingListsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Einkaufstag/, response.body)
     assert_no_match(/Bezugstag/, response.body)
   end
+
+  # BF-005: ShoppingItem-Eingabe — Fokus-Bug nach Append
+  test "BF-005 Create-Response trägt Marker zum Re-Fokus auf das neue Form" do
+    sign_in_as(@caretaker)
+    post shopping_list_shopping_items_path(@list),
+         params: { shopping_item: { name: "Brot" } },
+         as: :turbo_stream
+    assert_response :success
+    assert_match(/data-focus-on-connect="true"/, response.body,
+                 "Turbo-Stream-Response muss data-focus-on-connect='true' auf dem neuen Form-Element setzen")
+  end
 end
