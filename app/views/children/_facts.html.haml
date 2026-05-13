@@ -1,0 +1,33 @@
+- total = children.size
+- ages = children.group_by { |c| c.age }.transform_values(&:size).compact
+- groups = children.group_by { |c| c.group&.name || "–" }.transform_values(&:size)
+
+.mw-children-facts{ style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 1.5rem;" }
+  .mw-card{ style: "padding: 16px 20px;" }
+    %span.mw-text-muted Gesamt
+    .mw-text-strong{ style: "font-size: var(--fs-24, 24px); margin-top: 6px;" }
+      = pluralize(total, "Kind", "Kinder")
+
+  .mw-card{ style: "padding: 16px 20px;" }
+    %span.mw-text-muted pro Alter
+    - if ages.any?
+      .mw-children-facts__ages{ style: "margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px;" }
+        - ages.sort_by { |age, _| age.nil? ? -1 : age }.each do |age, count|
+          %span.mw-badge.mw-badge--neutral
+            - if age.nil?
+              ohne Datum: #{count}
+            - else
+              #{age} J.: #{count}
+    - else
+      %p.mw-text-muted{ style: "margin: 6px 0 0;" } –
+
+  .mw-card{ style: "padding: 16px 20px;" }
+    %span.mw-text-muted pro Gruppe
+    - if groups.any?
+      .mw-children-facts__groups{ style: "margin-top: 6px; display: flex; flex-direction: column; gap: 4px;" }
+        - groups.sort_by { |name, _| name }.each do |name, count|
+          %span
+            %strong= name
+            %span.mw-text-muted{ style: "margin-left: 6px;" }= count
+    - else
+      %p.mw-text-muted{ style: "margin: 6px 0 0;" } –

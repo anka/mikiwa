@@ -2336,7 +2336,7 @@
       "id": "F40",
       "name": "Facts-Übersicht in /children",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Oberhalb der Liste in /children eine kompakte Statistik: Gesamtanzahl, Anzahl pro Alter, Anzahl pro Gruppe.",
       "description": "Ziel: Schneller Überblick über Bestand und Verteilung der aktiven Kinder.\n\nKomponente: 'children/_facts.html.erb' Partial — drei Karten/Sektionen:\n  1. Anzahl Kinder (gesamt, aktiv)\n  2. Anzahl Kinder pro Alter (gruppiert nach Child#age, aufsteigend; z. B. '3 J.: 4, 4 J.: 7, 5 J.: 9')\n  3. Anzahl Kinder pro Gruppe (nach Gruppen-Name sortiert)\n\nPerformance: Aggregationen in Ruby auf bereits geladener Collection (keine zusätzlichen Queries auf Index, idealerweise eine includes(:group) Query). Bei aktiven Filtern (siehe F41) zeigt Facts die gefilterte Menge an, NICHT die globale.\n\nMobile: Karten untereinander, Desktop nebeneinander (3-Spalten-Grid). Konsistent mit Mikiwa Design System (Pastell-Untergrund/Karte).",
       "acceptance_criteria": [

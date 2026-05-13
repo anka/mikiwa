@@ -309,6 +309,31 @@ class ChildrenControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # F40: Facts-Übersicht in /children
+  test "F40 Index zeigt Facts-Übersicht mit Gesamtanzahl" do
+    sign_in_as(@caretaker)
+    Child.create!(first_name: "Lara", last_name: "Stein",
+      date_of_birth: 4.years.ago.to_date, group: @group, kindergarten_year: @year, photo_consent: true)
+    get children_path
+    assert_response :success
+    assert_match(/mw-children-facts/, response.body, "Facts-Container muss vorhanden sein")
+    assert_match(/Gesamt/i, response.body)
+    assert_match(/pro Alter/i, response.body)
+    assert_match(/pro Gruppe/i, response.body)
+  end
+
+  test "F40 Facts zeigen korrekte Anzahl pro Gruppe und Alter" do
+    sign_in_as(@caretaker)
+    travel_to Date.new(2026, 5, 13) do
+      Child.create!(first_name: "Lara", last_name: "Stein",
+        date_of_birth: Date.new(2021, 5, 10), group: @group, kindergarten_year: @year, photo_consent: true)
+      get children_path
+      assert_response :success
+      assert_match(/Löwen/, response.body)
+      assert_match(/5 J\./, response.body, "Alter-Aggregat '5 J.' muss erscheinen")
+    end
+  end
+
   test "F36 Caretaker behält vollen Edit-Umfang" do
     sign_in_as(@caretaker)
     patch child_path(@child), params: {

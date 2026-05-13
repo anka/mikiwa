@@ -14,6 +14,7 @@
   .mw-flash.mw-flash--success= notice
 
 - if @children.any?
+  = render "facts", children: @children
   .mw-card{ style: "margin-top: 1.5rem;" }
     %table.mw-table.mw-table--cards{ style: "width: 100%;" }
       %thead
