@@ -97,11 +97,15 @@
         .mw-nk-item
           .mw-nk-item__icon= ec.position
           .mw-nk-item__body
-            .mw-nk-item__name= ec.name
+            .mw-nk-item__name
+              = ec.display_name
+              - if ec.linked?
+                %span.mw-icon-hint{ title: "Verknüpft mit Eltern-Account" }
+                  = lucide_icon "user-check", size: 14
             .mw-nk-item__meta
               = ec.relationship
               ·
-              = ec.phone
+              = ec.display_phone
           .mw-actions
             = link_to edit_child_emergency_contact_path(@child, ec), class: "mw-page-action" do
               = lucide_icon "pencil", size: 14

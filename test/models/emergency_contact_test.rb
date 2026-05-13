@@ -53,4 +53,68 @@ class EmergencyContactTest < ActiveSupport::TestCase
     EmergencyContact.create!(child: @child, name: "Papa", relationship: "Vater", phone: "222", position: 1)
     assert_equal %w[Papa Oma], @child.emergency_contacts.map(&:name)
   end
+
+  # F38 – User-Verknüpfung
+  test "F38 manueller Kontakt: name und phone Pflicht ohne user_id" do
+    ec = EmergencyContact.new(child: @child, relationship: "Mutter", position: 1)
+    assert_not ec.valid?
+    assert ec.errors[:name].any?
+    assert ec.errors[:phone].any?
+  end
+
+  test "F38 verknüpfter Kontakt: name und phone nicht Pflicht mit user_id" do
+    parent = User.create!(email: "nk_parent@test.at", password: "geheimwort12345678", role: "parent",
+      first_name: "Maria", last_name: "Huber", phone: "+43 664 1234")
+    ParentChild.create!(user: parent, child: @child)
+    ec = EmergencyContact.new(child: @child, user: parent, relationship: "Mutter", position: 1)
+    assert ec.valid?, ec.errors.full_messages.inspect
+  end
+
+  test "F38 display_name gibt user.full_name zurück wenn verknüpft" do
+    parent = User.create!(email: "nk_parent2@test.at", password: "geheimwort12345678", role: "parent",
+      first_name: "Maria", last_name: "Huber", phone: "+43 664 5678")
+    ParentChild.create!(user: parent, child: @child)
+    ec = EmergencyContact.create!(child: @child, user: parent, relationship: "Mutter", position: 1)
+    assert_equal "Maria Huber", ec.display_name
+  end
+
+  test "F38 display_name gibt gespeicherten name zurück wenn nicht verknüpft" do
+    ec = EmergencyContact.create!(child: @child, name: "Oma Erna", relationship: "Großmutter", phone: "111", position: 1)
+    assert_equal "Oma Erna", ec.display_name
+  end
+
+  test "F38 display_phone gibt user.phone zurück wenn verknüpft" do
+    parent = User.create!(email: "nk_parent3@test.at", password: "geheimwort12345678", role: "parent",
+      first_name: "Anna", last_name: "Wolf", phone: "+43 699 9999")
+    ParentChild.create!(user: parent, child: @child)
+    ec = EmergencyContact.create!(child: @child, user: parent, relationship: "Mutter", position: 1)
+    assert_equal "+43 699 9999", ec.display_phone
+  end
+
+  test "F38 linked? gibt true zurück wenn user_id gesetzt" do
+    parent = User.create!(email: "nk_parent4@test.at", password: "geheimwort12345678", role: "parent",
+      first_name: "Hans", last_name: "Klein", phone: "0664")
+    ParentChild.create!(user: parent, child: @child)
+    ec = EmergencyContact.create!(child: @child, user: parent, relationship: "Vater", position: 1)
+    assert ec.linked?
+  end
+
+  test "F38 linked? gibt false zurück ohne user_id" do
+    ec = EmergencyContact.create!(child: @child, name: "Opa", relationship: "Großvater", phone: "222", position: 1)
+    assert_not ec.linked?
+  end
+
+  test "F38 Validation: fremder User kann nicht verknüpft werden" do
+    other_child = Child.create!(
+      first_name: "Lisa", last_name: "Bauer",
+      date_of_birth: Date.new(2021, 1, 1),
+      group: @group, kindergarten_year: @year, photo_consent: true
+    )
+    parent = User.create!(email: "nk_parent5@test.at", password: "geheimwort12345678", role: "parent",
+      first_name: "Josef", last_name: "Bauer", phone: "0664")
+    ParentChild.create!(user: parent, child: other_child)
+    ec = EmergencyContact.new(child: @child, user: parent, relationship: "Vater", position: 1)
+    assert_not ec.valid?
+    assert ec.errors[:user].any?
+  end
 end

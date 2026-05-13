@@ -2256,7 +2256,7 @@
       "id": "F38",
       "name": "Notfallkontakt mit Eltern-User verknüpfen",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "EmergencyContact kann optional einen verknüpften Eltern-User referenzieren; Name/Telefon werden dann live aus dem User gelesen.",
       "description": "Ziel: Wenn ein Notfallkontakt bereits ein Eltern-User des Kindes ist, sollen seine Daten nicht redundant gepflegt werden. Stattdessen verweist der Notfallkontakt auf den User und wird bei Anzeige live aus dem User gelesen — Aktualität garantiert.\n\nDatenmodell: emergency_contacts bekommt optionalen user_id (FK → users.id, nullable). Ursprüngliche Migration anpassen, schema.rb regenerieren — wie in F35/F37. Validation: wenn user_id gesetzt → name und phone dürfen leer sein (werden ignoriert); wenn nil → name und phone weiterhin Pflicht. relationship und position bleiben in jedem Fall Pflicht.\n\nHelper am Modell:\n  def display_name = user&.full_name.presence || name\n  def display_phone = user&.phone.presence || phone\nAlle Views/Mailer/Exports rufen ausschließlich diese Helper auf, nicht mehr name/phone direkt.\n\nForm-UX: Im EmergencyContact-Form (eingebettet in Child-Edit oder eigener Action) gibt es einen Modus-Switch:\n  • 'Eltern auswählen' → Select aus den ParentChild-User des aktuellen Kindes; name/phone-Felder werden ausgeblendet; relationship bleibt.\n  • 'Manuell eingeben' → klassische Felder.\nBeim Wechsel wird der jeweils andere Modus zurückgesetzt.\n\nAnzeige: In der Liste der Notfallkontakte wird verknüpft-Status mit kleinem User-Icon angezeigt; ein Tooltip erklärt 'Verknüpft mit Eltern-User'.",
       "acceptance_criteria": [

@@ -48,7 +48,12 @@ class EmergencyContactsController < ApplicationController
   end
 
   def emergency_contact_params
-    params.require(:emergency_contact).permit(:name, :relationship, :phone, :position)
+    permitted = params.require(:emergency_contact).permit(:name, :relationship, :phone, :position, :user_id)
+    if permitted[:user_id].present?
+      permitted[:name]  = nil
+      permitted[:phone] = nil
+    end
+    permitted
   end
 
   def next_position

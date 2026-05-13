@@ -1708,8 +1708,10 @@ textarea.mw-input { resize: vertical; min-height: 96px; line-height: var(--lh-re
   font-size: var(--fs-14);
 }
 .mw-nk-item__body { flex: 1; min-width: 0; }
-.mw-nk-item__name { font-weight: var(--fw-semibold); color: var(--fg-1); }
+.mw-nk-item__name { font-weight: var(--fw-semibold); color: var(--fg-1); display: flex; align-items: center; gap: var(--space-1); }
 .mw-nk-item__meta { font-size: var(--fs-13); color: var(--fg-3); margin-top: 2px; }
+
+.mw-icon-hint { color: var(--fg-3); display: inline-flex; align-items: center; cursor: help; }
 
 /* Medizinischer Hinweis list item */
 .mw-mh-item {

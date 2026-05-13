@@ -2,27 +2,62 @@
     url: emergency_contact.new_record? ? child_emergency_contacts_path(@child) : child_emergency_contact_path(@child, emergency_contact),
     method: emergency_contact.new_record? ? :post : :patch,
     class: "mw-form",
-    html: { id: "emergency_contact_form" } do |form|
+    html: { id: "emergency_contact_form",
+            data: { controller: "emergency-contact-form",
+                    emergency_contact_form_linked_value: emergency_contact.linked?.to_s } } do |form|
   - if emergency_contact.errors.any?
     .mw-flash.mw-flash--error
       %ul{ style: "margin: 0; padding-left: 1.25rem;" }
         - emergency_contact.errors.full_messages.each do |msg|
           %li= msg
 
-  .mw-field-row
+  -# Modus-Switch
+  .mw-field
+    %p.mw-field__label Kontakt-Art
+    .mw-radio-group
+      %label.mw-radio-option
+        %input{ type: "radio", name: "_ec_mode", value: "manual",
+                class: "mw-radio",
+                checked: !emergency_contact.linked?,
+                data: { action: "change->emergency-contact-form#switchMode",
+                        emergency_contact_form_target: "modeRadio" } }
+        %span Manuell eingeben
+      - if @child.parents.any?
+        %label.mw-radio-option
+          %input{ type: "radio", name: "_ec_mode", value: "user",
+                  class: "mw-radio",
+                  checked: emergency_contact.linked?,
+                  data: { action: "change->emergency-contact-form#switchMode",
+                          emergency_contact_form_target: "modeRadio" } }
+          %span Eltern auswählen
+
+  -# Eltern-Select (Modus: user)
+  .mw-field{ data: { emergency_contact_form_target: "userSection" },
+             style: emergency_contact.linked? ? "" : "display:none" }
+    = form.label :user_id, "Eltern-Account", class: "mw-field__label"
+    = form.select :user_id,
+        @child.parents.order(:last_name, :first_name).map { |u| ["#{u.last_name}, #{u.first_name} · #{u.phone}", u.id] },
+        { include_blank: "Elternteil auswählen …" },
+        class: "mw-select",
+        data: { emergency_contact_form_target: "userSelect" }
+
+  -# Manuelle Felder (Modus: manual)
+  .mw-field-row{ data: { emergency_contact_form_target: "manualSection" },
+                 style: emergency_contact.linked? ? "display:none" : "" }
     .mw-field
       = form.label :name, "Name", class: "mw-field__label"
-      = form.text_field :name, required: true, autofocus: true, class: "mw-input"
+      = form.text_field :name, autofocus: !emergency_contact.linked?, class: "mw-input",
+          data: { emergency_contact_form_target: "nameInput" }
     .mw-field
-      = form.label :relationship, "Beziehung zum Kind", class: "mw-field__label"
-      = form.text_field :relationship, required: true, placeholder: "z.B. Mutter, Vater, Großmutter …", class: "mw-input"
+      = form.label :phone, "Telefonnummer", class: "mw-field__label"
+      = form.telephone_field :phone, class: "mw-input",
+          data: { emergency_contact_form_target: "phoneInput" }
 
   .mw-field-row
     .mw-field
-      = form.label :phone, "Telefonnummer", class: "mw-field__label"
-      = form.telephone_field :phone, required: true, class: "mw-input"
+      = form.label :relationship, "Beziehung zum Kind", class: "mw-field__label"
+      = form.text_field :relationship, required: true, placeholder: "z.B. Mutter, Vater, Großmutter …", class: "mw-input"
     .mw-field
       = form.label :position, "Reihenfolge", class: "mw-field__label"
       = form.number_field :position, required: true, min: 1, class: "mw-input"
       %p.mw-field__hint 1 = zuerst anrufen
-

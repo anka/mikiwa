@@ -128,14 +128,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_120000) do
 
   create_table "emergency_contacts", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.string "child_id", limit: 36, null: false
+    t.string "user_id", limit: 36
     t.datetime "created_at", null: false
-    t.string "name", null: false
-    t.string "phone", null: false
+    t.string "name"
+    t.string "phone"
     t.integer "position", default: 0, null: false
     t.string "relationship", null: false
     t.datetime "updated_at", null: false
     t.index ["child_id", "position"], name: "index_emergency_contacts_on_child_id_and_position"
     t.index ["child_id"], name: "index_emergency_contacts_on_child_id"
+    t.index ["user_id"], name: "index_emergency_contacts_on_user_id"
   end
 
   create_table "galleries", id: { type: :string, limit: 36 }, force: :cascade do |t|
@@ -354,6 +356,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_120000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "emergency_contacts", "users", column: "user_id", on_delete: :nullify
   add_foreign_key "galleries", "kindergarten_years"
   add_foreign_key "galleries", "users", column: "created_by_id"
   add_foreign_key "gallery_groups", "galleries"

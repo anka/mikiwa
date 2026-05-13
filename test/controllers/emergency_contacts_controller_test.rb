@@ -78,4 +78,35 @@ class EmergencyContactsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to child_path(@child)
   end
+
+  # F38 – User-Verknüpfung
+  test "F38 Caretaker kann Eltern-User als Notfallkontakt verknüpfen" do
+    sign_in_as(@caretaker)
+    assert_difference "EmergencyContact.count", 1 do
+      post child_emergency_contacts_path(@child), params: {
+        emergency_contact: { user_id: @parent.id, relationship: "Mutter", position: 2 }
+      }
+    end
+    created = EmergencyContact.order(:created_at).last
+    assert_equal @parent.id, created.user_id
+    assert_nil created.name
+    assert_nil created.phone
+  end
+
+  test "F38 user_id auf fremden User scheitert an Validation" do
+    sign_in_as(@caretaker)
+    assert_no_difference "EmergencyContact.count" do
+      post child_emergency_contacts_path(@child), params: {
+        emergency_contact: { user_id: @other_parent.id, relationship: "Mutter", position: 2 }
+      }
+    end
+    assert_response :unprocessable_entity
+  end
+
+  test "F38 display_name im Show-View zeigt User-Namen" do
+    ec_linked = EmergencyContact.create!(child: @child, user: @parent, relationship: "Mutter", position: 2)
+    sign_in_as(@caretaker)
+    get child_path(@child)
+    assert_match @parent.full_name, response.body
+  end
 end
