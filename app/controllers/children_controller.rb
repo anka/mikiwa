@@ -1,6 +1,7 @@
 class ChildrenController < ApplicationController
   before_action :set_child, only: %i[show edit update deactivate update_consent attach_parent detach_parent]
-  before_action :require_staff_for_mutations!, only: %i[new create edit update deactivate]
+  before_action :require_staff_for_mutations!, only: %i[new create deactivate]
+  before_action :authorize_edit_update!, only: %i[edit update]
 
   def index
     @children = scoped_children.active.includes(:group, :parents).order(:last_name, :first_name)
@@ -24,11 +25,15 @@ class ChildrenController < ApplicationController
     end
   end
 
-  def edit; end
+  def edit
+    @parent_edit = current_user.parent?
+  end
 
   def update
-    if @child.update(child_params)
-      redirect_to children_path, notice: "Stammdaten wurden aktualisiert."
+    params_to_use = current_user.parent? ? parent_child_params : child_params
+    if @child.update(params_to_use)
+      target = current_user.parent? ? child_path(@child) : children_path
+      redirect_to target, notice: "Stammdaten wurden aktualisiert."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -88,8 +93,18 @@ class ChildrenController < ApplicationController
     )
   end
 
+  def parent_child_params
+    params.require(:child).permit(:insurance_number, :health_insurer)
+  end
+
   def require_staff_for_mutations!
     return if current_user&.staff?
+    render plain: "Zugriff verweigert", status: :forbidden
+  end
+
+  def authorize_edit_update!
+    policy = ChildPolicy.new(current_user, @child)
+    return if policy.edit?
     render plain: "Zugriff verweigert", status: :forbidden
   end
 

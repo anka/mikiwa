@@ -3,8 +3,8 @@ class ChildPolicy < ApplicationPolicy
   def show?     = staff? || parent_of_record?
   def new?      = staff?
   def create?   = staff?
-  def edit?     = staff?
-  def update?   = staff?
+  def edit?     = staff? || parent_of_record?
+  def update?   = staff? || parent_of_record?
   def destroy?  = admin?
 
   def deactivate?     = staff?

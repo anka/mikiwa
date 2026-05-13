@@ -2172,7 +2172,7 @@
       "id": "F36",
       "name": "Versicherungsdaten eines Kindes durch Eltern bearbeitbar",
       "phase": 7,
-      "status": "open",
+      "status": "done",
       "short_description": "Verknüpfte Eltern dürfen im Standard-Child-Edit-View die Versicherungsdaten des Kindes bearbeiten (eingeschränkter Edit-Mode).",
       "description": "Ziel: Eltern können Versicherungsdaten des eigenen Kindes pflegen, ohne dass Caretaker-Kapazität gebunden ist.\n\nAutorisierung: ChildrenController#edit/#update erlauben Eltern (role=parent), sofern sie über parent_children mit dem Child verbunden sind. Permitted-Params werden rollenabhängig eingeschränkt: für Eltern nur insurance_number und insurance_company (falls vorhanden, sonst nur insurance_number); Caretaker/Admin behalten den vollen Set.\n\nView: Standard-Edit-View wird wiederverwendet. Felder, die der aktuelle User nicht bearbeiten darf, werden via disabled/readonly bzw. nicht gerendert (Helper child_field_editable?(user, field)). Versicherungs-Sektion bleibt sichtbar und editierbar.\n\nNavigation: In der Eltern-Übersicht des Kindes (Show) ein 'Versicherung bearbeiten'-Button, der zur eingeschränkten Edit-View führt. Fremde Kinder bleiben 403 (bestehende Policy nicht aufweichen).",
       "acceptance_criteria": [

@@ -2,7 +2,11 @@
 
 .mw-page-header
   .mw-page-header__text
-    %h1.mw-page-header__title= "#{@child.full_name} bearbeiten"
+    %h1.mw-page-header__title
+      - if @parent_edit
+        Versicherungsdaten bearbeiten
+      - else
+        = "#{@child.full_name} bearbeiten"
   .mw-page-header__actions
     = link_to "Abbrechen", child_path(@child), class: "mw-page-action"
     %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit", form: "child_form" }
@@ -10,4 +14,4 @@
       Speichern
 
 .mw-card{ style: "margin-top: 1.5rem; max-width: 620px;" }
-  = render "form", child: @child
+  = render "form", child: @child, parent_edit: @parent_edit

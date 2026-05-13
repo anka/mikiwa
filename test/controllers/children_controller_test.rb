@@ -237,4 +237,62 @@ class ChildrenControllerTest < ActionDispatch::IntegrationTest
       "Bei photo_consent=false muss die Nein-Option als checked gerendert sein"
     )
   end
+
+  # F36: Versicherungsdaten durch Eltern bearbeitbar
+  test "F36 verknüpftes Elternteil kann Edit-Seite öffnen" do
+    sign_in_as(@parent)
+    get edit_child_path(@child)
+    assert_response :success
+  end
+
+  test "F36 verknüpftes Elternteil kann Versicherungsnummer speichern" do
+    sign_in_as(@parent)
+    patch child_path(@child), params: { child: { insurance_number: "1234567890" } }
+    assert_redirected_to child_path(@child)
+    assert_equal "1234567890", @child.reload.insurance_number
+  end
+
+  test "F36 Elternteil kann group_id nicht manipulieren (Strong Params)" do
+    sign_in_as(@parent)
+    other_group = Group.create!(name: "Fremde Gruppe")
+    original_group_id = @child.group_id
+    patch child_path(@child), params: { child: { insurance_number: "XY", group_id: other_group.id } }
+    assert_equal original_group_id, @child.reload.group_id
+  end
+
+  test "F36 fremdes Elternteil erhält 403 für Edit" do
+    sign_in_as(@parent)
+    unlinked_child = Child.create!(
+      first_name: "Fremdes", last_name: "Kind",
+      date_of_birth: Date.new(2022, 1, 1),
+      group: @group, kindergarten_year: @year, photo_consent: true
+    )
+    get edit_child_path(unlinked_child)
+    assert_response :forbidden
+  end
+
+  test "F36 Show-View zeigt 'Versicherung bearbeiten' CTA für verknüpftes Elternteil" do
+    sign_in_as(@parent)
+    get child_path(@child)
+    assert_response :success
+    assert_match(/Versicherung bearbeiten/i, response.body)
+  end
+
+  test "F36 Caretaker behält vollen Edit-Umfang" do
+    sign_in_as(@caretaker)
+    patch child_path(@child), params: {
+      child: {
+        first_name: "Geändert",
+        last_name: @child.last_name,
+        date_of_birth: @child.date_of_birth,
+        group_id: @group.id,
+        kindergarten_year_id: @year.id,
+        photo_consent: true,
+        insurance_number: "9999"
+      }
+    }
+    assert_redirected_to children_path
+    assert_equal "Geändert", @child.reload.first_name
+    assert_equal "9999", @child.reload.insurance_number
+  end
 end

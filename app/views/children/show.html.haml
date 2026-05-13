@@ -35,10 +35,14 @@
 .mw-detail-section
   .mw-detail-section__header
     %span.mw-detail-section__title Versicherung
-    - if current_user.staff? || current_user.children.exists?(@child.id)
+    - if current_user.staff?
       = link_to edit_child_path(@child), class: "mw-page-action" do
         = lucide_icon "pencil", size: 14
         Bearbeiten
+    - elsif current_user.children.exists?(@child.id)
+      = link_to edit_child_path(@child), class: "mw-btn mw-btn--secondary mw-btn--sm" do
+        = lucide_icon "pencil", size: 14
+        Versicherung bearbeiten
   .mw-card{ style: "padding: 16px 20px;" }
     - if @child.health_insurer.present? || @child.insurance_number.present?
       .mw-text-strong{ style: "margin-bottom: 4px;" }= @child.health_insurer.presence || "–"
