@@ -163,7 +163,8 @@ module ApplicationHelper
     "printer"         => '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/>',
     "leaf"            => '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19.2 2.96a1 1 0 0 1 1.6.7A18 18 0 0 1 11 20Z"/><path d="M2 22 17 7"/>',
     "sprout"          => '<path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/>',
-    "search"          => '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>'
+    "search"          => '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    "rotate-ccw"      => '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>'
   }.freeze
 
   # F34: Liefert das Diät-Icon (Lucide sprout/leaf) für einen MealCourse oder

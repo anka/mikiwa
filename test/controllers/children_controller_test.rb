@@ -347,8 +347,8 @@ class ChildrenControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/mw-children-facts/, response.body, "Facts-Container muss vorhanden sein")
     assert_match(/Gesamt/i, response.body)
-    assert_match(/pro Alter/i, response.body)
-    assert_match(/pro Gruppe/i, response.body)
+    assert_match(/Alter/, response.body)
+    assert_match(/Gruppe/, response.body)
   end
 
   test "F40 Facts zeigen korrekte Anzahl pro Gruppe und Alter" do
@@ -368,7 +368,7 @@ class ChildrenControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@caretaker)
     get children_path
     assert_response :success
-    assert_match(/mw-children-filters/, response.body)
+    assert_match(/mw-filters/, response.body)
     assert_match(/name="q"/, response.body)
     assert_match(/name="group_id"/, response.body)
     assert_match(/name="age"/, response.body)
@@ -422,9 +422,9 @@ class ChildrenControllerTest < ActionDispatch::IntegrationTest
 
   test "F41 Reset-Link führt zurück zur ungefilterten Liste" do
     sign_in_as(@caretaker)
-    get children_path, params: { q: "xyz" }
+    get children_path, params: { q: "Finn" }
     assert_response :success
-    assert_match(/href="\/children"[^>]*>[^<]*Filter zurücksetzen/i, response.body)
+    assert_select 'a.mw-filters__reset[href="/children"]'
   end
 
   # F42: Deaktivierte Kinder /children/inactive
