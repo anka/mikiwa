@@ -3766,7 +3766,7 @@
       "id": "F72",
       "name": "Kind-Anwesenheit: Tabs entfernen, fokussierter Kalender + Zurück",
       "phase": 9,
-      "status": "open",
+      "status": "done",
       "short_description": "/children/:id/attendance verliert die mw-tabs-Leiste; nur Page-Header + Monats-Kalender + Standard-'Zurück'-Link bleiben.",
       "description": "Ziel: Saubere Sub-Page ohne dekorative Tab-Mechanik.\n\nView app/views/children/attendance.html.haml:\n  • Block .mw-tabs{ role: 'tablist' } ... %tab 'Stammdaten' / %tab 'Anwesenheit' ersatzlos entfernen\n  • mw-page-header__actions enthält genau ein Element: link_to 'Zurück', child_path(@child), class: 'mw-page-action'\n  • Direkt unter Header rendert weiterhin _attendance_calendar\n  • Lede bleibt 'Anwesenheit · <Gruppe>'\n\nKeine Controller- oder Routen-Änderung. Reine View-Cleanup.\n\nSpec: docs/spec-child-attendance-tabs-entfernen.json",
       "acceptance_criteria": [

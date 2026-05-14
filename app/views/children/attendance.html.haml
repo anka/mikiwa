@@ -16,12 +16,6 @@
   .mw-page-header__actions
     = link_to "Zurück", child_path(@child), class: "mw-page-action"
 
-.mw-tabs{ role: "tablist" }
-  = link_to child_path(@child), class: "mw-tab", role: "tab" do
-    Stammdaten
-  = link_to attendance_child_path(@child), class: "mw-tab mw-tab--active", role: "tab", "aria-current": "page" do
-    Anwesenheit
-
 = render "attendance_calendar", child: @child, month: @month,
                                 calendar_cells: @calendar_cells,
                                 attendances_by_date: @attendances_by_date

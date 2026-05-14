@@ -90,4 +90,29 @@ class ChildrenAttendanceControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".mw-attendance-day--outside", minimum: 1
   end
+
+  test "F72 Tabs-Block ist nicht mehr im DOM" do
+    sign_in_as(@caretaker)
+    get attendance_child_path(@child, month: "2026-05")
+    assert_response :success
+    assert_select ".mw-tabs", count: 0
+    assert_select ".mw-tab", count: 0
+  end
+
+  test "F72 mw-page-header__actions enthält genau ein Zurück-Element" do
+    sign_in_as(@caretaker)
+    get attendance_child_path(@child)
+    assert_response :success
+    assert_select ".mw-page-header__actions" do
+      assert_select "a", count: 1, text: /Zurück/
+      assert_select "a[href=?]", child_path(@child)
+    end
+  end
+
+  test "F72 Page-Header behält Lede 'Anwesenheit · <Gruppe>'" do
+    sign_in_as(@caretaker)
+    get attendance_child_path(@child)
+    assert_response :success
+    assert_select ".mw-page-header__lede", text: /Anwesenheit\s*·\s*F64-Gruppe/
+  end
 end
