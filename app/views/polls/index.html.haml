@@ -12,6 +12,8 @@
 - if notice
   .mw-flash.mw-flash--success= notice
 
+= render "filters"
+
 - if @polls.any?
   .mw-card{ style: "margin-top: 1.5rem;" }
     %table.mw-table{ style: "width: 100%;" }

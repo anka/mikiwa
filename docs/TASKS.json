@@ -3648,7 +3648,7 @@
       "id": "F70",
       "name": "Abstimmungen: Filter (neu) im mw-filters-Stil erstellen",
       "phase": 8,
-      "status": "open",
+      "status": "done",
       "short_description": "Neue Filter-Bar in /polls (bisher keine) mit Such-Feld, Gruppe, Status, Typ – im mw-filters-Komponentenstil.",
       "description": "Ziel: /polls erhält erstmals Filter, konsistent zur /children-Komponente.\n\nNeuer Partial app/views/polls/_filters.html.haml:\n  • Such-Feld 'Abstimmung suchen…' (q)\n  • Select 'Alle Gruppen' (group_id)\n  • Select 'Status' (alle/offen/Stimmschluss/geschlossen)\n  • Select 'Typ' (alle/Einfachauswahl/Mehrfachauswahl)\n  • Reset-Link mit Count\n\nController-Anpassung PollsController#index:\n  • @filter_q, @filter_group_id, @filter_status, @filter_poll_type, @filter_groups\n  • Scopes:\n      - Poll.search_by_title(q)\n      - Poll.in_group(group_id)\n      - Poll.with_status(status) – differenziert open + open?, open + !open?, closed\n      - Poll.with_type(type)\n\nIndex-View: render 'filters' oberhalb der Tabelle.\n\nSpec: docs/spec-filters-alignment.json (perPagePlan – polls)",
       "acceptance_criteria": [

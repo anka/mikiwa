@@ -5,7 +5,27 @@ class PollsController < ApplicationController
   before_action :require_staff!, only: %i[new create edit update destroy close]
 
   def index
-    @polls = policy_scope(Poll).includes(:group, :poll_options).ordered
+    @filter_q         = params[:q].to_s
+    @filter_group_id  = params[:group_id]
+    @filter_status    = params[:status]
+    @filter_poll_type = params[:poll_type]
+    @filter_groups    = Group.order(:name)
+
+    scope = policy_scope(Poll).includes(:group, :poll_options).ordered
+    scope = scope.where("LOWER(title) LIKE ?", "%#{@filter_q.downcase}%") if @filter_q.present?
+    scope = scope.where(group_id: @filter_group_id)                       if @filter_group_id.present?
+    scope = scope.where(poll_type: @filter_poll_type)                     if @filter_poll_type.present?
+
+    case @filter_status
+    when "open"
+      scope = scope.where(status: "open").where("deadline IS NULL OR deadline > ?", Time.current)
+    when "deadline_passed"
+      scope = scope.where(status: "open").where("deadline <= ?", Time.current)
+    when "closed"
+      scope = scope.where(status: "closed")
+    end
+
+    @polls = scope
   end
 
   def show

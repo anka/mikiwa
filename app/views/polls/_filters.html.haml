@@ -1,0 +1,44 @@
+- active_count = [ @filter_q.presence, @filter_group_id.presence, @filter_status.presence, @filter_poll_type.presence ].compact.size
+- clear_url    = polls_path
+
+= form_with url: polls_path, method: :get, local: true, class: "mw-filters" do
+  .mw-filters__row
+    .mw-filters__search
+      = lucide_icon "search", size: 16, class: "mw-filters__search-icon"
+      = text_field_tag :q, @filter_q,
+          id: "filter-q",
+          placeholder: "Abstimmung suchen …",
+          autocomplete: "off",
+          class: "mw-input mw-filters__search-input"
+      - if @filter_q.present?
+        - clear_q = { group_id: @filter_group_id, status: @filter_status, poll_type: @filter_poll_type }.compact_blank
+        = link_to "#{polls_path}?#{clear_q.to_query}",
+            class: "mw-filters__clear",
+            "aria-label": "Suchtext löschen", title: "Suchtext löschen" do
+          = lucide_icon "x", size: 14
+
+    = select_tag :group_id,
+                 options_from_collection_for_select(@filter_groups, :id, :name, @filter_group_id),
+                 include_blank: "Alle Gruppen",
+                 class: "mw-select mw-filters__select",
+                 onchange: "this.form.requestSubmit()"
+
+    = select_tag :status,
+                 options_for_select([ [ "Offen", "open" ], [ "Stimmschluss", "deadline_passed" ], [ "Geschlossen", "closed" ] ], @filter_status),
+                 include_blank: "Alle Status",
+                 class: "mw-select mw-filters__select",
+                 onchange: "this.form.requestSubmit()"
+
+    = select_tag :poll_type,
+                 options_for_select([ [ "Einfachauswahl", "single" ], [ "Mehrfachauswahl", "multiple" ] ], @filter_poll_type),
+                 include_blank: "Alle Typen",
+                 class: "mw-select mw-filters__select",
+                 onchange: "this.form.requestSubmit()"
+
+    .mw-filters__actions
+      = submit_tag "Filtern", class: "mw-btn mw-btn--primary mw-btn--sm"
+      - if active_count.positive?
+        = link_to clear_url, class: "mw-page-action mw-filters__reset" do
+          = lucide_icon "rotate-ccw", size: 14
+          Zurücksetzen
+          %span.mw-badge.mw-badge--accent.mw-filters__reset-count= active_count
