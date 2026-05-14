@@ -31,13 +31,6 @@ class AttendancesControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
-  test "F63 Staff sieht Filter ohne Gruppe → Hinweistext" do
-    sign_in_as(@caretaker)
-    get attendances_path
-    assert_response :success
-    assert_match(/Bitte Gruppe wählen/i, response.body)
-  end
-
   test "F63 Staff sieht Kindertabelle mit Gruppen-Filter" do
     sign_in_as(@caretaker)
     get attendances_path(date: "2026-05-14", group_id: @group.id)

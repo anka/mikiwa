@@ -12,31 +12,18 @@
 - if notice
   .mw-flash.mw-flash--success= notice
 
-= render "filters"
+= render "tabs"
 
 - if @group.nil?
   .mw-card{ style: "margin-top: 1.5rem; padding: 1.25rem;" }
-    %p.mw-text-muted Bitte Gruppe wählen, um die Anwesenheits-Liste zu sehen.
-- elsif @children.empty?
-  .mw-card{ style: "margin-top: 1.5rem; padding: 1.25rem;" }
-    %p.mw-text-muted In dieser Gruppe sind aktuell keine aktiven Kinder.
+    %p.mw-text-muted Es sind aktuell keine Gruppen verfügbar.
 - else
-  = form_with url: attendances_path, method: :post, class: "mw-form", html: { style: "margin-top: 1.5rem;" } do |form|
-    = form.hidden_field :date,     value: @date
-    = form.hidden_field :group_id, value: @group.id
-
-    .mw-card
-      %table.mw-table.mw-table--cards{ style: "width: 100%;" }
-        %thead
-          %tr
-            %th Kind
-            %th Anwesend
-            %th Abwesenheitsgrund
-            %th Notiz
-        %tbody
-          - @children.each do |child|
-            - attendance = @attendances_by_child[child]
-            = render "form_row", child: child, attendance: attendance
-
-    .mw-form__actions{ style: "margin-top: 1rem;" }
-      = form.submit "Speichern", class: "mw-btn mw-btn--primary mw-btn--sm"
+  = render "date_nav"
+  - if @children.empty?
+    .mw-card{ style: "margin-top: 1rem; padding: 1.25rem;" }
+      %p.mw-text-muted In dieser Gruppe sind aktuell keine aktiven Kinder.
+  - else
+    .mw-attendance-list
+      - @children.each do |child|
+        - attendance = @attendances_by_child[child]
+        = render "form_row", child: child, attendance: attendance

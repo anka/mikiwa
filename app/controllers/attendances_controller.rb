@@ -4,15 +4,12 @@ class AttendancesController < ApplicationController
   EXPORT_MAX_SPAN_DAYS = 92
 
   def index
-    @date     = parse_date(params[:date]) || Date.current
-    @group_id = params[:group_id]
-    @filter_q = params[:q].to_s
-    @groups   = Group.order(:name)
-    @group    = Group.find_by(id: @group_id) if @group_id.present?
+    @date    = parse_date(params[:date]) || Date.current
+    @groups  = Group.order(:name)
+    @group   = @groups.find_by(id: params[:group_id]) || @groups.first
 
     if @group
       @children = Child.active.where(group: @group)
-                       .search_by_name(@filter_q)
                        .order(:last_name, :first_name)
       existing = Attendance.for_date(@date).for_group(@group.id).index_by(&:child_id)
       @attendances_by_child = @children.index_with do |child|
@@ -29,10 +26,11 @@ class AttendancesController < ApplicationController
   end
 
   def create
-    date     = parse_date(params[:date]) || Date.current
-    group    = Group.find(params[:group_id])
+    date  = parse_date(params[:date]) || Date.current
+    group = Group.find(params[:group_id])
     submitted = params.fetch(:attendances, {}).to_unsafe_h
 
+    saved_records = []
     Attendance.transaction do
       submitted.each do |child_id, attrs|
         record = Attendance.find_or_initialize_by(child_id: child_id, date: date)
@@ -46,11 +44,20 @@ class AttendancesController < ApplicationController
         )
         record.absence_reason = nil if record.present
         record.save!
+        saved_records << record
       end
     end
 
-    redirect_to attendances_path(date: date.to_fs(:iso8601), group_id: group.id),
-                notice: "Anwesenheit gespeichert."
+    respond_to do |format|
+      format.turbo_stream do
+        @attendances = saved_records
+        @group       = group
+      end
+      format.html do
+        redirect_to attendances_path(date: date.to_fs(:iso8601), group_id: group.id),
+                    notice: "Anwesenheit gespeichert."
+      end
+    end
   end
 
   def update

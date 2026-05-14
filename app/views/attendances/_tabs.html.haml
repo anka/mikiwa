@@ -1,0 +1,10 @@
+- return if @groups.size <= 1
+
+.mw-tabs{ role: "tablist" }
+  - @groups.each do |group|
+    - active = group.id == @group&.id
+    = link_to attendances_path(group_id: group.id, date: @date.to_fs(:iso8601)),
+              class: [ "mw-tab", ("mw-tab--active" if active) ].compact.join(" "),
+              role: "tab",
+              "aria-current": (active ? "page" : nil) do
+      = group.name

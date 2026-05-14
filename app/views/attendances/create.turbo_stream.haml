@@ -1,0 +1,5 @@
+- @date = @attendances.first.date
+- @attendances.each do |attendance|
+  - child = attendance.child
+  = turbo_stream.replace "attendance_row_#{child.id}" do
+    = render "form_row", child: child, attendance: attendance

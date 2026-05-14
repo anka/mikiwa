@@ -3706,3 +3706,119 @@ textarea.mw-input { resize: vertical; min-height: 96px; line-height: var(--lh-re
 .mw-attendance-legend__item .mw-attendance-day {
   margin-top: 0;
 }
+
+/* ==========================================================================
+   F71 — ATTENDANCE INDEX (Tabs + Date-Nav + Per-Row Forms)
+   ========================================================================== */
+
+.mw-attendance-date-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 var(--space-3);
+  flex-wrap: wrap;
+}
+.mw-attendance-date-nav__arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--fg-2);
+  text-decoration: none;
+  transition: background var(--dur-micro) var(--ease-soft),
+              color var(--dur-micro) var(--ease-soft);
+}
+.mw-attendance-date-nav__arrow:hover {
+  background: var(--surface-hover);
+  color: var(--fg-1);
+}
+.mw-attendance-date-nav__arrow:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+.mw-attendance-date-nav__date {
+  display: inline-flex;
+  align-items: center;
+}
+.mw-attendance-date-nav__picker {
+  min-width: 11rem;
+  text-align: center;
+}
+.mw-attendance-date-nav__today {
+  margin-left: var(--space-1);
+}
+
+.mw-attendance-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.mw-attendance-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.4fr) auto minmax(180px, 1fr) minmax(180px, 1.4fr);
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.mw-attendance-row__child {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.mw-attendance-row__name {
+  font-weight: var(--fw-semibold);
+  color: var(--fg-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mw-attendance-row__field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.mw-attendance-row__field--note {
+  min-width: 0;
+}
+.mw-attendance-row__field--note .mw-input {
+  width: 100%;
+}
+.mw-attendance-row__label {
+  display: none;
+  font-size: var(--fs-12);
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 720px) {
+  .mw-attendance-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+  .mw-attendance-row__field {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+  .mw-attendance-row__label {
+    display: block;
+  }
+  .mw-attendance-row__field--present {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+  .mw-attendance-date-nav__picker {
+    min-width: 8rem;
+  }
+}

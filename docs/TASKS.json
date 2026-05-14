@@ -3704,7 +3704,7 @@
       "id": "F71",
       "name": "Anwesenheit: Gruppen-Tabs + Datums-Navigation statt Filter-Bar",
       "phase": 9,
-      "status": "open",
+      "status": "done",
       "short_description": "/attendances zeigt direkt die heutige Liste der ersten Gruppe; Gruppen-Wechsel via Tabs (bei >1 Gruppe), Datum via ‹ › + Date-Picker + 'Heute'-Button; Auto-Save pro Zeile.",
       "description": "Ziel: Daily-Workflow ohne Filter-Klick.\n\nAttendancesController#index:\n  • @date = params[:date].presence&.to_date || Date.current\n  • @group = User-zugängliche Groups.find_by(id: params[:group_id]) || first alphabetisch\n  • @groups = User-zugängliche Groups (für Tab-Render)\n  • @children = @group.children.active.ordered\n  • @attendances_by_child wie bisher\n  • Bestehende @filter_q, @filter_groups, @filter_date entfernen\n  • create wird zu Upsert pro Kind (Turbo-Stream-Response pro Zeile)\n\nNeue Partials:\n  • app/views/attendances/_tabs.html.haml: rendert .mw-tabs nur wenn @groups.size > 1; link_to /attendances?group_id=<id>&date=<aktuelles datum>; aktiver Tab via mw-tab--active.\n  • app/views/attendances/_date_nav.html.haml: ‹ [<input type='date'>] › [Heute (conditional)]; Stimulus 'date-jump'-Controller.\n\nIndex-View: _filters entfernen, _tabs + _date_nav rendern; per-Row-Forms statt One-Big-Form.\n\n_form_row.html.haml: Form pro Zeile mit data-controller='auto-submit'; Speichern-Button im Footer entfällt.\n\nNeuer Stimulus 'date-jump': on change → window.location.href = '/attendances?date=<value>&group_id=<currentGroup>'.\n\nSpec: docs/spec-attendances-tabs-navigation.json",
       "acceptance_criteria": [

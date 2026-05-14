@@ -1,25 +1,32 @@
 - absence_options = Attendance::ABSENCE_REASONS.map { |r| [ Attendance::ABSENCE_REASON_LABELS[r], r ] }
 - field_base = "attendances[#{child.id}]"
+- row_id = "attendance_row_#{child.id}"
+- present_data = { action: "change->auto-submit#submit" }
+- reason_data  = { action: "change->auto-submit#submit" }
+- note_data    = { action: "blur->auto-submit#submit change->auto-submit#submit", "auto-submit-debounce-value": "600" }
 
-%tr
-  %td{ "data-label": "Kind" }
-    .mw-child-name-cell
-      - if child.profile_photo.attached?
-        = image_tag child.profile_photo.variant(**ImageAttachable::VARIANT_CONFIGS[:thumb]),
-            class: "mw-child-avatar mw-child-avatar--sm", alt: ""
-      - else
-        .mw-child-avatar.mw-child-avatar--sm.mw-child-avatar--placeholder
-          = child.first_name[0].upcase
-      .mw-child-name-cell__text
-        %strong= child.full_name
-  %td{ "data-label": "Anwesend" }
-    -# hidden_field_tag liefert "0" wenn Checkbox unchecked bleibt;
-    -# check_box_tag sendet sonst keinen present-Key → NOT NULL violation.
+= form_with url: attendances_path, method: :post, id: row_id, data: { controller: "auto-submit" }, html: { class: "mw-attendance-row" } do |form|
+  = form.hidden_field :date, value: @date.to_fs(:iso8601)
+  = form.hidden_field :group_id, value: @group.id
+
+  .mw-attendance-row__child
+    - if child.profile_photo.attached?
+      = image_tag child.profile_photo.variant(**ImageAttachable::VARIANT_CONFIGS[:thumb]), class: "mw-child-avatar mw-child-avatar--sm", alt: ""
+    - else
+      .mw-child-avatar.mw-child-avatar--sm.mw-child-avatar--placeholder
+        = child.first_name[0].upcase
+    %strong.mw-attendance-row__name= child.full_name
+
+  .mw-attendance-row__field.mw-attendance-row__field--present
+    %span.mw-attendance-row__label Anwesend
+    -# hidden_field 'present=0' davor – sonst sendet HTML bei unchecked nichts.
     = hidden_field_tag "#{field_base}[present]", "0"
-    = check_box_tag "#{field_base}[present]", "1", attendance.present, class: "mw-checkbox"
-  %td{ "data-label": "Abwesenheitsgrund" }
-    = select_tag "#{field_base}[absence_reason]",
-        options_for_select([ [ "—", "" ] ] + absence_options, attendance.absence_reason),
-        class: "mw-select"
-  %td{ "data-label": "Notiz" }
-    = text_field_tag "#{field_base}[note]", attendance.note, class: "mw-input"
+    = check_box_tag "#{field_base}[present]", "1", attendance.present, class: "mw-checkbox", data: present_data
+
+  .mw-attendance-row__field.mw-attendance-row__field--reason
+    %span.mw-attendance-row__label Abwesenheitsgrund
+    = select_tag "#{field_base}[absence_reason]", options_for_select([ [ "—", "" ] ] + absence_options, attendance.absence_reason), class: "mw-select", data: reason_data
+
+  .mw-attendance-row__field.mw-attendance-row__field--note
+    %span.mw-attendance-row__label Notiz
+    = text_field_tag "#{field_base}[note]", attendance.note, class: "mw-input", data: note_data

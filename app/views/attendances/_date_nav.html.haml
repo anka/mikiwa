@@ -1,0 +1,15 @@
+- prev_url  = attendances_path(group_id: @group.id, date: (@date - 1.day).to_fs(:iso8601))
+- next_url  = attendances_path(group_id: @group.id, date: (@date + 1.day).to_fs(:iso8601))
+- today_url = attendances_path(group_id: @group.id, date: Date.current.to_fs(:iso8601))
+- base_url  = attendances_path(group_id: @group.id)
+- picker_data = { controller: "date-jump", "date-jump-base-url-value": base_url, action: "change->date-jump#go" }
+
+.mw-attendance-date-nav
+  = link_to prev_url, class: "mw-attendance-date-nav__arrow", "aria-label": "Vorheriger Tag", title: "Vorheriger Tag" do
+    = lucide_icon "chevron-left", size: 16
+  .mw-attendance-date-nav__date
+    = date_field_tag :date, @date.to_fs(:iso8601), class: "mw-input mw-attendance-date-nav__picker", data: picker_data, "aria-label": "Datum wählen"
+  = link_to next_url, class: "mw-attendance-date-nav__arrow", "aria-label": "Nächster Tag", title: "Nächster Tag" do
+    = lucide_icon "chevron-right", size: 16
+  - if @date != Date.current
+    = link_to "Heute", today_url, class: "mw-page-action mw-attendance-date-nav__today"
