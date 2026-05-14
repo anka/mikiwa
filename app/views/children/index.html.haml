@@ -9,6 +9,9 @@
       = link_to inactive_children_path, class: "mw-page-action" do
         = lucide_icon "eye-off", size: 14
         Deaktivierte Kinder
+      = link_to children_path(format: :xlsx, q: @filter_q.presence, group_id: @filter_group_id.presence, age: @filter_age.presence), class: "mw-page-action" do
+        = lucide_icon "download", size: 14
+        Excel exportieren
       = link_to new_child_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
         = lucide_icon "plus", size: 16
         Kind anlegen

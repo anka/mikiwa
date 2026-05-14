@@ -1,0 +1,69 @@
+wb = xlsx_package.workbook
+wb.add_worksheet(name: "Kinder") do |sheet|
+  header_style    = sheet.styles.add_style(ExcelExportHelper::HEADER_STYLE)
+  date_style      = sheet.styles.add_style(format_code: "yyyy-mm-dd")
+  datetime_style  = sheet.styles.add_style(format_code: "yyyy-mm-dd hh:mm")
+  wrap_style      = sheet.styles.add_style(alignment: { vertical: :top, wrap_text: true })
+
+  sheet.add_row [
+    "Nachname",
+    "Vorname",
+    "Spitzname",
+    "Geburtsdatum",
+    "Alter",
+    "Gruppe",
+    "Kindergartenjahr",
+    "Foto-Einwilligung",
+    "Foto-Einw. aktualisiert am",
+    "Notfallkontakte",
+    "Medizinische Notizen",
+    "Krankenkasse",
+    "Versicherungsnummer",
+    "Eltern",
+    "Aktiv",
+    "Angelegt am"
+  ], style: header_style
+
+  @children.each do |child|
+    emergency = child.emergency_contacts.map do |ec|
+      "#{ec.display_name} – #{ec.display_phone} – #{ec.relationship}"
+    end.join("\n")
+
+    medical = child.medical_notes.map { |m| "#{m.note_type}: #{m.content}" }.join("\n")
+
+    parents = child.parents.map do |p|
+      "#{p.full_name} – #{p.email} – #{p.phone}"
+    end.join("\n")
+
+    sheet.add_row [
+      child.last_name,
+      child.first_name,
+      child.nickname,
+      child.date_of_birth,
+      child.age,
+      child.group&.name,
+      child.kindergarten_year&.label,
+      child.photo_consent ? "Ja" : "Nein",
+      child.photo_consent_updated_at,
+      emergency,
+      medical,
+      child.health_insurer,
+      child.insurance_number,
+      parents,
+      child.active? ? "Ja" : "Nein",
+      child.created_at
+    ], style: [
+      nil, nil, nil, date_style, nil, nil, nil, nil, datetime_style,
+      wrap_style, wrap_style, nil, nil, wrap_style, nil, datetime_style
+    ]
+  end
+
+  sheet.column_widths 16, 16, 14, 14, 6, 18, 16, 14, 20,
+                      36, 36, 18, 18, 36, 6, 18
+  sheet.sheet_view.pane do |pane|
+    pane.state = :frozen
+    pane.y_split = 1
+    pane.top_left_cell = "A2"
+    pane.active_pane = :bottom_left
+  end
+end

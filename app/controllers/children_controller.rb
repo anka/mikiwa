@@ -3,19 +3,28 @@ class ChildrenController < ApplicationController
   before_action :require_staff_for_mutations!, only: %i[new create deactivate reactivate]
   before_action :require_staff!, only: %i[inactive]
   before_action :authorize_edit_update!, only: %i[edit update]
+  before_action :require_staff_for_xlsx!, only: %i[index]
 
   def index
     @children = scoped_children.active
                                .search_by_name(params[:q])
                                .in_group(params[:group_id])
                                .with_age(params[:age])
-                               .includes(:group, :parents)
+                               .includes(:group, :parents, :emergency_contacts, :medical_notes, :kindergarten_year)
                                .order(:last_name, :first_name)
     @filter_q = params[:q].to_s
     @filter_group_id = params[:group_id]
     @filter_age = params[:age]
     @filter_groups = Group.order(:name)
     @filter_ages = filter_age_options
+
+    respond_to do |format|
+      format.html
+      format.xlsx do
+        response.headers["Content-Disposition"] =
+          %(attachment; filename="#{helpers.export_filename('kinder')}")
+      end
+    end
   end
 
   def show
@@ -137,6 +146,12 @@ class ChildrenController < ApplicationController
   end
 
   def require_staff!
+    return if current_user&.staff?
+    render plain: "Zugriff verweigert", status: :forbidden
+  end
+
+  def require_staff_for_xlsx!
+    return unless request.format.symbol == :xlsx
     return if current_user&.staff?
     render plain: "Zugriff verweigert", status: :forbidden
   end

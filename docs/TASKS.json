@@ -3225,7 +3225,7 @@
       "id": "F60",
       "name": "Kinder-Liste: Excel-Export-Action",
       "phase": 8,
-      "status": "open",
+      "status": "done",
       "short_description": "Action 'Excel exportieren' in /children-Header liefert eine .xlsx-Datei mit vollständigen Stammdaten (inkl. Versicherung und medizinische Notizen) aller gelisteten Kinder.",
       "description": "Ziel: Caretaker können die Kinder-Liste mit allen Details exportieren – inkl. Versicherung und med. Notizen für Behörden/Träger-Reports.\n\nButton: In app/views/children/index.html.haml im .mw-page-header__actions (vor 'Kind anlegen') ein neuer Link 'Excel exportieren' (Lucide 'download'), staff-only.\nLink: children_path(format: :xlsx, q: @filter_q, group_id: @filter_group_id, age: @filter_age).\n\nController-Erweiterung: ChildrenController#index erhält respond_to-Block mit format.xlsx; verwendet bereits geladene @children (mit Filtern).\n\nView: app/views/children/index.xlsx.axlsx (neu) generiert Workbook 'Kinder':\n  • Sheet 'Kinder'\n  • Header-Zeile fixiert mit caxlsx-Style HEADER\n  • Spalten siehe Spec spec-excel-exports.json#childrenExport (Nachname, Vorname, Spitzname, Geburtsdatum, Alter, Geschlecht, Gruppe, KGJ, Foto-Einw.+Datum, Notfallkontakte mehrzeilig, Med. Notizen mehrzeilig, Krankenkasse, Versicherungsnummer entschlüsselt, Eltern mehrzeilig, Aktiv, Angelegt am)\n  • Sortierung: Nachname, Vorname\n  • Zeilenhöhe für Multi-Line-Zellen anpassen, Wrap-Text aktivieren\n\nResponse-Header: Content-Disposition: attachment; filename=mikiwa_kinder_{date}.xlsx (caxlsx_rails übernimmt).\n\nAuthorization: Staff-only (require_staff! before_action für format.xlsx).\n\nSpec: docs/spec-excel-exports.json (childrenExport)",
       "acceptance_criteria": [

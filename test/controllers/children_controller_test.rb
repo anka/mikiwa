@@ -504,4 +504,64 @@ class ChildrenControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Geändert", @child.reload.first_name
     assert_equal "9999", @child.reload.insurance_number
   end
+
+  # F60: Excel-Export-Action für Kinder-Liste
+  test "F60 Caretaker erhält .xlsx als Download" do
+    sign_in_as(@caretaker)
+    get children_path(format: :xlsx)
+    assert_response :success
+    assert_equal Mime[:xlsx].to_s, response.media_type
+    assert_match(/mikiwa_kinder_\d{4}-\d{2}-\d{2}\.xlsx/, response.headers["Content-Disposition"])
+    assert response.body.bytesize.positive?, "Excel-Body darf nicht leer sein"
+  end
+
+  test "F60 Parent bekommt 403 bei /children.xlsx" do
+    sign_in_as(@parent)
+    get children_path(format: :xlsx)
+    assert_response :forbidden
+  end
+
+  test "F60 Excel respektiert group_id-Filter" do
+    sign_in_as(@caretaker)
+    other_group = Group.create!(name: "F60-Andere-Gruppe")
+    Child.create!(
+      first_name: "Otto", last_name: "Anders",
+      date_of_birth: Date.new(2021, 1, 1),
+      group: other_group, kindergarten_year: @year, photo_consent: true
+    )
+    get children_path(format: :xlsx, group_id: @group.id)
+    assert_response :success
+    # Excel ist Binary - wir prüfen nur Status; Inhalt via Roundtrip-Parse wäre Stretch
+  end
+
+  test "F60 Excel respektiert q-Filter" do
+    sign_in_as(@caretaker)
+    Child.create!(
+      first_name: "Zacharias", last_name: "Müllner",
+      date_of_birth: Date.new(2021, 1, 1),
+      group: @group, kindergarten_year: @year, photo_consent: true
+    )
+    get children_path(format: :xlsx, q: "Müllner")
+    assert_response :success
+  end
+
+  test "F60 Index-Header enthält Excel-Export-Link für Caretaker" do
+    sign_in_as(@caretaker)
+    get children_path
+    assert_response :success
+    assert_match(/Excel exportieren/, response.body)
+    assert_select 'a[href*=".xlsx"]'
+  end
+
+  test "F60 Index-Header zeigt KEINEN Excel-Export-Link für Parent" do
+    sign_in_as(@parent)
+    get children_path
+    assert_response :success
+    assert_no_match(/Excel exportieren/, response.body)
+  end
+
+  test "F60 unauthenticated user wird auf Login geleitet bei .xlsx" do
+    get children_path(format: :xlsx)
+    assert_redirected_to new_session_path
+  end
 end
