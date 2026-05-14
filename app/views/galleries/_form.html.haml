@@ -40,6 +40,11 @@
           options_from_collection_for_select(events, :id, :title, gallery.event_id),
           { include_blank: "Keine" }, class: "mw-select"
 
+  - slideshow_speed_options = [ [ "Langsam (8 Sekunden pro Bild)", "slow" ], [ "Normal (4 Sekunden pro Bild)", "normal" ], [ "Schnell (2 Sekunden pro Bild)", "fast" ] ]
+  .mw-field
+    = f.label :slideshow_speed, "Slideshow-Geschwindigkeit", class: "mw-field__label"
+    = f.select :slideshow_speed, slideshow_speed_options, {}, class: "mw-select"
+
   .mw-field
     .mw-checkbox-row
       = f.check_box :visibility, { id: "gallery_visibility_released", class: "mw-checkbox" },

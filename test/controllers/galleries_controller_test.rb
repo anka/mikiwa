@@ -356,6 +356,51 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/Galerie ansehen/, response.body)
   end
 
+  # F57: Slideshow-Geschwindigkeit als Galerie-Einstellung
+  test "F57 Form enthält slideshow_speed-Select mit drei Optionen" do
+    sign_in_as(@caretaker)
+    get edit_gallery_path(@gallery)
+    assert_response :success
+    assert_select 'select[name="gallery[slideshow_speed]"]' do
+      assert_select 'option[value="slow"]'
+      assert_select 'option[value="normal"]'
+      assert_select 'option[value="fast"]'
+    end
+  end
+
+  test "F57 caretaker kann slideshow_speed beim Update setzen" do
+    sign_in_as(@caretaker)
+    patch gallery_path(@gallery), params: {
+      gallery: {
+        title:                @gallery.title,
+        kindergarten_year_id: @year.id,
+        group_ids:            [ @group_baeren.id ],
+        slideshow_speed:      "fast"
+      }
+    }
+    assert_redirected_to gallery_path(@gallery)
+    assert_equal "fast", @gallery.reload.slideshow_speed
+  end
+
+  test "F57 Show gibt slideshow_speed als data-Attribute am Magic-Slideshow-Container aus" do
+    sign_in_as(@caretaker)
+    @gallery.update!(slideshow_speed: :fast)
+    @gallery.photos.attach(io: StringIO.new(minimal_jpeg), filename: "f57.jpg", content_type: "image/jpeg")
+    @gallery.save!
+    get gallery_path(@gallery)
+    assert_response :success
+    assert_select 'div[data-controller~="magic-slideshow"][data-magic-slideshow-speed-value="fast"]'
+  end
+
+  test "F57 Show ohne expliziten Speed nutzt 'normal' im data-Attribute" do
+    sign_in_as(@caretaker)
+    @gallery.photos.attach(io: StringIO.new(minimal_jpeg), filename: "f57b.jpg", content_type: "image/jpeg")
+    @gallery.save!
+    get gallery_path(@gallery)
+    assert_response :success
+    assert_select 'div[data-controller~="magic-slideshow"][data-magic-slideshow-speed-value="normal"]'
+  end
+
   # BF-006: CSP-Fehler auf Gallery-Detail
   test "BF-006 Show enthält keine inline style='display:none' Attribute (CSP)" do
     sign_in_as(@caretaker)

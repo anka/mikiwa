@@ -25,6 +25,8 @@ class Gallery < ApplicationRecord
   validate  :photos_valid_types_and_sizes
 
   enum :visibility, { internal: 0, released: 1 }, default: :internal
+  enum :slideshow_speed, { slow: "slow", normal: "normal", fast: "fast" },
+       default: :normal, prefix: true
 
   scope :ordered,  -> { order(created_at: :desc) }
   scope :released, -> { where(visibility: :released) }

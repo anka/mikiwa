@@ -3063,7 +3063,7 @@
       "id": "F57",
       "name": "Gallery: Slideshow-Geschwindigkeit als persistente Galerie-Einstellung",
       "phase": 8,
-      "status": "open",
+      "status": "done",
       "short_description": "Pro Galerie wählbare Slideshow-Geschwindigkeit (langsam/normal/schnell), die beim Start der Magic Slideshow berücksichtigt wird.",
       "description": "Ziel: Caretaker können pro Galerie festlegen, wie schnell die Magic Slideshow Bilder wechselt – passend zum Anlass (langsam für Vorführungen, schnell als Eyecatcher).\n\nDatenmodell: galleries.slideshow_speed:string, enum :slideshow_speed, { slow: 'slow', normal: 'normal', fast: 'fast' }, default 'normal'. Mapping zu Millisekunden:\n  • slow   → 8000 ms\n  • normal → 4000 ms (bisheriger Default)\n  • fast   → 2000 ms\nReduced-Motion: weiterhin +50% Delay (slow=12s, normal=6s, fast=3s).\n\nMigration: add_column :galleries, :slideshow_speed, :string, null: false, default: 'normal'. Wie im Projekt üblich (Dev-Phase): bestehende galleries-Migration anpassen statt neue Migration anlegen, schema.rb regenerieren via db:reset.\n\nForm-Änderung: In app/views/galleries/_form.html.haml ein neues Select-Feld 'Slideshow-Geschwindigkeit' mit den drei Optionen, ergänzt um Beschreibung des resultierenden Delays.\n\nGallery-Show: Wert wird als data-Attribute am Magic-Slideshow-Container ausgegeben (data-magic-slideshow-speed-value='slow|normal|fast').\n\nController/Stimulus: magic_slideshow_controller.js liest data-Attribute, mapped auf Millisekunden, setzt this.delay statt hardcoded 4000.",
       "acceptance_criteria": [

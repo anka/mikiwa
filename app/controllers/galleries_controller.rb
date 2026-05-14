@@ -123,7 +123,7 @@ class GalleriesController < ApplicationController
   end
 
   def gallery_params
-    params.require(:gallery).permit(:title, :description, :event_date, :kindergarten_year_id, :event_id, :visibility)
+    params.require(:gallery).permit(:title, :description, :event_date, :kindergarten_year_id, :event_id, :visibility, :slideshow_speed)
   end
 
   def require_staff!

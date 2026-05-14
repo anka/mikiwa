@@ -3,7 +3,9 @@
 - controllers = []
 - controllers << "lightbox" if @photos.any?
 - controllers << "magic-slideshow" if @photos.any?
-%div{ data: { controller: controllers.join(" ").presence } }
+- root_data = { controller: controllers.join(" ").presence }
+- root_data[:"magic-slideshow-speed-value"] = @gallery.slideshow_speed if @photos.any?
+%div{ data: root_data }
   .mw-page-header
     .mw-page-header__text
       %h1.mw-page-header__title= @gallery.title

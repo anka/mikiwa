@@ -8,6 +8,7 @@ class CreateGalleries < ActiveRecord::Migration[8.1]
       t.references :created_by,       null: false, type: :string, limit: 36, foreign_key: { to_table: :users }
       t.string  :event_id,            limit: 36
       t.integer :visibility,          null: false, default: 0
+      t.string  :slideshow_speed,     null: false, default: "normal"
       t.timestamps
     end
 

@@ -92,4 +92,31 @@ class GalleryTest < ActiveSupport::TestCase
   test "F37 visibility-Enum hat die Werte internal und released" do
     assert_equal({ "internal" => 0, "released" => 1 }, Gallery.visibilities)
   end
+
+  # F57 – Slideshow-Geschwindigkeit pro Galerie
+  test "F57 neue Galerie hat slideshow_speed normal als Default" do
+    @gallery.save!
+    assert_equal "normal", @gallery.reload.slideshow_speed
+    assert @gallery.slideshow_speed_normal?
+  end
+
+  test "F57 slideshow_speed kann auf slow oder fast gesetzt werden" do
+    @gallery.save!
+    @gallery.update!(slideshow_speed: :slow)
+    assert @gallery.slideshow_speed_slow?
+    @gallery.update!(slideshow_speed: :fast)
+    assert @gallery.slideshow_speed_fast?
+  end
+
+  test "F57 slideshow_speed-Enum hat die Werte slow, normal, fast" do
+    assert_equal(
+      { "slow" => "slow", "normal" => "normal", "fast" => "fast" },
+      Gallery.slideshow_speeds
+    )
+  end
+
+  test "F57 ungültiger slideshow_speed wird abgelehnt" do
+    @gallery.save!
+    assert_raises(ArgumentError) { @gallery.slideshow_speed = "ultra" }
+  end
 end

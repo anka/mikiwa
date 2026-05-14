@@ -6,8 +6,13 @@ import { Controller } from "@hotwired/stimulus"
 const EFFECTS = ["fade", "slide-left", "zoom", "flip"]
 const REDUCED_MOTION_EFFECT = "fade"
 
+// F57: Speed-Werte → Basis-Delay in ms.
+// Reduced-Motion erhöht den Delay um +50%.
+const SPEED_DELAYS = { slow: 8000, normal: 4000, fast: 2000 }
+
 export default class extends Controller {
   static targets = ["srcs"]
+  static values = { speed: { type: String, default: "normal" } }
 
   open(event) {
     event?.preventDefault()
@@ -19,7 +24,8 @@ export default class extends Controller {
     this.paused = false
     this.lastEffect = null
     this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    this.delay = this.reducedMotion ? 6000 : 4000
+    const baseDelay = SPEED_DELAYS[this.speedValue] ?? SPEED_DELAYS.normal
+    this.delay = this.reducedMotion ? Math.round(baseDelay * 1.5) : baseDelay
 
     this.buildOverlay()
     this.bindControls()
