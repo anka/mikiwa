@@ -1,0 +1,47 @@
+- prev_month = month.prev_month
+- next_month = month.next_month
+
+.mw-calendar-month
+  .mw-calendar-month__nav
+    = link_to attendance_child_path(child, month: prev_month.strftime("%Y-%m")),
+        class: "mw-btn mw-btn--ghost mw-btn--sm", "aria-label": "Vorheriger Monat" do
+      = lucide_icon "chevron-left", size: 18
+    %h2.mw-calendar-month__title= l(month, format: "%B %Y")
+    = link_to attendance_child_path(child, month: next_month.strftime("%Y-%m")),
+        class: "mw-btn mw-btn--ghost mw-btn--sm", "aria-label": "Nächster Monat" do
+      = lucide_icon "chevron-right", size: 18
+
+  .mw-card{ style: "overflow: hidden; margin-top: 1rem;" }
+    .mw-cal-grid__header
+      - %w[Mo Di Mi Do Fr Sa So].each do |day|
+        %div= day
+
+    .mw-cal-grid
+      - calendar_cells.each do |date|
+        - in_month = date.month == month.month
+        - is_today = date == Date.current
+        - attendance = attendances_by_date[date]
+        - status_class, tooltip = attendance_status_for(attendance)
+        .mw-cal-cell{ class: [ in_month ? nil : "mw-cal-cell--empty mw-attendance-day--outside", is_today ? "mw-cal-cell--today" : nil ].compact.join(" ") }
+          .mw-cal-cell__day{ class: is_today ? "mw-cal-cell__day--today" : nil }= date.day
+          - if in_month && attendance
+            %span.mw-attendance-day{ class: status_class, title: tooltip }
+              - if attendance.present
+                = lucide_icon "check", size: 12
+              - else
+                = lucide_icon "x", size: 12
+          - elsif in_month
+            %span.mw-attendance-day.mw-attendance-day--none{ title: "Kein Eintrag", "aria-label": "Kein Eintrag" }
+
+  .mw-attendance-legend
+    %span.mw-attendance-legend__item
+      %span.mw-attendance-day.mw-attendance-day--present
+        = lucide_icon "check", size: 12
+      Anwesend
+    %span.mw-attendance-legend__item
+      %span.mw-attendance-day.mw-attendance-day--absent
+        = lucide_icon "x", size: 12
+      Abwesend
+    %span.mw-attendance-legend__item
+      %span.mw-attendance-day.mw-attendance-day--none
+      Kein Eintrag

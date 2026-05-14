@@ -1,0 +1,27 @@
+- content_for :title, "Anwesenheit · #{@child.full_name} · Mikiwa"
+
+.mw-page-header
+  - if @child.profile_photo.attached?
+    = image_tag @child.profile_photo.variant(**ImageAttachable::VARIANT_CONFIGS[:thumb]),
+        class: "mw-child-avatar", alt: @child.full_name
+  - else
+    .mw-child-avatar.mw-child-avatar--placeholder
+      = @child.first_name[0].upcase
+  .mw-page-header__text
+    %h1.mw-page-header__title= @child.full_name
+    %p.mw-page-header__lede
+      Anwesenheit
+      ·
+      = @child.group.name
+  .mw-page-header__actions
+    = link_to "Zurück", child_path(@child), class: "mw-page-action"
+
+.mw-tabs{ role: "tablist" }
+  = link_to child_path(@child), class: "mw-tab", role: "tab" do
+    Stammdaten
+  = link_to attendance_child_path(@child), class: "mw-tab mw-tab--active", role: "tab", "aria-current": "page" do
+    Anwesenheit
+
+= render "attendance_calendar", child: @child, month: @month,
+                                calendar_cells: @calendar_cells,
+                                attendances_by_date: @attendances_by_date

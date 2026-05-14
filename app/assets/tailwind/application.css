@@ -3632,3 +3632,77 @@ textarea.mw-input { resize: vertical; min-height: 96px; line-height: var(--lh-re
 }
 
 .mw-parent-add__select { flex: 1; min-width: 0; }
+
+/* ==========================================================================
+   F64 — ATTENDANCE CALENDAR (Child-Show Sub-Page)
+   ========================================================================== */
+
+.mw-tabs {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--border-subtle);
+  margin: var(--space-4) 0 var(--space-4);
+}
+.mw-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-14);
+  font-weight: var(--fw-semibold);
+  color: var(--fg-3);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  text-decoration: none;
+  transition: color 120ms;
+}
+.mw-tab:hover { color: var(--fg-1); border-bottom: 2px solid transparent; }
+.mw-tab--active {
+  color: var(--fg-1);
+  border-bottom-color: var(--accent);
+}
+
+/* Status-Marker auf einer Kalenderzelle */
+.mw-attendance-day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-top: var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-11);
+  font-weight: var(--fw-bold);
+  cursor: help;
+}
+.mw-attendance-day--present {
+  background: var(--success-soft);
+  color: var(--success);
+}
+.mw-attendance-day--absent {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.mw-attendance-day--none {
+  background: var(--surface-sunken);
+  color: var(--fg-3);
+  border: 1px dashed var(--border-subtle);
+}
+.mw-attendance-day--outside { /* applied auf die Zelle, nicht den Marker */ }
+
+.mw-attendance-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  font-size: var(--fs-13);
+  color: var(--fg-3);
+}
+.mw-attendance-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.mw-attendance-legend__item .mw-attendance-day {
+  margin-top: 0;
+}

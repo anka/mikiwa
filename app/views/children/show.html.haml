@@ -26,6 +26,9 @@
       = link_to edit_child_path(@child), class: "mw-btn mw-btn--secondary mw-btn--sm" do
         = lucide_icon "pencil", size: 14
         Bearbeiten
+    = link_to attendance_child_path(@child), class: "mw-page-action" do
+      = lucide_icon "calendar-check", size: 14
+      Anwesenheit
     = link_to "Zurück", children_path, class: "mw-page-action"
 
 - if notice

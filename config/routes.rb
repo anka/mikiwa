@@ -28,6 +28,7 @@ Rails.application.routes.draw do
       patch  :update_consent
       post   :attach_parent
       delete :detach_parent
+      get    :attendance
     end
     resources :emergency_contacts, only: %i[new create edit update destroy]
     resources :medical_notes, only: %i[new create edit update destroy]

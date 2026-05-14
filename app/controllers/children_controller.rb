@@ -1,5 +1,5 @@
 class ChildrenController < ApplicationController
-  before_action :set_child, only: %i[show edit update deactivate reactivate update_consent attach_parent detach_parent]
+  before_action :set_child, only: %i[show edit update deactivate reactivate update_consent attach_parent detach_parent attendance]
   before_action :require_staff_for_mutations!, only: %i[new create deactivate reactivate]
   before_action :require_staff!, only: %i[inactive]
   before_action :authorize_edit_update!, only: %i[edit update]
@@ -29,6 +29,13 @@ class ChildrenController < ApplicationController
 
   def show
     authorize_child_access!(@child)
+  end
+
+  def attendance
+    authorize_child_access!(@child)
+    @month = parse_month(params[:month]) || Date.current.beginning_of_month
+    @attendances_by_date = Attendance.for_child(@child.id).in_month(@month).index_by(&:date)
+    @calendar_cells = build_month_grid(@month)
   end
 
   def new
@@ -178,6 +185,26 @@ class ChildrenController < ApplicationController
     return unless parent_id.present?
     parent = User.find_by(id: parent_id, role: "parent")
     ParentChild.create!(user: parent, child: child) if parent
+  end
+
+  def parse_month(value)
+    return nil if value.blank?
+    Date.strptime(value.to_s, "%Y-%m").beginning_of_month
+  rescue ArgumentError, TypeError
+    nil
+  end
+
+  def build_month_grid(month_start)
+    first = month_start.beginning_of_month
+    last  = month_start.end_of_month
+    # Mo-Start (wday: Mo=1, So=0 → wir wollen Mo=0..So=6)
+    lead_blanks = (first.wday + 6) % 7
+    trail_blanks = (6 - ((last.wday + 6) % 7))
+    cells = []
+    lead_blanks.times { |i| cells << (first - (lead_blanks - i)) }
+    (first..last).each { |d| cells << d }
+    trail_blanks.times { |i| cells << (last + (i + 1)) }
+    cells
   end
 
   def filter_age_options
