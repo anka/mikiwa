@@ -1,0 +1,55 @@
+wb = xlsx_package.workbook
+wb.add_worksheet(name: "Eltern") do |sheet|
+  header_style   = sheet.styles.add_style(ExcelExportHelper::HEADER_STYLE)
+  datetime_style = sheet.styles.add_style(format_code: "yyyy-mm-dd hh:mm")
+  wrap_style     = sheet.styles.add_style(alignment: { vertical: :top, wrap_text: true })
+
+  sheet.add_row [
+    "Nachname",
+    "Vorname",
+    "E-Mail",
+    "Telefon",
+    "Wissen / Fähigkeiten",
+    "Status",
+    "Zugeordnete Kinder",
+    "Eingeladen am",
+    "Letzter Login",
+    "Angelegt am"
+  ], style: header_style
+
+  @parents.each do |parent|
+    status = if parent.locked?
+      "Deaktiviert"
+    elsif parent.invitation_sent_at.present? && parent.magic_link_token_version.zero?
+      "Eingeladen"
+    else
+      "Aktiv"
+    end
+
+    children_cell = parent.children.map { |c| "#{c.full_name} (#{c.group&.name})" }.join("\n")
+
+    sheet.add_row [
+      parent.last_name,
+      parent.first_name,
+      parent.email,
+      parent.phone.presence,
+      parent.knowhow.presence,
+      status,
+      children_cell,
+      parent.invitation_sent_at,
+      @last_logins[parent.id],
+      parent.created_at
+    ], style: [
+      nil, nil, nil, nil, wrap_style, nil,
+      wrap_style, datetime_style, datetime_style, datetime_style
+    ]
+  end
+
+  sheet.column_widths 18, 16, 28, 16, 30, 14, 36, 18, 18, 18
+  sheet.sheet_view.pane do |pane|
+    pane.state = :frozen
+    pane.y_split = 1
+    pane.top_left_cell = "A2"
+    pane.active_pane = :bottom_left
+  end
+end

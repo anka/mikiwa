@@ -3272,7 +3272,7 @@
       "id": "F61",
       "name": "Eltern-Liste: Excel-Export-Action",
       "phase": 8,
-      "status": "open",
+      "status": "done",
       "short_description": "Action 'Excel exportieren' in /parents-Header liefert eine .xlsx-Datei mit Kontaktdaten, Status und zugeordneten Kindern aller gelisteten Eltern.",
       "description": "Ziel: Caretaker können die Eltern-Liste mit allen Details exportieren – inkl. Kinderzuordnung für Kommunikation/Versand.\n\nButton: In app/views/parents/index.html.haml im .mw-page-header__actions (neben 'Elternteil einladen') ein neuer Link 'Excel exportieren' (Lucide 'download').\nLink: parents_path(format: :xlsx, q: @search_query).\n\nController-Erweiterung: ParentsController#index erhält respond_to-Block mit format.xlsx; verwendet bereits geladene @parents (mit Search-Filter).\n\nView: app/views/parents/index.xlsx.axlsx (neu) generiert Workbook 'Eltern':\n  • Sheet 'Eltern'\n  • Header-Zeile fixiert\n  • Spalten gemäß Spec: Nachname, Vorname, E-Mail, Telefon, Wissen/Fähigkeiten, Status (Aktiv/Eingeladen/Deaktiviert), Kinder (Name (Gruppe), mehrzeilig), Eingeladen am, Letzter Login, Angelegt am\n  • Sortierung: Nachname, Vorname\n\nAuthorization: Staff-only.\n\nSpec: docs/spec-excel-exports.json (parentsExport)",
       "acceptance_criteria": [

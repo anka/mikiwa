@@ -14,6 +14,17 @@ class ParentsController < ApplicationController
     end
     @parents = scope.order(:last_name, :first_name)
     @search_query = params[:q].to_s
+
+    respond_to do |format|
+      format.html
+      format.xlsx do
+        @parents = @parents.includes(children: :group)
+        @last_logins = Session.where(user_id: @parents.map(&:id))
+                              .group(:user_id).maximum(:created_at)
+        response.headers["Content-Disposition"] =
+          %(attachment; filename="#{helpers.export_filename('eltern')}")
+      end
+    end
   end
 
   def new

@@ -244,4 +244,41 @@ class ParentsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/name="user\[knowhow\]"/, response.body)
     assert_match(/name="user\[notes\]"/, response.body)
   end
+
+  # F61: Excel-Export-Action für Eltern-Liste
+  test "F61 Caretaker erhält .xlsx als Download" do
+    sign_in_as(@caretaker)
+    get parents_path(format: :xlsx)
+    assert_response :success
+    assert_equal Mime[:xlsx].to_s, response.media_type
+    assert_match(/mikiwa_eltern_\d{4}-\d{2}-\d{2}\.xlsx/, response.headers["Content-Disposition"])
+    assert response.body.bytesize.positive?
+  end
+
+  test "F61 Parent bekommt 403 bei /parents.xlsx" do
+    sign_in_as(@parent)
+    get parents_path(format: :xlsx)
+    assert_response :forbidden
+  end
+
+  test "F61 unauthenticated user wird auf Login geleitet bei .xlsx" do
+    get parents_path(format: :xlsx)
+    assert_redirected_to new_session_path
+  end
+
+  test "F61 Excel respektiert q-Search-Filter" do
+    sign_in_as(@caretaker)
+    User.create!(email: "fritz.f61@test.at", password: SecureRandom.hex(20), role: "parent",
+                 first_name: "Fritz", last_name: "Müllerschön", phone: "0650 111 222")
+    get parents_path(format: :xlsx, q: "Müllerschön")
+    assert_response :success
+  end
+
+  test "F61 Index-Header enthält Excel-Export-Link" do
+    sign_in_as(@caretaker)
+    get parents_path
+    assert_response :success
+    assert_match(/Excel exportieren/, response.body)
+    assert_select 'a[href*=".xlsx"]'
+  end
 end
