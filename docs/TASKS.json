@@ -3544,7 +3544,7 @@
       "id": "F67",
       "name": "Kalender: Filter im mw-filters-Stil angleichen",
       "phase": 8,
-      "status": "open",
+      "status": "done",
       "short_description": "Filter-Bar in /calendar_events wird auf mw-filters-Pattern umgestellt (Such-Lupe, Reset-Badge, Auto-Submit). View-Toggle Monat/Liste bleibt funktional.",
       "description": "Ziel: Filter auf /calendar_events nutzen das gleiche Komponenten-Set wie /children.\n\nNeuer Partial app/views/calendar_events/_filters.html.haml (analog children/_filters):\n  • Such-Feld 'Ereignis suchen…' mit Lucide 'search'\n  • Select 'Alle Jahre' (kindergarten_year_id)\n  • Select 'Alle Gruppen' (group_id)\n  • View-Toggle (Monat/Liste) bleibt am rechten Rand der Filter-Row oder in eigener Zeile\n  • Reset-Link mit Lucide 'rotate-ccw' + Count-Badge\n\nController-Anpassung CalendarEventsController#index:\n  • @filter_q = params[:q].to_s\n  • Scope CalendarEvent.search_by_title(q) (oder inline-where)\n  • @filter_year, @filter_group_id wie bisher; @filter_groups, @kindergarten_years für Selects\n  • Active-Count-Logik fürs Partial\n\nIndex-View: render 'filters' statt Inline-Form.\n\nSpec: docs/spec-filters-alignment.json (perPagePlan – calendar_events)",
       "acceptance_criteria": [

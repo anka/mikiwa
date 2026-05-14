@@ -8,12 +8,18 @@ class CalendarEventsController < ApplicationController
     @filter_year  = params[:kindergarten_year_id].present? ?
       KindergartenYear.find_by(id: params[:kindergarten_year_id]) : @current_year
     @filter_year ||= @current_year
+    @filter_q        = params[:q].to_s
+    @filter_group_id = params[:group_id]
 
     @groups = Group.order(:name)
     base_scope = policy_scope(CalendarEvent).for_year(@filter_year).includes(:groups)
 
-    if params[:group_id].present?
-      base_scope = base_scope.for_groups([ params[:group_id] ])
+    if @filter_group_id.present?
+      base_scope = base_scope.for_groups([ @filter_group_id ])
+    end
+
+    if @filter_q.present?
+      base_scope = base_scope.where("LOWER(title) LIKE ?", "%#{@filter_q.downcase}%")
     end
 
     birthday_resolver = CalendarBirthdayResolver.new(current_user)
