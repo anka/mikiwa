@@ -119,4 +119,64 @@ class GalleryTest < ActiveSupport::TestCase
     @gallery.save!
     assert_raises(ArgumentError) { @gallery.slideshow_speed = "ultra" }
   end
+
+  # F58 – Audio-Upload-Validierung
+  test "F58 Galerie ohne Audio bleibt valide" do
+    @gallery.save!
+    assert_not @gallery.audio.attached?
+    assert @gallery.valid?
+  end
+
+  test "F58 MP3-Audio mit gültigem Content-Type wird akzeptiert" do
+    @gallery.save!
+    @gallery.audio.attach(
+      io: StringIO.new("\xFF\xFBfake-mp3-data"),
+      filename: "song.mp3",
+      content_type: "audio/mpeg"
+    )
+    assert @gallery.valid?, @gallery.errors.full_messages.inspect
+  end
+
+  test "F58 M4A-Audio mit gültigem Content-Type wird akzeptiert" do
+    @gallery.save!
+    @gallery.audio.attach(
+      io: StringIO.new("fake-m4a-data"),
+      filename: "song.m4a",
+      content_type: "audio/mp4"
+    )
+    assert @gallery.valid?, @gallery.errors.full_messages.inspect
+  end
+
+  test "F58 audio/x-m4a Content-Type wird akzeptiert" do
+    @gallery.save!
+    @gallery.audio.attach(
+      io: StringIO.new("fake-m4a-data"),
+      filename: "song.m4a",
+      content_type: "audio/x-m4a"
+    )
+    assert @gallery.valid?
+  end
+
+  test "F58 ungültiger Audio-Content-Type wird abgelehnt" do
+    @gallery.save!
+    @gallery.audio.attach(
+      io: StringIO.new("fake-wav-data"),
+      filename: "song.wav",
+      content_type: "audio/wav"
+    )
+    assert_not @gallery.valid?
+    assert_includes @gallery.errors[:audio].first, "MP3"
+  end
+
+  test "F58 Audio über 25 MB wird abgelehnt" do
+    @gallery.save!
+    big = "x" * (25 * 1024 * 1024 + 1)
+    @gallery.audio.attach(
+      io: StringIO.new(big),
+      filename: "huge.mp3",
+      content_type: "audio/mpeg"
+    )
+    assert_not @gallery.valid?
+    assert_includes @gallery.errors[:audio].first, "25"
+  end
 end

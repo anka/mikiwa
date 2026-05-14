@@ -401,6 +401,87 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
     assert_select 'div[data-controller~="magic-slideshow"][data-magic-slideshow-speed-value="normal"]'
   end
 
+  # F58: Audio-Upload & Slideshow-Begleitmusik
+  test "F58 Edit-Form enthält Audio-Upload-Feld" do
+    sign_in_as(@caretaker)
+    get edit_gallery_path(@gallery)
+    assert_response :success
+    assert_select 'input[type="file"][name="gallery[audio]"][accept*="audio/mpeg"]'
+  end
+
+  test "F58 caretaker kann MP3 hochladen" do
+    sign_in_as(@caretaker)
+    mp3 = fixture_file_upload(Rails.root.join("test/fixtures/files/sample_audio.mp3"), "audio/mpeg")
+    patch gallery_path(@gallery), params: {
+      gallery: {
+        title:                @gallery.title,
+        kindergarten_year_id: @year.id,
+        group_ids:            [ @group_baeren.id ],
+        audio:                mp3
+      }
+    }
+    assert_redirected_to gallery_path(@gallery)
+    assert @gallery.reload.audio.attached?
+  end
+
+  test "F58 ungültiger Audio-Typ wird abgelehnt (422)" do
+    sign_in_as(@caretaker)
+    wav = fixture_file_upload(Rails.root.join("test/fixtures/files/sample.txt"), "audio/wav")
+    patch gallery_path(@gallery), params: {
+      gallery: {
+        title:                @gallery.title,
+        kindergarten_year_id: @year.id,
+        group_ids:            [ @group_baeren.id ],
+        audio:                wav
+      }
+    }
+    assert_response :unprocessable_entity
+    assert_not @gallery.reload.audio.attached?
+  end
+
+  test "F58 Show enthält audio-Element wenn Audio attached" do
+    sign_in_as(@caretaker)
+    @gallery.audio.attach(
+      io: StringIO.new("\xFF\xFBfake-mp3"),
+      filename: "song.mp3",
+      content_type: "audio/mpeg"
+    )
+    @gallery.photos.attach(io: StringIO.new(minimal_jpeg), filename: "f58.jpg", content_type: "image/jpeg")
+    @gallery.save!
+    get gallery_path(@gallery)
+    assert_response :success
+    assert_select 'audio[data-magic-slideshow-target="audio"]'
+  end
+
+  test "F58 Show ohne Audio enthält kein audio-Element" do
+    sign_in_as(@caretaker)
+    @gallery.photos.attach(io: StringIO.new(minimal_jpeg), filename: "f58b.jpg", content_type: "image/jpeg")
+    @gallery.save!
+    get gallery_path(@gallery)
+    assert_response :success
+    assert_select 'audio[data-magic-slideshow-target="audio"]', count: 0
+  end
+
+  test "F58 caretaker kann Audio via purge_audio entfernen" do
+    sign_in_as(@caretaker)
+    @gallery.audio.attach(
+      io: StringIO.new("\xFF\xFBfake-mp3"),
+      filename: "song.mp3",
+      content_type: "audio/mpeg"
+    )
+    @gallery.save!
+    assert @gallery.reload.audio.attached?
+    delete purge_audio_gallery_path(@gallery)
+    assert_redirected_to edit_gallery_path(@gallery)
+    assert_not @gallery.reload.audio.attached?
+  end
+
+  test "F58 parent kann Audio nicht entfernen (403)" do
+    sign_in_as(@parent)
+    delete purge_audio_gallery_path(@gallery)
+    assert_response :forbidden
+  end
+
   # BF-006: CSP-Fehler auf Gallery-Detail
   test "BF-006 Show enthält keine inline style='display:none' Attribute (CSP)" do
     sign_in_as(@caretaker)

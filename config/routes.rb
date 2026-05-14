@@ -58,6 +58,7 @@ Rails.application.routes.draw do
       get    :download
       patch  :release
       patch  :withdraw
+      delete :audio, action: :purge_audio, as: :purge_audio
     end
   end
 

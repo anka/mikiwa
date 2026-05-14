@@ -46,6 +46,19 @@
     = f.select :slideshow_speed, slideshow_speed_options, {}, class: "mw-select"
 
   .mw-field
+    = f.label :audio, "Begleitmusik (optional)", class: "mw-field__label"
+    - if gallery.audio.attached? && gallery.audio.blob&.persisted?
+      .mw-audio-attached
+        %audio.mw-audio-attached__player{ controls: true, src: url_for(gallery.audio) }
+        = button_to purge_audio_gallery_path(gallery), method: :delete,
+            class: "mw-btn mw-btn--ghost mw-btn--sm",
+            data: { turbo_confirm: "Begleitmusik entfernen?" } do
+          = lucide_icon "trash-2", size: 14
+          Entfernen
+    = f.file_field :audio, accept: "audio/mpeg,audio/mp4,audio/x-m4a", class: "mw-input"
+    %small.mw-field__hint MP3 oder M4A, max. 25 MB
+
+  .mw-field
     .mw-checkbox-row
       = f.check_box :visibility, { id: "gallery_visibility_released", class: "mw-checkbox" },
           "released", "internal"

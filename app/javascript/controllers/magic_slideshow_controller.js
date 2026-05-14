@@ -11,7 +11,7 @@ const REDUCED_MOTION_EFFECT = "fade"
 const SPEED_DELAYS = { slow: 8000, normal: 4000, fast: 2000 }
 
 export default class extends Controller {
-  static targets = ["srcs"]
+  static targets = ["srcs", "audio"]
   static values = { speed: { type: String, default: "normal" } }
 
   open(event) {
@@ -32,6 +32,7 @@ export default class extends Controller {
     this.show()
     this.requestFs()
     this.startAutoplay()
+    this.startAudio()
   }
 
   buildOverlay() {
@@ -118,8 +119,38 @@ export default class extends Controller {
 
   togglePause() {
     this.paused = !this.paused
-    if (this.paused) this.stopAutoplay()
-    else this.startAutoplay()
+    if (this.paused) {
+      this.stopAutoplay()
+      this.pauseAudio()
+    } else {
+      this.startAutoplay()
+      this.resumeAudio()
+    }
+  }
+
+  startAudio() {
+    if (!this.hasAudioTarget) return
+    const a = this.audioTarget
+    a.loop = true
+    try { a.currentTime = 0 } catch (_) {}
+    a.play().catch(() => {})
+  }
+
+  pauseAudio() {
+    if (!this.hasAudioTarget) return
+    this.audioTarget.pause()
+  }
+
+  resumeAudio() {
+    if (!this.hasAudioTarget) return
+    this.audioTarget.play().catch(() => {})
+  }
+
+  stopAudio() {
+    if (!this.hasAudioTarget) return
+    const a = this.audioTarget
+    a.pause()
+    try { a.currentTime = 0 } catch (_) {}
   }
 
   pauseAndResume() {
@@ -145,6 +176,7 @@ export default class extends Controller {
 
   close() {
     this.stopAutoplay()
+    this.stopAudio()
     clearTimeout(this.resumeTimer)
     clearTimeout(this.toolbarFadeTimer)
     document.removeEventListener("keydown", this.keyHandler)

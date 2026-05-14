@@ -1,6 +1,6 @@
 class GalleriesController < ApplicationController
-  before_action :set_gallery,     only: %i[show edit update destroy add_photo remove_photo download release withdraw]
-  before_action :require_staff!,  only: %i[new create edit update destroy add_photo remove_photo release withdraw]
+  before_action :set_gallery,     only: %i[show edit update destroy add_photo remove_photo download release withdraw purge_audio]
+  before_action :require_staff!,  only: %i[new create edit update destroy add_photo remove_photo release withdraw purge_audio]
 
   def index
     @galleries = policy_scope(Gallery).includes(:groups, :created_by).ordered
@@ -116,6 +116,11 @@ class GalleriesController < ApplicationController
                 allow_other_host: true
   end
 
+  def purge_audio
+    @gallery.audio.purge_later if @gallery.audio.attached?
+    redirect_to edit_gallery_path(@gallery), notice: "Begleitmusik wurde entfernt."
+  end
+
   private
 
   def set_gallery
@@ -123,7 +128,7 @@ class GalleriesController < ApplicationController
   end
 
   def gallery_params
-    params.require(:gallery).permit(:title, :description, :event_date, :kindergarten_year_id, :event_id, :visibility, :slideshow_speed)
+    params.require(:gallery).permit(:title, :description, :event_date, :kindergarten_year_id, :event_id, :visibility, :slideshow_speed, :audio)
   end
 
   def require_staff!
