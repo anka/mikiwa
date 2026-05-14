@@ -3584,7 +3584,7 @@
       "id": "F68",
       "name": "Einkaufslisten: Filter im mw-filters-Stil angleichen",
       "phase": 8,
-      "status": "open",
+      "status": "done",
       "short_description": "Filter in /shopping_lists wird auf mw-filters-Pattern umgestellt; 'Nur mir zugewiesen'-Quick-Toggle wird integriert; Titel-Suche neu.",
       "description": "Ziel: Filter auf /shopping_lists nutzen das gleiche Komponenten-Set wie /children.\n\nNeuer Partial app/views/shopping_lists/_filters.html.haml (basiert auf children/_filters):\n  • Such-Feld 'Liste suchen…' (q, Titel-Suche)\n  • Select 'Alle Gruppen' (group_id)\n  • Select 'Alle Monate' (month)\n  • Select 'Alle Verantwortlichen' (assigned_to_id)\n  • Quick-Toggle 'Nur mir zugewiesen' als kleiner Toggle-Link rechts neben den Selects (assigned=me)\n  • Reset-Link mit Count-Badge\n\nController-Anpassung ShoppingListsController#index:\n  • @filter_q = params[:q]\n  • ShoppingList.search_by_title(q)\n  • Bestehende Filter bleiben\n\nIndex-View: bestehende separate assigned=me-Bar entfernen und in mw-filters integrieren; render 'filters'.\n\nSpec: docs/spec-filters-alignment.json (perPagePlan – shopping_lists)",
       "acceptance_criteria": [

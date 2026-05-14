@@ -1,0 +1,54 @@
+- assigned_me  = @assigned_filter == "me"
+- active_count = [ @filter_q.presence, @filter_group_id.presence, @filter_month.presence, @filter_assigned_to_id.presence, (assigned_me ? "me" : nil) ].compact.size
+- clear_url    = shopping_lists_path
+
+= form_with url: shopping_lists_path, method: :get, local: true, class: "mw-filters" do
+  - if assigned_me
+    = hidden_field_tag :assigned, "me"
+  .mw-filters__row
+    .mw-filters__search
+      = lucide_icon "search", size: 16, class: "mw-filters__search-icon"
+      = text_field_tag :q, @filter_q,
+          id: "filter-q",
+          placeholder: "Liste suchen …",
+          autocomplete: "off",
+          class: "mw-input mw-filters__search-input"
+      - if @filter_q.present?
+        - clear_q = { group_id: @filter_group_id, month: @filter_month, assigned_to_id: @filter_assigned_to_id, assigned: (assigned_me ? "me" : nil) }.compact_blank
+        = link_to "#{shopping_lists_path}?#{clear_q.to_query}",
+            class: "mw-filters__clear",
+            "aria-label": "Suchtext löschen", title: "Suchtext löschen" do
+          = lucide_icon "x", size: 14
+
+    = select_tag :group_id,
+                 options_from_collection_for_select(@filter_groups, :id, :name, @filter_group_id),
+                 include_blank: "Alle Gruppen",
+                 class: "mw-select mw-filters__select",
+                 onchange: "this.form.requestSubmit()"
+
+    = select_tag :month,
+                 options_for_select(@filter_months.map { |m| [ I18n.l(Date.parse("#{m}-01"), format: "%B %Y"), m ] }, @filter_month),
+                 include_blank: "Alle Monate",
+                 class: "mw-select mw-filters__select",
+                 onchange: "this.form.requestSubmit()"
+
+    = select_tag :assigned_to_id,
+                 options_from_collection_for_select(@filter_assignees, :id, ->(u) { u.full_name.presence || u.email }, @filter_assigned_to_id),
+                 include_blank: "Alle Verantwortlichen",
+                 class: "mw-select mw-filters__select",
+                 onchange: "this.form.requestSubmit()"
+
+    .mw-filters__actions
+      = submit_tag "Filtern", class: "mw-btn mw-btn--primary mw-btn--sm"
+      - if assigned_me
+        - toggle_target = shopping_lists_path(q: @filter_q.presence, group_id: @filter_group_id, month: @filter_month, assigned_to_id: @filter_assigned_to_id)
+      - else
+        - toggle_target = shopping_lists_path(q: @filter_q.presence, group_id: @filter_group_id, month: @filter_month, assigned_to_id: @filter_assigned_to_id, assigned: "me")
+      = link_to toggle_target, class: "mw-page-action #{assigned_me ? 'mw-page-action--active' : ''}", title: "Nur mir zugewiesen" do
+        = lucide_icon "user-check", size: 14
+        Nur mir
+      - if active_count.positive?
+        = link_to clear_url, class: "mw-page-action mw-filters__reset" do
+          = lucide_icon "rotate-ccw", size: 14
+          Zurücksetzen
+          %span.mw-badge.mw-badge--accent.mw-filters__reset-count= active_count

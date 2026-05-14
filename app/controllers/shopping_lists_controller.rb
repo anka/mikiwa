@@ -14,7 +14,11 @@ class ShoppingListsController < ApplicationController
       first_day = Date.new(year, month, 1)
       scope = scope.where(event_date: first_day..first_day.end_of_month)
     end
+    if params[:q].present?
+      scope = scope.where("LOWER(title) LIKE ?", "%#{params[:q].to_s.downcase}%")
+    end
     @lists = scope.ordered
+    @filter_q = params[:q].to_s
     @assigned_filter = params[:assigned]
     @filter_group_id = params[:group_id]
     @filter_month = params[:month]

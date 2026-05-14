@@ -220,7 +220,7 @@ class ShoppingListsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@caretaker)
     get shopping_lists_path
     assert_response :success
-    assert_match(/mw-shopping-lists-filters/, response.body)
+    assert_match(/mw-filters/, response.body)
     assert_match(/name="group_id"/, response.body)
     assert_match(/name="month"/, response.body)
     assert_match(/name="assigned_to_id"/, response.body)
@@ -258,7 +258,7 @@ class ShoppingListsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@caretaker)
     get shopping_lists_path, params: { month: "2026-06" }
     assert_response :success
-    assert_match(/Filter zurücksetzen/, response.body)
+    assert_match(/Zurücksetzen/, response.body)
   end
 
   # F51: gruppierte Anzeige nach Kategorie
