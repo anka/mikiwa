@@ -80,3 +80,7 @@ gem "rails-i18n", "~> 8.0"
 
 # Brute-force protection and rate limiting
 gem "rack-attack"
+
+# Excel-Export-Infrastruktur (F59)
+gem "caxlsx", "~> 4.1"
+gem "caxlsx_rails", "~> 0.6"

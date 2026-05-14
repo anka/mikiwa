@@ -3190,7 +3190,7 @@
       "id": "F59",
       "name": "Excel-Export-Infrastruktur (caxlsx + caxlsx_rails)",
       "phase": 8,
-      "status": "open",
+      "status": "done",
       "short_description": "Basis-Infrastruktur für Excel-Exports: Gems caxlsx und caxlsx_rails, MIME-Type-Registrierung, ExcelExportHelper mit gemeinsamen Styles und Filename-Konventionen.",
       "description": "Ziel: Einheitliche, wiederverwendbare Excel-Export-Pipeline für alle nachfolgenden Export-Features (F60 Kinder, F61 Eltern, F62 Speiseplan, F65 Anwesenheit).\n\nGemfile-Einträge:\n  gem 'caxlsx', '~> 4.1'\n  gem 'caxlsx_rails', '~> 0.6'\nBundle install, Tests grün halten.\n\nMIME-Type: caxlsx_rails registriert :xlsx-Format. Falls nicht: config/initializers/mime_types.rb ergänzen.\n\nApp/helpers/excel_export_helper.rb (neu):\n  • Style-Konstanten: HEADER (bold, bg=Mikiwa-Accent), SUB_HEADER, WEEKEND (bg=grau), PRESENT (bg=hellgrün), ABSENT (bg=hellrot), NEUTRAL\n  • export_filename(prefix, *parts) → 'mikiwa_{prefix}_{parts.join('_')}_{date}.xlsx'\n  • dietary_short(value) → ''/' (V)'/' (V+)' (für Speiseplan)\n  • present_cell_value(attendance) → 'A' / 'X·k' / '-' (für Anwesenheit)\n\nKeine eigene View notwendig – Infrastruktur wird durch nachfolgende Tasks konsumiert.\n\nSpec: docs/spec-excel-exports.json (Abschnitt sharedInfrastructure)",
       "acceptance_criteria": [
