@@ -1,0 +1,46 @@
+- year_default_id = @current_year&.id
+- year_active     = @filter_year && @filter_year.id != year_default_id
+- active_count    = [ @filter_q.presence, @filter_group_id.presence, @filter_status.presence, (year_active ? @filter_year.id : nil) ].compact.size
+- clear_url       = events_path
+
+= form_with url: events_path, method: :get, local: true, class: "mw-filters" do
+  .mw-filters__row
+    .mw-filters__search
+      = lucide_icon "search", size: 16, class: "mw-filters__search-icon"
+      = text_field_tag :q, @filter_q,
+          id: "filter-q",
+          placeholder: "Veranstaltung suchen …",
+          autocomplete: "off",
+          class: "mw-input mw-filters__search-input"
+      - if @filter_q.present?
+        - clear_q = { kindergarten_year_id: (year_active ? @filter_year.id : nil), group_id: @filter_group_id, status: @filter_status }.compact_blank
+        = link_to "#{events_path}?#{clear_q.to_query}",
+            class: "mw-filters__clear",
+            "aria-label": "Suchtext löschen", title: "Suchtext löschen" do
+          = lucide_icon "x", size: 14
+
+    = select_tag :kindergarten_year_id,
+                 options_from_collection_for_select(@kindergarten_years, :id, :label, @filter_year&.id),
+                 include_blank: "Alle Jahre",
+                 class: "mw-select mw-filters__select",
+                 onchange: "this.form.requestSubmit()"
+
+    = select_tag :group_id,
+                 options_from_collection_for_select(@groups, :id, :name, @filter_group_id),
+                 include_blank: "Alle Gruppen",
+                 class: "mw-select mw-filters__select",
+                 onchange: "this.form.requestSubmit()"
+
+    = select_tag :status,
+                 options_for_select([ [ "Aktiv", "active" ], [ "Abgesagt", "cancelled" ] ], @filter_status),
+                 include_blank: "Alle Status",
+                 class: "mw-select mw-filters__select",
+                 onchange: "this.form.requestSubmit()"
+
+    .mw-filters__actions
+      = submit_tag "Filtern", class: "mw-btn mw-btn--primary mw-btn--sm"
+      - if active_count.positive?
+        = link_to clear_url, class: "mw-page-action mw-filters__reset" do
+          = lucide_icon "rotate-ccw", size: 14
+          Zurücksetzen
+          %span.mw-badge.mw-badge--accent.mw-filters__reset-count= active_count

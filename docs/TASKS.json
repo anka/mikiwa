@@ -3617,7 +3617,7 @@
       "id": "F69",
       "name": "Veranstaltungen: Filter im mw-filters-Stil angleichen",
       "phase": 8,
-      "status": "open",
+      "status": "done",
       "short_description": "Filter in /events wird auf mw-filters-Pattern umgestellt und um Such-Feld + Status-Filter (aktiv/abgesagt) erweitert.",
       "description": "Ziel: Filter auf /events nutzen das gleiche Komponenten-Set wie /children.\n\nNeuer Partial app/views/events/_filters.html.haml:\n  • Such-Feld 'Veranstaltung suchen…' (q)\n  • Select 'Alle Jahre' (kindergarten_year_id)\n  • Select 'Alle Gruppen' (group_id)\n  • Select 'Status' (alle/aktiv/abgesagt)\n  • Reset-Link mit Count\n\nController-Anpassung EventsController#index:\n  • @filter_q, @filter_status\n  • Event.search_by_title-Scope; with_status(status)-Scope (active=where(cancelled: false), cancelled=where(cancelled: true))\n  • Bestehende Filter bleiben\n\nIndex-View: render 'filters'.\n\nSpec: docs/spec-filters-alignment.json (perPagePlan – events)",
       "acceptance_criteria": [

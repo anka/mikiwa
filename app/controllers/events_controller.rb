@@ -7,9 +7,23 @@ class EventsController < ApplicationController
     @filter_year  = params[:kindergarten_year_id].present? ?
       KindergartenYear.find_by(id: params[:kindergarten_year_id]) : @current_year
     @filter_year ||= @current_year
+    @filter_q        = params[:q].to_s
+    @filter_group_id = params[:group_id]
+    @filter_status   = params[:status]
 
     base_scope = policy_scope(Event).for_year(@filter_year).includes(:groups).ordered
-    base_scope = base_scope.for_groups([ params[:group_id] ]) if params[:group_id].present?
+    base_scope = base_scope.for_groups([ @filter_group_id ]) if @filter_group_id.present?
+
+    if @filter_q.present?
+      base_scope = base_scope.where("LOWER(title) LIKE ?", "%#{@filter_q.downcase}%")
+    end
+
+    case @filter_status
+    when "active"
+      base_scope = base_scope.active
+    when "cancelled"
+      base_scope = base_scope.cancelled
+    end
 
     @events = base_scope
     @groups = Group.order(:name)

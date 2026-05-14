@@ -14,20 +14,7 @@
 - if notice
   .mw-flash.mw-flash--success= notice
 
-.mw-calendar-filters
-  = form_with url: events_path, method: :get, local: true, class: "mw-calendar-filters__form" do |f|
-    .mw-calendar-filters__row
-      .mw-field.mw-field--inline
-        = f.label :kindergarten_year_id, "Jahr", class: "mw-field__label"
-        = f.select :kindergarten_year_id,
-            options_from_collection_for_select(@kindergarten_years, :id, :label, @filter_year&.id),
-            { include_blank: "Alle Jahre" }, class: "mw-select mw-select--sm"
-      .mw-field.mw-field--inline
-        = f.label :group_id, "Gruppe", class: "mw-field__label"
-        = f.select :group_id,
-            options_from_collection_for_select(@groups, :id, :name, params[:group_id]),
-            { include_blank: "Alle Gruppen" }, class: "mw-select mw-select--sm"
-      = f.submit "Filtern", class: "mw-btn mw-btn--secondary mw-btn--sm"
+= render "filters"
 
 - if @events.any?
   .mw-card{ style: "margin-top: 1.5rem;" }
