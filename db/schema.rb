@@ -334,17 +334,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_120000) do
     t.datetime "created_at", null: false
     t.string "email", null: false
     t.boolean "email_invalid", default: false, null: false
-    t.string "first_name"
+    t.string "first_name", default: "", null: false
     t.string "ical_token"
     t.datetime "invitation_sent_at"
     t.string "invited_by_id"
     t.text "knowhow"
-    t.string "last_name"
+    t.string "last_name", default: "", null: false
     t.datetime "locked_at"
     t.integer "magic_link_token_version", default: 0, null: false
     t.text "notes"
     t.string "password_digest", null: false
-    t.string "phone"
+    t.string "phone", default: "", null: false
     t.string "role", default: "caretaker", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true

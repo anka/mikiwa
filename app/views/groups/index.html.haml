@@ -3,11 +3,13 @@
 .mw-page-header
   .mw-page-header__text
     %h1.mw-page-header__title Gruppen
-    %p.mw-page-header__lede Bis zu 3 Gruppen für Ihre Einrichtung verwalten.
+    %p.mw-page-header__lede Verwalte Gruppen für Ihre Einrichtung.
   .mw-page-header__actions
     = link_to new_group_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
       = lucide_icon "plus", size: 16
       Neue Gruppe
+
+.mw-flash.mw-flash--info= "Die Gruppen werden in Kürze für Ihre Eltern sichtbar gemacht."
 
 - if notice
   .mw-flash.mw-flash--success= notice

@@ -57,10 +57,8 @@
   -# Einwilligungs-Hinweis
   - if @consent_warnings.any?
     .mw-flash.mw-flash--warning{ style: "margin-top: 1rem;" }
-      %strong Hinweis: Kein Einverständnis zur Foto-Verwendung für:
-      %ul{ style: "margin: 0.5rem 0 0 1.25rem;" }
-        - @consent_warnings.each do |child|
-          %li= child.full_name
+      %strong Kein Einverständnis zur Foto-Verwendung für:
+      = @consent_warnings.map(&:full_name).join(", ")
 
   - if @gallery.description.present?
     .mw-card{ style: "margin-top: 1rem; padding: 1rem 1.25rem;" }

@@ -45,15 +45,12 @@
         = link_to children_path, class: "mw-nav-link #{nav_active?('/children')}" do
           = lucide_icon "users", size: 20
           %span Kinder
+        = link_to parents_path, class: "mw-nav-link #{nav_active?('/parents')}" do
+          = lucide_icon "users-round", size: 20
+          %span Eltern
         = link_to birthdays_path, class: "mw-nav-link #{nav_active?('/birthdays')}" do
           = lucide_icon "cake", size: 20
           %span Geburtstage
-        = link_to groups_path, class: "mw-nav-link #{nav_active?('/groups')}" do
-          = lucide_icon "layout-grid", size: 20
-          %span Gruppen
-        = link_to parents_path, class: "mw-nav-link #{nav_active?('/parents')}" do
-          = lucide_icon "users-round", size: 20
-          %span Eltern-Accounts
         .mw-nav-divider
         -# Planung & Events
         = link_to calendar_events_path, class: "mw-nav-link #{nav_active?('/calendar_events')}" do
@@ -87,6 +84,9 @@
         = link_to kindergarten_years_path, class: "mw-nav-link #{nav_active?('/kindergarten_years')}" do
           = lucide_icon "calendar-range", size: 20
           %span Kindergartenjahre
+        = link_to groups_path, class: "mw-nav-link #{nav_active?('/groups')}" do
+          = lucide_icon "layout-grid", size: 20
+          %span Gruppen
         - if current_user.admin?
           = link_to admin_users_path, class: "mw-nav-link #{nav_active?('/admin')}" do
             = lucide_icon "shield-check", size: 20
