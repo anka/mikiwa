@@ -119,6 +119,27 @@
         "F55",
         "F56"
       ]
+    },
+    {
+      "phase": 8,
+      "name": "Anwesenheit, Exports & Filter-Vereinheitlichung",
+      "feature_ids": [
+        "F57",
+        "F58",
+        "BF-008",
+        "F59",
+        "F60",
+        "F61",
+        "F62",
+        "F63",
+        "F64",
+        "F65",
+        "F66",
+        "F67",
+        "F68",
+        "F69",
+        "F70"
+      ]
     }
   ],
   "features": [
@@ -3037,6 +3058,631 @@
         "Voraussetzung für sauberen Wizard-Flow (F55/F56)"
       ],
       "dependencies": []
+    },
+    {
+      "id": "F57",
+      "name": "Gallery: Slideshow-Geschwindigkeit als persistente Galerie-Einstellung",
+      "phase": 8,
+      "status": "open",
+      "short_description": "Pro Galerie wählbare Slideshow-Geschwindigkeit (langsam/normal/schnell), die beim Start der Magic Slideshow berücksichtigt wird.",
+      "description": "Ziel: Caretaker können pro Galerie festlegen, wie schnell die Magic Slideshow Bilder wechselt – passend zum Anlass (langsam für Vorführungen, schnell als Eyecatcher).\n\nDatenmodell: galleries.slideshow_speed:string, enum :slideshow_speed, { slow: 'slow', normal: 'normal', fast: 'fast' }, default 'normal'. Mapping zu Millisekunden:\n  • slow   → 8000 ms\n  • normal → 4000 ms (bisheriger Default)\n  • fast   → 2000 ms\nReduced-Motion: weiterhin +50% Delay (slow=12s, normal=6s, fast=3s).\n\nMigration: add_column :galleries, :slideshow_speed, :string, null: false, default: 'normal'. Wie im Projekt üblich (Dev-Phase): bestehende galleries-Migration anpassen statt neue Migration anlegen, schema.rb regenerieren via db:reset.\n\nForm-Änderung: In app/views/galleries/_form.html.haml ein neues Select-Feld 'Slideshow-Geschwindigkeit' mit den drei Optionen, ergänzt um Beschreibung des resultierenden Delays.\n\nGallery-Show: Wert wird als data-Attribute am Magic-Slideshow-Container ausgegeben (data-magic-slideshow-speed-value='slow|normal|fast').\n\nController/Stimulus: magic_slideshow_controller.js liest data-Attribute, mapped auf Millisekunden, setzt this.delay statt hardcoded 4000.",
+      "acceptance_criteria": [
+        "galleries.slideshow_speed-Spalte mit Enum slow/normal/fast, default 'normal'",
+        "Gallery-Form bietet Select 'Slideshow-Geschwindigkeit' mit den drei Werten",
+        "Magic-Slideshow-Controller respektiert den Wert (slow=8s, normal=4s, fast=2s; +50% bei reduced-motion)",
+        "Bestehende Galerien werden korrekt mit 'normal' migriert",
+        "Test-Suite grün, System-Test überprüft Speed-Wechsel",
+        "Verifiziert via agent-browser: drei Werte konfigurieren, Slideshow starten, Bildwechsel-Zeit messen"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Speed-Auswahl wird gespeichert",
+          "given": "Galerie mit slideshow_speed='normal'",
+          "when": "Im Edit-Form auf 'schnell' setzen und speichern",
+          "then": "Datensatz hat slideshow_speed='fast'"
+        },
+        {
+          "scenario": "Slideshow nutzt korrekten Delay",
+          "given": "Galerie mit slideshow_speed='fast'",
+          "when": "Magic Slideshow startet",
+          "then": "Bildwechsel alle 2 Sekunden (statt 4)"
+        }
+      ],
+      "success_criteria": [
+        "Vorführungen können flexibel an Tempo angepasst werden",
+        "Konsistente UX – Speed bleibt pro Galerie gespeichert"
+      ],
+      "dependencies": [
+        "F53"
+      ]
+    },
+    {
+      "id": "F58",
+      "name": "Gallery: Audio-Upload & Slideshow-Begleitmusik",
+      "phase": 8,
+      "status": "open",
+      "short_description": "Pro Galerie kann eine Audiodatei (MP3 oder M4A, ≤25 MB) hochgeladen werden, die beim Start der Magic Slideshow im Loop abgespielt wird.",
+      "description": "Ziel: Magic Slideshow wird mit eingebetteter Begleitmusik zum erlebnishaften Anlass.\n\nDatenmodell: Gallery `has_one_attached :audio` (Active Storage – kein Schema-Migration nötig).\n\nValidierungen am Gallery-Modell:\n  • audio.content_type ∈ ['audio/mpeg', 'audio/mp4', 'audio/x-m4a']\n  • audio.byte_size ≤ 25.megabytes\nFehlermeldungen 'Audio muss MP3 oder M4A sein' und 'Audio darf maximal 25 MB groß sein'.\n\nForm: app/views/galleries/_form.html.haml – Neues Feld 'Begleitmusik (optional)' mit file_field accept='audio/mpeg,audio/mp4,audio/x-m4a'. Bei bereits angehängtem Audio: <audio controls> mit aktueller Datei + Löschen-Button.\n\nRoute: innerhalb resources :galleries member-Block:\n  delete :audio, action: :purge_audio, as: :purge_audio\nController-Action GalleriesController#purge_audio (Staff-only) ruft @gallery.audio.purge_later auf, redirected mit notice.\n\nGallery-Show: Wenn @gallery.audio.attached? – ein verstecktes <audio data-magic-slideshow-target='audio' preload='auto' src='{url_for(@gallery.audio)}'></audio>. Optional ein 'Mit Musik'-Badge in der Galerie-Lede.\n\nStimulus-Controller magic_slideshow_controller.js:\n  • neuer audioTarget\n  • open(): audio.loop=true; audio.currentTime=0; audio.play().catch(()=>{})\n  • close()/togglePause(): audio.pause() bzw. audio.play()\n  • Browser-Autoplay-Block: Slideshow läuft visuell weiter, keine Fehlerausgabe (open ist user-geste-getriggert, sollte aber defensiv geprüft werden)\n\nSpec: docs/spec-gallery-audio.json",
+      "acceptance_criteria": [
+        "Gallery.has_one_attached :audio mit Content-Type- und Größen-Validierung",
+        "Gallery-Edit-Form bietet Audio-Upload-Feld + Anzeige + Löschen-Button",
+        "Route DELETE /galleries/:id/audio aufrufbar und Staff-only",
+        "Bei vorhandenem Audio: <audio>-Element im DOM der Gallery-Show",
+        "Klick auf 'Magic Slideshow' startet Audio im Loop synchron",
+        "Esc/Schließen pausiert Audio; togglePause synchronisiert mit Bildwechsel",
+        "Ungültige Audio-Formate werden mit klarer Fehlermeldung abgewiesen",
+        "Test-Suite grün (Modell, Controller, System-Test ohne auditive Verifikation)",
+        "Verifiziert via agent-browser: Upload + Slideshow-Start (DOM-Check audio.currentTime>0)"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Audio-Upload erfolgreich",
+          "given": "Galerie ohne Audio, MP3-Datei 5 MB",
+          "when": "Im Edit-Form hochladen und speichern",
+          "then": "Audio ist angehängt, in Show als <audio>-Element sichtbar"
+        },
+        {
+          "scenario": "Audio läuft mit Slideshow",
+          "given": "Galerie mit Audio, 3 Fotos",
+          "when": "Magic Slideshow starten",
+          "then": "Audio spielt; loop=true gesetzt"
+        },
+        {
+          "scenario": "Ungültiges Format",
+          "given": "WAV-Datei wird hochgeladen",
+          "when": "Save",
+          "then": "Validierungsfehler, Galerie nicht gespeichert"
+        },
+        {
+          "scenario": "Audio entfernen",
+          "given": "Galerie mit Audio",
+          "when": "Klick auf Audio-Löschen",
+          "then": "audio.attached? == false; Slideshow künftig ohne Audio"
+        }
+      ],
+      "success_criteria": [
+        "Vorführungen mit Musik ohne externe Geräte möglich",
+        "Sauberer Lifecycle-Sync Audio ↔ Slideshow"
+      ],
+      "dependencies": [
+        "F53"
+      ],
+      "spec_file": "docs/spec-gallery-audio.json"
+    },
+    {
+      "id": "BF-008",
+      "name": "Speiseplan-Edit: Dietary-Radio-Pill-Active-State nicht reaktiv",
+      "phase": 8,
+      "status": "open",
+      "short_description": "Beim Bearbeiten eines Speiseplans bleibt der ursprünglich aktive Dietary-Wert (standard/vegetarisch/vegan) visuell hervorgehoben, auch wenn ein anderer gewählt wird – erst nach Speichern+Reload korrekt.",
+      "description": "Symptom: In /meal_entries/:id/edit zeigen pro Kurszeile drei Radio-Pills (Standard / Vegetarisch / Vegan). Klickt der User eine andere Pill, wechselt zwar das <input type='radio'>-checked-Attribut, der visuell aktive Pill bleibt jedoch der ursprünglich gerenderte. Erst nach Save + Neuladen ist die Anzeige korrekt.\n\nUrsache: In app/views/meal_entries/_form.html.haml wird die CSS-Klasse 'mw-radio-pill--active' beim Render-Zeitpunkt hardcoded an das Label gehängt:\n  %label.mw-radio-pill{ class: course.dietary == val ? 'mw-radio-pill--active' : nil }\nDas CSS verwendet bereits :has(input[type=radio]:checked) (mw-radio-pill:has(...checked):radio-pill--active). Dadurch ist die Hardcoded-Klasse redundant und führt zum Bug: der ursprünglich aktive Pill behält die Klasse auch nach Klick auf einen anderen.\n\nFix: Hardcoded class-Logik aus dem Label entfernen, Active-State ausschließlich über :has(:checked) im CSS:\n  %label.mw-radio-pill\n    = course_form.radio_button :dietary, val\n    %span= MealCourse::DIETARY_LABELS[val]\n\nDas :has-CSS in app/assets/tailwind/application.css (Zeilen ~3444) bleibt unverändert.\n\nKein Schema-Change. Tests anpassen: System-Test, der Dietary-Wechsel klickt und visuelle Klasse erwartet, ggf. anpassen.",
+      "acceptance_criteria": [
+        "Hardcoded 'mw-radio-pill--active'-Klasse aus app/views/meal_entries/_form.html.haml entfernt",
+        "Visuell aktiver Pill aktualisiert sich sofort beim Klick (keine Save+Reload notwendig)",
+        "Initial-Render zeigt den persistierten Dietary-Wert korrekt aktiv (über :has-CSS)",
+        "Keine Regression: Speichern persistiert weiterhin den korrekten Wert",
+        "Test-Suite grün, System-Test deckt Dietary-Wechsel ab",
+        "Verifiziert via agent-browser: Wert wechseln, Screenshot vergleichen"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Sofort reaktiv",
+          "given": "Hauptspeise hat dietary='standard'",
+          "when": "Im Edit-Form auf 'Vegan' klicken",
+          "then": "Vegan-Pill ist sofort visuell aktiv (Hintergrund Accent), Standard-Pill nicht"
+        },
+        {
+          "scenario": "Initial-State korrekt",
+          "given": "Persistierte Hauptspeise mit dietary='vegetarian'",
+          "when": "Edit-Form öffnen",
+          "then": "Vegetarisch-Pill ist visuell aktiv"
+        }
+      ],
+      "success_criteria": [
+        "Behebt UI-Verwirrung beim Bearbeiten",
+        "Vereinfachte Markup-Logik (CSS macht die Arbeit)"
+      ],
+      "dependencies": [
+        "F34"
+      ]
+    },
+    {
+      "id": "F59",
+      "name": "Excel-Export-Infrastruktur (caxlsx + caxlsx_rails)",
+      "phase": 8,
+      "status": "open",
+      "short_description": "Basis-Infrastruktur für Excel-Exports: Gems caxlsx und caxlsx_rails, MIME-Type-Registrierung, ExcelExportHelper mit gemeinsamen Styles und Filename-Konventionen.",
+      "description": "Ziel: Einheitliche, wiederverwendbare Excel-Export-Pipeline für alle nachfolgenden Export-Features (F60 Kinder, F61 Eltern, F62 Speiseplan, F65 Anwesenheit).\n\nGemfile-Einträge:\n  gem 'caxlsx', '~> 4.1'\n  gem 'caxlsx_rails', '~> 0.6'\nBundle install, Tests grün halten.\n\nMIME-Type: caxlsx_rails registriert :xlsx-Format. Falls nicht: config/initializers/mime_types.rb ergänzen.\n\nApp/helpers/excel_export_helper.rb (neu):\n  • Style-Konstanten: HEADER (bold, bg=Mikiwa-Accent), SUB_HEADER, WEEKEND (bg=grau), PRESENT (bg=hellgrün), ABSENT (bg=hellrot), NEUTRAL\n  • export_filename(prefix, *parts) → 'mikiwa_{prefix}_{parts.join('_')}_{date}.xlsx'\n  • dietary_short(value) → ''/' (V)'/' (V+)' (für Speiseplan)\n  • present_cell_value(attendance) → 'A' / 'X·k' / '-' (für Anwesenheit)\n\nKeine eigene View notwendig – Infrastruktur wird durch nachfolgende Tasks konsumiert.\n\nSpec: docs/spec-excel-exports.json (Abschnitt sharedInfrastructure)",
+      "acceptance_criteria": [
+        "Gemfile enthält caxlsx und caxlsx_rails; bundle install fehlerfrei",
+        "Mime::Type :xlsx erreichbar (respond_to format.xlsx möglich)",
+        "ExcelExportHelper mit Konstanten und Helpers vorhanden",
+        "Unit-Tests für Helper-Methoden (filename, dietary_short)",
+        "Test-Suite grün"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Mime-Type registriert",
+          "given": "Rails-App gebootet",
+          "when": "Mime::Type.lookup_by_extension('xlsx') aufgerufen",
+          "then": "Liefert gültigen MIME-Type für xlsx"
+        },
+        {
+          "scenario": "Filename-Helper",
+          "given": "export_filename('kinder')",
+          "when": "Aufgerufen am 14.05.2026",
+          "then": "Ergibt 'mikiwa_kinder_2026-05-14.xlsx'"
+        }
+      ],
+      "success_criteria": [
+        "Basis für alle weiteren Exports steht",
+        "Konsistente Filenames und Styles"
+      ],
+      "dependencies": [],
+      "spec_file": "docs/spec-excel-exports.json"
+    },
+    {
+      "id": "F60",
+      "name": "Kinder-Liste: Excel-Export-Action",
+      "phase": 8,
+      "status": "open",
+      "short_description": "Action 'Excel exportieren' in /children-Header liefert eine .xlsx-Datei mit vollständigen Stammdaten (inkl. Versicherung und medizinische Notizen) aller gelisteten Kinder.",
+      "description": "Ziel: Caretaker können die Kinder-Liste mit allen Details exportieren – inkl. Versicherung und med. Notizen für Behörden/Träger-Reports.\n\nButton: In app/views/children/index.html.haml im .mw-page-header__actions (vor 'Kind anlegen') ein neuer Link 'Excel exportieren' (Lucide 'download'), staff-only.\nLink: children_path(format: :xlsx, q: @filter_q, group_id: @filter_group_id, age: @filter_age).\n\nController-Erweiterung: ChildrenController#index erhält respond_to-Block mit format.xlsx; verwendet bereits geladene @children (mit Filtern).\n\nView: app/views/children/index.xlsx.axlsx (neu) generiert Workbook 'Kinder':\n  • Sheet 'Kinder'\n  • Header-Zeile fixiert mit caxlsx-Style HEADER\n  • Spalten siehe Spec spec-excel-exports.json#childrenExport (Nachname, Vorname, Spitzname, Geburtsdatum, Alter, Geschlecht, Gruppe, KGJ, Foto-Einw.+Datum, Notfallkontakte mehrzeilig, Med. Notizen mehrzeilig, Krankenkasse, Versicherungsnummer entschlüsselt, Eltern mehrzeilig, Aktiv, Angelegt am)\n  • Sortierung: Nachname, Vorname\n  • Zeilenhöhe für Multi-Line-Zellen anpassen, Wrap-Text aktivieren\n\nResponse-Header: Content-Disposition: attachment; filename=mikiwa_kinder_{date}.xlsx (caxlsx_rails übernimmt).\n\nAuthorization: Staff-only (require_staff! before_action für format.xlsx).\n\nSpec: docs/spec-excel-exports.json (childrenExport)",
+      "acceptance_criteria": [
+        "Button 'Excel exportieren' im /children-Header, staff-only",
+        "GET /children.xlsx liefert .xlsx-Datei (Content-Type application/vnd.openxmlformats-officedocument.spreadsheetml.sheet)",
+        "Excel enthält alle aktiven Kinder gemäß Filter (q, group_id, age)",
+        "Spalten gemäß Spec, Versicherungsnummer als Klartext (entschlüsselt durch Modell)",
+        "Multi-Line-Zellen für Eltern, Notfallkontakte, med. Notizen mit Wrap-Text",
+        "Header-Zeile gefroren, sinnvolle Spaltenbreiten",
+        "Eltern-Account erhält 403/Redirect bei Aufruf von .xlsx",
+        "Test-Suite grün; Controller-Test prüft Status, MIME, Filename; View-Test prüft Inhalt via caxlsx-Roundtrip-Parse",
+        "Verifiziert via agent-browser: Klick auf Button, Download-Event, Dateigröße > 0"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Filter werden übernommen",
+          "given": "100 Kinder, Filter group_id=A (15 Kinder)",
+          "when": "GET /children.xlsx?group_id=A",
+          "then": "Excel enthält genau 15 Kind-Zeilen + 1 Header-Zeile"
+        },
+        {
+          "scenario": "Sensitive Daten",
+          "given": "Kind mit Versicherungsnummer (encrypted)",
+          "when": "Export öffnen",
+          "then": "Versicherungsnummer in Klartext in der Zelle"
+        },
+        {
+          "scenario": "Authorization",
+          "given": "Eltern-Account",
+          "when": "GET /children.xlsx",
+          "then": "403 oder Redirect; keine Datei ausgeliefert"
+        }
+      ],
+      "success_criteria": [
+        "Zeitsparender Export für Träger/Behörden",
+        "Datenkonsistenz mit Live-Daten"
+      ],
+      "dependencies": [
+        "F59"
+      ],
+      "spec_file": "docs/spec-excel-exports.json"
+    },
+    {
+      "id": "F61",
+      "name": "Eltern-Liste: Excel-Export-Action",
+      "phase": 8,
+      "status": "open",
+      "short_description": "Action 'Excel exportieren' in /parents-Header liefert eine .xlsx-Datei mit Kontaktdaten, Status und zugeordneten Kindern aller gelisteten Eltern.",
+      "description": "Ziel: Caretaker können die Eltern-Liste mit allen Details exportieren – inkl. Kinderzuordnung für Kommunikation/Versand.\n\nButton: In app/views/parents/index.html.haml im .mw-page-header__actions (neben 'Elternteil einladen') ein neuer Link 'Excel exportieren' (Lucide 'download').\nLink: parents_path(format: :xlsx, q: @search_query).\n\nController-Erweiterung: ParentsController#index erhält respond_to-Block mit format.xlsx; verwendet bereits geladene @parents (mit Search-Filter).\n\nView: app/views/parents/index.xlsx.axlsx (neu) generiert Workbook 'Eltern':\n  • Sheet 'Eltern'\n  • Header-Zeile fixiert\n  • Spalten gemäß Spec: Nachname, Vorname, E-Mail, Telefon, Wissen/Fähigkeiten, Status (Aktiv/Eingeladen/Deaktiviert), Kinder (Name (Gruppe), mehrzeilig), Eingeladen am, Letzter Login, Angelegt am\n  • Sortierung: Nachname, Vorname\n\nAuthorization: Staff-only.\n\nSpec: docs/spec-excel-exports.json (parentsExport)",
+      "acceptance_criteria": [
+        "Button 'Excel exportieren' im /parents-Header",
+        "GET /parents.xlsx liefert .xlsx-Datei",
+        "Search-Filter (?q=) wird im Export berücksichtigt",
+        "Spalten gemäß Spec; Kinder-Zelle mit Name (Gruppe) je Zeile",
+        "Status (Aktiv/Eingeladen/Deaktiviert) korrekt ermittelt",
+        "Letzter Login als Datetime formatiert oder '-'",
+        "Staff-only; Eltern-Account 403/Redirect",
+        "Test-Suite grün; Controller-Test prüft MIME und Filename",
+        "Verifiziert via agent-browser"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Eltern mit mehreren Kindern",
+          "given": "Elternteil mit Kindern in 2 Gruppen",
+          "when": "Export geöffnet",
+          "then": "Kinder-Zelle enthält 'Max Mustermann (Sonnen)\\nLisa Mustermann (Sterne)'"
+        },
+        {
+          "scenario": "Search-Filter",
+          "given": "50 Eltern, Search 'Müller' (3 Treffer)",
+          "when": "GET /parents.xlsx?q=Müller",
+          "then": "Excel enthält 3 Eltern-Zeilen + Header"
+        }
+      ],
+      "success_criteria": [
+        "Schneller Kontaktexport für Versand-/Notfall-Listen"
+      ],
+      "dependencies": [
+        "F59"
+      ],
+      "spec_file": "docs/spec-excel-exports.json"
+    },
+    {
+      "id": "F62",
+      "name": "Speiseplan: Excel-Export-Seite (Zeitraum + Gruppe)",
+      "phase": 8,
+      "status": "open",
+      "short_description": "Eigene Seite /meal_entries/export mit Start/Ende/Gruppe-Auswahl; liefert Excel mit Tag-Zeilen und Kurs-Spalten inkl. Dietary-Suffix.",
+      "description": "Ziel: Caretaker können Wochen-/Monats-Speisepläne als Excel exportieren – z. B. zum Aushang oder Versand an Lieferanten.\n\nRouten:\n  • GET  /meal_entries/export  → MealEntriesController#export (Form-View)\n  • POST /meal_entries/export  → MealEntriesController#export_create (Excel-Download)\n  (Alternative: GET mit Query-Params – einfacher, gleichwertig)\n\nForm-View app/views/meal_entries/export.html.haml:\n  • mw-page-header 'Speiseplan exportieren'\n  • Form: date_field :start_date (Pflicht), date_field :end_date (Pflicht), select :group_id (Pflicht), Submit 'Excel exportieren'\n  • Validierung: end_date ≥ start_date; Spanne ≤ 92 Tage; Gruppe gehört zur Org\n  • Hinweis-Text zum 92-Tage-Limit\n\nController#export_create:\n  • Validierung (Inline-Errors, render :export bei Fehler)\n  • Lädt MealEntry für (date IN start..end, group_id) inkl. meal_courses\n  • Übergibt an View export.xlsx.axlsx\n\nView app/views/meal_entries/export.xlsx.axlsx:\n  • Sheet '{Gruppenname}'\n  • Header: Zeile 1 'Speiseplan – {Gruppe} – {Start}–{Ende}', Zeile 3 Spalten-Header\n  • Spalten: Datum (Wochentag, Datum) | Vorspeise | Hauptspeise | Nachspeise | Zusatz | Hinweise\n  • Pro Tag (auch ohne Eintrag) eine Zeile; Wochenenden ausgegraut/leer\n  • Kurs-Zellen: '{name}{dietary_short(dietary)}' z. B. 'Spaghetti (V)'\n  • Erste Spalte und Header fixiert\n\nFilename: mikiwa_speiseplan_{group}_{start}_{end}.xlsx\n\nNavigation: Aktion 'Exportieren' im /meal_entries-Header (Lucide 'download').\n\nSpec: docs/spec-excel-exports.json (mealPlanExport)",
+      "acceptance_criteria": [
+        "Routen export (GET) und export_create (POST) eingerichtet",
+        "Export-Form-Seite mit Start/Ende/Gruppe und Validierung (≤92 Tage)",
+        "Excel-Export liefert eine Zeile pro Tag mit allen 4 Kurs-Spalten + Hinweise",
+        "Dietary-Suffix in Zellen korrekt ('(V)', '(V+)')",
+        "Wochenend-Zeilen ausgegraut",
+        "Tage ohne Speiseplan-Eintrag werden mit '-' angezeigt",
+        "Action-Link 'Exportieren' im /meal_entries-Header (Staff-only)",
+        "Test-Suite grün (Controller-Tests, View-Tests)",
+        "Verifiziert via agent-browser: Form ausfüllen, Submit, Download abfangen"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Happy Path",
+          "given": "Gruppe A, Speisepläne 10.05.–14.05.",
+          "when": "Export mit Start=10.05., Ende=14.05.",
+          "then": "Excel mit 5 Tag-Zeilen, Kurs-Zellen befüllt"
+        },
+        {
+          "scenario": "Validierung Zeitraum",
+          "given": "Start=01.01., Ende=31.12.",
+          "when": "Submit",
+          "then": "Fehlermeldung 'Zeitraum max. 92 Tage'"
+        },
+        {
+          "scenario": "Lücken",
+          "given": "Nur an 3 von 5 Tagen ein Speiseplan",
+          "when": "Export 5 Tage",
+          "then": "5 Zeilen, 2 zeigen '-' in den Kurs-Spalten"
+        }
+      ],
+      "success_criteria": [
+        "Speiseplan-Export für Aushang/Versand ohne manuellen Aufwand",
+        "Dietary-Information klar erkennbar"
+      ],
+      "dependencies": [
+        "F59",
+        "BF-008"
+      ],
+      "spec_file": "docs/spec-excel-exports.json"
+    },
+    {
+      "id": "F63",
+      "name": "Anwesenheit: Datenmodell + tägliche Erfassungs-Seite",
+      "phase": 8,
+      "status": "open",
+      "short_description": "Neues Modul 'Anwesenheit' (/attendances): Modell Attendance (child, date, present, absence_reason, note), Erfassungs-Seite pro Tag und Gruppe mit Kindertabelle, Checkboxen und Abwesenheitsgründen.",
+      "description": "Ziel: Tägliche Anwesenheitsprotokollierung pro Gruppe – schnelles Eintragen durch Betreuer.\n\nMigration: create_table :attendances mit Spalten id, child_id, group_id, kindergarten_year_id, date, present, absence_reason, note, recorded_by_id, timestamps. Indizes (siehe Spec). Unique-Index (child_id, date).\n\nDB-Vorgehen (Dev-Phase, Konvention im Projekt): Neue Migration anlegen, da das Modul komplett neu ist und keine bestehende Migration angepasst werden muss.\n\nModell app/models/attendance.rb:\n  include UuidPrimaryKey\n  belongs_to :child, :group, :kindergarten_year, :recorded_by (User)\n  enum :absence_reason, { sick: 'sick', vacation: 'vacation', appointment: 'appointment', other: 'other' }\n  Validierungen: presence der Pflichtfelder, uniqueness date scope :child_id, conditional 'absence_reason nur bei present=false'\n  Scopes: for_date, for_group, for_child, in_month\n\nRoute resources :attendances, only: %i[index create update] (export-Routen kommen in F65).\nNavigations-Sidebar: neuer Eintrag 'Anwesenheit' (Lucide 'user-check'), staff-only.\n\nController AttendancesController:\n  • require_staff!\n  • index: liest params[:date] (default Date.current) und params[:group_id]; lädt Group aktive Kinder + Attendance für (date, group); baut für fehlende Kinder ein virtuelles Attendance (find_or_initialize_by)\n  • create: Bulk-Endpunkt, akzeptiert Array attendances_attributes; upsert pro Kind/Datum in Transaktion; Redirect mit Flash\n  • update: einzelner Datensatz (für Inline-Edit, Stretch v1.1)\n\nView app/views/attendances/index.html.haml:\n  • mw-page-header 'Anwesenheit'\n  • Filter-Partial (siehe F66 für die finale Form, hier minimal-functional)\n  • Wenn keine Gruppe gewählt: Hinweis 'Bitte Gruppe wählen'\n  • Sonst: Tabelle pro Kind mit:\n      - Foto + Name\n      - Checkbox 'Anwesend'\n      - Select 'Abwesenheitsgrund' (— / krank / Urlaub / Termin / Sonstiges), disabled wenn anwesend\n      - text_field 'Notiz' (optional)\n  • Button 'Speichern' am Ende (Bulk-Submit)\n\nPartial app/views/attendances/_form_row.html.haml (eine Zeile).\n\nSpec: docs/spec-attendances.json",
+      "acceptance_criteria": [
+        "Migration mit Attendance-Tabelle, allen Spalten und Indizes",
+        "Model Attendance mit Enum, Validierungen, Scopes",
+        "Sidebar-Eintrag 'Anwesenheit' (Staff-only, Eltern sehen nicht)",
+        "/attendances rendert Filter (Datum, Gruppe) und Kindertabelle für gewählte Gruppe",
+        "Checkbox+Select+Notiz pro Kind; Select disabled wenn Anwesend",
+        "Bulk-Submit speichert/aktualisiert alle Einträge in einer Transaktion",
+        "Validierung: Abwesenheitsgrund nur wenn !present",
+        "Unique-Constraint pro Kind/Tag wird durchgesetzt",
+        "Staff-only Zugriff",
+        "Test-Suite grün (Modell, Controller, System-Test)",
+        "Verifiziert via agent-browser: Tag erfassen, Speichern, Reload zeigt Werte"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Neue Tag-Erfassung",
+          "given": "Gruppe A mit 10 aktiven Kindern, kein Eintrag für heute",
+          "when": "8 anwesend, 2 abwesend (krank), Speichern",
+          "then": "10 Attendance-Records, davon 8 present=true, 2 present=false + absence_reason='sick'"
+        },
+        {
+          "scenario": "Upsert bestehender Tag",
+          "given": "Tag bereits erfasst",
+          "when": "Werte ändern, Speichern",
+          "then": "Bestehende Records aktualisiert, keine Duplikate"
+        },
+        {
+          "scenario": "Validierungsfehler",
+          "given": "present=true und absence_reason='sick'",
+          "when": "Direkt-Save am Modell",
+          "then": "Validierungsfehler"
+        }
+      ],
+      "success_criteria": [
+        "Schneller, fehlerarmer Tageseintrag",
+        "Sauberer Datenbestand als Grundlage für F64/F65"
+      ],
+      "dependencies": [
+        "F54"
+      ],
+      "spec_file": "docs/spec-attendances.json"
+    },
+    {
+      "id": "F64",
+      "name": "Anwesenheit: Monats-Kalenderübersicht pro Kind",
+      "phase": 8,
+      "status": "open",
+      "short_description": "Neuer Abschnitt 'Anwesenheit' im Child-Show: Monatskalender mit success/danger Markierung pro Tag, Navigation ‹ ›.",
+      "description": "Ziel: Eltern/Caretaker sehen die Anwesenheits-Historie eines Kindes auf einen Blick.\n\nRoute: GET /children/:id/attendance (Member-Action in resources :children, action :attendance).\n\nController ChildrenController#attendance:\n  • Authorization: Staff oder verlinkter Elternteil des Kindes\n  • params[:month] (default 'YYYY-MM' aktuell)\n  • @attendances = Attendance.for_child(@child).in_month(month_start)\n  • @month_days = month_start..month_end\n  • render template 'children/attendance' (eigenes Template, nicht show)\n\nView app/views/children/attendance.html.haml:\n  • mw-page-header (gleicher Style wie show, mit Kindes-Avatar/Name)\n  • Tab-Navigation: 'Stammdaten' (zurück zu /children/:id) | 'Anwesenheit' (aktiv)\n  • Monats-Navigation: ‹ {Monat YYYY} ›\n  • Render Partial _attendance_calendar mit @attendances + @month_days\n\nPartial app/views/children/_attendance_calendar.html.haml:\n  • CSS-Grid 7 Spalten (Mo–So), Wochen-Zeilen\n  • Header-Zeile mit Wochentag-Kürzeln\n  • Pro Tag eine Zelle:\n      - Datum-Zahl\n      - Status-Punkt: grün (mw-badge--success) wenn anwesend, rot (mw-badge--danger) wenn abwesend (Tooltip 'Grund: krank'), neutral grau wenn kein Eintrag\n      - Tage außerhalb des Monats: ausgegraut\n      - Heute: dezent hervorgehoben\n\nLink im /children/:id/show: Action-Button 'Anwesenheit' (Lucide 'calendar-check') in der mw-page-header__actions.\n\nSpec: docs/spec-attendances.json",
+      "acceptance_criteria": [
+        "Route GET /children/:id/attendance funktional",
+        "Action-Button 'Anwesenheit' im Child-Show",
+        "Kalender rendert Monats-Grid mit korrekter Wochentag-Ausrichtung",
+        "Tagesstatus: success (anwesend), danger (abwesend, Tooltip Grund), neutral (kein Eintrag)",
+        "Monatsnavigation ‹ › funktioniert (Query-Param ?month=YYYY-MM)",
+        "Authorization: Staff oder verlinkter Elternteil",
+        "Test-Suite grün",
+        "Verifiziert via agent-browser: Kind öffnen, Anwesenheits-Tab klicken, Kalender sichtbar, Monatsnavigation prüfen"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Kalender zeigt Mix-Status",
+          "given": "Kind mit 15 anwesend, 5 abwesend, Rest kein Eintrag im Mai",
+          "when": "GET /children/:id/attendance?month=2026-05",
+          "then": "15 grüne, 5 rote, Rest graue Tageszellen"
+        },
+        {
+          "scenario": "Authorization Eltern",
+          "given": "Elternteil von Kind X",
+          "when": "GET /children/:id/attendance für sein Kind",
+          "then": "200 OK; Kalender sichtbar"
+        },
+        {
+          "scenario": "Authorization fremde Eltern",
+          "given": "Elternteil ohne Bezug zum Kind",
+          "when": "GET /children/:id/attendance",
+          "then": "403 oder Redirect"
+        }
+      ],
+      "success_criteria": [
+        "Schnelle visuelle Auswertung pro Kind",
+        "Eltern erhalten Transparenz"
+      ],
+      "dependencies": [
+        "F63"
+      ],
+      "spec_file": "docs/spec-attendances.json"
+    },
+    {
+      "id": "F65",
+      "name": "Anwesenheit: Excel-Export (Zeitraum + Gruppe)",
+      "phase": 8,
+      "status": "open",
+      "short_description": "Eigene Export-Seite /attendances/export mit Start/Ende/Gruppe; liefert Excel mit Kindern als Zeilen, Datum als Spalten und Anwesend/Abwesend-Markierungen.",
+      "description": "Ziel: Auswertbarer Excel-Report für Behörden/Träger oder interne Übersicht.\n\nRouten (innerhalb resources :attendances collection):\n  • GET  /attendances/export  → AttendancesController#export (Form)\n  • POST /attendances/export  → AttendancesController#export_create (.xlsx-Download)\n\nForm-View app/views/attendances/export.html.haml:\n  • Felder: start_date, end_date, group_id\n  • Validierung: Ende ≥ Start, Spanne ≤ 92 Tage; Gruppe Pflicht\n  • Submit 'Excel exportieren'\n\nController#export_create:\n  • Validierung, sonst render :export\n  • Lädt aktive Kinder der Gruppe im KGJ\n  • Lädt Attendance-Records für (date IN range, group)\n  • Übergibt an View export.xlsx.axlsx\n\nView app/views/attendances/export.xlsx.axlsx:\n  • Header-Zeile: 'Kind' | Datum_1 | Datum_2 | … | 'Anwesend' | 'Abwesend'\n  • Eine Zeile pro Kind\n  • Zell-Inhalt: 'A' (anwesend, hellgrün), 'X' bzw. 'X·k|u|t|s' (abwesend Code-Suffix für Grund, hellrot), '-' (kein Eintrag, grau)\n  • Letzte Spalten: Summen anwesend / abwesend\n  • Footer-Zeile: Tagessumme anwesender Kinder pro Datum\n  • Wochenende-Spalten ausgegraut\n  • Erste Spalte und Header fixiert (freeze_panes A2)\n\nFilename: mikiwa_anwesenheit_{group}_{start}_{end}.xlsx\n\nNavigations-Link 'Exportieren' im /attendances-Header (Staff-only).\n\nSpec: docs/spec-attendances.json (exportFormat), docs/spec-excel-exports.json (attendanceExport)",
+      "acceptance_criteria": [
+        "Routen export + export_create eingerichtet",
+        "Export-Form mit Validierung (≤92 Tage)",
+        "Excel-Matrix: Kinder×Datum mit korrektem Status pro Zelle",
+        "Tagessumme und Kind-Summen vorhanden",
+        "Wochenenden ausgegraut, freeze_panes aktiv",
+        "Filename gemäß Konvention",
+        "Action-Link 'Exportieren' im /attendances-Header",
+        "Staff-only",
+        "Test-Suite grün",
+        "Verifiziert via agent-browser: Form ausfüllen, Submit, Download"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Happy Path",
+          "given": "Gruppe A mit 12 Kindern, Daten 01.05.–10.05.",
+          "when": "Export 01.05.–10.05.",
+          "then": "Excel mit 12 Kind-Zeilen, 10 Datum-Spalten, Summen am Ende"
+        },
+        {
+          "scenario": "Validierung Span",
+          "given": "Spanne 6 Monate",
+          "when": "Submit",
+          "then": "Fehler 'Max. 92 Tage'"
+        },
+        {
+          "scenario": "Tag ohne Einträge",
+          "given": "Tag 10.05. mit keinerlei Attendance-Records",
+          "when": "Export",
+          "then": "Alle Zellen für 10.05. zeigen '-'; Tagessumme=0"
+        }
+      ],
+      "success_criteria": [
+        "Reports für Träger/Behörden",
+        "Erkennbar Häufungen (z.B. Krankheitsphase)"
+      ],
+      "dependencies": [
+        "F59",
+        "F63"
+      ],
+      "spec_file": "docs/spec-attendances.json"
+    },
+    {
+      "id": "F66",
+      "name": "Anwesenheit: Filter (Datum, Gruppe, Kind-Suche) im mw-filters-Stil",
+      "phase": 8,
+      "status": "open",
+      "short_description": "Erstellt Filter-Partial für /attendances analog zu /children/_filters mit Datum-Picker (default heute), Gruppe-Select (Pflicht) und Kind-Suche.",
+      "description": "Ziel: Konsistente Filter-UX auf der Erfassungsseite, gleich wie /children.\n\nNeuer Partial app/views/attendances/_filters.html.haml (basiert auf children/_filters):\n  • Such-Feld mit Lucide 'search'-Icon und mw-filters__search-Markup für Kind-Name\n  • Date-Picker für 'Datum' (default Date.current, value-Submit bei Änderung)\n  • Gruppe-Select (mw-filters__select, Pflicht, default '')\n  • Submit + Reset-Link mit Count-Badge\n\nController-Anpassungen AttendancesController#index:\n  • @filter_q = params[:q].to_s\n  • @filter_date = params[:date].presence&.to_date || Date.current\n  • @filter_group_id = params[:group_id]\n  • @filter_groups = Group.order(:name)\n  • Kindertabelle filtert auf Name (Child.search_by_name) wenn @filter_q gesetzt\n\nIndex-View: render 'filters' anstelle von Inline-Code (falls F63 noch inline rendered).\n\nSpec: docs/spec-filters-alignment.json (perPagePlan – attendances), docs/spec-attendances.json",
+      "acceptance_criteria": [
+        "Partial _filters.html.haml folgt mw-filters-Markup aus children/_filters",
+        "Datum-Picker default heute; bei Änderung Auto-Submit",
+        "Gruppe ist Pflicht (Hinweis wenn nicht gewählt)",
+        "Kind-Suche reduziert Tabelle live nach Submit",
+        "Reset-Link mit Lucide rotate-ccw + Count-Badge nur wenn Filter aktiv (Suche/Gruppe ≠ default)",
+        "Mobile-Stack <768px funktioniert (CSS bereits vorhanden)",
+        "Test-Suite grün; System-Test prüft Filter+Reset",
+        "Verifiziert via agent-browser"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Filter Kind-Name",
+          "given": "Gruppe A mit 10 Kindern, Suche='Max'",
+          "when": "Submit",
+          "then": "Tabelle zeigt nur Kinder mit 'Max' im Namen"
+        },
+        {
+          "scenario": "Reset",
+          "given": "Filter aktiv (Suche + alternatives Datum)",
+          "when": "Klick auf Reset",
+          "then": "Default (heute, keine Suche), Badge verschwindet"
+        }
+      ],
+      "success_criteria": [
+        "Konsistente UX mit /children"
+      ],
+      "dependencies": [
+        "F63",
+        "F41"
+      ],
+      "spec_file": "docs/spec-filters-alignment.json"
+    },
+    {
+      "id": "F67",
+      "name": "Kalender: Filter im mw-filters-Stil angleichen",
+      "phase": 8,
+      "status": "open",
+      "short_description": "Filter-Bar in /calendar_events wird auf mw-filters-Pattern umgestellt (Such-Lupe, Reset-Badge, Auto-Submit). View-Toggle Monat/Liste bleibt funktional.",
+      "description": "Ziel: Filter auf /calendar_events nutzen das gleiche Komponenten-Set wie /children.\n\nNeuer Partial app/views/calendar_events/_filters.html.haml (analog children/_filters):\n  • Such-Feld 'Ereignis suchen…' mit Lucide 'search'\n  • Select 'Alle Jahre' (kindergarten_year_id)\n  • Select 'Alle Gruppen' (group_id)\n  • View-Toggle (Monat/Liste) bleibt am rechten Rand der Filter-Row oder in eigener Zeile\n  • Reset-Link mit Lucide 'rotate-ccw' + Count-Badge\n\nController-Anpassung CalendarEventsController#index:\n  • @filter_q = params[:q].to_s\n  • Scope CalendarEvent.search_by_title(q) (oder inline-where)\n  • @filter_year, @filter_group_id wie bisher; @filter_groups, @kindergarten_years für Selects\n  • Active-Count-Logik fürs Partial\n\nIndex-View: render 'filters' statt Inline-Form.\n\nSpec: docs/spec-filters-alignment.json (perPagePlan – calendar_events)",
+      "acceptance_criteria": [
+        "Partial _filters.html.haml folgt mw-filters-Pattern",
+        "Such-Feld nach Titel funktional",
+        "Bestehende Filter (Jahr, Gruppe) funktionieren weiterhin",
+        "View-Toggle (Monat/Liste) bleibt erreichbar und funktional",
+        "Reset zeigt Count und setzt zurück",
+        "Auto-Submit bei Select-Änderung",
+        "Test-Suite grün",
+        "Verifiziert via agent-browser"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Titel-Suche",
+          "given": "10 Events, davon 3 mit 'Fest' im Titel",
+          "when": "Suche='Fest'",
+          "then": "Liste zeigt 3 Events"
+        },
+        {
+          "scenario": "Reset Count",
+          "given": "Jahr + Gruppe + Suche gesetzt",
+          "when": "Render",
+          "then": "Reset-Badge zeigt '3'"
+        }
+      ],
+      "success_criteria": [
+        "Konsistente Filter-UX",
+        "Erfüllt mikiwa-design-Vorgabe"
+      ],
+      "dependencies": [
+        "F41"
+      ],
+      "spec_file": "docs/spec-filters-alignment.json"
+    },
+    {
+      "id": "F68",
+      "name": "Einkaufslisten: Filter im mw-filters-Stil angleichen",
+      "phase": 8,
+      "status": "open",
+      "short_description": "Filter in /shopping_lists wird auf mw-filters-Pattern umgestellt; 'Nur mir zugewiesen'-Quick-Toggle wird integriert; Titel-Suche neu.",
+      "description": "Ziel: Filter auf /shopping_lists nutzen das gleiche Komponenten-Set wie /children.\n\nNeuer Partial app/views/shopping_lists/_filters.html.haml (basiert auf children/_filters):\n  • Such-Feld 'Liste suchen…' (q, Titel-Suche)\n  • Select 'Alle Gruppen' (group_id)\n  • Select 'Alle Monate' (month)\n  • Select 'Alle Verantwortlichen' (assigned_to_id)\n  • Quick-Toggle 'Nur mir zugewiesen' als kleiner Toggle-Link rechts neben den Selects (assigned=me)\n  • Reset-Link mit Count-Badge\n\nController-Anpassung ShoppingListsController#index:\n  • @filter_q = params[:q]\n  • ShoppingList.search_by_title(q)\n  • Bestehende Filter bleiben\n\nIndex-View: bestehende separate assigned=me-Bar entfernen und in mw-filters integrieren; render 'filters'.\n\nSpec: docs/spec-filters-alignment.json (perPagePlan – shopping_lists)",
+      "acceptance_criteria": [
+        "Partial _filters.html.haml folgt mw-filters-Pattern",
+        "Titel-Suche funktional",
+        "Quick-Toggle 'Nur mir zugewiesen' integriert (URL-Param assigned=me)",
+        "Bestehende Filter (Gruppe, Monat, Verantwortlich) funktional",
+        "Reset setzt alle inkl. Quick-Toggle zurück",
+        "Auto-Submit bei Select-Änderung",
+        "Test-Suite grün",
+        "Verifiziert via agent-browser"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Quick-Toggle",
+          "given": "20 Listen, 5 mir zugewiesen",
+          "when": "Klick auf 'Nur mir zugewiesen'",
+          "then": "Liste zeigt 5; Badge zeigt aktiven Filter"
+        }
+      ],
+      "success_criteria": [
+        "Konsistente UX"
+      ],
+      "dependencies": [
+        "F41"
+      ],
+      "spec_file": "docs/spec-filters-alignment.json"
+    },
+    {
+      "id": "F69",
+      "name": "Veranstaltungen: Filter im mw-filters-Stil angleichen",
+      "phase": 8,
+      "status": "open",
+      "short_description": "Filter in /events wird auf mw-filters-Pattern umgestellt und um Such-Feld + Status-Filter (aktiv/abgesagt) erweitert.",
+      "description": "Ziel: Filter auf /events nutzen das gleiche Komponenten-Set wie /children.\n\nNeuer Partial app/views/events/_filters.html.haml:\n  • Such-Feld 'Veranstaltung suchen…' (q)\n  • Select 'Alle Jahre' (kindergarten_year_id)\n  • Select 'Alle Gruppen' (group_id)\n  • Select 'Status' (alle/aktiv/abgesagt)\n  • Reset-Link mit Count\n\nController-Anpassung EventsController#index:\n  • @filter_q, @filter_status\n  • Event.search_by_title-Scope; with_status(status)-Scope (active=where(cancelled: false), cancelled=where(cancelled: true))\n  • Bestehende Filter bleiben\n\nIndex-View: render 'filters'.\n\nSpec: docs/spec-filters-alignment.json (perPagePlan – events)",
+      "acceptance_criteria": [
+        "Partial _filters.html.haml folgt mw-filters-Pattern",
+        "Such-Feld nach Titel funktional",
+        "Status-Filter funktional",
+        "Reset mit Count-Badge",
+        "Test-Suite grün",
+        "Verifiziert via agent-browser"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Status-Filter abgesagt",
+          "given": "8 Events, davon 2 abgesagt",
+          "when": "Filter status='cancelled'",
+          "then": "Liste zeigt 2 Events"
+        }
+      ],
+      "success_criteria": [
+        "Konsistente UX"
+      ],
+      "dependencies": [
+        "F41"
+      ],
+      "spec_file": "docs/spec-filters-alignment.json"
+    },
+    {
+      "id": "F70",
+      "name": "Abstimmungen: Filter (neu) im mw-filters-Stil erstellen",
+      "phase": 8,
+      "status": "open",
+      "short_description": "Neue Filter-Bar in /polls (bisher keine) mit Such-Feld, Gruppe, Status, Typ – im mw-filters-Komponentenstil.",
+      "description": "Ziel: /polls erhält erstmals Filter, konsistent zur /children-Komponente.\n\nNeuer Partial app/views/polls/_filters.html.haml:\n  • Such-Feld 'Abstimmung suchen…' (q)\n  • Select 'Alle Gruppen' (group_id)\n  • Select 'Status' (alle/offen/Stimmschluss/geschlossen)\n  • Select 'Typ' (alle/Einfachauswahl/Mehrfachauswahl)\n  • Reset-Link mit Count\n\nController-Anpassung PollsController#index:\n  • @filter_q, @filter_group_id, @filter_status, @filter_poll_type, @filter_groups\n  • Scopes:\n      - Poll.search_by_title(q)\n      - Poll.in_group(group_id)\n      - Poll.with_status(status) – differenziert open + open?, open + !open?, closed\n      - Poll.with_type(type)\n\nIndex-View: render 'filters' oberhalb der Tabelle.\n\nSpec: docs/spec-filters-alignment.json (perPagePlan – polls)",
+      "acceptance_criteria": [
+        "Partial _filters.html.haml im mw-filters-Pattern",
+        "Such-Feld nach Titel funktional",
+        "Status- und Typ-Filter funktional",
+        "Gruppe-Filter funktional",
+        "Reset mit Count-Badge",
+        "Auto-Submit bei Select",
+        "Test-Suite grün",
+        "Verifiziert via agent-browser"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Status open + offene Frist",
+          "given": "10 Polls (Mix Status)",
+          "when": "Filter status='open' (≙ offen + open?)",
+          "then": "Liste zeigt nur offene aktive Polls"
+        },
+        {
+          "scenario": "Reset Count",
+          "given": "3 Filter gesetzt",
+          "when": "Render",
+          "then": "Badge zeigt '3'"
+        }
+      ],
+      "success_criteria": [
+        "Bessere Auffindbarkeit bei wachsender Polls-Liste",
+        "UX-Konsistenz mit anderen Listen-Seiten"
+      ],
+      "dependencies": [
+        "F41"
+      ],
+      "spec_file": "docs/spec-filters-alignment.json"
     }
   ]
 }

@@ -1,0 +1,150 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:gallery-audio",
+  "name": "Gallery: Audio-Upload & Slideshow-Begleitmusik",
+  "description": "Pro Galerie kann eine Audiodatei (MP3 oder M4A) hochgeladen werden. Beim Start der Magic Slideshow wird das Audio im Loop synchron abgespielt; Schließen der Slideshow stoppt das Audio.",
+  "dateCreated": "2026-05-14",
+  "version": "1.0",
+  "spec:problemStatement": {
+    "description": "Die Magic Slideshow (F53) bietet bereits eine erlebnishafte Vollbild-Darstellung mit Übergangsanimationen. Bei Vorführungen (Sommerfest, Elterncafé, interne Anlässe) fehlt jedoch musikalische Begleitung, die den emotionalen Charakter verstärkt. Aktuell muss Audio extern (Bluetooth-Lautsprecher, Handy) abgespielt werden – das ist unkomfortabel und nicht synchron.",
+    "affectedUsers": "Caretaker (führen Galerien bei Anlässen vor), Eltern (sehen/hören die Diashow), Kinder.",
+    "costOfInaction": "Diashow wirkt steril ohne Klang; Vorführungen sind organisatorisch aufwendig."
+  },
+  "spec:goals": [
+    {
+      "description": "Pro Galerie genau eine Audiodatei hochladbar",
+      "type": "user",
+      "target": "Active-Storage-Anhang `has_one_attached :audio` an Gallery"
+    },
+    {
+      "description": "Audio startet automatisch beim Slideshow-Start, stoppt beim Schließen",
+      "type": "user",
+      "target": "Magic-Slideshow-Controller verlinkt Audio-Element, koordiniert play/pause/stop mit Open/Close-Lifecycle"
+    },
+    {
+      "description": "Audio läuft auf Loop solange die Slideshow läuft",
+      "type": "user",
+      "target": "<audio loop> oder JS-loop via 'ended'-Event"
+    },
+    {
+      "description": "Browser-native Wiedergabe ohne externe Libraries",
+      "type": "user",
+      "target": "Nur MP3 + M4A (universelle Browser-Kompatibilität); reines HTML5 <audio>"
+    },
+    {
+      "description": "Audio austausch- und löschbar",
+      "type": "user",
+      "target": "Im Gallery-Edit-Form: Upload-Feld, Anzeige des aktuellen Audios mit Audio-Player und Lösch-Button"
+    }
+  ],
+  "spec:nonGoals": [
+    {
+      "description": "Mehrere Audiospuren pro Galerie / Playlist",
+      "rationale": "Ein Audio pro Galerie ist ausreichend für den Anlass-Use-Case; Komplexität wird vermieden"
+    },
+    {
+      "description": "Audio-Editing (Trim, Fade-In/Out, Lautstärke-Profil)",
+      "rationale": "Audio-Bearbeitung soll extern erfolgen; In-App-Editor wäre eigenes Feature"
+    },
+    {
+      "description": "Slideshow-Dauer an Audio-Länge koppeln",
+      "rationale": "Audio läuft per Loop (siehe Antwort im Interview) – Bildanzahl × Slide-Speed ist die führende Dauer"
+    },
+    {
+      "description": "Lautstärke-Slider in der Slideshow-Toolbar",
+      "rationale": "v1: Lautstärke via Hardware-Buttons / Browser-Native-Controls; Software-Slider wäre Folgefeature"
+    },
+    {
+      "description": "Streaming/CDN-Optimierung",
+      "rationale": "Active Storage liefert ausreichend Performance für Kindergarten-typische Galerie-Größen"
+    }
+  ],
+  "spec:dataModel": {
+    "model": "Gallery",
+    "attachment": "has_one_attached :audio",
+    "validations": [
+      "audio.content_type in ['audio/mpeg', 'audio/mp4', 'audio/x-m4a']",
+      "audio.byte_size <= 25.megabytes",
+      "Optional: Filename-Endung .mp3 oder .m4a (Defense-in-depth)"
+    ],
+    "noSchemaMigration": "Active Storage benötigt keine zusätzliche Spalte an galleries"
+  },
+  "spec:viewChanges": [
+    {
+      "view": "app/views/galleries/_form.html.haml",
+      "change": "Neues Feld 'Begleitmusik (optional)' mit file_field (accept='audio/mpeg,audio/mp4,audio/x-m4a'). Wenn audio bereits angehängt: <audio controls> mit aktueller Datei + Löschen-Button (button_to purge_audio_gallery_path, method: :delete)."
+    },
+    {
+      "view": "app/views/galleries/show.html.haml",
+      "change": "Wenn @gallery.audio.attached?: <audio> mit data-magic-slideshow-target='audio' (versteckt, preload='auto', src=url_for(@gallery.audio)). Auch ein kleiner Hinweis-Badge 'Mit Musik' in der Galerie-Lede."
+    },
+    {
+      "view": "app/javascript/controllers/magic_slideshow_controller.js",
+      "change": "Neue audioTarget (HTMLAudioElement). open(): audio.loop = true; audio.currentTime = 0; audio.play().catch(() => {}). close()/pause(): audio.pause(). togglePause(): audio.paused ? audio.play() : audio.pause(). Bei Autoplay-Block durch Browser: Slideshow läuft trotzdem visuell, kein Fehler."
+    }
+  ],
+  "spec:controllerChanges": [
+    {
+      "controller": "GalleriesController",
+      "change": "Permitted Params um :audio erweitern (Strong Params). Neue Member-Action `purge_audio` (DELETE), die @gallery.audio.purge_later aufruft und mit notice zur Edit-Seite redirected. Staff-only."
+    },
+    {
+      "route": "config/routes.rb",
+      "change": "Innerhalb des `resources :galleries` Member-Block: `delete :audio, action: :purge_audio, as: :purge_audio`"
+    }
+  ],
+  "spec:browserCompatibility": {
+    "mp3": "Universell unterstützt (Chrome, Firefox, Safari, Edge auf Desktop & Mobile)",
+    "m4a": "AAC im M4A-Container: Chrome, Safari, Edge nativ; Firefox unterstützt seit FF 71 nativ",
+    "autoplayPolicy": "Browser blocken Autoplay ohne User-Geste – kein Problem, da Slideshow-Open ein User-Click ist (geste-getriggert)"
+  },
+  "spec:acceptanceCriteria": [
+    "Im Edit-Form kann eine Audiodatei (MP3 oder M4A, ≤25 MB) hochgeladen werden",
+    "Bei vorhandenem Audio wird im Edit-Form ein Audio-Player und ein Löschen-Button angezeigt",
+    "Bei Klick auf 'Magic Slideshow' startet das Audio automatisch (sofern angehängt)",
+    "Audio läuft im Loop, solange die Slideshow läuft",
+    "Esc / Schließen-Button stoppen Audio und Slideshow",
+    "Pause-Button pausiert sowohl Audio als auch Slideshow; Play setzt beides fort",
+    "Validierung lehnt unzulässige Content-Types und Größen ab (Inline-Fehlermeldung)",
+    "Audio kann via separater Aktion entfernt werden, ohne die Galerie zu löschen",
+    "Test-Suite grün (Modell-Tests für Validierung, Controller-Test für purge_audio, System-Test für Slideshow+Audio)"
+  ],
+  "spec:testScenarios": [
+    {
+      "name": "Audio-Upload und Wiedergabe",
+      "given": "Galerie mit 3 Fotos, MP3-Datei 5 MB hochgeladen",
+      "when": "Klick auf 'Magic Slideshow'",
+      "then": "Slideshow startet, Audio spielt"
+    },
+    {
+      "name": "Audio-Loop",
+      "given": "Audio 10s, Slideshow 4 Bilder × 4s = 16s",
+      "when": "Slideshow läuft",
+      "then": "Audio loopt nahtlos (10s + 6s)"
+    },
+    {
+      "name": "Schließen stoppt Audio",
+      "given": "Slideshow mit Audio läuft",
+      "when": "Esc gedrückt",
+      "then": "Audio pausiert/stoppt; Slideshow geschlossen"
+    },
+    {
+      "name": "Ungültiges Format",
+      "given": "WAV-Datei wird hochgeladen",
+      "when": "Form-Submit",
+      "then": "Validierungsfehler 'Audio muss MP3 oder M4A sein'; Galerie nicht gespeichert"
+    },
+    {
+      "name": "Audio entfernen",
+      "given": "Galerie mit Audio",
+      "when": "Klick auf Audio-Löschen",
+      "then": "Audio ist entfernt; Slideshow startet künftig ohne Audio"
+    }
+  ],
+  "spec:agentBrowserVerification": "Verifiable via agent-browser: Galerie-Edit-Seite öffnen, Audio hochladen, speichern, Galerie-Show öffnen, Magic Slideshow starten – auditive Verifikation nicht möglich, aber DOM-Inspektion (audio-Element existiert, currentTime > 0 nach Start) und Browser-Konsolen-Logging der Play-Events.",
+  "spec:dependencies": ["F53"]
+}

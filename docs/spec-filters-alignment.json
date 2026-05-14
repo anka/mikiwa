@@ -1,0 +1,188 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:filters-alignment",
+  "name": "Filter-Vereinheitlichung: calendar_events, shopping_lists, events, polls, attendances",
+  "description": "Die Filter-Bars von /calendar_events, /shopping_lists und /events werden auf den Komponenten-Stil von /children (mw-filters) umgestellt. Für /polls und /attendances werden Filter im gleichen Stil neu erstellt. Ziel: konsistente UX, Lucide-Search-Icon, Reset-Button mit Active-Count-Badge, Auto-Submit bei Select-Änderung.",
+  "dateCreated": "2026-05-14",
+  "version": "1.0",
+  "spec:problemStatement": {
+    "description": "Aktuell verwendet jede Listen-Seite ein eigenes Filter-Layout: /children nutzt mw-filters mit Suche+Selects+Reset, /calendar_events nutzt mw-calendar-filters mit Inline-Labels und Buttons, /shopping_lists nutzt mw-shopping-lists-filters mit Grid-Layout und separater Assigned-to-Me-Bar, /events nutzt mw-calendar-filters, /polls und /attendances haben gar keine Filter. Das wirkt inkonsistent und erschwert die Nutzung.",
+    "affectedUsers": "Alle Mitarbeiter und Eltern, die die Listen-Seiten regelmäßig nutzen.",
+    "costOfInaction": "UX-Inkonsistenz, Lerneffekt zwischen Seiten geht verloren, mikiwa-design-Vorgabe wird nicht erfüllt."
+  },
+  "spec:goals": [
+    {
+      "description": "Einheitliches Filter-Komponenten-Pattern auf allen Listen-Seiten",
+      "type": "user",
+      "target": "Alle 5 Seiten nutzen mw-filters mit denselben CSS-Klassen, Spacing, Icons"
+    },
+    {
+      "description": "Konsistente Search-Lupe links im Such-Feld",
+      "type": "user",
+      "target": "Lucide 'search' icon (16px) als mw-filters__search-icon"
+    },
+    {
+      "description": "Reset-Link mit Active-Filter-Count-Badge",
+      "type": "user",
+      "target": "Wenn mind. 1 Filter aktiv: 'Zurücksetzen' mit Lucide 'rotate-ccw' und Count-Badge (mw-badge--accent)"
+    },
+    {
+      "description": "Auto-Submit bei Select-Änderung",
+      "type": "user",
+      "target": "onchange='this.form.requestSubmit()' auf allen Selects"
+    },
+    {
+      "description": "Mobile-Stack: Filter unter Search auf < 768px",
+      "type": "user",
+      "target": "Bereits in mw-filters CSS abgebildet"
+    }
+  ],
+  "spec:nonGoals": [
+    {
+      "description": "Filter persistieren in Session/User-Settings",
+      "rationale": "v1: Filter sind URL-basiert, kein Persistence-Layer"
+    },
+    {
+      "description": "Saved-Views (benannte Filter-Kombinationen)",
+      "rationale": "Folgefeature, wenn Bedarf besteht"
+    },
+    {
+      "description": "Volltextsuche über mehrere Felder",
+      "rationale": "Aktueller Scope pro Seite bleibt (Bestätigt im Interview): Such-Feld nur über Haupttitel/-namen"
+    },
+    {
+      "description": "Filter-Drawer / Modal-Filter",
+      "rationale": "Inline-Filter genügen für die Komplexität"
+    }
+  ],
+  "spec:filterComponentReference": {
+    "partial": "app/views/children/_filters.html.haml",
+    "cssClasses": [
+      "mw-filters – Form-Wrapper",
+      "mw-filters__row – Flex-Container für Search + Selects + Actions",
+      "mw-filters__search – Such-Feld-Container (relative position)",
+      "mw-filters__search-icon – Absolute Search-Lupe",
+      "mw-filters__search-input – text_field_tag mit padding-left",
+      "mw-filters__clear – X-Button im Such-Feld",
+      "mw-filters__select – Style für select_tag",
+      "mw-filters__actions – Submit + Reset",
+      "mw-filters__reset – Reset-Link mit rotate-ccw",
+      "mw-filters__reset-count – mw-badge--accent Count"
+    ]
+  },
+  "spec:perPagePlan": [
+    {
+      "page": "/calendar_events",
+      "controller": "CalendarEventsController#index",
+      "currentFilters": ["kindergarten_year_id", "group_id", "view (month/list, separate Buttons)"],
+      "newFilters": ["kindergarten_year_id (Select 'Alle Jahre')", "group_id (Select 'Alle Gruppen')", "q (Titel-Suche, optional)"],
+      "viewToggle": "Bleibt separat (Monat / Liste Buttons), aber rechts neben mw-filters__actions positioniert",
+      "controllerChanges": [
+        "@filter_q via params[:q]; CalendarEvent.search_by_title(q)-Scope hinzufügen oder inline-where",
+        "@filter_groups = Group.order(:name); @filter_years = KindergartenYear.order(start_date: :desc)"
+      ],
+      "viewChange": "/app/views/calendar_events/_filters.html.haml (neu, basierend auf children/_filters); calendar_events/index.html.haml render 'filters' statt Inline-Form"
+    },
+    {
+      "page": "/shopping_lists",
+      "controller": "ShoppingListsController#index",
+      "currentFilters": ["assigned=me (separate Button-Bar)", "group_id", "month", "assigned_to_id"],
+      "newFilters": ["q (Titel-Suche)", "group_id", "month", "assigned_to_id"],
+      "viewToggle": "'Nur mir zugewiesen'-Toggle wird in mw-filters integriert als Quick-Toggle-Button rechts neben Reset",
+      "controllerChanges": [
+        "@filter_q via params[:q]; ShoppingList.search_by_title(q)",
+        "Bestehende Filter bleiben"
+      ],
+      "viewChange": "/app/views/shopping_lists/_filters.html.haml (neu); shopping_lists/index.html.haml render 'filters'"
+    },
+    {
+      "page": "/events",
+      "controller": "EventsController#index",
+      "currentFilters": ["kindergarten_year_id", "group_id"],
+      "newFilters": ["kindergarten_year_id", "group_id", "q (Titel-Suche)", "status (alle/aktiv/abgesagt)"],
+      "controllerChanges": [
+        "@filter_q, @filter_status hinzufügen",
+        "Event.search_by_title-Scope; Filter auf cancelled-Status"
+      ],
+      "viewChange": "/app/views/events/_filters.html.haml (neu); events/index.html.haml render 'filters'"
+    },
+    {
+      "page": "/polls",
+      "controller": "PollsController#index",
+      "currentFilters": "Keine",
+      "newFilters": ["q (Titel-Suche)", "group_id", "status (offen/Stimmschluss/geschlossen)", "poll_type (single/multiple)"],
+      "controllerChanges": [
+        "@filter_q, @filter_group_id, @filter_status, @filter_poll_type",
+        "Poll.search_by_title-Scope; in_group-Scope; with_status-Scope"
+      ],
+      "viewChange": "/app/views/polls/_filters.html.haml (neu); polls/index.html.haml render 'filters'"
+    },
+    {
+      "page": "/attendances",
+      "controller": "AttendancesController#index",
+      "currentFilters": "N/A (neue Seite)",
+      "newFilters": ["date (date_field, default heute)", "group_id (Select, Pflicht)", "q (Kind-Name-Suche, optional)"],
+      "specialBehavior": "Datum ist Pflichtfilter (Anwesenheit pro Tag); Gruppe Pflicht (max 1 Gruppe pro View)",
+      "viewChange": "/app/views/attendances/_filters.html.haml (neu); attendances/index.html.haml render 'filters'"
+    }
+  ],
+  "spec:cssChangesNeeded": "Keine. mw-filters-Komponente ist bereits in tailwind/application.css definiert (durch F41 / Children-Filter-Feature).",
+  "spec:helperConventions": [
+    "Filter-State im Controller-Hash: @filter_q, @filter_group_id, @filter_group_id, etc.",
+    "@filter_groups, @filter_years für Collection-Selects",
+    "active_count-Berechnung im Partial wie in children/_filters: [@filter_q.presence, @filter_group_id.presence, …].compact.size",
+    "clear_search_url als Helper für X-Button im Such-Feld"
+  ],
+  "spec:acceptanceCriteria": [
+    "Alle 5 Listen-Seiten haben einen _filters.html.haml-Partial mit identischem Markup-Pattern",
+    "Such-Lupe (Lucide 'search') ist in allen Such-Feldern links",
+    "Reset-Link mit Lucide 'rotate-ccw' und Count-Badge nur sichtbar wenn Filter aktiv",
+    "Select-Felder lösen Form-Submit bei Änderung aus",
+    "X-Clear-Button im Such-Feld wenn Text vorhanden",
+    "Mobile: Filter stack vertikal auf < 768px (kommt aus bestehendem CSS)",
+    "Bestehende Filter-Werte bleiben funktional (URL-Parameter unverändert)",
+    "Calendar-Events Monat/Liste-Toggle bleibt funktional (außerhalb mw-filters oder am Ende)",
+    "Shopping-Lists Quick-Toggle 'Nur mir zugewiesen' bleibt erreichbar (als Toggle-Link)",
+    "Polls und Attendances haben neue Filter, die mit Existing-Daten korrekt arbeiten",
+    "Test-Suite grün; bestehende Controller-Tests passen sich an neue Params an",
+    "Verifiziert via agent-browser auf jeder der 5 Seiten"
+  ],
+  "spec:testScenarios": [
+    {
+      "name": "Calendar-Events Filter+Reset",
+      "given": "/calendar_events mit 30 Ereignissen, 3 Gruppen, 2 Jahren",
+      "when": "Filter group_id=A, kindergarten_year_id=2026 → Reset",
+      "then": "Liste wird gefiltert; Reset-Badge zeigt '2'; nach Klick auf Reset Liste wieder vollständig"
+    },
+    {
+      "name": "Polls Status-Filter",
+      "given": "/polls mit Mix aus offen/geschlossen/Stimmschluss",
+      "when": "Filter status='closed'",
+      "then": "Nur geschlossene Polls sichtbar"
+    },
+    {
+      "name": "Shopping-Lists Quick-Toggle",
+      "given": "User hat 5 ihm zugewiesene Listen, gesamt 20",
+      "when": "Klick auf 'Nur mir zugewiesen'",
+      "then": "Liste auf 5 reduziert; Filter-State bleibt erhalten (URL-Param)"
+    },
+    {
+      "name": "Attendances Pflichtfilter",
+      "given": "/attendances ohne Gruppe-Auswahl",
+      "when": "Render",
+      "then": "Hinweis 'Bitte Gruppe wählen'; Kindertabelle leer"
+    },
+    {
+      "name": "Konsistenter Markup",
+      "given": "Alle 5 Seiten",
+      "when": "HTML-Inspektion",
+      "then": "Identische CSS-Klassen mw-filters/__row/__search/__select/__actions/__reset; identische Search-Lupen-Position"
+    }
+  ],
+  "spec:agentBrowserVerification": "Verifiable via agent-browser: jede Seite öffnen, Filter setzen, Reset-Button klicken, visuelle Konsistenz prüfen (Screenshot-Vergleich oder DOM-Inspektion).",
+  "spec:dependencies": ["F41"]
+}

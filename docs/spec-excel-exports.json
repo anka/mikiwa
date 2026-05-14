@@ -1,0 +1,216 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:excel-exports",
+  "name": "Excel-Export-Infrastruktur & Domain-Exports (Kinder, Eltern, Speiseplan, Anwesenheit)",
+  "description": "Einführung einer einheitlichen Excel-Export-Infrastruktur (caxlsx + caxlsx_rails) und Implementation domain-spezifischer Exports: Kinder (vollständig inkl. Versicherung/med. Notizen), Eltern (inkl. zugeordnete Kinder), Speiseplan (Zeitraum+Gruppe, eine Zeile pro Tag), Anwesenheit (siehe spec-attendances.json).",
+  "dateCreated": "2026-05-14",
+  "version": "1.0",
+  "spec:problemStatement": {
+    "description": "Caretaker und Kindergartenleitung müssen regelmäßig Listen für Träger, Behörden, Versicherung oder interne Auswertung exportieren. Aktuell gibt es keinen strukturierten Export – Daten werden händisch aus den Browser-Seiten kopiert oder Screenshots gemacht. Das ist fehleranfällig und zeitintensiv.",
+    "affectedUsers": "Caretaker (Anwesenheits-Reports, Speiseplan-Druck), Kindergartenleitung (Kinder-/Eltern-Listen, Förderbescheid-Daten), Träger/Behörden (empfangen die Excel-Files).",
+    "costOfInaction": "Manueller Aufwand, Daten-Inkonsistenzen, Fehler in offiziellen Reports."
+  },
+  "spec:goals": [
+    {
+      "description": "Einheitliche Excel-Library und Helper-Infrastruktur",
+      "type": "business",
+      "target": "Gem caxlsx (~> 4.0) + caxlsx_rails (~> 0.6); zentraler Application-Helper für Styling-Konstanten (Header, Sub-Header, Wochenende, Statuszellen); MIME-Type-Registrierung; Filename-Helper."
+    },
+    {
+      "description": "Kinder-Excel-Export aus /children",
+      "type": "user",
+      "target": "Action-Button 'Excel exportieren' im Children-Header; berücksichtigt aktive Filter (Gruppe/Alter/Suche); enthält vollständige Stammdaten inkl. Versicherung und medizinische Notizen"
+    },
+    {
+      "description": "Eltern-Excel-Export aus /parents",
+      "type": "user",
+      "target": "Action-Button 'Excel exportieren' im Parents-Header; berücksichtigt Such-Filter; enthält Kontaktdaten, Status, zugeordnete Kinder + Gruppen, Knowhow, Einladungs-/Login-Daten"
+    },
+    {
+      "description": "Speiseplan-Excel-Export",
+      "type": "user",
+      "target": "Eigene Seite /meal_entries/export mit Start/Ende/Gruppe-Auswahl; Excel: Datum | Vorspeise | Hauptspeise | Nachspeise | Zusatz | Hinweise – pro Kurszelle Name + Dietary-Suffix '(V)' für vegetarisch, '(V+)' für vegan"
+    },
+    {
+      "description": "Anwesenheits-Export (siehe spec-attendances.json)",
+      "type": "user",
+      "target": "Eigene Export-Seite, Kinder×Datum-Matrix mit Anwesend/Abwesend/Kein-Eintrag-Symbolen"
+    }
+  ],
+  "spec:nonGoals": [
+    {
+      "description": "PDF-Export",
+      "rationale": "v1: Excel reicht für die Use-Cases. PDF wäre eigenes Feature mit Layout-Aufwand"
+    },
+    {
+      "description": "CSV-Export als Alternative",
+      "rationale": "Excel deckt die Behörden-/Träger-Use-Cases ab und bietet Formatierung. CSV ist Stretch"
+    },
+    {
+      "description": "Automatischer Versand der Excel-Exports per E-Mail",
+      "rationale": "v1: synchroner Download. Asynchrone Versendung wäre eigenes Feature"
+    },
+    {
+      "description": "Konfigurierbare Spalten-Auswahl pro Export",
+      "rationale": "v1: Fixe Spaltensätze, abgestimmt mit Stakeholdern. Konfiguration wäre v2"
+    }
+  ],
+  "spec:libraryChoice": {
+    "primary": "caxlsx (~> 4.1)",
+    "rails": "caxlsx_rails (~> 0.6)",
+    "license": "MIT (beide)",
+    "rationale": "caxlsx ist die aktiv gepflegte Fork von axlsx (welches seit 2017 nicht mehr maintained ist). Breit eingesetzt im Rails-Ökosystem, unterstützt aktuelle Ruby- und Rails-Versionen. caxlsx_rails liefert .xlsx.axlsx-Templates und Mime-Type-Helpers.",
+    "alternativesConsidered": [
+      "fast_excel (libxlsxwriter-Wrapper) – schneller, aber komplexere Installation (C-Lib) und weniger Rails-Integration",
+      "rubyXL – weniger aktiv, schwächere Doku"
+    ]
+  },
+  "spec:sharedInfrastructure": {
+    "gemfile": "gem 'caxlsx', '~> 4.1'\ngem 'caxlsx_rails', '~> 0.6'",
+    "mimeTypeSetup": "config/initializers/mime_types.rb – Mime::Type.register 'application/xlsx', :xlsx (idR durch caxlsx_rails selbst registriert; prüfen)",
+    "helperModule": {
+      "name": "ExcelExportHelper (app/helpers/excel_export_helper.rb)",
+      "responsibilities": [
+        "Style-Konstanten: HEADER_STYLE, SUB_HEADER_STYLE, WEEKEND_STYLE, PRESENT_STYLE, ABSENT_STYLE, NEUTRAL_STYLE",
+        "Filename-Helper: export_filename(prefix, *parts) → 'mikiwa_kinder_2026-05-14.xlsx'",
+        "Dietary-Suffix: dietary_short(value) → '' / '(V)' / '(V+)'"
+      ]
+    },
+    "fileLayout": "app/views/{children,parents,meal_entries,attendances}/export.xlsx.axlsx als View-Templates; jeweils setzt Workbook/Worksheet auf",
+    "responseHeader": "Content-Disposition: attachment; filename=\"...xlsx\""
+  },
+  "spec:childrenExport": {
+    "trigger": "Button 'Excel exportieren' (Lucide 'download') in /children-Page-Header neben 'Kind anlegen'; respektiert ?q, ?group_id, ?age",
+    "route": "GET /children.xlsx (Format-Erweiterung des bestehenden index)",
+    "implementation": "In children#index respond_to do |format| format.html; format.xlsx end; entsprechende children/index.xlsx.axlsx-View",
+    "filename": "mikiwa_kinder_{YYYY-MM-DD}.xlsx",
+    "columns": [
+      "Nachname",
+      "Vorname",
+      "Spitzname",
+      "Geburtsdatum (Datumsformat)",
+      "Alter",
+      "Geschlecht (falls erfasst)",
+      "Gruppe",
+      "Kindergartenjahr",
+      "Foto-Einwilligung (Ja/Nein) + Datum",
+      "Notfallkontakte (Liste: Name – Telefon – Beziehung; mehrzeilig in einer Zelle)",
+      "Medizinische Notizen (Liste: Titel – Notiz; mehrzeilig)",
+      "Krankenkasse",
+      "Versicherungsnummer (entschlüsselt, Klartext)",
+      "Eltern (Liste: Name – E-Mail – Telefon)",
+      "Aktiv (Ja/Nein)",
+      "Angelegt am"
+    ],
+    "sortBy": "Nachname, Vorname",
+    "freeze": "Erste Zeile (Header) gefroren",
+    "sensitivity": "Versicherungsnummer und med. Notizen sind sensible Daten – Action ist Staff-only und wird im Audit-Log (falls vorhanden) erfasst"
+  },
+  "spec:parentsExport": {
+    "trigger": "Button 'Excel exportieren' in /parents-Page-Header",
+    "route": "GET /parents.xlsx (Format-Erweiterung)",
+    "filename": "mikiwa_eltern_{YYYY-MM-DD}.xlsx",
+    "columns": [
+      "Nachname",
+      "Vorname",
+      "E-Mail",
+      "Telefon",
+      "Wissen / Fähigkeiten",
+      "Status (Aktiv / Eingeladen / Deaktiviert)",
+      "Zugeordnete Kinder (Liste: Name (Gruppe); mehrzeilig in einer Zelle)",
+      "Eingeladen am",
+      "Letzter Login",
+      "Angelegt am"
+    ],
+    "sortBy": "Nachname, Vorname",
+    "respectsSearch": "Search-Filter ?q wird in Export übernommen"
+  },
+  "spec:mealPlanExport": {
+    "trigger": "Eigene Export-Seite (separate Route)",
+    "routes": [
+      "GET  /meal_entries/export      → Form (Start/Ende/Gruppe)",
+      "POST /meal_entries/export      → Excel-Download (Alternative: GET mit Query-Params – einfacher)"
+    ],
+    "filename": "mikiwa_speiseplan_{gruppe}_{start}_{ende}.xlsx",
+    "structure": {
+      "header": "Zeile 1: 'Speiseplan – {Gruppe} – {Start}–{Ende}'; Zeile 3: Header (siehe columns)",
+      "columns": [
+        "Datum (Wochentag, Datum)",
+        "Vorspeise (Name + Dietary-Suffix)",
+        "Hauptspeise (Name + Dietary-Suffix)",
+        "Nachspeise (Name + Dietary-Suffix)",
+        "Zusatz (Name + Dietary-Suffix)",
+        "Hinweise"
+      ],
+      "rowPerDay": "Eine Zeile je Tag im Bereich; leere Zelle wenn kein Kurs erfasst",
+      "weekends": "Samstag/Sonntag-Zeilen optional ausgegraut (Kindergarten geschlossen)"
+    },
+    "dietarySuffix": "(V) = vegetarisch, (V+) = vegan, kein Suffix = standard",
+    "limits": {
+      "maxSpanDays": 92,
+      "validation": "Ende ≥ Start"
+    }
+  },
+  "spec:attendanceExport": {
+    "reference": "Siehe spec-attendances.json Abschnitt spec:exportFormat",
+    "summary": "/attendances/export – Kinder×Datum-Matrix mit 'A'/'X'/'-' und Tagessummen"
+  },
+  "spec:authorization": "Alle Exports: Staff-only (before_action :require_staff!). Eltern-Rolle hat keinen Zugriff auf Export-Aktionen.",
+  "spec:performance": {
+    "expectedScale": "Pro Kindergarten typ. 20–80 Kinder, 30–120 Eltern, 200 Tage Speiseplan/Anwesenheit",
+    "renderTime": "Erwartete Excel-Generierung < 2s synchron; bei >500 Datensätzen Stretch: ActiveJob async",
+    "memoryNote": "caxlsx baut Workbook in-memory – für unsere Datenmengen unproblematisch"
+  },
+  "spec:acceptanceCriteria": [
+    "Gemfile enthält caxlsx und caxlsx_rails; bundle install läuft fehlerfrei",
+    "MIME-Type :xlsx registriert; Format wird in respond_to akzeptiert",
+    "ExcelExportHelper mit Style-Konstanten und Filename-Helper vorhanden",
+    "Kinder-Export-Button in /children-Header; Klick liefert .xlsx-Datei mit vollständigen Stammdaten",
+    "Eltern-Export-Button in /parents-Header; Klick liefert .xlsx mit Kontaktdaten + Kinderzuordnung",
+    "Speiseplan-Export-Seite mit Start/Ende/Gruppe; liefert .xlsx mit Tag-Zeilen und Kurs-Spalten",
+    "Anwesenheits-Export gemäß spec-attendances.json",
+    "Alle Exports: Header-Zeile gefroren, Spaltenbreiten sinnvoll, Datum als Datum-Typ",
+    "Sensible Daten (Versicherungsnummer, med. Notizen) nur für Staff",
+    "Such-/Filter-Parameter (q, group_id, age) werden in Children-Export übernommen",
+    "Test-Suite grün (Controller-Tests verifizieren Mime-Type & Filename; Service-Tests verifizieren Inhalt via caxlsx-Roundtrip oder via Streaming-Inspektion)",
+    "Verifiziert via agent-browser: Button klicken, Download-Event empfangen, Dateigröße > 0"
+  ],
+  "spec:testScenarios": [
+    {
+      "name": "Children-Export respektiert Filter",
+      "given": "100 Kinder, Filter group_id=Sonnenkinder (15 Kinder)",
+      "when": "GET /children.xlsx?group_id=…",
+      "then": "Excel enthält 15 Zeilen (+1 Header)"
+    },
+    {
+      "name": "Parents-Export inkl. Kinderzuordnung",
+      "given": "Elternteil mit 2 zugeordneten Kindern in unterschiedlichen Gruppen",
+      "when": "Export",
+      "then": "Spalte 'Zugeordnete Kinder' enthält 'Max Mustermann (Sonnen) / Lisa Mustermann (Sterne)'"
+    },
+    {
+      "name": "Meal-Export Wochenende-Markierung",
+      "given": "Zeitraum 11.05.–17.05. (Mo-So)",
+      "when": "Export",
+      "then": "Sa/So-Zeilen sind ausgegraut bzw. mit Hinweis '–'"
+    },
+    {
+      "name": "Authorization",
+      "given": "Eltern-Account",
+      "when": "GET /children.xlsx",
+      "then": "403 Forbidden / Redirect zum Eltern-Dashboard"
+    },
+    {
+      "name": "Speiseplan-Export-Spanne",
+      "given": "User wählt Start=01.01., Ende=31.12. (>92 Tage)",
+      "when": "Submit",
+      "then": "Validierungsfehler 'Zeitraum max. 92 Tage'"
+    }
+  ],
+  "spec:agentBrowserVerification": "Verifiable via agent-browser: jeweilige Index-Seite öffnen, Export-Button klicken, Download-Event abfangen, Datei-Existenz und MIME-Type prüfen. Inhaltsprüfung optional via Datei-Größe > 5 KB (Sanity-Check) – tiefere Verifikation erfolgt durch automatisierte Backend-Tests.",
+  "spec:dependencies": []
+}

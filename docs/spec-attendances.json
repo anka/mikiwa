@@ -1,0 +1,247 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:attendances",
+  "name": "Anwesenheits-Modul: tägliche Erfassung, Kalenderübersicht pro Kind, Excel-Export",
+  "description": "Neues Modul 'Anwesenheit' zur täglichen Protokollierung der Kinderanwesenheit pro Gruppe. Eigene Route /attendances (nicht zu verwechseln mit /attendance_lists = Veranstaltungs-Teilnahme). Drei Hauptansichten: Erfassung (Datum+Gruppe → Kindertabelle mit Checkboxen, Abwesenheitsgrund-Select, Notiz), Kalenderübersicht pro Kind (Monat mit success/danger Markierung), Excel-Export (Zeitraum+Gruppe → Kinder×Datum-Matrix).",
+  "dateCreated": "2026-05-14",
+  "version": "1.0",
+  "spec:problemStatement": {
+    "description": "Aktuell wird die Anwesenheit der Kinder im Kindergartenalltag entweder auf Papier oder in externen Tools geführt. Das erschwert (a) tägliche Erfassung durch Betreuer, (b) Übersicht pro Kind über einen längeren Zeitraum (Eltern-Gespräche, Krankheits-Häufungen), (c) Reports für Behörden/Träger (Abrechnungsgrundlage, Förderbescheid).",
+    "affectedUsers": "Caretaker (täglicher Eintrag), Kindergartenleitung (Reports, Auswertung), Eltern (transparenz über Anwesenheits-Historie ihres Kindes – v1: read-only-Kalender in Child-Show).",
+    "costOfInaction": "Manueller Aufwand, fehlerträchtig, kein zentraler Datenbestand."
+  },
+  "spec:goals": [
+    {
+      "description": "Schnelle tägliche Erfassung pro Gruppe",
+      "type": "user",
+      "target": "Eine Seite, Datum-Auswahl (default heute) + Gruppen-Auswahl → Tabelle aller aktiven Kinder mit Anwesend-Checkbox, Abwesenheitsgrund-Select und Freitext-Notiz; Inline-Submit via Turbo Stream (Auto-Save je Zeile) oder Sammel-Submit"
+    },
+    {
+      "description": "Kalenderübersicht pro Kind",
+      "type": "user",
+      "target": "Im Child-Show neuer Abschnitt 'Anwesenheit'; Monatskalender mit Tagen, Farbcodierung (grün=anwesend, rot=abwesend, neutral=kein Eintrag); Navigation ‹ ›; Anzeige des Abwesenheitsgrunds als Tooltip"
+    },
+    {
+      "description": "Excel-Export für Reports",
+      "type": "business",
+      "target": "Eigene Seite /attendances/export mit Start/Ende/Gruppe; Excel: Kinder als Zeilen, Datum als Spalten, Zellinhalt 'A' (anwesend), 'X' (abwesend) oder '-' (kein Eintrag); Footer-Zeile pro Tag mit Summen"
+    },
+    {
+      "description": "Filter analog /children-Pattern",
+      "type": "user",
+      "target": "Auf der Übersichts-/Erfassungsseite Filter: Gruppe, Datum (default heute), Suche nach Kindname – im selben Komponenten-Stil (mw-filters) wie /children"
+    }
+  ],
+  "spec:nonGoals": [
+    {
+      "description": "Ankunfts-/Abholzeit-Erfassung (mit Uhrzeit)",
+      "rationale": "v1 nur Tagesanwesenheit (Boolean). Zeit-Erfassung wäre eigenes Feature (Förderbescheid-Modul)"
+    },
+    {
+      "description": "Eltern können selbst krankmelden",
+      "rationale": "v1: Erfassung nur durch Staff. Eltern-Krankmeldung wäre Folgefeature (würde Mitteilungs-/Notification-Workflow brauchen)"
+    },
+    {
+      "description": "Automatische Erinnerung an Erfassung",
+      "rationale": "v1: rein manueller Eintrag. Daily-Reminder ist Folgefeature"
+    },
+    {
+      "description": "Auswertungs-Dashboards (Statistiken pro Monat)",
+      "rationale": "v1: Excel-Export ist die Auswertungs-Schnittstelle. Dashboards folgen, wenn Bedarf konkretisiert"
+    },
+    {
+      "description": "Rückwirkendes Bearbeiten weit zurückliegender Tage",
+      "rationale": "Erlaubt, aber kein expliziter Bulk-Edit-Workflow. Caretaker editiert pro Tag wie üblich"
+    }
+  ],
+  "spec:dataModel": {
+    "newTable": "attendances",
+    "columns": [
+      {"name": "id", "type": "string(36)", "primary": true, "note": "UUID via UuidPrimaryKey-Concern"},
+      {"name": "child_id", "type": "string(36)", "null": false, "fk": "children.id", "index": true},
+      {"name": "group_id", "type": "string(36)", "null": false, "fk": "groups.id", "index": true, "note": "Denormalisiert für Filter-Performance (Gruppe zum Erfassungszeitpunkt)"},
+      {"name": "kindergarten_year_id", "type": "string(36)", "null": false, "fk": "kindergarten_years.id", "index": true},
+      {"name": "date", "type": "date", "null": false, "index": true},
+      {"name": "present", "type": "boolean", "null": false, "default": true},
+      {"name": "absence_reason", "type": "string", "null": true, "note": "Enum: 'sick', 'vacation', 'appointment', 'other' – nur gesetzt wenn !present"},
+      {"name": "note", "type": "text", "null": true},
+      {"name": "recorded_by_id", "type": "string(36)", "null": false, "fk": "users.id"},
+      {"name": "created_at", "type": "datetime", "null": false},
+      {"name": "updated_at", "type": "datetime", "null": false}
+    ],
+    "indexes": [
+      "UNIQUE(child_id, date) – ein Eintrag pro Kind pro Tag",
+      "INDEX(group_id, date) – Gruppen-/Tagesabfragen",
+      "INDEX(kindergarten_year_id, date)"
+    ],
+    "model": "Attendance",
+    "enums": {
+      "absence_reason": "{ sick: 'sick', vacation: 'vacation', appointment: 'appointment', other: 'other' }"
+    },
+    "validations": [
+      "child, group, kindergarten_year, date, recorded_by – presence",
+      "date – uniqueness scope: :child_id",
+      "absence_reason – nur erlaubt wenn present == false; sonst muss nil sein",
+      "absence_reason – inclusion in Enum-Werte wenn gesetzt"
+    ],
+    "scopes": [
+      "for_date(date): where(date: date)",
+      "for_group(group_id): where(group_id: group_id)",
+      "for_child(child_id): where(child_id: child_id)",
+      "in_month(date): where(date: date.beginning_of_month..date.end_of_month)"
+    ]
+  },
+  "spec:routes": {
+    "resourceful": "resources :attendances, only: %i[index create update]",
+    "collectionRoutes": [
+      "GET  /attendances              → index (Erfassungsseite, mit ?date=YYYY-MM-DD&group_id=...)",
+      "POST /attendances              → create (Bulk: alle Kinder einer Gruppe für einen Tag)",
+      "PATCH/PUT /attendances/:id     → update (Einzelner Datensatz, für Inline-Edit)",
+      "GET  /attendances/export       → export_form (Seite mit Start/Ende/Gruppe-Auswahl)",
+      "POST /attendances/export       → export (Excel-Download)"
+    ],
+    "memberRoutes": [],
+    "nestedRoutes": [
+      "GET /children/:child_id/attendances → child_attendances#index (Kalenderübersicht pro Kind, mit ?month=YYYY-MM); ODER stattdessen ein Tab innerhalb von children#show, der diesen Sub-View rendert"
+    ],
+    "preferredImplementation": "Sub-View in children#show via separater Action `children#attendance` (GET /children/:id/attendance) – konsistent mit bestehender Navigation in children-Subviews"
+  },
+  "spec:viewChanges": [
+    {
+      "view": "app/views/attendances/index.html.haml (neu)",
+      "change": "Header 'Anwesenheit'. Filter-Bar (analog mw-filters): Datum-Picker (default today), Gruppe-Select, Kind-Suche (optional). Tabelle: Foto/Name | Anwesend (Checkbox) | Abwesenheitsgrund (Select inkl. '—') | Notiz (Textfield). Submit-Button 'Speichern' (Bulk-POST). Hinweis: Inline-Auto-Save via Turbo-Stream pro Zeile ist Stretch."
+    },
+    {
+      "view": "app/views/attendances/_form_row.html.haml (neu, Partial)",
+      "change": "Eine Tabellenzeile mit Foto, Name, Anwesend-Checkbox (mw-checkbox), Abwesenheitsgrund-Select (disabled wenn anwesend), Notiz-Input."
+    },
+    {
+      "view": "app/views/attendances/export.html.haml (neu)",
+      "change": "Form mit Date-Range-Picker (Start/Ende) + Gruppe-Select + Submit 'Excel exportieren'. Validierung: Ende ≥ Start, max 92 Tage Spanne (Excel-Spalten begrenzen)."
+    },
+    {
+      "view": "app/views/children/_attendance_calendar.html.haml (neu, Partial)",
+      "change": "Monatskalender-Grid (7 Spalten Mo–So, Wochen-Zeilen). Pro Tag: Datum + Status-Punkt (grün=anwesend, rot=abwesend mit Tooltip='Grund: krank'). Navigation ‹ Monat › via Links auf children#attendance?month=YYYY-MM."
+    },
+    {
+      "view": "app/views/children/show.html.haml",
+      "change": "Im Sub-Navigations-/Action-Bereich ein neuer Tab/Link 'Anwesenheit' → /children/:id/attendance, wo der Kalender-Partial gerendert wird."
+    },
+    {
+      "view": "app/views/layouts/_navigation.html.haml",
+      "change": "Staff-Sidebar: Neuer Eintrag 'Anwesenheit' (Lucide 'user-check') zwischen 'Teilnahmelisten' und 'Abstimmungen' (oder unter 'Planung & Events'). Eltern-Sidebar: kein Eintrag in v1 (Eltern sehen Kalender nur im eigenen Kind)."
+    }
+  ],
+  "spec:controllerChanges": [
+    {
+      "controller": "AttendancesController (neu)",
+      "actions": [
+        "index: lädt aktive Kinder der gewählten Gruppe + bestehende Attendance-Datensätze für das Datum; baut für jedes Kind ein 'virtuelles' Attendance, wenn noch keines existiert; rendert Tabelle",
+        "create: Bulk-Endpunkt – akzeptiert Array von Attendances-Attributen, upsertet (find_or_initialize_by(child:, date:)); Validierung; Transaktion; Redirect zur selben Tagesansicht mit Flash",
+        "update: einzelnes Attendance (Inline-Edit via Turbo Frame, optional v1.1)",
+        "export: Form-View",
+        "export_create: erzeugt Excel mit caxlsx, send_data"
+      ],
+      "authorization": "Staff-only (before_action :require_staff!)"
+    },
+    {
+      "controller": "ChildrenController",
+      "change": "Neue Member-Action `attendance` (GET /children/:id/attendance); lädt Attendances des aktuellen Monats (Param :month), rendert show-Template-Variant oder eigenes Template mit Kalender-Partial. Authorization: Staff oder verlinkter Elternteil."
+    }
+  ],
+  "spec:filterPattern": {
+    "alignment": "Filter auf /attendances folgen dem selben Komponenten-Stil wie /children (mw-filters)",
+    "fields": [
+      "Datum-Picker (date_field, default Date.current)",
+      "Gruppe-Select (alle Gruppen, include_blank 'Bitte wählen' – Pflichtfeld, da Erfassung pro Gruppe)",
+      "Kind-Suchfeld (text_field q, optional)"
+    ],
+    "resetButton": "Wenn Filter (außer default-Datum heute) aktiv ist: Reset-Link mit Lucide 'rotate-ccw'",
+    "submitOnChange": "Datum und Gruppe: this.form.requestSubmit() (analog /children)"
+  },
+  "spec:exportFormat": {
+    "library": "caxlsx + caxlsx_rails (siehe spec-excel-exports.json)",
+    "filename": "anwesenheit_{gruppe}_{start}_{ende}.xlsx",
+    "structure": {
+      "header": [
+        "Zeile 1: 'Anwesenheit – {Gruppenname} – {Start}–{Ende}'",
+        "Zeile 2: leer",
+        "Zeile 3: Spalten – 'Kind' | Datum-1 | Datum-2 | … | 'Anwesend gesamt' | 'Abwesend gesamt'"
+      ],
+      "rows": [
+        "Eine Zeile pro aktivem Kind der Gruppe (im KGJ des Zeitraums)",
+        "Zellinhalt: 'A' (anwesend, Hintergrund hellgrün), 'X' + Grund-Initial (abwesend, hellrot), '-' (kein Eintrag, grau)"
+      ],
+      "footer": [
+        "Letzte Zeile: 'Tagessumme' mit Anzahl anwesender Kinder pro Tag"
+      ],
+      "formatting": [
+        "Erste Spalte fixiert (freeze_panes)",
+        "Datum-Spalten in Wochenenden grau hinterlegt",
+        "Breite 'Kind' = 25 Zeichen, Datum-Spalten = 4 Zeichen"
+      ]
+    },
+    "limits": {
+      "maxSpanDays": 92,
+      "maxChildren": 500
+    }
+  },
+  "spec:acceptanceCriteria": [
+    "Neues Datenmodell Attendance mit Migration, Modell-Klasse, Validierungen, Scopes",
+    "Sidebar-Eintrag 'Anwesenheit' für Staff",
+    "GET /attendances zeigt Datum-/Gruppen-Filter (Default: heute) und Kindertabelle mit Checkboxen, Abwesenheitsgrund-Select und Notizfeld",
+    "POST /attendances speichert/aktualisiert alle übermittelten Einträge in einer Transaktion (upsert via find_or_initialize_by)",
+    "Pflicht-Logik: Abwesenheitsgrund nur erforderlich/erlaubt wenn present=false",
+    "/children/:id/attendance rendert Monats-Kalender mit Tagesstatus (success=anwesend, danger=abwesend, neutral=kein Eintrag); Monatsnavigation ‹ ›",
+    "GET /attendances/export rendert Formular (Start/Ende/Gruppe)",
+    "POST /attendances/export liefert Excel-Datei (Kinder×Datum-Matrix mit 'A'/'X'/'-')",
+    "Filter folgen mw-filters-Komponentenstil aus /children",
+    "Authorization: Erfassung Staff-only; Kind-Kalender Staff oder verlinkter Elternteil",
+    "Test-Suite grün (Modell-Tests inkl. Validierungen, Controller-Tests, System-Test für Erfassen + Kalender)",
+    "Verifiziert via agent-browser (Erfassung, Kalenderübersicht, Excel-Download)"
+  ],
+  "spec:testScenarios": [
+    {
+      "name": "Tag erfassen",
+      "given": "Gruppe 'Sonnenkinder' mit 12 aktiven Kindern, heute kein Eintrag",
+      "when": "/attendances?date=heute&group_id=…, 10 Kinder anwesend ✓, 2 abwesend mit Grund 'krank'",
+      "then": "12 Attendance-Datensätze gespeichert, 10 mit present=true, 2 mit present=false absence_reason='sick'"
+    },
+    {
+      "name": "Tag bearbeiten (Upsert)",
+      "given": "Tag bereits erfasst, ein Kind als anwesend markiert",
+      "when": "Caretaker setzt das Kind nachträglich auf abwesend (krank)",
+      "then": "Bestehender Datensatz wird aktualisiert (kein Duplikat), updated_at neu"
+    },
+    {
+      "name": "Kind-Kalender",
+      "given": "Kind mit Mix aus anwesend/abwesend/keinem Eintrag im Mai",
+      "when": "GET /children/:id/attendance?month=2026-05",
+      "then": "Kalendergrid zeigt jeden Tag entsprechend (success/danger/neutral); Tooltip beim Hover zeigt Grund"
+    },
+    {
+      "name": "Excel-Export",
+      "given": "Gruppe 'Sonnenkinder', 10 Tage Daten (01.–10.05.)",
+      "when": "POST /attendances/export mit start=01.05., ende=10.05., gruppe=…",
+      "then": "Datei wird gedownloadet; öffnet in Excel mit korrekter Struktur, Werte stimmen mit DB überein"
+    },
+    {
+      "name": "Validierung Abwesenheitsgrund",
+      "given": "present=true und absence_reason='sick' gesetzt",
+      "when": "Save",
+      "then": "Validierungsfehler 'Abwesenheitsgrund nur bei Abwesenheit erlaubt'"
+    },
+    {
+      "name": "Eindeutigkeit pro Kind/Tag",
+      "given": "Kind X hat bereits Eintrag für 10.05.",
+      "when": "Direkt-DB-Insert eines zweiten Eintrags für 10.05. desselben Kindes",
+      "then": "Unique-Constraint verhindert; Modell-Validation greift im normalen Flow"
+    }
+  ],
+  "spec:agentBrowserVerification": "Verifiable via agent-browser: /attendances öffnen, Datum heute auswählen, Gruppe wählen, Kinder anhaken/abhaken + Grund setzen, Speichern – Flash erscheint, DB-Stand prüfen (z.B. via /children/:id/attendance Kalender). Excel-Export: Button klicken, File-Download abfangen, vom Sandbox-FS lesen (binär – Inhalt nur indirekt prüfbar via Größe + Mime). Kind-Kalender: visuelle Status-Punkte sichtbar.",
+  "spec:dependencies": ["F54"]
+}
