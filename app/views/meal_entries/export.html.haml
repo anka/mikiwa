@@ -1,0 +1,37 @@
+- content_for :title, "Speiseplan exportieren · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Speiseplan exportieren
+    %p.mw-page-header__lede Wähle Zeitraum und Gruppe; max. 92 Tage.
+  .mw-page-header__actions
+    = link_to meal_entries_path, class: "mw-page-action" do
+      = lucide_icon "chevron-left", size: 14
+      Zurück
+
+- if @errors.present?
+  .mw-flash.mw-flash--error
+    %ul{ style: "margin: 0; padding-left: 1.25rem;" }
+      - @errors.each do |msg|
+        %li= msg
+
+= form_with url: export_meal_entries_path(format: :xlsx), method: :get, class: "mw-form", html: { style: "margin-top: 1.5rem;" } do |form|
+  .mw-field-row
+    .mw-field
+      = form.label :start_date, "Startdatum", class: "mw-field__label"
+      = form.date_field :start_date, required: true, value: @start_date, class: "mw-input"
+    .mw-field
+      = form.label :end_date, "Enddatum", class: "mw-field__label"
+      = form.date_field :end_date, required: true, value: @end_date, class: "mw-input"
+
+  .mw-field
+    = form.label :group_id, "Gruppe", class: "mw-field__label"
+    = form.select :group_id,
+        options_from_collection_for_select(@groups, :id, :name, @group_id),
+        { include_blank: "Bitte wählen" },
+        required: true, class: "mw-select"
+
+  %p.mw-field__hint Maximaler Zeitraum: 92 Tage.
+
+  .mw-form__actions
+    = form.submit "Excel exportieren", class: "mw-btn mw-btn--primary mw-btn--sm"

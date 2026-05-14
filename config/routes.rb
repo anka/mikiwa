@@ -73,6 +73,7 @@ Rails.application.routes.draw do
   resources :meal_entries, only: %i[index new create edit update destroy] do
     collection do
       get :print
+      get :export
     end
   end
   get "birthdays", to: "birthdays#index", as: :birthdays

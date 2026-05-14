@@ -202,6 +202,87 @@ class MealEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
+  # F62: Speiseplan Excel-Export-Seite
+  test "F62 Staff kann Export-Form-Seite öffnen" do
+    sign_in_as(@staff)
+    get export_meal_entries_path
+    assert_response :success
+    assert_select 'input[type="date"][name="start_date"]'
+    assert_select 'input[type="date"][name="end_date"]'
+    assert_select 'select[name="group_id"]'
+    assert_match(/Speiseplan exportieren/, response.body)
+  end
+
+  test "F62 Parent bekommt 403 bei /meal_entries/export" do
+    sign_in_as(@parent)
+    get export_meal_entries_path
+    assert_response :forbidden
+  end
+
+  test "F62 Index-Header zeigt 'Exportieren'-Link für Staff" do
+    sign_in_as(@staff)
+    get meal_entries_path
+    assert_response :success
+    assert_match(/Exportieren/, response.body)
+    assert_select 'a[href*="/meal_entries/export"]'
+  end
+
+  test "F62 Index-Header zeigt KEINEN Exportieren-Link für Parent" do
+    sign_in_as(@parent)
+    get meal_entries_path
+    assert_response :success
+    assert_no_match(/Exportieren/, response.body)
+  end
+
+  test "F62 Happy Path: Excel mit Tag-Zeilen wird ausgeliefert" do
+    sign_in_as(@staff)
+    get export_meal_entries_path(format: :xlsx,
+                                  start_date: "2026-05-04",
+                                  end_date: "2026-05-08",
+                                  group_id: @group.id)
+    assert_response :success
+    assert_equal Mime[:xlsx].to_s, response.media_type
+    assert_match(/mikiwa_speiseplan_.*\.xlsx/, response.headers["Content-Disposition"])
+    assert response.body.bytesize.positive?
+  end
+
+  test "F62 Validierung: end_date < start_date → Fehler" do
+    sign_in_as(@staff)
+    get export_meal_entries_path(format: :xlsx,
+                                  start_date: "2026-05-08",
+                                  end_date: "2026-05-04",
+                                  group_id: @group.id)
+    assert_response :unprocessable_entity
+    assert_match(/Ende.*nach.*Start|größer|kleiner/i, response.body)
+  end
+
+  test "F62 Validierung: Spanne > 92 Tage → Fehler" do
+    sign_in_as(@staff)
+    get export_meal_entries_path(format: :xlsx,
+                                  start_date: "2026-01-01",
+                                  end_date: "2026-12-31",
+                                  group_id: @group.id)
+    assert_response :unprocessable_entity
+    assert_match(/92|Zeitraum/i, response.body)
+  end
+
+  test "F62 Validierung: fehlende Group → Fehler" do
+    sign_in_as(@staff)
+    get export_meal_entries_path(format: :xlsx,
+                                  start_date: "2026-05-04",
+                                  end_date: "2026-05-08")
+    assert_response :unprocessable_entity
+  end
+
+  test "F62 Parent bekommt 403 bei Submit" do
+    sign_in_as(@parent)
+    get export_meal_entries_path(format: :xlsx,
+                                  start_date: "2026-05-04",
+                                  end_date: "2026-05-08",
+                                  group_id: @group.id)
+    assert_response :forbidden
+  end
+
   # BF-008: Dietary-Radio-Pill nicht reaktiv – Fix-Verifizierung
   test "BF-008 Edit-Form rendert keine hardcoded mw-radio-pill--active-Klasse" do
     sign_in_as(@staff)

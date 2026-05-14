@@ -1,0 +1,53 @@
+wb = xlsx_package.workbook
+wb.add_worksheet(name: @group.name.truncate(31, omission: "")) do |sheet|
+  header_style    = sheet.styles.add_style(ExcelExportHelper::HEADER_STYLE)
+  sub_header      = sheet.styles.add_style(ExcelExportHelper::SUB_HEADER_STYLE)
+  weekend_style   = sheet.styles.add_style(ExcelExportHelper::WEEKEND_STYLE)
+  date_style      = sheet.styles.add_style(format_code: "ddd dd.mm.yyyy")
+  weekend_date    = sheet.styles.add_style(
+    ExcelExportHelper::WEEKEND_STYLE.merge(format_code: "ddd dd.mm.yyyy")
+  )
+
+  sheet.add_row [ "Speiseplan – #{@group.name} – #{l(@start_date, format: :short)}–#{l(@end_date, format: :short)}" ],
+                style: sub_header
+  sheet.merge_cells("A1:F1")
+  sheet.add_row []
+  sheet.add_row [
+    "Datum",
+    "Vorspeise",
+    "Hauptspeise",
+    "Nachspeise",
+    "Zusatz",
+    "Hinweise"
+  ], style: header_style
+
+  @days.each do |day|
+    entry = @entries_by_date[day]
+    weekend = day.saturday? || day.sunday?
+
+    course = ->(type) {
+      c = entry&.meal_courses&.find { |mc| mc.course_type == type }
+      next "-" if c.nil? || c.name.blank?
+      "#{c.name}#{ExcelExportHelper::DIETARY_SUFFIXES[c.dietary].to_s}"
+    }
+
+    row_style = weekend ? [ weekend_date, weekend_style, weekend_style, weekend_style, weekend_style, weekend_style ] : [ date_style, nil, nil, nil, nil, nil ]
+
+    sheet.add_row [
+      day,
+      course.call("starter"),
+      course.call("main"),
+      course.call("dessert"),
+      course.call("extra"),
+      entry&.notes.presence || ""
+    ], style: row_style
+  end
+
+  sheet.column_widths 18, 28, 28, 28, 28, 36
+  sheet.sheet_view.pane do |pane|
+    pane.state = :frozen
+    pane.y_split = 3
+    pane.top_left_cell = "A4"
+    pane.active_pane = :bottom_left
+  end
+end
