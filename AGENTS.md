@@ -60,7 +60,8 @@ Standard Rails layout. Key entry points:
 8. Business logic goes in dedicated service objects
 9. Background jobs use Solid Queue (Rails 8's default job backend) and should be small and idempotent
 10. Use conventional commit messages with a brief title and a detailed body. The body can contain asciiart for architectual patterns or introduced design patterns. The body should describe the main changes in a summary easy to read and comprehend.
-11. **ENTWICKLUNGSSPRACHE IST ENGLISCH – NICHT VERHANDELBAR.** Alle Code-Artefakte müssen englisch benannt sein: Modelle, Klassen, Controller, Actions, Methoden, Attribute, Datenbanktabellen, Spalten, Views, Routen, Services, Tests, Helpers, Konstanten, lokale Variablen in Templates. Die UI-Sprache (Labels, Flash-Messages, Platzhalter) bleibt Deutsch. Enum-/Typ-Werte die im Code und in der DB gespeichert werden (z.B. `note_type`) sind ebenfalls englisch.
+11. When introducing new features, data models, attributes update `./db/seeds.rb` respectively to reflect the changes to create a clean application state.
+12. **ENTWICKLUNGSSPRACHE IST ENGLISCH – NICHT VERHANDELBAR.** Alle Code-Artefakte müssen englisch benannt sein: Modelle, Klassen, Controller, Actions, Methoden, Attribute, Datenbanktabellen, Spalten, Views, Routen, Services, Tests, Helpers, Konstanten, lokale Variablen in Templates. Die UI-Sprache (Labels, Flash-Messages, Platzhalter) bleibt Deutsch. Enum-/Typ-Werte die im Code und in der DB gespeichert werden (z.B. `note_type`) sind ebenfalls englisch.
 
 **Konkrete Mapping-Beispiele (Referenz für zukünftige Entwicklung):**
 
@@ -151,11 +152,14 @@ For multi-step tasks, state a brief plan:
 
 ## Browser Automation
 
-Use `agent-browser` for web automation. Run `agent-browser --help` for all commands.
+Use `agent-browser` for web automation AND feature verfication. Run `agent-browser --help` for all commands.
 
 Core workflow:
 
-1. `agent-browser open <url>` - Navigate to page
-2. `agent-browser snapshot -i` - Get interactive elements with refs (@e1, @e2)
-3. `agent-browser click @e1` / `fill @e2 "text"` - Interact using refs
-4. Re-snapshot after page changes
+1. Use `./script/reset-seed.sh` to create a new, clean database/application state.
+2. Use sabine@mikiwa.local/changeme12345678 as caretaker login OR anna.gruber@example.at/changeme12345678 as parent account.
+3. Ensure the dev server is running `bin/dev` successfully.
+4. `agent-browser open <url>` - Navigate to page
+5. `agent-browser snapshot -i` - Get interactive elements with refs (@e1, @e2)
+6. `agent-browser click @e1` / `fill @e2 "text"` - Interact using refs
+7. Re-snapshot after page changes
