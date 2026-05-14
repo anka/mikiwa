@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_04_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_14_170058) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -79,6 +79,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_120000) do
     t.datetime "updated_at", null: false
     t.index ["group_id"], name: "index_attendance_lists_on_group_id"
     t.index ["kindergarten_year_id"], name: "index_attendance_lists_on_kindergarten_year_id"
+  end
+
+  create_table "attendances", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.string "absence_reason"
+    t.string "child_id", limit: 36, null: false
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.string "group_id", limit: 36, null: false
+    t.string "kindergarten_year_id", limit: 36, null: false
+    t.text "note"
+    t.boolean "present", default: true, null: false
+    t.string "recorded_by_id", limit: 36, null: false
+    t.datetime "updated_at", null: false
+    t.index ["child_id", "date"], name: "index_attendances_on_child_id_and_date", unique: true
+    t.index ["child_id"], name: "index_attendances_on_child_id"
+    t.index ["group_id", "date"], name: "index_attendances_on_group_id_and_date"
+    t.index ["group_id"], name: "index_attendances_on_group_id"
+    t.index ["kindergarten_year_id", "date"], name: "index_attendances_on_kindergarten_year_id_and_date"
+    t.index ["kindergarten_year_id"], name: "index_attendances_on_kindergarten_year_id"
+    t.index ["recorded_by_id"], name: "index_attendances_on_recorded_by_id"
   end
 
   create_table "calendar_event_groups", id: { type: :string, limit: 36 }, force: :cascade do |t|
@@ -365,6 +385,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_120000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "attendances", "children"
+  add_foreign_key "attendances", "groups"
+  add_foreign_key "attendances", "kindergarten_years"
+  add_foreign_key "attendances", "users", column: "recorded_by_id"
   add_foreign_key "emergency_contacts", "users", on_delete: :nullify
   add_foreign_key "galleries", "kindergarten_years"
   add_foreign_key "galleries", "users", column: "created_by_id"

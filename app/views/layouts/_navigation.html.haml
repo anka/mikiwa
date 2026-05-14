@@ -62,6 +62,9 @@
         = link_to attendance_lists_path, class: "mw-nav-link #{nav_active?('/attendance_lists')}" do
           = lucide_icon "clipboard-list", size: 20
           %span Teilnahmelisten
+        = link_to attendances_path, class: "mw-nav-link #{nav_active?('/attendances')}" do
+          = lucide_icon "user-check", size: 20
+          %span Anwesenheit
         = link_to polls_path, class: "mw-nav-link #{nav_active?('/polls')}" do
           = lucide_icon "bar-chart-2", size: 20
           %span Abstimmungen

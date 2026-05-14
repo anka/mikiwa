@@ -76,6 +76,8 @@ Rails.application.routes.draw do
       get :export
     end
   end
+
+  resources :attendances, only: %i[index create update]
   get "birthdays", to: "birthdays#index", as: :birthdays
 
   resources :calendar_events

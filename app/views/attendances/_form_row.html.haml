@@ -1,0 +1,25 @@
+- absence_options = Attendance::ABSENCE_REASONS.map { |r| [ Attendance::ABSENCE_REASON_LABELS[r], r ] }
+- field_base = "attendances[#{child.id}]"
+
+%tr
+  %td{ "data-label": "Kind" }
+    .mw-child-name-cell
+      - if child.profile_photo.attached?
+        = image_tag child.profile_photo.variant(**ImageAttachable::VARIANT_CONFIGS[:thumb]),
+            class: "mw-child-avatar mw-child-avatar--sm", alt: ""
+      - else
+        .mw-child-avatar.mw-child-avatar--sm.mw-child-avatar--placeholder
+          = child.first_name[0].upcase
+      .mw-child-name-cell__text
+        %strong= child.full_name
+  %td{ "data-label": "Anwesend" }
+    -# hidden_field_tag liefert "0" wenn Checkbox unchecked bleibt;
+    -# check_box_tag sendet sonst keinen present-Key → NOT NULL violation.
+    = hidden_field_tag "#{field_base}[present]", "0"
+    = check_box_tag "#{field_base}[present]", "1", attendance.present, class: "mw-checkbox"
+  %td{ "data-label": "Abwesenheitsgrund" }
+    = select_tag "#{field_base}[absence_reason]",
+        options_for_select([ [ "—", "" ] ] + absence_options, attendance.absence_reason),
+        class: "mw-select"
+  %td{ "data-label": "Notiz" }
+    = text_field_tag "#{field_base}[note]", attendance.note, class: "mw-input"

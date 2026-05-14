@@ -1,0 +1,45 @@
+- content_for :title, "Anwesenheit · Mikiwa"
+
+.mw-page-header
+  .mw-page-header__text
+    %h1.mw-page-header__title Anwesenheit
+    %p.mw-page-header__lede Tägliche Erfassung pro Gruppe.
+
+- if notice
+  .mw-flash.mw-flash--success= notice
+
+= form_with url: attendances_path, method: :get, class: "mw-filters", html: { style: "margin-top: 1.5rem;" } do |form|
+  .mw-filters__row
+    = form.date_field :date, value: @date, class: "mw-input mw-filters__select", onchange: "this.form.requestSubmit()"
+    = form.select :group_id,
+        options_from_collection_for_select(@groups, :id, :name, @group_id),
+        { include_blank: "Bitte Gruppe wählen" },
+        class: "mw-select mw-filters__select",
+        onchange: "this.form.requestSubmit()"
+
+- if @group.nil?
+  .mw-card{ style: "margin-top: 1.5rem; padding: 1.25rem;" }
+    %p.mw-text-muted Bitte Gruppe wählen, um die Anwesenheits-Liste zu sehen.
+- elsif @children.empty?
+  .mw-card{ style: "margin-top: 1.5rem; padding: 1.25rem;" }
+    %p.mw-text-muted In dieser Gruppe sind aktuell keine aktiven Kinder.
+- else
+  = form_with url: attendances_path, method: :post, class: "mw-form", html: { style: "margin-top: 1.5rem;" } do |form|
+    = form.hidden_field :date,     value: @date
+    = form.hidden_field :group_id, value: @group.id
+
+    .mw-card
+      %table.mw-table.mw-table--cards{ style: "width: 100%;" }
+        %thead
+          %tr
+            %th Kind
+            %th Anwesend
+            %th Abwesenheitsgrund
+            %th Notiz
+        %tbody
+          - @children.each do |child|
+            - attendance = @attendances_by_child[child]
+            = render "form_row", child: child, attendance: attendance
+
+    .mw-form__actions{ style: "margin-top: 1rem;" }
+      = form.submit "Speichern", class: "mw-btn mw-btn--primary mw-btn--sm"
