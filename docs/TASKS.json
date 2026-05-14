@@ -3153,7 +3153,7 @@
       "id": "BF-008",
       "name": "Speiseplan-Edit: Dietary-Radio-Pill-Active-State nicht reaktiv",
       "phase": 8,
-      "status": "open",
+      "status": "done",
       "short_description": "Beim Bearbeiten eines Speiseplans bleibt der ursprünglich aktive Dietary-Wert (standard/vegetarisch/vegan) visuell hervorgehoben, auch wenn ein anderer gewählt wird – erst nach Speichern+Reload korrekt.",
       "description": "Symptom: In /meal_entries/:id/edit zeigen pro Kurszeile drei Radio-Pills (Standard / Vegetarisch / Vegan). Klickt der User eine andere Pill, wechselt zwar das <input type='radio'>-checked-Attribut, der visuell aktive Pill bleibt jedoch der ursprünglich gerenderte. Erst nach Save + Neuladen ist die Anzeige korrekt.\n\nUrsache: In app/views/meal_entries/_form.html.haml wird die CSS-Klasse 'mw-radio-pill--active' beim Render-Zeitpunkt hardcoded an das Label gehängt:\n  %label.mw-radio-pill{ class: course.dietary == val ? 'mw-radio-pill--active' : nil }\nDas CSS verwendet bereits :has(input[type=radio]:checked) (mw-radio-pill:has(...checked):radio-pill--active). Dadurch ist die Hardcoded-Klasse redundant und führt zum Bug: der ursprünglich aktive Pill behält die Klasse auch nach Klick auf einen anderen.\n\nFix: Hardcoded class-Logik aus dem Label entfernen, Active-State ausschließlich über :has(:checked) im CSS:\n  %label.mw-radio-pill\n    = course_form.radio_button :dietary, val\n    %span= MealCourse::DIETARY_LABELS[val]\n\nDas :has-CSS in app/assets/tailwind/application.css (Zeilen ~3444) bleibt unverändert.\n\nKein Schema-Change. Tests anpassen: System-Test, der Dietary-Wechsel klickt und visuelle Klasse erwartet, ggf. anpassen.",
       "acceptance_criteria": [

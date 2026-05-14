@@ -42,7 +42,7 @@
                 autofocus: idx == 1
             .mw-meal-course__diet
               - MealCourse::DIETARY_VALUES.each do |val|
-                %label.mw-radio-pill{ class: course.dietary == val ? "mw-radio-pill--active" : nil }
+                %label.mw-radio-pill
                   = course_form.radio_button :dietary, val
                   %span= MealCourse::DIETARY_LABELS[val]
 

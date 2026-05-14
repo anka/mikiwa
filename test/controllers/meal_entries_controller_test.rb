@@ -202,6 +202,22 @@ class MealEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
+  # BF-008: Dietary-Radio-Pill nicht reaktiv – Fix-Verifizierung
+  test "BF-008 Edit-Form rendert keine hardcoded mw-radio-pill--active-Klasse" do
+    sign_in_as(@staff)
+    get edit_meal_entry_path(@entry)
+    assert_response :success
+    refute_match(/mw-radio-pill--active/, response.body,
+                 "Hardcoded --active-Klasse muss entfernt sein; Active-State steuert :has(:checked)")
+  end
+
+  test "BF-008 Edit-Form markiert persistierten Dietary-Wert als checked" do
+    sign_in_as(@staff)
+    get edit_meal_entry_path(@entry)
+    assert_response :success
+    assert_select 'input[type="radio"][name*="dietary"][value="vegetarian"][checked="checked"]'
+  end
+
   test "F34 staff can update meal entry und neue Courses ergänzen" do
     sign_in_as(@staff)
     main_id = @entry.meal_courses.first.id
