@@ -462,6 +462,24 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
     assert_select 'audio[data-magic-slideshow-target="audio"]', count: 0
   end
 
+  test "F58 Edit-Form: Entfernen-Button steckt NICHT im Edit-form (kein nested form)" do
+    sign_in_as(@caretaker)
+    @gallery.audio.attach(
+      io: StringIO.new("\xFF\xFBfake-mp3"),
+      filename: "song.mp3",
+      content_type: "audio/mpeg"
+    )
+    @gallery.save!
+    get edit_gallery_path(@gallery)
+    assert_response :success
+    # Der Lösch-Mechanismus darf nicht als <form>/<button> innerhalb des
+    # Outer-Edit-Forms gerendert werden – sonst submittet der Klick den
+    # Outer-PATCH (Browser entfernt nested <form>). Statt button_to nutzen
+    # wir link_to mit data-turbo-method="delete".
+    assert_select 'a[href*="/audio"][data-turbo-method="delete"]'
+    assert_select 'form#gallery_form form', count: 0
+  end
+
   test "F58 caretaker kann Audio via purge_audio entfernen" do
     sign_in_as(@caretaker)
     @gallery.audio.attach(

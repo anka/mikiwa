@@ -50,9 +50,12 @@
     - if gallery.audio.attached? && gallery.audio.blob&.persisted?
       .mw-audio-attached
         %audio.mw-audio-attached__player{ controls: true, src: url_for(gallery.audio) }
-        = button_to purge_audio_gallery_path(gallery), method: :delete,
+        -# kein button_to im äußeren form_with (HTML erlaubt keine
+        -# verschachtelten <form>; sonst submittet 'Entfernen' den
+        -# Outer-Edit-PATCH statt /audio DELETE).
+        = link_to purge_audio_gallery_path(gallery),
             class: "mw-btn mw-btn--ghost mw-btn--sm",
-            data: { turbo_confirm: "Begleitmusik entfernen?" } do
+            data: { turbo_method: :delete, turbo_confirm: "Begleitmusik entfernen?" } do
           = lucide_icon "trash-2", size: 14
           Entfernen
     = f.file_field :audio, accept: "audio/mpeg,audio/mp4,audio/x-m4a", class: "mw-input"
