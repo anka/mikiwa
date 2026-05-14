@@ -3504,7 +3504,7 @@
       "id": "F66",
       "name": "Anwesenheit: Filter (Datum, Gruppe, Kind-Suche) im mw-filters-Stil",
       "phase": 8,
-      "status": "open",
+      "status": "done",
       "short_description": "Erstellt Filter-Partial für /attendances analog zu /children/_filters mit Datum-Picker (default heute), Gruppe-Select (Pflicht) und Kind-Suche.",
       "description": "Ziel: Konsistente Filter-UX auf der Erfassungsseite, gleich wie /children.\n\nNeuer Partial app/views/attendances/_filters.html.haml (basiert auf children/_filters):\n  • Such-Feld mit Lucide 'search'-Icon und mw-filters__search-Markup für Kind-Name\n  • Date-Picker für 'Datum' (default Date.current, value-Submit bei Änderung)\n  • Gruppe-Select (mw-filters__select, Pflicht, default '')\n  • Submit + Reset-Link mit Count-Badge\n\nController-Anpassungen AttendancesController#index:\n  • @filter_q = params[:q].to_s\n  • @filter_date = params[:date].presence&.to_date || Date.current\n  • @filter_group_id = params[:group_id]\n  • @filter_groups = Group.order(:name)\n  • Kindertabelle filtert auf Name (Child.search_by_name) wenn @filter_q gesetzt\n\nIndex-View: render 'filters' anstelle von Inline-Code (falls F63 noch inline rendered).\n\nSpec: docs/spec-filters-alignment.json (perPagePlan – attendances), docs/spec-attendances.json",
       "acceptance_criteria": [

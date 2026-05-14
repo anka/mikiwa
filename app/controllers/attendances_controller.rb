@@ -6,11 +6,14 @@ class AttendancesController < ApplicationController
   def index
     @date     = parse_date(params[:date]) || Date.current
     @group_id = params[:group_id]
+    @filter_q = params[:q].to_s
     @groups   = Group.order(:name)
     @group    = Group.find_by(id: @group_id) if @group_id.present?
 
     if @group
-      @children = Child.active.where(group: @group).order(:last_name, :first_name)
+      @children = Child.active.where(group: @group)
+                       .search_by_name(@filter_q)
+                       .order(:last_name, :first_name)
       existing = Attendance.for_date(@date).for_group(@group.id).index_by(&:child_id)
       @attendances_by_child = @children.index_with do |child|
         existing[child.id] || Attendance.new(

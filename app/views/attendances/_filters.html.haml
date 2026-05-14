@@ -1,0 +1,40 @@
+- default_date = Date.current
+- date_active  = @date && @date != default_date
+- active_count = [ @filter_q.presence, @group_id.presence, (date_active ? @date : nil) ].compact.size
+- clear_url    = attendances_path
+
+= form_with url: attendances_path, method: :get, local: true, class: "mw-filters" do
+  .mw-filters__row
+    .mw-filters__search
+      = lucide_icon "search", size: 16, class: "mw-filters__search-icon"
+      = text_field_tag :q, @filter_q,
+          id: "filter-q",
+          placeholder: "Kind suchen …",
+          autocomplete: "off",
+          class: "mw-input mw-filters__search-input"
+      - if @filter_q.present?
+        - clear_query = { date: @date, group_id: @group_id }.compact_blank
+        = link_to "#{attendances_path}?#{clear_query.to_query}",
+            class: "mw-filters__clear",
+            "aria-label": "Suchtext löschen",
+            title: "Suchtext löschen" do
+          = lucide_icon "x", size: 14
+
+    = date_field_tag :date, @date,
+        class: "mw-input mw-filters__select",
+        onchange: "this.form.requestSubmit()"
+
+    = select_tag :group_id,
+                 options_from_collection_for_select(@groups, :id, :name, @group_id),
+                 include_blank: "Bitte Gruppe wählen",
+                 id: "filter-group-id",
+                 class: "mw-select mw-filters__select",
+                 onchange: "this.form.requestSubmit()"
+
+    .mw-filters__actions
+      = submit_tag "Filtern", class: "mw-btn mw-btn--primary mw-btn--sm"
+      - if active_count.positive?
+        = link_to clear_url, class: "mw-page-action mw-filters__reset" do
+          = lucide_icon "rotate-ccw", size: 14
+          Zurücksetzen
+          %span.mw-badge.mw-badge--accent.mw-filters__reset-count= active_count

@@ -12,14 +12,7 @@
 - if notice
   .mw-flash.mw-flash--success= notice
 
-= form_with url: attendances_path, method: :get, class: "mw-filters", html: { style: "margin-top: 1.5rem;" } do |form|
-  .mw-filters__row
-    = form.date_field :date, value: @date, class: "mw-input mw-filters__select", onchange: "this.form.requestSubmit()"
-    = form.select :group_id,
-        options_from_collection_for_select(@groups, :id, :name, @group_id),
-        { include_blank: "Bitte Gruppe wählen" },
-        class: "mw-select mw-filters__select",
-        onchange: "this.form.requestSubmit()"
+= render "filters"
 
 - if @group.nil?
   .mw-card{ style: "margin-top: 1.5rem; padding: 1.25rem;" }
