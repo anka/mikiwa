@@ -1,0 +1,226 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:galleries-multi-upload-bug",
+  "name": "Galerie: Multi-Upload reproduzieren, Ursache finden und beheben",
+  "description": "Bug-Verdacht: Beim gleichzeitigen Upload mehrerer Fotos (z.B. 10 auf einmal) werden nicht alle gespeichert. Diese Spec definiert ein deterministisches Repro mit 10 Sample-JPGs, das Diagnose-Vorgehen und die Akzeptanzkriterien für den Fix.",
+  "dateCreated": "2026-05-15",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Bei /galleries/:id (Show, Drag&Drop-Upload oder Edit-Form) gibt es den Verdacht, dass beim Hochladen mehrerer Fotos einzelne nicht in der Galerie landen. Ursache ist unklar – mögliche Kandidaten: Race-Condition im add_photo-Endpoint, fehlerhafte Multi-Part-Form, ActiveStorage-Validierung kippt einen Anhang, MAX_PHOTOS-Limit, Variant-Generierung schlägt fehl, Per-File-Progress-Controller bricht ab.",
+    "affectedUsers": "Betreuer beim Pflegen einer Galerie (Hauptworkflow).",
+    "costOfInaction": "Datenverlust, Fotos müssen einzeln re-uploaded werden, niedrigeres Vertrauen in die App."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Verifizierter, reproduzierbarer Test mit 10 Sample-JPGs",
+      "type": "business",
+      "target": "Automatisierter System-Test (oder agent-browser-Skript) lädt 10 Bilder hoch und verifiziert 10 persistierte Photos"
+    },
+    {
+      "description": "Ursache identifiziert und behoben",
+      "type": "business",
+      "target": "Root-Cause dokumentiert; Fix per Code-Änderung; Test grün; Manual-Verification via agent-browser"
+    },
+    {
+      "description": "Robustheit für 20+ Fotos",
+      "type": "user",
+      "target": "Stress-Check 20 Fotos auf einmal – mindestens 95% Erfolgsrate; verbleibende mit klarer Fehlermeldung"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Generelle Re-Architektur des Upload-Pipelines",
+      "rationale": "Fix bleibt minimal-invasiv; Refactor nur wenn die Root-Cause das erfordert"
+    },
+    {
+      "description": "Hintergrund-Upload-Queue mit Resume",
+      "rationale": "Out-of-scope für diesen Bug"
+    },
+    {
+      "description": "Direct-Upload (S3 presigned)",
+      "rationale": "Aktuelle Architektur ist Form-Upload auf Rails-Server; nicht verändern"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer",
+      "capability": "10 Fotos in einem Schritt in eine Galerie hochladen",
+      "benefit": "Schneller Bulk-Workflow",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Bei Fehlern erfahren, welche Dateien nicht hochgeladen wurden und warum",
+      "benefit": "Re-Upload nur fehlender Dateien statt Rätselraten",
+      "priority": 1
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Repro-Skript: Es werden 10 Sample-JPGs (z.B. 800×600 Pixel, je ~50-150KB, generiert mit ImageMagick oder Ruby/MiniMagick) als Test-Fixtures angelegt unter test/fixtures/files/sample_photos/.",
+        "acceptanceCriteria": [
+          {
+            "given": "Test-Fixtures-Pfad existiert",
+            "when": "ls test/fixtures/files/sample_photos/",
+            "then": "10 JPG-Dateien sample_01.jpg .. sample_10.jpg vorhanden, jede valid JPEG"
+          }
+        ],
+        "technicalNotes": "Generieren via Rake-Task oder einmalig per ImageMagick: convert -size 800x600 plasma: sample_NN.jpg",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "System-Test (oder agent-browser-Skript): Betreuer öffnet /galleries/:id, droppt 10 Sample-JPGs in die Dropzone, wartet bis Progress fertig, prüft dass @gallery.photos.count == 10.",
+        "acceptanceCriteria": [
+          {
+            "given": "Leere Galerie + 10 Sample-JPGs",
+            "when": "Multi-Drop in Upload-Zone",
+            "then": "Nach Abschluss zeigt Galerie 10 Photo-Kacheln; DB enthält 10 Photo-Records mit korrektem gallery_id"
+          },
+          {
+            "given": "Test wird 3× hintereinander ausgeführt",
+            "when": "Aggregation",
+            "then": "Erfolgsrate 100% (0 flaky)"
+          }
+        ],
+        "technicalNotes": "Capybara/System-Test mit attach_file in einem aktuellen Drag&Drop-Modus oder File-Input direkt. Alternativ: skill 'agent-browser' nutzen für End-to-End-Verifikation.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Diagnose: Falls Repro nicht alle 10 speichert, werden mögliche Ursachen systematisch geprüft und in der Spec-Notiz dokumentiert.",
+        "acceptanceCriteria": [
+          {
+            "given": "Bug reproduziert",
+            "when": "Diagnose ausgeführt",
+            "then": "Mindestens folgende Kandidaten geprüft: (a) Per-File-Progress-Controller bricht nach n Files ab, (b) add_photo-Endpoint hat Race-Condition (parallele Requests, gleicher Gallery-Record, lost update), (c) Server max_request_size oder client_max_body_size in Puma/Nginx, (d) Active Storage upload validation, (e) MAX_PHOTOS Limit, (f) CSRF-Token-Refresh nach erstem POST"
+          }
+        ],
+        "technicalNotes": "Logs in development.log + rails server stdout + JS console. Vergleichen: Anzahl POST /galleries/:id/add_photo vs. Anzahl 201/200 vs. Anzahl persistierter Photos.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Fix: Code-Änderungen behebt die identifizierte Ursache.",
+        "acceptanceCriteria": [
+          {
+            "given": "Vor Fix: Repro liefert <10 Photos",
+            "when": "Nach Fix: Repro neu ausgeführt",
+            "then": "10/10 Photos persistiert; Tests grün"
+          }
+        ],
+        "technicalNotes": "Häufige Ursachen + typische Fixes: \n- Race-Condition auf Gallery: bei add_photo NICHT mit gallery.update(photos: gallery.photos + [file]) arbeiten, sondern .attach([file]) ODER neu: Photo.create!(gallery: gallery, image: file). \n- Parallele Multipart-Uploads klemmen am gemeinsamen ActiveRecord lock → sequenziell durch Stimulus-Queue oder concurrent-safe per Photo.create!. \n- Bei JS-Upload-Controller: stelle sicher, dass Fehler in einem File nicht die Iteration über die anderen abbricht (try/catch pro File).",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-005",
+        "description": "Fehlertoleranz: Schlägt eines der 10 Files fehl (z.B. unsupported type), bleiben die anderen 9 erhalten; UI zeigt klare Fehlermeldung pro fehlgeschlagener Datei.",
+        "acceptanceCriteria": [
+          {
+            "given": "9 valide JPGs + 1 Datei .heic (nicht supported)",
+            "when": "Upload",
+            "then": "9 Photos in Galerie; pro fehlgeschlagene Datei eine sichtbare Fehlermeldung mit Dateiname + Grund"
+          }
+        ],
+        "technicalNotes": "Per-File-Progress-Controller toleriert Fehler; rendered HTML per Turbo Stream zeigt Fehlerliste am Ende.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-006",
+        "description": "Per-File-Progress-Indikator zeigt Status (queued/uploading/done/error) pro Datei.",
+        "acceptanceCriteria": [
+          {
+            "given": "10 Files in Queue",
+            "when": "Upload läuft",
+            "then": "Jede Datei zeigt ihren Status; Reihenfolge der Anzeige stabil"
+          }
+        ],
+        "technicalNotes": "Bereits in F29 'gallery-upload'-Controller vorgesehen; ggf. nur Bug fixen",
+        "dependencies": []
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Retry-Button pro fehlgeschlagener Datei",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Stress-Test 20+ Fotos mit Mess-Output (Median-Upload-Zeit)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Direct-Upload zu S3/Tigris mit presigned URLs",
+        "rationale": "Reduziert Rails-Server-Last; gesondertes Infra-Feature"
+      }
+    ]
+  },
+
+  "spec:diagnosticPlan": {
+    "step1": "10 Sample-JPGs erzeugen (test/fixtures/files/sample_photos/).",
+    "step2": "Aktuellen Zustand reproduzieren: Galerie öffnen, 10 Files droppen, beobachten (Server-Log + JS-Console + DOM). Anzahl in DB vs. UI vs. Logs vergleichen.",
+    "step3": "Falls <10: Hypothesen-Reihenfolge prüfen. Erste verdächtige Stellen: (a) gallery-upload-Controller (Per-File-Schleife/Promise.all/sequential?), (b) GalleriesController#add_photo (find_by_id vs. with_lock, .photos.attach vs. Photo.create).",
+    "step4": "Fix lokal anwenden, Test-Suite + System-Test (oder agent-browser) ausführen, manuell verifizieren.",
+    "step5": "Edge-Cases prüfen: 1 invalides + 9 valide; 20 Fotos auf einmal; sehr große Dateien (10MB) – sollen entweder mit klarer Validierung abgewiesen werden oder durchgehen, kein silent drop."
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Multi-Upload-Erfolgsrate",
+        "description": "% gleichzeitig hochgeladener Dateien, die persistiert werden",
+        "target": "100% bei valider Datei, ≥95% in Stress-Tests mit 20+ Files",
+        "measurementMethod": "Automatisierter Test (Capybara/agent-browser)",
+        "evaluationAt": "Sofort nach Fix"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Support-Tickets 'Fotos fehlen'",
+        "description": "Anzahl Tickets in 60 Tagen post-fix",
+        "target": "0 reproduzierbare Tickets",
+        "measurementMethod": "Support-Channel-Review",
+        "evaluationAt": "60 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [],
+
+  "spec:resolvedDecisions": [
+    {
+      "decision": "BF-009 läuft VOR F73 (Photo-Modell-Refactor)",
+      "rationale": "Fix entsteht auf der bestehenden has_many_attached-Architektur; Test-Infrastruktur (Sample-JPGs + System-Test) ist Vorarbeit für F73, die das funktionierende Setup übernimmt und migriert. Kürzeste Bug-Lebenszeit.",
+      "resolvedAt": "2026-05-15"
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "Bestehende F29-Upload-Implementierung muss eingestiegen werden" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Repro + Diagnose + Fix + Tests; läuft idealerweise vor F73 (Photo-Modell), damit der Fix nicht auf zwischenzeitlichen Photo-Refactor wartet" }
+    ]
+  }
+}

@@ -1,0 +1,218 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:profile-ical-link",
+  "name": "Profil: iCal-Link als anklickbarer Link (webcal://) mit https-Fallback",
+  "description": "Der persönliche iCal-Feed-Link im Profil wird vom reinen <code>-Text zu einem anklickbaren <a href='webcal://...'>-Link. Damit erkennen Apple Kalender, Google Kalender und Outlook das Abo automatisch und können es nach Klick direkt einrichten. Daneben bleibt ein Copy-Button und der https-Link für Clients ohne webcal-Support.",
+  "dateCreated": "2026-05-15",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell wird der iCal-Feed-URL als Plaintext in einem <code>-Element angezeigt. Eltern müssen den Link manuell kopieren und in ihrer Kalender-App einfügen – ein Mehrschritt-Workflow, der oft scheitert (Tippfehler beim Selektieren, falsche App).",
+    "affectedUsers": "Eltern (häufigster Anwendungsfall) und Betreuer, die ihre Termine im persönlichen Kalender abonnieren möchten.",
+    "costOfInaction": "Niedrige Abonnement-Rate, viele Eltern verzichten oder schaffen es nicht; Mehrwert des Kalender-Moduls verpufft."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Ein Klick öffnet die richtige Kalender-App und bietet Abo direkt an",
+      "type": "user",
+      "target": "<a href='webcal://...'> als primärer Link"
+    },
+    {
+      "description": "Fallback für Clients ohne webcal-Support",
+      "type": "user",
+      "target": "Sekundärer Link 'Als https-Link kopieren' bzw. Copy-Button zeigt https://...ics"
+    },
+    {
+      "description": "Hilfetext bleibt verständlich",
+      "type": "user",
+      "target": "Hinweis 'In Apple Kalender, Google Kalender oder Outlook abonnieren' bleibt; ggf. mit Plattform-Hinweis"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "OAuth-Integration mit Google Calendar API",
+      "rationale": "v1 ist Standard-iCal-Abo, kein Push-Sync"
+    },
+    {
+      "description": "Pro-Plattform-Quick-Add-Links (z.B. 'Zu Google Kalender hinzufügen'-Button)",
+      "rationale": "Google's URL-Schema funktioniert nur eingeschränkt mit privaten Token-URLs; aufwendiger als Nutzen"
+    },
+    {
+      "description": "Token-Rotation-Logik ändern",
+      "rationale": "Bestehender 'Token zurücksetzen'-Button bleibt unverändert"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Eltern auf iOS",
+      "capability": "Im Profil auf den iCal-Link tippen und in Apple Kalender abonnieren",
+      "benefit": "Termine landen automatisch im Heim-Kalender",
+      "priority": 0
+    },
+    {
+      "persona": "Eltern auf Android",
+      "capability": "Den https-Link kopieren und in Google Kalender als URL-Abo einfügen",
+      "benefit": "Auch ohne webcal-Support funktioniert das Abo",
+      "priority": 1
+    },
+    {
+      "persona": "Betreuer auf Desktop",
+      "capability": "Per Klick die Outlook/Apple-Kalender-App öffnen",
+      "benefit": "Quickstart ohne Copy-Paste",
+      "priority": 2
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Im Profil-View wird der iCal-Feed-Wert als <a href='webcal://...'> dargestellt. URL ist identisch zur bisherigen https-URL, nur mit Schema-Tausch.",
+        "acceptanceCriteria": [
+          {
+            "given": "User mit ical_token='abc'",
+            "when": "/profile rendert",
+            "then": "Anchor-Element <a href='webcal://<host>/calendar/abc.ics'>… enthält Lucide 'calendar-plus' Icon + Label 'In Kalender-App öffnen'"
+          },
+          {
+            "given": "iOS Safari Tap auf Link",
+            "when": "Klick",
+            "then": "System fragt 'Mit Kalender öffnen?'; bei Bestätigung öffnet Kalender und zeigt Abo-Dialog"
+          }
+        ],
+        "technicalNotes": "url_for(controller: :ical_feeds, action: :show, token: current_user.ical_token, format: :ics, protocol: 'webcal'). Alternativ String-Konstruktion: 'webcal://' + request.host_with_port + path.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Sekundärer Block zeigt den https-Link weiterhin als <code> mit Copy-Button.",
+        "acceptanceCriteria": [
+          {
+            "given": "Profil rendert",
+            "when": "Sekundärer Block sichtbar",
+            "then": "https-URL in <code> + Button 'Kopieren' (Lucide 'copy', Stimulus-Controller 'clipboard')"
+          },
+          {
+            "given": "Klick auf Kopieren",
+            "when": "Action",
+            "then": "URL ist im Clipboard; Button zeigt kurz 'Kopiert' (Feedback)"
+          }
+        ],
+        "technicalNotes": "Stimulus 'clipboard'-Controller mit navigator.clipboard.writeText; Fallback bei nicht-https-Kontext: document.execCommand('copy') auf hidden textarea.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Hilfetext bleibt und wird leicht erweitert, sodass beide Wege klar sind.",
+        "acceptanceCriteria": [
+          {
+            "given": "Profil rendert",
+            "when": "Karte 'Kalender-Abonnement' gelesen",
+            "then": "Text 'Klicken Sie den Link, um Ihre Kalender-App zu öffnen, oder kopieren Sie die URL für Google Kalender/Outlook.' o.ä. ist sichtbar"
+          }
+        ],
+        "technicalNotes": "",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-004",
+        "description": "iCal-Endpoint /calendar/:token.ics liefert weiterhin korrektes Content-Type text/calendar; charset=utf-8.",
+        "acceptanceCriteria": [
+          {
+            "given": "GET https://host/calendar/abc.ics",
+            "when": "Response",
+            "then": "Header Content-Type: text/calendar; charset=utf-8; Body beginnt mit BEGIN:VCALENDAR"
+          },
+          {
+            "given": "Apple Kalender folgt webcal://-Link",
+            "when": "Browser-Redirect zu https",
+            "then": "iCal-Datei wird korrekt geparsed, Events erscheinen"
+          }
+        ],
+        "technicalNotes": "Diese Funktion sollte bereits funktionieren (IcalFeedsController); im Rahmen des Tasks verifizieren.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-005",
+        "description": "Mobile-Touch-Target des Hauptlinks ≥44px.",
+        "acceptanceCriteria": [
+          {
+            "given": "Mobile (375px)",
+            "when": "Link wird gerendert",
+            "then": "Klick-Fläche mindestens 44×44px (Button-Style oder Padding)"
+          }
+        ],
+        "technicalNotes": "mw-btn--secondary oder mw-btn--primary--sm verwenden",
+        "dependencies": []
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Plattform-Detection: auf Mobile-Apple primären 'Mit Kalender öffnen' anzeigen, auf Mobile-Android primären 'In Google Kalender öffnen' (Direkt-URL mit cid=) anzeigen",
+        "acceptanceCriteria": [],
+        "technicalNotes": "User-Agent Sniffing in Helper; Google Calendar-URL: https://calendar.google.com/calendar/r?cid=<webcal-url>",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "QR-Code mit webcal://-URL, scannbar mit Smartphone",
+        "rationale": "Folge-Feature, gut für Aushang im Kindergarten"
+      }
+    ]
+  },
+
+  "spec:viewChanges": [
+    {
+      "view": "app/views/profile/show.html.haml",
+      "change": "Block 'Persönlicher iCal-Feed':\n  • Primärer Button: link_to 'In Kalender-App öffnen', webcal_url, class: 'mw-btn mw-btn--primary mw-btn--sm', target: '_self', mit Icon 'calendar-plus'\n  • Sekundär: bisherige Code-Anzeige des https-Links + Copy-Button (Stimulus 'clipboard')\n  • Hilfetext erweitern\n  • Token-Reset-Button bleibt"
+    }
+  ],
+
+  "spec:stimulusChanges": [
+    {
+      "controller": "clipboard (neu, sofern noch nicht vorhanden)",
+      "purpose": "Kopiert data-clipboard-text ins Clipboard und zeigt kurzes 'Kopiert'-Feedback am Auslöser"
+    }
+  ],
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Klicks auf iCal-Link",
+        "description": "Anzahl Aufrufe /calendar/:token.ics über User-Initiated-Action",
+        "target": "+200% vs. Baseline der manuellen Copy-Workflow-Aufrufe",
+        "measurementMethod": "Server-Log-Aggregation",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Abo-aktive Eltern",
+        "description": "% Eltern, deren iCal-Token in letzten 14 Tagen vom Kalender-Client abgerufen wurde (Polling-Pattern in Logs)",
+        "target": "≥ 40% (vorher geschätzt <15%)",
+        "measurementMethod": "Log-Aggregation: GET /calendar/:token.ics gruppiert pro User mit Polling-Heuristik",
+        "evaluationAt": "90 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [],
+    "phases": [
+      { "name": "v1", "scope": "Profile-View-Änderung + Clipboard-Stimulus" }
+    ]
+  }
+}

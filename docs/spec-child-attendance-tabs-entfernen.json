@@ -1,0 +1,158 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:child-attendance-tabs-entfernen",
+  "name": "Kind-Anwesenheit: Tabs entfernen, fokussierter Kalender + Zurück",
+  "description": "Die Ansicht /children/:id/attendance braucht keine Tab-Navigation. Die Seite zeigt ausschließlich den Monats-Kalender; rechts oben steht ein standardisierter 'Zurück'-Link zur Kind-Detailseite.",
+  "dateCreated": "2026-05-15",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell zeigt /children/:id/attendance eine mw-tabs-Leiste mit zwei Tabs ('Stammdaten' linkt zurück zur Show, 'Anwesenheit' ist aktiv). Diese Tab-Mechanik ist visuell redundant: Es gibt keinen Tab-Wechsel im klassischen Sinn, sondern jeder Tab ist ein eigener Page-Aufruf. Das verbraucht vertikalen Platz und suggeriert eine UI-Komplexität, die es nicht gibt.",
+    "affectedUsers": "Betreuer und Eltern, die die Anwesenheits-Historie eines Kindes betrachten.",
+    "costOfInaction": "Unsaubere Information Architecture, verschwendeter Platz oberhalb des Kalenders, Inkonsistenz mit anderen Detail-Sub-Seiten."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Fokussierte Detail-Sub-Seite ohne dekorative Tabs",
+      "type": "user",
+      "target": "Tabs werden entfernt; nur Page-Header + Kalender + Standard-Zurück sichtbar"
+    },
+    {
+      "description": "Konsistente Sub-Page-Navigation via 'Zurück'-Pattern",
+      "type": "user",
+      "target": "Wie auf anderen Detail-Sub-Seiten: 'Zurück'-Link in mw-page-header__actions führt zur Parent-Seite /children/:id"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Änderung am Kalender-Rendering selbst",
+      "rationale": "Kalender (F64) bleibt unverändert in Funktion und Aussehen"
+    },
+    {
+      "description": "Inline-Editierbarkeit des Kalenders",
+      "rationale": "Die Eltern-Sicht ist read-only; Staff editiert über /attendances"
+    },
+    {
+      "description": "Action-Button 'Anwesenheit' auf der Child-Show entfernen",
+      "rationale": "Der Einstieg in die Anwesenheits-Sub-Seite bleibt über den Action-Button im Show-Header"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer",
+      "capability": "Den Anwesenheits-Kalender eines Kindes ohne UI-Ballast einsehen",
+      "benefit": "Schnellere visuelle Erfassung der Historie",
+      "priority": 0
+    },
+    {
+      "persona": "Eltern auf Mobile",
+      "capability": "Mit einem Tap zurück zur Kind-Detailseite",
+      "benefit": "Klare, vorhersehbare Navigation",
+      "priority": 1
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Das mw-tabs-Markup wird aus app/views/children/attendance.html.haml ersatzlos entfernt.",
+        "acceptanceCriteria": [
+          {
+            "given": "Aufruf /children/:id/attendance",
+            "when": "DOM inspiziert",
+            "then": "Kein .mw-tabs Element vorhanden; keine 'Stammdaten/Anwesenheit'-Pillen sichtbar"
+          }
+        ],
+        "technicalNotes": "",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Im mw-page-header__actions bleibt genau ein Action-Element: 'Zurück' (link_to child_path(@child), class: 'mw-page-action') analog Standard-Pattern anderer Sub-Pages.",
+        "acceptanceCriteria": [
+          {
+            "given": "Aufruf /children/:id/attendance",
+            "when": "Page-Header rendert",
+            "then": "Genau ein Element 'Zurück' im mw-page-header__actions"
+          },
+          {
+            "given": "Klick auf 'Zurück'",
+            "when": "Navigation",
+            "then": "Browser landet auf /children/:id (Kind-Show)"
+          }
+        ],
+        "technicalNotes": "Bestehender Code: = link_to 'Zurück', child_path(@child), class: 'mw-page-action' bleibt; nichts daneben.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Page-Header-Lede bleibt informativ: Avatar + Name + Lede 'Anwesenheit · {Gruppe}' wie bisher.",
+        "acceptanceCriteria": [
+          {
+            "given": "Kind 'Lena' in Gruppe 'Bären'",
+            "when": "Anwesenheits-Seite öffnet",
+            "then": "Header zeigt Avatar, 'Lena Mustermann' und Lede 'Anwesenheit · Bären'"
+          }
+        ],
+        "technicalNotes": "",
+        "dependencies": []
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Monats-Navigation (‹ Mai 2026 ›) optisch leicht angehoben, da nun erster Inhalt nach dem Header",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Margin-top der Kalender-Karte minimal vergrößern, ggf. Section-Title hinzufügen",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Detail-Click in einer Tageszelle öffnet ein Modal mit allen Details (Notiz, recorder, exakte Zeit)",
+        "rationale": "Aktuell reicht der Tooltip mit Abwesenheitsgrund"
+      }
+    ]
+  },
+
+  "spec:viewChanges": [
+    {
+      "view": "app/views/children/attendance.html.haml",
+      "change": "Block '.mw-tabs{ role: \"tablist\" } ...' komplett entfernen. Davor liegender mw-page-header bleibt. Direkt darunter folgt der bestehende = render 'attendance_calendar', ...."
+    }
+  ],
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Visuelle Bounce-Rate",
+        "description": "Nicht direkt messbar; qualitatives Review nach Deploy",
+        "target": "Keine User-Beschwerden über fehlende Navigation",
+        "measurementMethod": "Smoke-Test + Stakeholder-Feedback",
+        "evaluationAt": "1 Woche post-launch"
+      }
+    ],
+    "lagging": []
+  },
+
+  "spec:openQuestions": [],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "F64 (Kalenderübersicht) muss bestehen – ist done" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Reine View-Änderung; Routen/Controller unverändert" }
+    ]
+  }
+}

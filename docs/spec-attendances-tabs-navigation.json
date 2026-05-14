@@ -1,0 +1,321 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:attendances-tabs-navigation",
+  "name": "Anwesenheit: Gruppen-Tabs + Datums-Navigation",
+  "description": "Die Erfassungsseite /attendances zeigt direkt die heutige Anwesenheitsliste an. Statt eines Gruppen-Selects gibt es eine Tab-Leiste pro Gruppe (bei mehreren Gruppen). Eine Datums-Navigation mit Pfeilen erlaubt schnelles Wechseln zwischen Tagen. Die bisherige Filter-Bar im mw-filters-Stil wird durch dieses fokussierte UI ersetzt.",
+  "dateCreated": "2026-05-15",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell muss der Betreuer auf /attendances erst eine Gruppe aus einem Select wählen, bevor die Liste sichtbar wird. Das ist ein zusätzlicher Klick im Daily-Workflow und fühlt sich nach 'Filter-Form' an, obwohl der typische Use-Case 'Heutige Anwesenheit meiner Gruppe' ist. Bei mehreren Gruppen ist der Wechsel umständlich (Select aufklappen, Eintrag suchen).",
+    "affectedUsers": "Betreuer (täglich, oft mehrfach pro Tag), Kindergartenleitung (Wechsel zwischen Gruppen).",
+    "costOfInaction": "Friction im wichtigsten Tages-Workflow, niedrigere Adoption des Anwesenheits-Moduls."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Direkter Einstieg in die heutige Anwesenheitsliste ohne Filter-Klick",
+      "type": "user",
+      "target": "Beim Aufruf von /attendances ist die Tagesliste der ersten Gruppe sofort sichtbar (≤1 Tap nötig)"
+    },
+    {
+      "description": "Schnellster Gruppen-Wechsel via Tabs",
+      "type": "user",
+      "target": "Bei >1 Gruppe Tab-Wechsel mit 1 Tap; bei 1 Gruppe keine Tabs (visuell minimal)"
+    },
+    {
+      "description": "Schnelle Datums-Navigation für Rückblick/Vorblick",
+      "type": "user",
+      "target": "‹ Heute › Buttons + Datum-Picker im Header der Tagesliste; ≤2 Taps pro Tageswechsel"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Eltern-Zugriff auf /attendances",
+      "rationale": "Bleibt Staff-only; Eltern sehen ihre Kinder weiterhin nur über /children/:id/attendance"
+    },
+    {
+      "description": "Such-Feld nach Kindname",
+      "rationale": "In der fokussierten Tagesansicht einer Gruppe nicht nötig (Liste ist überschaubar). Kann später als Quick-Filter zurückkehren, falls Bedarf"
+    },
+    {
+      "description": "Bulk-Aktionen über mehrere Gruppen",
+      "rationale": "Jede Gruppe hat ihre eigene Eingabe-Hoheit, Cross-Group-Bulk verwirrt mehr als es hilft"
+    },
+    {
+      "description": "Live-Aktualisierung wenn Kollege parallel speichert",
+      "rationale": "v1 reicht Last-Write-Wins; Turbo-Stream-Sync wäre Folgefeature"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer mit 1 Gruppe",
+      "capability": "/attendances aufrufen und direkt heutige Liste sehen",
+      "benefit": "Kein Filter-Klick, sofortige Eingabe",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer mit mehreren Gruppen",
+      "capability": "Zwischen Gruppen mit einem Tap wechseln",
+      "benefit": "Tagesabläufe in mehreren Gruppen schnell abarbeiten",
+      "priority": 1
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Per ‹ › durch Tage navigieren und per Datum-Picker einen Tag direkt anspringen",
+      "benefit": "Schnelles Nachtragen oder Korrigieren vergangener Tage",
+      "priority": 2
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Den 'Heute'-Button erkennen, wenn ich aktuell einen anderen Tag betrachte",
+      "benefit": "Schnelle Rückkehr zur Tagesarbeit",
+      "priority": 3
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "URL-Schema /attendances akzeptiert optionale Parameter ?date=YYYY-MM-DD&group_id=UUID. Beim Fehlen wird date=heute und group_id=erste verfügbare Gruppe (alphabetisch) gewählt.",
+        "acceptanceCriteria": [
+          {
+            "given": "Betreuer mit Zugriff auf 2 Gruppen ruft /attendances ohne Parameter auf",
+            "when": "Seite rendert",
+            "then": "URL bleibt /attendances; Datum ist heute, aktive Gruppe ist erste alphabetisch sortierte Gruppe"
+          },
+          {
+            "given": "Betreuer ruft /attendances?date=2026-05-10&group_id=ABC auf",
+            "when": "Seite rendert",
+            "then": "Tagesliste für 2026-05-10 und Gruppe ABC ist sichtbar"
+          }
+        ],
+        "technicalNotes": "AttendancesController#index – @date = params[:date].presence&.to_date || Date.current; @group = current_user verfügbare Gruppen.find_by(id: params[:group_id]) || first.",
+        "dependencies": ["F63"]
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Tab-Leiste pro Gruppe (mw-tabs-Stil) oberhalb der Liste. Bei genau 1 Gruppe wird die Tab-Leiste ausgeblendet.",
+        "acceptanceCriteria": [
+          {
+            "given": "Betreuer mit Zugriff auf 3 Gruppen",
+            "when": "/attendances rendert",
+            "then": "Drei Tab-Elemente erscheinen (alphabetisch); aktiver Tab hat mw-tab--active"
+          },
+          {
+            "given": "Betreuer mit Zugriff auf nur 1 Gruppe",
+            "when": "/attendances rendert",
+            "then": "Keine Tab-Leiste sichtbar; nur Datums-Navigation + Liste"
+          },
+          {
+            "given": "Aktiver Tab 'Bären', Datum 2026-05-15",
+            "when": "Klick auf Tab 'Löwen'",
+            "then": "Navigation zu /attendances?date=2026-05-15&group_id=<löwen-id>; aktuelle Datums-Auswahl bleibt erhalten"
+          }
+        ],
+        "technicalNotes": "Tab-Markup: mw-tabs/mw-tab analog children/attendance.html.haml. group_id wird in Tab-Links als Query-Param gesetzt.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Datums-Navigation: ‹ {Datum-Label} ›. Datum-Label ist klickbar und öffnet einen Date-Picker; ‹ navigiert -1 Tag, › navigiert +1 Tag. Wochenenden werden nicht übersprungen (Erfassung an Wochenenden sehr selten, aber möglich).",
+        "acceptanceCriteria": [
+          {
+            "given": "Datum heute (Donnerstag)",
+            "when": "Klick auf ‹",
+            "then": "Datum wechselt auf gestern (Mittwoch); URL ?date=… wird aktualisiert; Liste lädt neu"
+          },
+          {
+            "given": "Datum heute",
+            "when": "Klick auf ›",
+            "then": "Datum wechselt auf morgen; Liste lädt neu"
+          },
+          {
+            "given": "Datum gestern",
+            "when": "Klick auf Datums-Label",
+            "then": "Native Date-Picker öffnet sich; bei Auswahl von 2026-04-15 navigiert die Seite dorthin"
+          }
+        ],
+        "technicalNotes": "Date-Picker: <input type='date' value='@date'> mit data-action='change->date-jump#go' Stimulus-Controller, der window.location.href setzt. Pfeile als <a>-Links mit query-helper.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-004",
+        "description": "'Heute'-Button erscheint sichtbar, wenn das angezeigte Datum ≠ heute. Klick navigiert auf das heutige Datum bei aktuell gewählter Gruppe.",
+        "acceptanceCriteria": [
+          {
+            "given": "Datum=heute",
+            "when": "Header rendert",
+            "then": "Kein 'Heute'-Button sichtbar"
+          },
+          {
+            "given": "Datum=gestern",
+            "when": "Klick auf 'Heute'",
+            "then": "Navigation auf /attendances?date=<heute>&group_id=<aktuelle-gruppe>"
+          }
+        ],
+        "technicalNotes": "",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-005",
+        "description": "Bestehender Filter-Partial (_filters.html.haml) wird entfernt und durch ein neues Partial _tabs.html.haml + _date_nav.html.haml ersetzt. Export-Button bleibt im Page-Header erhalten.",
+        "acceptanceCriteria": [
+          {
+            "given": "/attendances rendert",
+            "when": "DOM inspiziert",
+            "then": "Kein .mw-filters Markup mehr vorhanden; stattdessen .mw-tabs (bei >1 Gruppe) + .mw-attendance-date-nav"
+          }
+        ],
+        "technicalNotes": "_filters.html.haml löschen. AttendancesController#index – @filter_q, @filter_groups, @filter_date entfernen.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-006",
+        "description": "Auto-Save (Turbo Stream pro Zeile) statt Sammel-Submit, damit Tab/Datums-Wechsel keine Daten verlieren.",
+        "acceptanceCriteria": [
+          {
+            "given": "Aktive Liste mit 12 Kindern, Datum heute",
+            "when": "Checkbox 'Anwesend' für Kind X umschalten",
+            "then": "Inline-Submit via Turbo Stream; Zeile zeigt kurze 'gespeichert'-Indikation; Speichern-Button im Footer entfällt"
+          },
+          {
+            "given": "Eingabe in 'Notiz'-Feld",
+            "when": "Blur oder Debounce 600ms",
+            "then": "Auto-Submit speichert; bei Erfolg keine UI-Disruption"
+          },
+          {
+            "given": "Tab- oder Datums-Wechsel mit nicht-gespeichertem Notiz-Text",
+            "when": "Wechsel ausgelöst",
+            "then": "Notiz wird zuerst gespeichert (Blur-Event), dann navigiert"
+          }
+        ],
+        "technicalNotes": "Stimulus-Controller 'auto-submit' bereits vorhanden (siehe Shopping-Items). Für Checkbox: change->auto-submit#submit. Für Notiz: blur+debounce. Form-Element pro Zeile statt einem großen Form.",
+        "dependencies": []
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Tastatur-Shortcuts: Pfeil-Links/Rechts bei Fokus außerhalb Eingaben navigieren Tage; Tab-Zahlen (1,2,3) wechseln Gruppe",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Stimulus-Window-Listener; bewusst nur außerhalb von Inputs",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Mini-Statistik im Date-Nav: 'X von Y anwesend' Badge",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Live-Sync zwischen mehreren Betreuer-Sessions via Turbo::StreamsChannel",
+        "rationale": "Aktuell unwahrscheinlicher Konflikt; ActionCable-Setup wäre eigenes Feature"
+      },
+      {
+        "id": "R-P2-002",
+        "description": "Wochenansicht (5×N-Grid statt Tagesliste)",
+        "rationale": "v1 ist tägliche Erfassung; Wochenansicht ist Auswertungs-Feature, eher als Excel/Excel-Export"
+      }
+    ]
+  },
+
+  "spec:viewChanges": [
+    {
+      "view": "app/views/attendances/index.html.haml",
+      "change": "Page-Header bleibt (Titel 'Anwesenheit' + Export-Button). _filters wird durch _tabs (oben) + _date_nav (über Liste) ersetzt. Form-Tag entfällt zugunsten per-Row-Forms."
+    },
+    {
+      "view": "app/views/attendances/_tabs.html.haml (neu)",
+      "change": "Rendert mw-tabs nur wenn @groups.size > 1; jeder Tab ist link_to /attendances?group_id=<id>&date=<aktuelles datum>; aktiver Tab via mw-tab--active."
+    },
+    {
+      "view": "app/views/attendances/_date_nav.html.haml (neu)",
+      "change": "Markup: .mw-attendance-date-nav mit [‹] [Date-Label/Picker] [›] [Heute (conditional)]. Pfeile sind link_to mit date_param ±1 Tag. Date-Picker ist <input type='date'> mit Stimulus 'date-jump' Controller."
+    },
+    {
+      "view": "app/views/attendances/_form_row.html.haml",
+      "change": "Wird zu eigenständigem form_with pro Zeile mit data-controller='auto-submit', method=:post auf /attendances (Upsert-Endpoint). Speichern-Submit-Button im Footer entfällt."
+    }
+  ],
+
+  "spec:controllerChanges": [
+    {
+      "controller": "AttendancesController",
+      "change": "#index: @date, @group, @groups (= verfügbare Gruppen für current_user); @children, @attendances_by_child. Kein @filter_q/@filter_groups mehr. #create wird zu Upsert pro Kind (find_or_initialize_by child_id+date)."
+    }
+  ],
+
+  "spec:stimulusChanges": [
+    {
+      "controller": "date-jump (neu)",
+      "purpose": "Auf <input type='date'>-Change navigiert die Seite zu /attendances?date=<value>&group_id=<currentGroup>"
+    }
+  ],
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Zeit bis zur ersten Eingabe",
+        "description": "Sekunden von /attendances-Aufruf bis erstes Checkbox-Toggle",
+        "target": "Median ≤ 3s (vorher ~6s wegen Gruppe-Select)",
+        "measurementMethod": "Frontend-Timing in Stimulus, optional Telemetrie",
+        "evaluationAt": "14 Tage post-launch"
+      },
+      {
+        "name": "Tageswechsel-Häufigkeit",
+        "description": "Anteil Sessions mit Datum-Navigation (Pfeil oder Picker)",
+        "target": "≥ 20% (vorher quasi 0 da fehlende Funktion)",
+        "measurementMethod": "Server-Log-Analyse Query-Param ?date≠heute",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Tägliche Erfassungs-Quote",
+        "description": "% Werktage mit ≥1 Attendance-Record pro Gruppe",
+        "target": "≥ 90%",
+        "measurementMethod": "SQL-Report: count(distinct date,group_id) / (werktage × gruppen)",
+        "evaluationAt": "90 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Soll der 'Heute'-Button auch zusätzlich ins Heute springen, wenn das Datum in der Zukunft liegt?",
+      "owner": "stakeholder",
+      "blocking": false
+    }
+  ],
+
+  "spec:resolvedDecisions": [
+    {
+      "decision": "Tab-Sortierung ist alphabetisch nach Group.name",
+      "rationale": "Vorhersehbare, stabile Reihenfolge unabhängig von User-Berechtigungen; Tab-Position bleibt konstant zwischen Sessions",
+      "resolvedAt": "2026-05-15"
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "F63 (Anwesenheits-Erfassung) muss bestehen – ist done" },
+      { "description": "F66 (mw-filters-Filter) wird ersetzt – Code wird entfernt" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Tabs + Datum-Navigation + Auto-Save + Heute-Button. Such-Feld + Filter-Bar entfallen." }
+    ]
+  }
+}

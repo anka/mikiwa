@@ -1,0 +1,310 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:gallery-photo-sortierung",
+  "name": "Galerie: Drag&Drop-Sortierung der Fotos mit automatischer Persistierung",
+  "description": "Fotos einer Galerie sollen per Drag&Drop neu angeordnet werden können. Die Reihenfolge wird sofort persistiert – kein Save-Button. Voraussetzung ist die Migration von ActiveStorage::Attachment-only zu einem dedizierten Photo-Modell mit position-Spalte.",
+  "dateCreated": "2026-05-15",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell sind Fotos einer Galerie als has_many_attached :photos auf Gallery angeknüpft und werden nach created_at sortiert. Es gibt keine Möglichkeit, die Reihenfolge nachträglich zu ändern. Beim Hochladen mehrerer Fotos ist die Reihenfolge oft nicht ideal (z.B. Smartphone-Sortierung nach Dateinamen statt Story-Reihenfolge).",
+    "affectedUsers": "Betreuer beim Pflegen einer Galerie, Eltern beim Konsumieren (Magic Slideshow, Lightbox).",
+    "costOfInaction": "Galerien wirken unordentlich; Story-/Event-Reihenfolge geht verloren; manuelles Workaround (Fotos umbenennen vor Upload)."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Fotos per Drag&Drop neu sortierbar",
+      "type": "user",
+      "target": "Im Show oder Edit-View einer Galerie kann jedes Foto per Drag an eine neue Position gezogen werden; visuelles Feedback während des Drags"
+    },
+    {
+      "description": "Sofortige Persistierung der Reihenfolge",
+      "type": "user",
+      "target": "Nach Drop wird die neue Reihenfolge per Turbo PATCH gespeichert; kein 'Speichern'-Button; bei Fehler Rollback der UI auf alte Reihenfolge"
+    },
+    {
+      "description": "Reihenfolge gilt für alle Ansichten (Show, Lightbox, Magic Slideshow, Excel-Export falls zutreffend)",
+      "type": "user",
+      "target": "Photo.in_order Scope ist single-source-of-truth"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Sortierung nach EXIF-Aufnahmedatum als Default",
+      "rationale": "v1 default ist Upload-Reihenfolge (created_at). EXIF-Auswertung kann später als Option ergänzt werden"
+    },
+    {
+      "description": "Mehrfach-Selektion und gemeinsames Verschieben",
+      "rationale": "Per-Foto-Drag reicht für typische Mengen (≤50 Fotos pro Galerie)"
+    },
+    {
+      "description": "Sortierung über mehrere Galerien hinweg",
+      "rationale": "Sortierung ist Galerie-lokal"
+    },
+    {
+      "description": "Drag&Drop im Eltern-View",
+      "rationale": "Nur Staff darf umsortieren; Eltern sehen read-only"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer im Show-View einer Galerie",
+      "capability": "Ein Foto per Drag an eine neue Position ziehen",
+      "benefit": "Galerie erzählt die Story chronologisch oder thematisch",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer auf Mobile",
+      "capability": "Per Long-Press + Drag ein Foto verschieben",
+      "benefit": "Sortierung auch unterwegs möglich",
+      "priority": 1
+    },
+    {
+      "persona": "Eltern in der Lightbox/Slideshow",
+      "capability": "Fotos in der vom Betreuer gewünschten Reihenfolge sehen",
+      "benefit": "Konsistente Erzählung der Story",
+      "priority": 2
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Neue Tabelle 'photos' mit Spalten: id (UUID), gallery_id (UUID, FK), position (integer, NOT NULL), caption (string nullable, max 200), created_at, updated_at. Index UNIQUE(gallery_id, position) verzögert (deferrable) oder via Modell-Reposition gehandhabt.",
+        "acceptanceCriteria": [
+          {
+            "given": "Migration läuft",
+            "when": "Schema-Dump erzeugt",
+            "then": "Tabelle photos vorhanden mit UUID-PK, gallery_id-FK, position, caption-Spalten + Index gallery_id+position"
+          }
+        ],
+        "technicalNotes": "UuidPrimaryKey-Concern. Photo has_one_attached :image (ImageAttachable-Konzept übernehmen). belongs_to :gallery. acts_as_list-Pattern oder eigene Reposition-Methode.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Migration der bestehenden ActiveStorage-Attachments aus Gallery#photos in das neue Photo-Modell. Jede bestehende Anhang-Datei wird zu einem Photo-Record mit position gemäß bisheriger created_at-Reihenfolge konvertiert.",
+        "acceptanceCriteria": [
+          {
+            "given": "Galerie hat 5 ActiveStorage-Attachments (created_at 1..5)",
+            "when": "Migrations-Task läuft",
+            "then": "5 Photo-Records mit position 1..5 vorhanden; Attachments sind nun an Photo gehängt; Gallery#photos has_many_attached entfällt"
+          },
+          {
+            "given": "Galerie hatte 0 Fotos",
+            "when": "Migrations-Task läuft",
+            "then": "Keine Photo-Records erzeugt; kein Fehler"
+          }
+        ],
+        "technicalNotes": "Data-Migration als rake-Task oder in Migration. Schema-Dump-Strategie nach Mikiwa-Konvention: ursprüngliche Galerie-Migration anpassen statt neue Migration. Dev-DB drop/migrate/seed.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Gallery has_many :photos, -> { in_order } mit Scope in_order { order(:position, :created_at) }. Bestehender Zugriff @gallery.photos in Views/Controllers wird semantisch unverändert (Liste der Photos).",
+        "acceptanceCriteria": [
+          {
+            "given": "Gallery mit 5 Photos position=[3,1,4,2,5]",
+            "when": "@gallery.photos.in_order",
+            "then": "Reihenfolge [1,2,3,4,5]"
+          }
+        ],
+        "technicalNotes": "Galleries::Show-Controller: @photos = @gallery.photos.in_order.includes(image_attachment: :blob). Magic Slideshow / Lightbox lesen dieselbe Liste.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Im Show-View (Staff-Sicht) wird jede Foto-Kachel mit data-photo-id und data-position attribuiert. SortableJS oder native HTML5 Drag&Drop ist über Stimulus 'photo-sort'-Controller initialisiert.",
+        "acceptanceCriteria": [
+          {
+            "given": "Staff-User auf /galleries/:id",
+            "when": "Foto-Kachel wird per Drag bewegt",
+            "then": "DOM-Reihenfolge ändert sich live während des Drags; Lücken-Indikator markiert Drop-Zone"
+          },
+          {
+            "given": "Parent-User auf /galleries/:id",
+            "when": "Versuch Drag",
+            "then": "Drag ist nicht möglich (Listener fehlt); Kacheln bleiben statisch"
+          }
+        ],
+        "technicalNotes": "SortableJS via importmap (sortablejs). Stimulus-Controller 'photo-sort' bindet auf Container; on:end → fetch PATCH /galleries/:id/photos/reorder mit photo_ids[] in neuer Reihenfolge.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-005",
+        "description": "Neuer Endpoint PATCH /galleries/:gallery_id/photos/reorder akzeptiert photo_ids[] (Array von UUIDs in neuer Reihenfolge) und setzt position entsprechend (1-basiert).",
+        "acceptanceCriteria": [
+          {
+            "given": "Gallery mit Photos [P1, P2, P3]",
+            "when": "PATCH /galleries/<id>/photos/reorder mit photo_ids=[P3, P1, P2]",
+            "then": "P3.position=1, P1.position=2, P2.position=3; Response 200 (Turbo Stream oder JSON)"
+          },
+          {
+            "given": "PATCH mit unvollständigem photo_ids (fehlt eines)",
+            "when": "Request",
+            "then": "422 Unprocessable Entity; keine Änderung in DB"
+          },
+          {
+            "given": "Parent-User",
+            "when": "PATCH",
+            "then": "403 Forbidden"
+          }
+        ],
+        "technicalNotes": "PhotosController#reorder oder GalleriesController#reorder_photos. Transactional update; Validierung: alle gallery.photo_ids müssen vollständig angegeben sein.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-006",
+        "description": "Optimistic UI: Reihenfolge wird sofort visuell übernommen; bei Server-Fehler erfolgt Rollback der DOM-Reihenfolge auf den Zustand vor Drag.",
+        "acceptanceCriteria": [
+          {
+            "given": "Drag erfolgreich",
+            "when": "Drop",
+            "then": "Keine sichtbare Latenz; im Hintergrund läuft PATCH"
+          },
+          {
+            "given": "PATCH liefert 500",
+            "when": "Response",
+            "then": "Reihenfolge wird auf vorherigen Zustand zurückgesetzt; Toast/Flash 'Sortierung konnte nicht gespeichert werden'"
+          }
+        ],
+        "technicalNotes": "Stimulus 'photo-sort'-Controller speichert pre-drag snapshot der Reihenfolge; bei Response !== ok wird snapshot wiederhergestellt.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-007",
+        "description": "Touch-Support für Mobile (Long-Press + Drag).",
+        "acceptanceCriteria": [
+          {
+            "given": "iOS Safari / Android Chrome",
+            "when": "Long-Press 300ms + Drag",
+            "then": "Foto folgt dem Finger; Drop löst Reorder aus"
+          }
+        ],
+        "technicalNotes": "SortableJS hat Touch-Support out-of-the-box (touchStartThreshold/delay-Option).",
+        "dependencies": []
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Sortier-Button 'Nach Aufnahmedatum sortieren' (EXIF) im Show-Header",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Bulk-Reorder via Photo.exif_taken_at",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Tastatur-Sortierung (Pfeil ↑/↓ bei fokussierter Kachel)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Accessibility-Plus",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Mehrfach-Selektion und Bulk-Verschieben",
+        "rationale": "v1 löst single-photo-drag"
+      },
+      {
+        "id": "R-P2-002",
+        "description": "Foto-Gruppen / Abschnittsüberschriften innerhalb einer Galerie",
+        "rationale": "Bricht das einfache Sortier-Modell, gesonderte Spec sinnvoll"
+      }
+    ]
+  },
+
+  "spec:dataModel": {
+    "newTable": "photos",
+    "columns": [
+      {"name": "id", "type": "string(36)", "primary": true, "note": "UUID via UuidPrimaryKey"},
+      {"name": "gallery_id", "type": "string(36)", "null": false, "fk": "galleries.id", "index": true},
+      {"name": "position", "type": "integer", "null": false, "default": 0},
+      {"name": "caption", "type": "string(200)", "null": true},
+      {"name": "created_at", "type": "datetime", "null": false},
+      {"name": "updated_at", "type": "datetime", "null": false}
+    ],
+    "indexes": [
+      "INDEX(gallery_id, position)"
+    ],
+    "associations": [
+      "Photo belongs_to :gallery",
+      "Photo has_one_attached :image (mit ImageAttachable-Varianten)",
+      "Gallery has_many :photos, -> { in_order }, dependent: :destroy",
+      "Gallery has_many_attached :photos ENTFÄLLT"
+    ]
+  },
+
+  "spec:viewChanges": [
+    {
+      "view": "app/views/galleries/show.html.haml",
+      "change": "Foto-Grid bekommt data-controller='photo-sort' und data-photo-sort-reorder-url-value='<reorder_gallery_photos_path>'. Pro Kachel: data-photo-id, draggable-Klasse nur wenn current_user.staff?. Magic Slideshow / Lightbox arbeiten weiterhin mit @photos."
+    },
+    {
+      "view": "app/views/galleries/_photo_tile.html.haml (neu, optional Refactor)",
+      "change": "Partial für eine Foto-Kachel mit konsistentem Markup für Sort + späteren Caption-Edit (siehe spec-gallery-photo-captions)"
+    }
+  ],
+
+  "spec:stimulusChanges": [
+    {
+      "controller": "photo-sort (neu)",
+      "purpose": "Initialisiert SortableJS auf dem Container; on:end → fetch PATCH mit photo_ids; bei Fehler Rollback via pre-drag DOM-Snapshot"
+    }
+  ],
+
+  "spec:routesChanges": [
+    {
+      "route": "resources :galleries do resources :photos, only: %i[destroy] do collection { patch :reorder } end end",
+      "purpose": "Neuer Endpoint /galleries/:gallery_id/photos/reorder + bestehender Destroy auf Photo (ersetzt remove_photo)"
+    }
+  ],
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Reorder-Adoption",
+        "description": "% Galerien mit ≥1 Reorder-Aktion innerhalb 7 Tagen",
+        "target": "≥ 25%",
+        "measurementMethod": "Server-Log Count der PATCH /reorder Calls / Gallery-Anzahl",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Slideshow-Vollendungs-Rate",
+        "description": "% Slideshow-Sessions, die bis zum letzten Foto laufen",
+        "target": "+10% vs. Baseline (besser erzählte Story → mehr Engagement)",
+        "measurementMethod": "Stimulus-Event-Logging auf Slideshow-Ende",
+        "evaluationAt": "90 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Soll der Reorder-Endpoint Photo-Records anlegen, die fehlen (z.B. nach parallelem Upload), oder strikt 422 liefern?",
+      "owner": "engineering",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "Multi-Upload-Bugfix (BF-009) sollte vorher landen, damit Test-Setups stabil sind" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Datenmodell + Migration + Drag&Drop + Reorder-Endpoint. Captions kommen in Folge-Spec." }
+    ]
+  }
+}

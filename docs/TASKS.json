@@ -140,6 +140,22 @@
         "F69",
         "F70"
       ]
+    },
+    {
+      "phase": 9,
+      "name": "Refinement: Anwesenheit, Galerien & Auto-Klassifikation",
+      "feature_ids": [
+        "F71",
+        "F72",
+        "BF-009",
+        "F73",
+        "F74",
+        "F75",
+        "F76",
+        "F77",
+        "F78",
+        "F79"
+      ]
     }
   ],
   "features": [
@@ -3683,6 +3699,497 @@
         "F41"
       ],
       "spec_file": "docs/spec-filters-alignment.json"
+    },
+    {
+      "id": "F71",
+      "name": "Anwesenheit: Gruppen-Tabs + Datums-Navigation statt Filter-Bar",
+      "phase": 9,
+      "status": "open",
+      "short_description": "/attendances zeigt direkt die heutige Liste der ersten Gruppe; Gruppen-Wechsel via Tabs (bei >1 Gruppe), Datum via ‹ › + Date-Picker + 'Heute'-Button; Auto-Save pro Zeile.",
+      "description": "Ziel: Daily-Workflow ohne Filter-Klick.\n\nAttendancesController#index:\n  • @date = params[:date].presence&.to_date || Date.current\n  • @group = User-zugängliche Groups.find_by(id: params[:group_id]) || first alphabetisch\n  • @groups = User-zugängliche Groups (für Tab-Render)\n  • @children = @group.children.active.ordered\n  • @attendances_by_child wie bisher\n  • Bestehende @filter_q, @filter_groups, @filter_date entfernen\n  • create wird zu Upsert pro Kind (Turbo-Stream-Response pro Zeile)\n\nNeue Partials:\n  • app/views/attendances/_tabs.html.haml: rendert .mw-tabs nur wenn @groups.size > 1; link_to /attendances?group_id=<id>&date=<aktuelles datum>; aktiver Tab via mw-tab--active.\n  • app/views/attendances/_date_nav.html.haml: ‹ [<input type='date'>] › [Heute (conditional)]; Stimulus 'date-jump'-Controller.\n\nIndex-View: _filters entfernen, _tabs + _date_nav rendern; per-Row-Forms statt One-Big-Form.\n\n_form_row.html.haml: Form pro Zeile mit data-controller='auto-submit'; Speichern-Button im Footer entfällt.\n\nNeuer Stimulus 'date-jump': on change → window.location.href = '/attendances?date=<value>&group_id=<currentGroup>'.\n\nSpec: docs/spec-attendances-tabs-navigation.json",
+      "acceptance_criteria": [
+        "/attendances zeigt sofort heutige Liste der ersten verfügbaren Gruppe (kein Filter-Klick nötig)",
+        "Tab-Leiste nur bei >1 Gruppe sichtbar (mw-tabs/mw-tab); aktiver Tab korrekt markiert",
+        "Tab-Klick navigiert mit aktueller Datums-Auswahl",
+        "Datum-Navigation: ‹ (-1 Tag), Datum-Picker mit Auto-Jump, › (+1 Tag)",
+        "'Heute'-Button erscheint nur wenn Datum ≠ heute; springt auf heutiges Datum",
+        "Auto-Save pro Zeile (Turbo Stream); Save-Button im Footer entfällt",
+        "Tab/Datums-Wechsel speichert offene Notiz-Eingaben (Blur)",
+        "_filters.html.haml gelöscht; mw-filters-Markup nicht mehr im DOM",
+        "Test-Suite grün; Authorization (Staff-only) bleibt",
+        "Verifiziert via agent-browser: Tabs wechseln, Datum navigieren, Auto-Save"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Default Einstieg",
+          "given": "Betreuer mit 2 Gruppen Bären/Löwen, ruft /attendances auf",
+          "when": "Render",
+          "then": "Tab 'Bären' aktiv (alphabetisch erste), Datum heute, Kinderliste sichtbar"
+        },
+        {
+          "scenario": "Tab-Wechsel behält Datum",
+          "given": "Datum=gestern, Tab 'Bären' aktiv",
+          "when": "Klick auf Tab 'Löwen'",
+          "then": "Navigation zu /attendances?date=<gestern>&group_id=<löwen>"
+        },
+        {
+          "scenario": "Datums-Pfeil",
+          "given": "Datum heute",
+          "when": "Klick ‹",
+          "then": "Datum=gestern; Liste neu geladen; 'Heute'-Button erscheint"
+        },
+        {
+          "scenario": "Auto-Save",
+          "given": "Liste mit 12 Kindern",
+          "when": "Checkbox toggeln",
+          "then": "Turbo PATCH gesendet; Zeile aktualisiert; kein Save-Button"
+        },
+        {
+          "scenario": "Eine Gruppe",
+          "given": "Betreuer mit nur 1 Gruppe",
+          "when": "/attendances rendert",
+          "then": "Keine Tab-Leiste; Datum-Nav + Liste direkt"
+        }
+      ],
+      "success_criteria": [
+        "Daily-Workflow ohne Filter-Klick",
+        "Schneller Gruppen-Wechsel",
+        "Robuste Datums-Navigation"
+      ],
+      "dependencies": [
+        "F63",
+        "F66"
+      ],
+      "spec_file": "docs/spec-attendances-tabs-navigation.json"
+    },
+    {
+      "id": "F72",
+      "name": "Kind-Anwesenheit: Tabs entfernen, fokussierter Kalender + Zurück",
+      "phase": 9,
+      "status": "open",
+      "short_description": "/children/:id/attendance verliert die mw-tabs-Leiste; nur Page-Header + Monats-Kalender + Standard-'Zurück'-Link bleiben.",
+      "description": "Ziel: Saubere Sub-Page ohne dekorative Tab-Mechanik.\n\nView app/views/children/attendance.html.haml:\n  • Block .mw-tabs{ role: 'tablist' } ... %tab 'Stammdaten' / %tab 'Anwesenheit' ersatzlos entfernen\n  • mw-page-header__actions enthält genau ein Element: link_to 'Zurück', child_path(@child), class: 'mw-page-action'\n  • Direkt unter Header rendert weiterhin _attendance_calendar\n  • Lede bleibt 'Anwesenheit · <Gruppe>'\n\nKeine Controller- oder Routen-Änderung. Reine View-Cleanup.\n\nSpec: docs/spec-child-attendance-tabs-entfernen.json",
+      "acceptance_criteria": [
+        "Kein .mw-tabs Element auf /children/:id/attendance",
+        "Genau ein 'Zurück'-Element in mw-page-header__actions, führt zu /children/:id",
+        "Page-Header zeigt weiterhin Avatar, Name und Lede 'Anwesenheit · <Gruppe>'",
+        "Monats-Kalender (F64) funktioniert unverändert",
+        "Test-Suite grün",
+        "Verifiziert via agent-browser"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Tabs entfernt",
+          "given": "/children/:id/attendance",
+          "when": "DOM inspiziert",
+          "then": "Keine mw-tab-Pillen, keine mw-tabs-Wrapper"
+        },
+        {
+          "scenario": "Zurück-Navigation",
+          "given": "Anwesenheit-Sub-Seite",
+          "when": "Klick 'Zurück'",
+          "then": "Browser landet auf /children/:id"
+        }
+      ],
+      "success_criteria": [
+        "Konsistente Sub-Page-Navigation",
+        "Mehr Platz für Kalender"
+      ],
+      "dependencies": [
+        "F64"
+      ],
+      "spec_file": "docs/spec-child-attendance-tabs-entfernen.json"
+    },
+    {
+      "id": "BF-009",
+      "name": "Galerie: Multi-Upload reproduzieren & Bug fixen (10 Fotos auf einmal)",
+      "phase": 9,
+      "status": "open",
+      "short_description": "10 Sample-JPGs generieren, Multi-Upload auf /galleries/:id reproduzieren, Ursache identifizieren und beheben; Test stellt 100% Erfolg sicher.",
+      "description": "Ziel: Multi-Upload ist zuverlässig.\n\nVorgehen:\n  1. 10 Sample-JPGs als Fixtures generieren (test/fixtures/files/sample_photos/sample_01..10.jpg, 800×600).\n  2. System-Test (Capybara) oder agent-browser-Skript: leere Galerie öffnen, 10 Files droppen, prüfen Photos.count==10.\n  3. Diagnose-Kandidaten checken:\n     • gallery-upload-Stimulus: Per-File-Schleife mit try/catch, Anzahl Fetch-Calls\n     • GalleriesController#add_photo: Race-Condition auf Gallery (mehrere parallel laufende Requests mit gleichem gallery.update)?\n     • ActiveStorage Variant-Generation (Sidekiq-Job-Failures)\n     • CSRF-Token-Refresh nach erstem POST\n     • MAX_PHOTOS-Limit\n     • Server-Body-Size (Puma/Nginx)\n  4. Fix anwenden (z.B. Photo.create! statt gallery.photos.attach im add_photo, sequenzielle Verarbeitung im Stimulus, Error pro File isolieren).\n  5. Per-File-Progress zeigt Status (queued/uploading/done/error); Fehler bei einem File blockt andere nicht.\n  6. Test re-run: 10/10; Stress 20/20 ≥95%.\n\nSpec: docs/spec-galleries-multi-upload-bug.json",
+      "acceptance_criteria": [
+        "10 Sample-JPGs als Fixtures vorhanden",
+        "Repro-Test (System-Test oder agent-browser) prüft Photos.count == 10 nach Multi-Drop",
+        "Root-Cause dokumentiert (in PR-Beschreibung)",
+        "Fix landet im Code; Tests grün",
+        "Stress-Test 20 Fotos ≥95% Erfolg",
+        "Fehler in einer Datei blockiert die anderen 9 nicht; sichtbare Per-File-Error-Anzeige",
+        "Verifiziert via agent-browser End-to-End"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Happy Path",
+          "given": "Leere Galerie + 10 valide JPGs",
+          "when": "Multi-Drop",
+          "then": "Photos.count == 10; UI zeigt 10 Kacheln"
+        },
+        {
+          "scenario": "Stress 20",
+          "given": "Leere Galerie + 20 JPGs",
+          "when": "Multi-Drop",
+          "then": "≥19 Photos persistiert; verbleibende mit klarem Fehler"
+        },
+        {
+          "scenario": "Eine Datei ungültig",
+          "given": "9 JPGs + 1 .heic",
+          "when": "Upload",
+          "then": "9 Photos in DB; HEIC mit sichtbarer Fehlermeldung"
+        }
+      ],
+      "success_criteria": [
+        "Vertrauen in Multi-Upload",
+        "Robuste Fehlerbehandlung pro Datei"
+      ],
+      "dependencies": [],
+      "spec_file": "docs/spec-galleries-multi-upload-bug.json"
+    },
+    {
+      "id": "F73",
+      "name": "Galerie: Drag&Drop-Sortierung mit neuem Photo-Modell",
+      "phase": 9,
+      "status": "open",
+      "short_description": "Neue Tabelle 'photos' mit position+caption; Migration der bestehenden ActiveStorage-Attachments; SortableJS-basiertes Drag&Drop mit Auto-Persist via Turbo PATCH; Reorder-Endpoint mit optimistischem Rollback bei Fehler.",
+      "description": "Ziel: Fotos sortierbar, Reihenfolge wirkt überall (Show, Lightbox, Slideshow).\n\nDatenmodell:\n  • Neue Tabelle photos: id (UUID), gallery_id (UUID, FK, indexed), position (int NOT NULL), caption (string(200) nullable), created_at, updated_at. Index (gallery_id, position).\n  • Photo has_one_attached :image (ImageAttachable-Konzept übernehmen)\n  • Photo belongs_to :gallery\n  • Gallery has_many :photos, -> { in_order }, dependent: :destroy\n  • Scope Photo.in_order { order(:position, :created_at) }\n  • Gallery.has_many_attached :photos ENTFÄLLT\n\nData-Migration: bestehende ActiveStorage-Anhänge je Galerie nach created_at sortieren, Photos.create! mit position 1..N, Attachment auf Photo umhängen.\n\nSchema-Strategie (Mikiwa-Konvention): Ursprüngliche Galerie-Migration anpassen, schema.rb löschen, dev db:drop/create/migrate/seed. Für Produktion: dediziertes Migration-File mit Data-Move.\n\nRoutes: resources :galleries do resources :photos, only: %i[update destroy] do collection { patch :reorder } end end.\n\nNeuer Endpoint PhotosController#reorder:\n  • params[:photo_ids] array of UUIDs\n  • Authorize Staff\n  • Validate: alle photo_ids gehören zu @gallery; vollständig (kein Photo fehlt)\n  • transaction: Photo.where(id: ids).find_each { |p| p.update_column(:position, ids.index(p.id) + 1) }\n  • respond Turbo Stream oder 200 ok\n\nNeuer Stimulus 'photo-sort':\n  • Initialisiert SortableJS auf .mw-gallery-grid (oder Container)\n  • Touch-Support (delay:300)\n  • on:end → fetch PATCH mit photo_ids in neuer Reihenfolge\n  • Pre-drag DOM-Snapshot; bei Fehler Rollback der Reihenfolge + Flash 'Sortierung konnte nicht gespeichert werden'\n\nView: jede Foto-Kachel data-photo-id + data-position; draggable nur für Staff.\n\nSpec: docs/spec-gallery-photo-sortierung.json",
+      "acceptance_criteria": [
+        "Tabelle photos (id UUID, gallery_id, position, caption, created_at, updated_at) vorhanden",
+        "Index (gallery_id, position) gesetzt",
+        "Photo has_one_attached :image mit ImageAttachable-Varianten",
+        "Bestehende Galerien sind auf das neue Modell migriert; keine Fotos verloren",
+        "Gallery.photos liefert nun Photo-Records in_order",
+        "Lightbox + Magic Slideshow lesen @photos in der gleichen Reihenfolge",
+        "Show-View: SortableJS aktiv nur für Staff; Parent-View statisch",
+        "PATCH /galleries/:gallery_id/photos/reorder funktional + autorisiert (Staff-only, 403 für Parents)",
+        "Optimistic UI mit Rollback bei Server-Fehler",
+        "Touch-Drag auf Mobile funktioniert",
+        "Test-Suite grün; System-Test reorder + persistierte Reihenfolge",
+        "Verifiziert via agent-browser"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Drag&Drop persistiert",
+          "given": "Gallery mit 5 Fotos [P1..P5]",
+          "when": "P5 wird an Anfang gezogen",
+          "then": "Reihenfolge in DB [P5,P1,P2,P3,P4]; bei Reload identisch"
+        },
+        {
+          "scenario": "Parent kann nicht reorden",
+          "given": "Eltern-User",
+          "when": "PATCH /galleries/.../reorder",
+          "then": "403; Reihenfolge unverändert"
+        },
+        {
+          "scenario": "Server-Fehler Rollback",
+          "given": "Drag erfolgt; Server liefert 500",
+          "when": "Response",
+          "then": "DOM-Reihenfolge wird auf pre-drag zurückgesetzt; Toast mit Fehlermeldung"
+        },
+        {
+          "scenario": "Migration Bestand",
+          "given": "Galerie mit 8 ActiveStorage-Attachments",
+          "when": "Migration läuft",
+          "then": "8 Photos mit position 1..8 und korrektem Image-Attachment"
+        }
+      ],
+      "success_criteria": [
+        "Fotos sortierbar in allen Views",
+        "Saubere Datenbasis für Captions + Slideshow"
+      ],
+      "dependencies": [
+        "BF-009"
+      ],
+      "spec_file": "docs/spec-gallery-photo-sortierung.json"
+    },
+    {
+      "id": "F74",
+      "name": "Galerie: Foto-Beschreibung (Caption) inline editierbar",
+      "phase": 9,
+      "status": "open",
+      "short_description": "Pro Foto kurzer Beschreibungstext (max 200 Zeichen); Inline-Edit für Staff mit Auto-Submit; Lightbox zeigt Caption unter Foto.",
+      "description": "Ziel: Story-Kontext direkt am Foto.\n\nDatenmodell:\n  • Spalte caption (string, nullable, max 200) auf Tabelle photos (aus F73)\n  • Validierung: length: { maximum: 200 }, allow_blank: true\n\nShow-View (Staff):\n  • Foto-Kachel-Markup um Caption-Slot ergänzen\n  • form_with model: photo, url: gallery_photo_path(@gallery, photo), method: :patch, html: { data: { controller: 'auto-submit', 'auto-submit-debounce-value': 600 } }\n  • f.text_field :caption, maxlength: 200, placeholder: 'Beschreibung…', data: { action: 'blur->auto-submit#submit change->auto-submit#submit' }\n  • Bei Auto-Submit-Response Turbo Stream mit Re-Render der Kachel (oder einfach 200)\n\nShow-View (Parent):\n  • Caption (falls present) als read-only Text unter Foto; sonst kein Element (kein Layout-Shift)\n\nController PhotosController#update:\n  • Permit photo[:caption]\n  • Authorization Staff-only\n\nLightbox-Erweiterung (lightbox_controller.js):\n  • Photo-Daten enthalten caption\n  • Beim Foto-Wechsel: Caption-Element textContent setzen; bei leerer Caption ausblenden\n  • CSS .mw-lightbox__caption mit dezenter Vignette (Bottom-Gradient)\n\nSpec: docs/spec-gallery-photo-captions.json",
+      "acceptance_criteria": [
+        "photos.caption Spalte vorhanden, max 200 Zeichen",
+        "Photo-Modell validiert length <= 200",
+        "Staff: Inline-Caption-Feld unter jedem Foto im Show-View; Placeholder bei leer",
+        "Parent: Caption read-only (oder unsichtbar wenn leer)",
+        "Auto-Save bei Blur + Debounce 600ms",
+        "Validierung serverseitig (>200 → 422 mit Fehlertext)",
+        "Lightbox zeigt Caption unter Foto; kein Caption-Element wenn leer",
+        "PATCH /galleries/:gallery_id/photos/:id nur für Staff",
+        "Test-Suite grün; agent-browser-Verifikation"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Caption setzen",
+          "given": "Photo ohne Caption",
+          "when": "User tippt 'Beim Sommerfest' + Blur",
+          "then": "PATCH; DB caption='Beim Sommerfest'; Indikator 'gespeichert'"
+        },
+        {
+          "scenario": "Lightbox Caption",
+          "given": "Foto mit caption='Sommer 2026'",
+          "when": "Lightbox öffnet",
+          "then": "Caption sichtbar unter Foto"
+        },
+        {
+          "scenario": "Parent read-only",
+          "given": "Eltern-User",
+          "when": "Show-View",
+          "then": "Kein Caption-Eingabefeld; nur Text falls present"
+        }
+      ],
+      "success_criteria": [
+        "Story-Kontext am Foto",
+        "Read-only-Anzeige für Eltern"
+      ],
+      "dependencies": [
+        "F73"
+      ],
+      "spec_file": "docs/spec-gallery-photo-captions.json"
+    },
+    {
+      "id": "F75",
+      "name": "MagicSlideshow: Foto-Captions als lesbares Overlay",
+      "phase": 9,
+      "status": "open",
+      "short_description": "Captions werden während der Slideshow am unteren Bilddrittel mit dezentem Gradient + Text-Shadow als lesbares Overlay angezeigt; Fade-Synchron mit Foto-Wechsel; ARIA-konform.",
+      "description": "Ziel: Slideshow erzählt eine Story (Bild + Kontext).\n\nMarkup-Erweiterung galleries/show.html.haml (Slideshow-Block):\n  • <figcaption class='mw-magic-slideshow__caption' aria-live='polite'></figcaption> als Kind des Slideshow-Containers\n\nmagic_slideshow_controller.js:\n  • Photos-Datenquelle erhält caption-Property\n  • Beim Foto-Wechsel: captionElement.textContent = current.caption || ''; toggle Klasse 'is-visible' für opacity-Transition (400ms)\n  • Bei leerem Caption: Overlay komplett ausgeblendet\n  • Minimaldauer 3s pro Caption-Foto auch bei 'fast'-Speed (oder strikt nur visueller Hinweis)\n\nCSS:\n  • .mw-magic-slideshow__caption { position:absolute; left:0; right:0; bottom:0; padding: clamp(1rem, 4vw, 2.5rem); color:#fff; font-family: var(--ff-display); font-weight: 600; font-size: clamp(18px, 2.5vw, 28px); line-height:1.3; background: linear-gradient(to top, rgba(0,0,0,.7), rgba(0,0,0,0)); text-shadow: 0 1px 2px rgba(0,0,0,.6); opacity:0; transition: opacity 400ms ease; }\n  • .mw-magic-slideshow__caption.is-visible { opacity:1; }\n  • Mobile responsive via clamp()\n\nAccessibility:\n  • aria-live='polite' am Caption-Container, sodass Screen-Reader Wechsel ankündigen\n\nSpec: docs/spec-magic-slideshow-captions.json",
+      "acceptance_criteria": [
+        "Caption-Overlay erscheint synchron mit Foto-Wechsel",
+        "Position: untere ~30% des Bildes, full-width, linearer Gradient transparent→schwarz",
+        "Schrift: weiß, fett, clamp() responsive, text-shadow für Kontrast",
+        "Bei Foto ohne Caption: Overlay komplett ausgeblendet (kein Layout-Shift)",
+        "Fade-Animation 400ms beim Foto-Wechsel",
+        "Mobile <768px Schrift kleiner, Padding angepasst",
+        "ARIA-live='polite' (Screen-Reader friendly)",
+        "Mindestens 3s pro Caption-Foto auch bei fast (oder klare Begründung warum nicht)",
+        "Test-Suite grün; agent-browser-Verifikation"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Slideshow mit Captions",
+          "given": "5 Fotos, davon 3 mit Captions",
+          "when": "Slideshow startet",
+          "then": "Bei den 3 Caption-Fotos erscheint Overlay; bei 2 nicht"
+        },
+        {
+          "scenario": "Foto-Wechsel mit/ohne",
+          "given": "Foto 1 mit Caption, Foto 2 ohne",
+          "when": "Wechsel 1→2",
+          "then": "Caption fadet aus während Foto 1; Foto 2 ohne Overlay"
+        },
+        {
+          "scenario": "Mobile Schriftgröße",
+          "given": "iPhone 375px",
+          "when": "Slideshow rendert Caption",
+          "then": "font-size ~18px; Caption nicht abgeschnitten"
+        }
+      ],
+      "success_criteria": [
+        "Slideshow erzählt Story",
+        "Lesbar auf jedem Bildhintergrund"
+      ],
+      "dependencies": [
+        "F74"
+      ],
+      "spec_file": "docs/spec-magic-slideshow-captions.json"
+    },
+    {
+      "id": "F76",
+      "name": "Mobile Bottom-Nav für Betreuer: Anwesenheit + Speiseplan",
+      "phase": 9,
+      "status": "open",
+      "short_description": "In _mobile_nav.html.haml (else-Block / Staff) ersetzen: 'Kinder' (users-Icon) → 'Anwesenheit' (calendar-check), 'Kalender' (calendar-Icon) → 'Speiseplan' (utensils).",
+      "description": "Ziel: Mobile Bottom-Nav reflektiert echte Daily-Use-Reihenfolge für Betreuer.\n\nÄnderung app/views/layouts/_mobile_nav.html.haml im else-Block:\n  • Item 2: children_path → attendances_path, Icon 'users' → 'calendar-check', Label 'Kinder' → 'Anwesenheit', nav_active?('/attendances')\n  • Item 3: calendar_events_path → meal_entries_path, Icon 'calendar' → 'utensils', Label 'Kalender' → 'Speiseplan', nav_active?('/meal_entries')\n  • Item 1 (Übersicht) + Item 4 (Mitteilungen) bleiben unverändert\n\nSpeiseplan-Pfad ist meal_entries_path (im Code bestätigt: routes.rb resources :meal_entries; _navigation.html.haml linkt bereits dorthin).\n\nBurger-Menü-Inhalt (F30/Helper) unverändert; Kinder + Kalender bleiben dort erreichbar.\n\nTouch-Targets ≥44px (Mikiwa-Standard); bestehende mw-mobile-nav__item-Style sollte das bereits leisten.\n\nSpec: docs/spec-mobile-bottom-nav-staff.json",
+      "acceptance_criteria": [
+        "Staff Bottom-Nav-Reihenfolge: Übersicht, Anwesenheit, Speiseplan, Mitteilungen",
+        "Icons: home, calendar-check, utensils, send",
+        "Aktive Markierung funktioniert auf /attendances und /meal_entries (bzw. zutreffender Pfad)",
+        "Kinder + Kalender bleiben im Burger-Menü erreichbar",
+        "Touch-Target ≥44×44px",
+        "Eltern Bottom-Nav unverändert",
+        "Test-Suite grün; agent-browser-Verifikation auf Mobile-Viewport"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Staff-Reihenfolge",
+          "given": "Betreuer-Login auf Mobile",
+          "when": "Bottom-Nav gerendert",
+          "then": "Vier Einträge in Reihenfolge: Übersicht, Anwesenheit, Speiseplan, Mitteilungen"
+        },
+        {
+          "scenario": "Aktive Markierung Anwesenheit",
+          "given": "Betreuer auf /attendances",
+          "when": "Bottom-Nav rendert",
+          "then": "Anwesenheit-Tab ist visuell aktiv"
+        },
+        {
+          "scenario": "Burger enthält Kinder",
+          "given": "Betreuer auf Mobile, Burger geöffnet",
+          "when": "Menü gelesen",
+          "then": "'Kinder' und 'Kalender' sind erreichbar"
+        },
+        {
+          "scenario": "Eltern unverändert",
+          "given": "Eltern-Login auf Mobile",
+          "when": "Bottom-Nav rendert",
+          "then": "Bestehende 4 Punkte: Übersicht, Einkauf, Posteingang, Kalender"
+        }
+      ],
+      "success_criteria": [
+        "Reduzierte Tap-Distanz für Daily-Use",
+        "Keine Funktionsverluste"
+      ],
+      "dependencies": [],
+      "spec_file": "docs/spec-mobile-bottom-nav-staff.json"
+    },
+    {
+      "id": "F77",
+      "name": "Profil: iCal-Link als anklickbarer webcal://-Link mit https-Fallback",
+      "phase": 9,
+      "status": "open",
+      "short_description": "Im /profile wird der iCal-Feed als <a href='webcal://...'> Button gerendert (öffnet Kalender-App direkt); zusätzlich Copy-Button für https-URL.",
+      "description": "Ziel: Eltern abonnieren den persönlichen Kalender mit einem Klick.\n\nView app/views/profile/show.html.haml (Block 'Kalender-Abonnement'):\n  • Primärer Button: link_to 'In Kalender-App öffnen', webcal_url, class: 'mw-btn mw-btn--primary mw-btn--sm', target: '_self', mit Lucide 'calendar-plus'\n  • webcal_url: String-Build 'webcal://' + request.host_with_port + '/calendar/' + current_user.ical_token + '.ics'\n  • Sekundär: bestehende Code-Anzeige der https-URL bleibt; Copy-Button daneben (Stimulus 'clipboard' mit data-clipboard-text-value)\n  • Hilfetext erweitern: 'Klicken Sie den Link, um Ihre Kalender-App zu öffnen, oder kopieren Sie die URL für Google Kalender/Outlook.'\n  • Token-Reset-Button bleibt unverändert\n\nStimulus 'clipboard'-Controller (neu sofern fehlend):\n  • navigator.clipboard.writeText mit Fallback document.execCommand('copy')\n  • Button zeigt kurz 'Kopiert' (data-feedback)\n\niCal-Endpoint /calendar/:token.ics: Verifizieren dass Content-Type text/calendar; charset=utf-8 ist (sollte über IcalFeedsController bereits funktionieren).\n\nMobile-Touch-Target ≥44px (mw-btn--sm muss das erfüllen oder mw-btn nutzen).\n\nSpec: docs/spec-profile-ical-link.json",
+      "acceptance_criteria": [
+        "Primärer Link auf /profile ist <a href='webcal://...'> mit Label 'In Kalender-App öffnen' + Icon",
+        "Sekundär: https-URL als <code> + Copy-Button funktional",
+        "Klick auf Copy schreibt URL ins Clipboard + 'Kopiert'-Feedback",
+        "Hilfetext erklärt beide Wege",
+        "iCal-Endpoint liefert Content-Type text/calendar; charset=utf-8",
+        "Token-Reset-Button bleibt funktional",
+        "Touch-Target ≥44px auf Mobile",
+        "Test-Suite grün; agent-browser-Verifikation"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "webcal-Link",
+          "given": "User mit ical_token='abc'",
+          "when": "/profile rendert",
+          "then": "<a href='webcal://<host>/calendar/abc.ics'> mit Label 'In Kalender-App öffnen'"
+        },
+        {
+          "scenario": "Copy https",
+          "given": "Profil rendert",
+          "when": "Klick auf Kopieren",
+          "then": "https-URL im Clipboard; visuelles 'Kopiert'-Feedback"
+        },
+        {
+          "scenario": "Content-Type",
+          "given": "GET /calendar/abc.ics",
+          "when": "Response",
+          "then": "Header Content-Type: text/calendar; charset=utf-8"
+        }
+      ],
+      "success_criteria": [
+        "Höhere Abo-Aktivierungs-Rate",
+        "Klare UX für beide Plattformen (Apple/Google/Outlook)"
+      ],
+      "dependencies": [],
+      "spec_file": "docs/spec-profile-ical-link.json"
+    },
+    {
+      "id": "F78",
+      "name": "Einkaufsliste Edit: Kategorie-Select gestyled + Inline-Edit bei vorhandenen Einträgen",
+      "phase": 9,
+      "status": "open",
+      "short_description": "Kategorie-Select im New-Form bekommt korrekten mw-input-Style; im _item-Edit-Partial wird ein zusätzliches Kategorie-Select mit Auto-Submit ergänzt.",
+      "description": "Ziel: Konsistenter Look + nachträgliches Recategorisieren.\n\nNew-Form (_form.html.haml):\n  • Select hat Klassen 'mw-input mw-shopping-new__category'\n  • CSS prüfen/ergänzen: gleicher Look wie mw-input (Border, Padding, Border-Radius, Focus-Ring, Caret-SVG)\n\nEdit-Partial (_item.html.haml):\n  • Neues f.select :category, ShoppingItem::CATEGORY_ORDER.map { |k| [shopping_item_category_label(k), k] }, { include_blank: '— ohne —' }, class: 'mw-input mw-input--inline mw-shopping-edit-item__category', data: { action: 'change->auto-submit#submit' }\n  • Platzierung in mw-shopping-edit-item__meta-row (oder eigene Sub-Row); Mobile-friendly (full-width <768px)\n\nShoppingItemsController#update:\n  • Permit :category (sofern noch nicht)\n  • rescue ArgumentError (ungültiger Enum-Wert) → render :show, status: :unprocessable_entity\n\nShow-View bleibt unverändert; nach Recategorisierung erscheint Item bei nächstem Reload in der neuen Sektion (Turbo-Stream-Optimierung als Nice-to-have).\n\nSpec: docs/spec-einkaufsliste-kategorie-edit.json",
+      "acceptance_criteria": [
+        "Select im _form hat visuell den mw-input-Look (Border, Padding, Focus-Ring identisch)",
+        "_item-Partial enthält Kategorie-Select mit Auto-Submit bei Change",
+        "Recategorisierung persistiert; bei Reload erscheint Item in neuer Sektion",
+        "Permitted Params um :category ergänzt; ungültige Werte → 422",
+        "Mobile-Layout stabil (Kategorie full-width)",
+        "Test-Suite grün; agent-browser-Verifikation"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Inline Recategorisierung",
+          "given": "Item category='dairy' im Edit-Modus",
+          "when": "User wechselt auf 'fruit' + Change",
+          "then": "Auto-Submit; DB category='fruit'; Show zeigt Item in 'Obst'"
+        },
+        {
+          "scenario": "Style-Konsistenz",
+          "given": "_form rendert",
+          "when": "Select neben Notiz-Input",
+          "then": "Selbe Höhe, Border, Border-Radius"
+        }
+      ],
+      "success_criteria": [
+        "Konsistenter UI-Stil",
+        "Pflegbare Listen ohne Lösch-Workaround"
+      ],
+      "dependencies": [],
+      "spec_file": "docs/spec-einkaufsliste-kategorie-edit.json"
+    },
+    {
+      "id": "F79",
+      "name": "Einkaufsliste: Default 'Automatisch' + OpenAI-Klassifikations-Hook",
+      "phase": 9,
+      "status": "open",
+      "short_description": "Neuer Enum-Wert 'auto' (Anzeige 'Automatisch') als Default für neue Items; after_commit triggert ActiveJob mit OpenAI gpt-4o-mini (Structured Outputs) zur automatischen Klassifikation; manuelle Überschreibungen werden respektiert.",
+      "description": "Ziel: Items werden ohne User-Aufwand kategorisiert.\n\nModell ShoppingItem:\n  • enum :category erweitern um auto: 'auto' (prefix: true)\n  • i18n: de.activerecord.attributes.shopping_item.categories.auto = 'Automatisch'\n  • after_commit on: :create do; ShoppingItems::ClassifyJob.perform_later(id) if category_auto? && ShoppingItems::AutoClassifier.enabled?; end\n\nForm-Default (_form.html.haml):\n  • Select-Wert: options_for_select([['Automatisch','auto']] + CATEGORY_ORDER.map { |k| [label, k] }, item.category || 'auto')\n  • include_blank entfällt; Default ist 'auto'\n\nService ShoppingItems::AutoClassifier (app/services/shopping_items/auto_classifier.rb):\n  • .enabled? → ENV['OPENAI_API_KEY'].present?\n  • .call(item) → Symbol aus CATEGORY_ORDER ∪ [:other]\n  • Verwendet OpenAI Responses API (oder Chat-Completions) mit response_format JSON Schema (strict)\n  • Modell: 'gpt-4o-mini', Timeout 10s, max_output_tokens 50\n  • System-Prompt deutsch + Liste der Kategorien-Enum-Keys\n  • Bei invalid_json oder unknown enum-value: :other\n  • Bei Timeout/Rate-Limit: raise → Retry über Job-Wrapper\n\nJob ShoppingItems::ClassifyJob (ActiveJob, queue :default):\n  • perform(item_id) → ShoppingItem.find_by(id: ...); return unless item&.category_auto?\n  • result = AutoClassifier.call(item)\n  • item.update!(category: result) if result.present?\n  • retry_on StandardError, attempts: 3, wait: :exponentially_longer\n  • No-op wenn Item bereits manuell geändert wurde (Race-Schutz)\n\nShow-View Sektion 'Wird klassifiziert…':\n  • Vor regulären Sektionen, nur wenn Items mit category='auto' existieren\n  • Lucide 'sparkles'-Icon, mw-badge--info, subtile Pulsing-Animation\n\nConfig:\n  • config/initializers/openai.rb (sofern Gem genutzt): client mit ENV['OPENAI_API_KEY']\n  • .env.example: OPENAI_API_KEY= ergänzen\n\nTests:\n  • Service-Tests mit gestubbtem HTTP-Client (oder VCR)\n  • Job-Tests via perform_enqueued_jobs\n  • Model-Hook-Tests via assert_enqueued_with\n\nSpec: docs/spec-einkaufsliste-auto-klassifikation.json",
+      "acceptance_criteria": [
+        "Enum :auto vorhanden; i18n-Label 'Automatisch'",
+        "Form-Default ist 'auto' beim Neuanlegen",
+        "after_commit on: :create enqueued ClassifyJob nur wenn category_auto? && enabled?",
+        "Service ruft OpenAI Responses API mit Structured Outputs (json_schema strict)",
+        "Modell: gpt-4o-mini; Timeout 10s; API-Key via ENV",
+        "Job aktualisiert Item nur wenn category_auto? noch gilt (No-op bei manueller Überschreibung)",
+        "Retry-Logik (3 Versuche, exponentielles Backoff) bei Timeout/Rate-Limit",
+        "Fallback :other bei ungültigem JSON oder unbekanntem Enum-Wert",
+        "Bei fehlendem OPENAI_API_KEY: Feature deaktiviert; Warn-Log; Items bleiben 'auto'",
+        "Show-View zeigt Sektion 'Wird klassifiziert…' für auto-Items AM ENDE der Liste (nach allen regulären Kategorien und nach 'Ohne Kategorie')",
+        "Tests: Service, Job, Model-Hook grün",
+        "Verifiziert via agent-browser: Item anlegen → Sektion 'Wird klassifiziert…' → nach Job-Lauf in passender Sektion"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Default Auto",
+          "given": "User legt 'Äpfel' an, kein Category-Select-Change",
+          "when": "Submit",
+          "then": "Item.category='auto' in DB; ClassifyJob enqueued"
+        },
+        {
+          "scenario": "Klassifikation Erfolg",
+          "given": "Job stubbed AutoClassifier→:fruit",
+          "when": "Job perform",
+          "then": "Item.category='fruit'"
+        },
+        {
+          "scenario": "Manuelle Überschreibung gewinnt",
+          "given": "Item 'Äpfel' auto erstellt; User setzt manuell 'vegetable' vor Job-Lauf",
+          "when": "Job perform",
+          "then": "No-op; Item bleibt 'vegetable'"
+        },
+        {
+          "scenario": "API-Key fehlt",
+          "given": "ENV['OPENAI_API_KEY']=nil",
+          "when": "Item create",
+          "then": "Kein Job enqueued; Warn-Log; Item bleibt 'auto'"
+        },
+        {
+          "scenario": "Ungültige Response",
+          "given": "OpenAI liefert 'random_unknown'",
+          "when": "Parser",
+          "then": "Result :other; Item.category='other'"
+        },
+        {
+          "scenario": "Show-Sektion am Ende",
+          "given": "Liste mit 2 auto + 3 reguläre Items (1 fruit, 2 dairy)",
+          "when": "Show-View rendert",
+          "then": "Reihenfolge: 'Obst' → 'Milchprodukte' → 'Wird klassifiziert…' (auto-Sektion zuletzt)"
+        }
+      ],
+      "success_criteria": [
+        "≥80% Trefferquote bei typischen Items",
+        "≤10% manuelle Korrekturrate",
+        "Kosten ≤1€ pro 1000 Items"
+      ],
+      "dependencies": [
+        "F78"
+      ],
+      "spec_file": "docs/spec-einkaufsliste-auto-klassifikation.json"
     }
   ]
 }

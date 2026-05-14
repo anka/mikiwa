@@ -1,0 +1,510 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:einkaufsliste-auto-klassifikation",
+  "name": "Einkaufsliste: Default-Kategorie 'Automatisch' + OpenAI-Klassifikations-Hook",
+  "description": "Beim Erstellen einer Einkaufsliste werden neue Einträge mit einer Spezial-Kategorie 'auto' (Anzeige: 'Automatisch') angelegt. Ein Hintergrund-Job ruft die OpenAI Responses API mit Structured Outputs auf, mappt den Item-Namen auf eine vorhandene Enum-Kategorie und schreibt das Ergebnis zurück. Bei Fehler fällt das Item auf 'other' zurück.",
+  "dateCreated": "2026-05-15",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Betreuer wollen Einkaufslisten schnell erstellen. Das manuelle Setzen einer Kategorie pro Item ist ein zusätzlicher Klick, der oft vergessen wird – Ergebnis: viele Items landen in 'Ohne Kategorie' und der gruppierte Show-View verliert seinen Wert. Eine automatische Klassifikation anhand des Item-Namens (z.B. 'Äpfel' → 'fruit') würde die Pflege drastisch beschleunigen.",
+    "affectedUsers": "Betreuer beim Anlegen von Listen, Eltern beim Lesen (gruppierter Show-View funktioniert).",
+    "costOfInaction": "Kategorisierung-Adoption bleibt niedrig; Mehrwert des Grouping-Features (spec-shopping-item-categories) verpufft."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Neue Items werden defaultmäßig mit 'Automatisch' markiert",
+      "type": "user",
+      "target": "Im New-Form ist der Default-Wert des Kategorie-Selects 'Automatisch' (interner Wert :auto); kein leerer/Ohne-Kategorie-Default mehr"
+    },
+    {
+      "description": "Item-Erstellung triggert OpenAI-Klassifikations-Job",
+      "type": "business",
+      "target": "after_commit on: :create – Job wird in ActiveJob (Solid Queue) eingereiht; aktualisiert Item.category bei Erfolg"
+    },
+    {
+      "description": "Robustheit gegen API-Fehler",
+      "type": "business",
+      "target": "Bei OpenAI-Fehler (Rate-Limit, Timeout, ungültiges JSON) bleibt Item bei 'auto' und wird beim nächsten Job-Retry oder manuell gesetzt; Logging vorhanden"
+    },
+    {
+      "description": "Kosten-Kontrolle",
+      "type": "business",
+      "target": "Modell gpt-4o-mini; max 1 API-Call pro Item; geschätzte Kosten < 0,001€ pro Item"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Klassifikation für bereits bestehende Items",
+      "rationale": "v1: nur neue Items; Bestand kann später per Rake-Backfill nachgezogen werden"
+    },
+    {
+      "description": "Bild-basierte Klassifikation (Foto des Items)",
+      "rationale": "v1 reicht Text-Klassifikation; Vision-API ist deutlich teurer"
+    },
+    {
+      "description": "Mehrsprachige Klassifikation außer Deutsch",
+      "rationale": "App ist de-AT; Prompt instruiert auf Deutsch"
+    },
+    {
+      "description": "Erlernen aus Nutzer-Korrekturen (Feedback-Loop / Fine-Tuning)",
+      "rationale": "Out-of-scope; einfacher stateless Prompt"
+    },
+    {
+      "description": "Real-time Klassifikation während Eingabe (Typeahead)",
+      "rationale": "Out-of-scope; async nach Submit reicht"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer beim Erstellen einer Liste",
+      "capability": "Item-Namen eintippen und das System weist automatisch eine Kategorie zu",
+      "benefit": "Schneller Workflow, kein manueller Kategorie-Klick",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Während der Klassifikation läuft, das Item als 'Automatisch' im UI sehen",
+      "benefit": "Klare Erwartung, dass die Kategorie noch nachgeladen wird",
+      "priority": 1
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Eine automatisch zugewiesene Kategorie nachträglich manuell überschreiben",
+      "benefit": "Vertrauen + Korrektheit",
+      "priority": 2
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Enum :category bekommt neuen Wert 'auto' (deutsche Anzeige 'Automatisch'). In CATEGORY_ORDER kommt 'auto' NICHT vor (wird nicht als reguläre Sektion gezeigt); Sektion-Anzeige im Show-View für 'auto'-Items als eigene Sektion 'Wird klassifiziert…' GANZ AM ENDE (analog 'Ohne Kategorie'-Pattern).",
+        "acceptanceCriteria": [
+          {
+            "given": "ShoppingItem.create(name:'Äpfel', category: :auto)",
+            "when": "save",
+            "then": "Item persistiert mit category='auto'"
+          },
+          {
+            "given": "i18n.t('activerecord.attributes.shopping_item.categories.auto')",
+            "when": "Lookup",
+            "then": "'Automatisch'"
+          }
+        ],
+        "technicalNotes": "config/locales/de.yml ergänzen. CATEGORY_ORDER unverändert. Show-View: Sub-Sektion mit Items.category=='auto' rendert als 'Wird klassifiziert…' (mw-badge--info, Lucide 'sparkles') und liegt am Ende, NACH den regulären Kategorien-Sektionen und ggf. nach 'Ohne Kategorie' (oder davor – siehe Sortier-Reihenfolge unten).",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Im New-Item-Form ist Default-Wert des Kategorie-Selects 'auto' (Label 'Automatisch'). 'Automatisch' ist als erste Option und 'selected' gerendert.",
+        "acceptanceCriteria": [
+          {
+            "given": "Render _form-Partial (Neuanlage)",
+            "when": "Select-Default geprüft",
+            "then": "Optionwert 'auto' ist selected; Label 'Automatisch'"
+          },
+          {
+            "given": "User submittet ohne Select-Änderung",
+            "when": "Item erstellt",
+            "then": "category='auto' in DB"
+          }
+        ],
+        "technicalNotes": "f.select :category, options_for_select([['Automatisch','auto']] + CATEGORY_ORDER.map{...}, item.category || 'auto'). include_blank entfällt.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Klassifikations-Service: ShoppingItems::AutoClassifier (PORO). Eingabe: ShoppingItem (Name, Notiz). Output: Symbol aus CATEGORY_ORDER oder :other bei Unsicherheit.",
+        "acceptanceCriteria": [
+          {
+            "given": "Item.name='Äpfel'",
+            "when": "ShoppingItems::AutoClassifier.call(item)",
+            "then": "Rückgabe :fruit"
+          },
+          {
+            "given": "Item.name='Aluminium-Wandbild'",
+            "when": "call",
+            "then": "Rückgabe :other (kein offensichtliches Match)"
+          },
+          {
+            "given": "API-Aufruf timeout",
+            "when": "call",
+            "then": "Raised StandardError oder Rückgabe nil; Job-Wrapper entscheidet"
+          }
+        ],
+        "technicalNotes": "Klasse unter app/services/shopping_items/auto_classifier.rb. Nutzt OpenAI::Client (gem 'openai' oder direkter HTTP-Client) mit Responses API + Structured Outputs (response_format JSON schema). Modell 'gpt-4o-mini'. Timeout 10s. API-Key ENV['OPENAI_API_KEY'].",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Job: ShoppingItems::ClassifyJob (ActiveJob). Argument: shopping_item_id. Lädt Item, ruft Classifier, schreibt Ergebnis zurück. Bei Fehler: Logging + Retry (max 3 Versuche mit exponentiellem Backoff).",
+        "acceptanceCriteria": [
+          {
+            "given": "ShoppingItem.create!(name:'Brot', category: :auto)",
+            "when": "after_commit on: :create",
+            "then": "ShoppingItems::ClassifyJob.perform_later(item.id) ist enqueued"
+          },
+          {
+            "given": "Job läuft, Classifier liefert :bakery",
+            "when": "Job perform",
+            "then": "Item.category='bakery'; Item.updated_at aktualisiert"
+          },
+          {
+            "given": "Classifier raised 3× Timeout",
+            "when": "Retries verbraucht",
+            "then": "Item bleibt bei 'auto'; Job-Failure geloggt; kein Crash der App"
+          },
+          {
+            "given": "Item bereits manuell geändert (≠auto) bevor Job durchläuft",
+            "when": "Job perform",
+            "then": "Job tut nichts (no-op), damit manuelle Auswahl nicht überschrieben wird"
+          }
+        ],
+        "technicalNotes": "queue_as :default. retry_on(StandardError, attempts: 3, wait: :exponentially_longer). discard_on Net::ReadTimeout? No, retry. No-op check: return unless item.category_auto?.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-005",
+        "description": "Model-Hook: after_commit on: :create – wenn category_auto? wird ClassifyJob.perform_later(id) eingereiht.",
+        "acceptanceCriteria": [
+          {
+            "given": "Item create mit category='fruit'",
+            "when": "after_commit",
+            "then": "Kein Job enqueued (nur bei auto)"
+          },
+          {
+            "given": "Item create mit category='auto'",
+            "when": "after_commit",
+            "then": "Genau ein Job enqueued"
+          }
+        ],
+        "technicalNotes": "after_commit on: :create do; ShoppingItems::ClassifyJob.perform_later(id) if category_auto?; end",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-006",
+        "description": "Structured Output Schema für OpenAI Responses API: { category: enum-string aus CATEGORY_ORDER ∪ ['other'] }. Bei ungültiger Response wird das Item auf 'other' gesetzt (sicherer Fallback).",
+        "acceptanceCriteria": [
+          {
+            "given": "OpenAI-Response = {\"category\":\"fruit\"}",
+            "when": "Parser",
+            "then": "Rückgabe :fruit"
+          },
+          {
+            "given": "OpenAI-Response = {\"category\":\"random_unknown\"}",
+            "when": "Parser",
+            "then": "Rückgabe :other"
+          },
+          {
+            "given": "OpenAI-Response kein valides JSON oder fehlt category-Feld",
+            "when": "Parser",
+            "then": "Rückgabe :other"
+          }
+        ],
+        "technicalNotes": "JSON-Schema: { type:'object', required:['category'], properties:{ category:{ type:'string', enum: [<all categories>, 'other'] } }, additionalProperties:false }. response_format: { type:'json_schema', json_schema:{ name:'classification', schema:..., strict:true } }",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-007",
+        "description": "Prompt-Design: Deutsch, kurz, mit Liste aller Kategorien und Beispielen.",
+        "acceptanceCriteria": [
+          {
+            "given": "Verschiedene typische Inputs (Äpfel, Brot, Klopapier, Bastelpapier, Mehl, Bio-Joghurt)",
+            "when": "Classifier",
+            "then": "Sinnvolle Treffer (fruit, bakery, hygiene, craft_supplies, bakery, dairy) in >90% der Fälle bei Test-Set"
+          }
+        ],
+        "technicalNotes": "System-Prompt: 'Du klassifizierst Einkaufslisten-Artikel für einen österreichischen Kindergarten. Wähle EXAKT eine Kategorie aus der Liste. Bei Unsicherheit: other.' User-Prompt: 'Artikel: <name>, Notiz: <note>'. Kategorienliste mit deutschem Label + Enum-Key wird mitgegeben.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-008",
+        "description": "Show-View: Items mit category='auto' werden in eigener Bottom-Sektion 'Wird klassifiziert…' (Lucide 'sparkles', mw-badge--info) angezeigt, AM ENDE der Liste (nach allen regulären Kategorien-Sektionen). 'Ohne Kategorie' bleibt davor (order 13); 'auto' liegt mit order 14 ganz unten.",
+        "acceptanceCriteria": [
+          {
+            "given": "Liste mit 4 Items: 1 'fruit', 1 'dairy', 2 'auto'",
+            "when": "Show-View rendert",
+            "then": "Reihenfolge: 'Obst' (1) → 'Milchprodukte' (1) → 'Wird klassifiziert…' (2). Auto-Sektion zuletzt"
+          },
+          {
+            "given": "Liste mit 1 'auto', 1 ohne Kategorie, 1 'fruit'",
+            "when": "Show-View rendert",
+            "then": "Reihenfolge: 'Obst' → 'Ohne Kategorie' → 'Wird klassifiziert…'"
+          },
+          {
+            "given": "Job durchgelaufen, Item nun 'fruit'",
+            "when": "Show-View Reload",
+            "then": "Item ist in Sektion 'Obst'; 'Wird klassifiziert…'-Sektion ist leer und wird nicht gerendert"
+          }
+        ],
+        "technicalNotes": "Sektion-Reihenfolge: reguläre Kategorien (order 1..12) → 'Ohne Kategorie' (order 13, falls vorhanden) → 'Wird klassifiziert…' (order 14, nur wenn auto-Items vorhanden). Sektion nicht rendern wenn leer.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-009",
+        "description": "OpenAI-Konfiguration: API-Key über ENV['OPENAI_API_KEY']; bei Fehlen wird Job gerade nicht enqueued (Feature feature_flag-mäßig deaktiviert); Items bleiben auf 'auto' und können manuell kategorisiert werden.",
+        "acceptanceCriteria": [
+          {
+            "given": "ENV['OPENAI_API_KEY']=nil",
+            "when": "Item create mit auto",
+            "then": "Kein Job enqueued; Warn-Log 'OPENAI_API_KEY missing – classification disabled'"
+          },
+          {
+            "given": "ENV['OPENAI_API_KEY']='sk-...'",
+            "when": "Item create",
+            "then": "Job enqueued normal"
+          }
+        ],
+        "technicalNotes": "Helper-Methode ShoppingItems::AutoClassifier.enabled? -> ENV['OPENAI_API_KEY'].present?. Check im after_commit-Hook.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-010",
+        "description": "Tests: Service ist gegen einen Stub/Mock testbar; Job ist mit perform_enqueued_jobs testbar; Modell-Hook ist mit assert_enqueued_with prüfbar.",
+        "acceptanceCriteria": [
+          {
+            "given": "Test mit gestubbtem AutoClassifier.call → :fruit",
+            "when": "Job perform",
+            "then": "Item.reload.category == 'fruit'"
+          },
+          {
+            "given": "Item.create!(name:'X', category: :auto) im Test",
+            "when": "assert_enqueued_with(job: ShoppingItems::ClassifyJob, args: [item.id])",
+            "then": "passing"
+          }
+        ],
+        "technicalNotes": "Bestehende write-test-skill-Konventionen (Minitest). VCR oder einfache Stub für OpenAI-Client.",
+        "dependencies": []
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Confidence-Score in Structured Output: { category, confidence (float 0..1) }; bei <0.5 → 'other'",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Schwellwert verhindert wilde Treffer; muss empirisch kalibriert werden",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Batch-Classification mehrerer Items in einem API-Call (Kostenreduktion)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Job sammelt Items per Liste/Window, Single-Call mit Array-Response",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-003",
+        "description": "Backfill-Rake-Task für bestehende 'Ohne Kategorie'-Items",
+        "acceptanceCriteria": [],
+        "technicalNotes": "rake shopping_items:classify_uncategorized",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-004",
+        "description": "Toast/Turbo-Stream nach Klassifikation aktualisiert Show-View live (ohne Reload)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Job broadcastet turbo_stream.replace auf shopping_list_<id>",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Lokales Klassifikations-Modell (LLM-on-device oder Embedding-Lookup)",
+        "rationale": "Kostenoptimierung; nur sinnvoll bei sehr hohem Volumen"
+      },
+      {
+        "id": "R-P2-002",
+        "description": "Lern-Loop aus Nutzer-Korrekturen",
+        "rationale": "Embedding-Cache pro (name → category); spart API-Aufrufe für häufige Artikel"
+      }
+    ]
+  },
+
+  "spec:enumChanges": {
+    "description": "Erweiterung der Enum-Definition aus spec-shopping-item-categories",
+    "addedValue": "auto",
+    "i18nLabel": "Automatisch",
+    "icon": "sparkles",
+    "displayPosition": "Eigene Sektion 'Wird klassifiziert…' am Ende des Show-Views (nach allen regulären Kategorien und nach 'Ohne Kategorie')",
+    "categoryOrderInclusion": "NICHT in CATEGORY_ORDER (Markt-Begehung-Reihenfolge bleibt); Sonderfall-Sektion mit order 14 (nach 'Ohne Kategorie' order 13)"
+  },
+
+  "spec:openAiContract": {
+    "endpoint": "POST https://api.openai.com/v1/responses (oder Chat-Completions mit response_format)",
+    "model": "gpt-4o-mini",
+    "request": {
+      "input": "<System-Prompt>\\n\\n<User-Prompt mit Item-Name + optional Notiz>",
+      "response_format": {
+        "type": "json_schema",
+        "json_schema": {
+          "name": "shopping_item_classification",
+          "strict": true,
+          "schema": {
+            "type": "object",
+            "required": ["category"],
+            "additionalProperties": false,
+            "properties": {
+              "category": {
+                "type": "string",
+                "enum": ["fruit","vegetable","dairy","meat_fish","bakery","beverages","frozen","sweets","hygiene","household","craft_supplies","other"]
+              }
+            }
+          }
+        }
+      },
+      "timeout_seconds": 10,
+      "max_output_tokens": 50
+    },
+    "expectedResponse": {
+      "category": "fruit"
+    },
+    "errorHandling": {
+      "timeout": "Retry via ActiveJob (max 3)",
+      "rate_limit": "Retry mit Backoff (max 3)",
+      "invalid_json": "Fallback :other, kein Retry",
+      "missing_api_key": "Feature disabled, kein Job enqueued, Warn-Log"
+    }
+  },
+
+  "spec:promptDesign": {
+    "system": "Du klassifizierst Artikel auf Einkaufslisten für einen österreichischen Kindergarten. Deine Antwort ist EXAKT eine Kategorie aus der vorgegebenen Liste. Wenn du dir unsicher bist oder der Artikel zu mehrdeutig ist, wähle 'other'. Antworte ausschließlich in dem vorgegebenen JSON-Schema.",
+    "user": "Artikel: {{name}}\\n{{note ? 'Notiz: ' + note : ''}}\\n\\nVerfügbare Kategorien (Wert → Beschreibung):\\n- fruit → Obst\\n- vegetable → Gemüse\\n- dairy → Milchprodukte\\n- meat_fish → Fleisch & Fisch\\n- bakery → Backwaren\\n- beverages → Getränke\\n- frozen → Tiefkühlware\\n- sweets → Süßigkeiten\\n- hygiene → Hygiene-Artikel\\n- household → Haushalt\\n- craft_supplies → Bastelbedarf\\n- other → Sonstiges (Fallback)\\n\\nGib die passendste Kategorie zurück.",
+    "examples": [
+      {"input": "Äpfel", "expected": "fruit"},
+      {"input": "Toilettenpapier", "expected": "hygiene"},
+      {"input": "Buntpapier für Basteln", "expected": "craft_supplies"},
+      {"input": "Mineralwasser still", "expected": "beverages"},
+      {"input": "Tiefkühl-Erbsen", "expected": "frozen"}
+    ]
+  },
+
+  "spec:viewChanges": [
+    {
+      "view": "app/views/shopping_items/_form.html.haml",
+      "change": "Select-Default auf 'auto'; neue erste Option ['Automatisch','auto']"
+    },
+    {
+      "view": "app/views/shopping_lists/show.html.haml (oder helper)",
+      "change": "Render zusätzlicher Sektion 'Wird klassifiziert…' für Items mit category='auto' AM ENDE der Liste (nach allen regulären Kategorien und nach 'Ohne Kategorie'); mit Sparkles-Icon und subtiler Pulse-Animation; nur rendern wenn auto-Items vorhanden"
+    }
+  ],
+
+  "spec:modelChanges": [
+    {
+      "model": "ShoppingItem",
+      "change": "enum :category erweitern um auto: 'auto'. after_commit on: :create – ShoppingItems::ClassifyJob.perform_later(id) if category_auto? && ShoppingItems::AutoClassifier.enabled?"
+    }
+  ],
+
+  "spec:serviceChanges": [
+    {
+      "service": "ShoppingItems::AutoClassifier (neu)",
+      "purpose": "Wrappt OpenAI-Aufruf, parsed Structured Output, mapped auf Enum-Symbol"
+    },
+    {
+      "service": "ShoppingItems::ClassifyJob (neu, ActiveJob)",
+      "purpose": "Async-Wrapper mit Retry-Logik; respektiert manuelle Überschreibungen"
+    }
+  ],
+
+  "spec:configurationChanges": [
+    {
+      "config": "config/application.rb / config/initializers/openai.rb",
+      "change": "OpenAI-Client mit API-Key aus ENV; Timeouts; optional VCR im Test-Env"
+    },
+    {
+      "config": ".env.example",
+      "change": "Zeile OPENAI_API_KEY= ergänzen (mit Hinweis: optional, Feature wird ohne deaktiviert)"
+    }
+  ],
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Klassifikations-Trefferquote",
+        "description": "% Items, die nach Job-Lauf eine ≠ auto, ≠ other Kategorie haben",
+        "target": "≥ 80%",
+        "measurementMethod": "SQL: count(category NOT IN ('auto','other')) / count(*) der letzten 100 erstellten Items",
+        "evaluationAt": "30 Tage post-launch"
+      },
+      {
+        "name": "Job-Erfolgsrate",
+        "description": "% Jobs, die ohne Final-Failure durchlaufen",
+        "target": "≥ 98%",
+        "measurementMethod": "Solid Queue Dashboard",
+        "evaluationAt": "14 Tage post-launch"
+      },
+      {
+        "name": "API-Kosten / 1000 Items",
+        "description": "OpenAI-Kostenanteil",
+        "target": "≤ 1€ pro 1000 Items",
+        "measurementMethod": "OpenAI Dashboard Usage / count(items)",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "% Items mit Kategorie",
+        "description": "Anteil aller Shopping-Items mit category.present? ∧ ≠'auto'",
+        "target": "≥ 90%",
+        "measurementMethod": "SQL Aggregation",
+        "evaluationAt": "90 Tage post-launch"
+      },
+      {
+        "name": "Manuelle Korrekturrate",
+        "description": "% automatisch klassifizierter Items, die User danach manuell ändert",
+        "target": "≤ 10% (Indikator für Modell-Qualität)",
+        "measurementMethod": "Log-Analyse PATCH /shopping_items/:id mit category-Change nach Job-Lauf",
+        "evaluationAt": "60 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Soll der Hook auch bei Inline-Re-Edit von category=auto auf erneut auto-Wahl re-triggern? Vermutung: nein, nur on:create.",
+      "owner": "engineering",
+      "blocking": false
+    }
+  ],
+
+  "spec:resolvedDecisions": [
+    {
+      "decision": "Solid-Queue-Queue-Name: 'default'",
+      "rationale": "Keine zusätzliche Konfiguration nötig; Klassifikation läuft neben anderen Background-Jobs. Eigene Queue wäre Folge-Optimierung bei spürbarer Last",
+      "resolvedAt": "2026-05-15"
+    },
+    {
+      "decision": "Notiz fließt mit ins Prompt ein, sofern vorhanden",
+      "rationale": "Notiz enthält oft Hinweise wie 'Bio', 'TK', 'glutenfrei', die die Klassifikation präzisieren; Token-Mehrkosten minimal",
+      "resolvedAt": "2026-05-15"
+    },
+    {
+      "decision": "Sektion 'Wird klassifiziert…' wird am Ende der Liste gerendert (nicht oben)",
+      "rationale": "Stört den primären Lese-Flow von oben nach unten nicht; Pattern konsistent mit 'Ohne Kategorie'-Sektion",
+      "resolvedAt": "2026-05-15"
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "spec-shopping-item-categories.json + spec-einkaufsliste-kategorie-edit.json sind umgesetzt" },
+      { "description": "Solid Queue ist aktiv (bestehende Infrastruktur)" },
+      { "description": "OPENAI_API_KEY in Produktions-ENV gesetzt" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Enum auto, Default im Form, Hook, Job, Service, Structured-Output, Sektion 'Wird klassifiziert…'. Confidence-Score und Backfill kommen später." }
+    ]
+  }
+}

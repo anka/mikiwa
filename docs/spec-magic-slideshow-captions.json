@@ -1,0 +1,216 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:magic-slideshow-captions",
+  "name": "MagicSlideshow: Foto-Captions als lesbares Overlay",
+  "description": "Während der MagicSlideshow werden die Foto-Captions als Overlay auf dem jeweiligen Foto angezeigt. Typografie (Schriftart, -größe), Schatten/Background und Position sind so gewählt, dass der Text auf jedem Bildhintergrund gut lesbar bleibt.",
+  "dateCreated": "2026-05-15",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Die Magic Slideshow zeigt Fotos im Vollbild, ggf. mit Musik. Captions (siehe spec-gallery-photo-captions) sind aktuell nur in der Lightbox sichtbar – nicht in der Slideshow. Damit verliert die Slideshow Kontext, der den Mehrwert der App ausmacht.",
+    "affectedUsers": "Eltern (Hauptkonsumenten der Slideshow), Betreuer (zeigen Slideshow bei Elternabenden).",
+    "costOfInaction": "Slideshow bleibt 'nur Bilder mit Musik'; kein Storytelling-Mehrwert."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Caption pro Foto während der Slideshow sichtbar",
+      "type": "user",
+      "target": "Caption fadet beim Foto-Wechsel synchron ein/aus; gleicher Timing-Takt wie Foto"
+    },
+    {
+      "description": "Lesbar auf jedem Bildhintergrund",
+      "type": "user",
+      "target": "Subtiler Gradient/Backdrop-Filter unter dem Text; Schriftgröße responsiv, immer ≥ 18px"
+    },
+    {
+      "description": "Fotos ohne Caption nicht durch leeres Overlay stören",
+      "type": "user",
+      "target": "Caption-Overlay erscheint nur, wenn caption.present?; sonst kein Layout-Shift"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Rich-Text / mehrere Caption-Zeilen mit Heading/Body",
+      "rationale": "v1 ist Plain-Text max 200 Zeichen (siehe Caption-Spec)"
+    },
+    {
+      "description": "Per-Foto unterschiedliche Positionen / Stilvarianten",
+      "rationale": "Konsistente Position = professioneller Look"
+    },
+    {
+      "description": "Untertitel-Editor in der Slideshow selbst",
+      "rationale": "Edit erfolgt im Show-View, Slideshow ist read-only-Konsum"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Eltern in der Slideshow",
+      "capability": "Den Beschreibungstext zum aktuell gezeigten Foto lesen",
+      "benefit": "Kontext zum Bild ohne Slideshow zu unterbrechen",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer beim Elternabend",
+      "capability": "Mit der Slideshow eine Story erzählen (Bild + kurzer Kontext)",
+      "benefit": "Professionellere Präsentation",
+      "priority": 1
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Caption-Overlay positioniert am unteren Bilddrittel, full-width, dezenter linearer Gradient (transparent oben → ~70% schwarz unten), Schriftfarbe weiß.",
+        "acceptanceCriteria": [
+          {
+            "given": "Foto mit caption='Sommerfest 2026'",
+            "when": "Slideshow zeigt dieses Foto",
+            "then": "Text 'Sommerfest 2026' ist sichtbar im unteren Bilddrittel, weiß, auf Gradient-Overlay; Bild durch Gradient nicht stark abgedunkelt (unteres Bilddrittel ~50-70%)"
+          }
+        ],
+        "technicalNotes": "CSS: .mw-magic-slideshow__caption { position:absolute; left:0; right:0; bottom:0; padding: clamp(1rem, 4vw, 2.5rem); color:#fff; font-family: var(--ff-display, ui-sans-serif); font-weight: 600; font-size: clamp(18px, 2.5vw, 28px); line-height:1.3; background: linear-gradient(to top, rgba(0,0,0,.7), rgba(0,0,0,0)); }",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Caption-Overlay ist auch in High-Contrast-Situationen lesbar (helle Fotos): zusätzlicher dezenter Text-Shadow + Gradient.",
+        "acceptanceCriteria": [
+          {
+            "given": "Foto mit weißem Hintergrund (z.B. Schneelandschaft)",
+            "when": "Slideshow rendert Caption",
+            "then": "Text bleibt erkennbar dank Gradient + text-shadow"
+          }
+        ],
+        "technicalNotes": "text-shadow: 0 1px 2px rgba(0,0,0,.6), 0 0 12px rgba(0,0,0,.35);",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Caption fadet synchron mit Foto-Wechsel ein/aus. Wenn nächstes Foto keine Caption hat, fadet aktuelles Caption aus (Overlay leer).",
+        "acceptanceCriteria": [
+          {
+            "given": "Foto 1 mit Caption, Foto 2 ohne Caption",
+            "when": "Slideshow wechselt 1→2",
+            "then": "Caption von Foto 1 fadet aus während Foto 1 ausfaded; Foto 2 ohne Caption-Overlay"
+          },
+          {
+            "given": "Foto 2 ohne, Foto 3 mit Caption",
+            "when": "Wechsel 2→3",
+            "then": "Bei Anzeige von Foto 3 fadet Caption synchron ein"
+          }
+        ],
+        "technicalNotes": "magic-slideshow-Controller (Stimulus) erhält data-photos JSON mit {url, caption}; Caption-DOM-Element wird beim Foto-Wechsel mit Text gefüllt und über CSS transition opacity 400ms gefaded.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Caption-Overlay reagiert auf Slideshow-Speed (slow/normal/fast): Text bleibt mindestens lang genug sichtbar, dass er gelesen werden kann (Mindestdauer pro Caption ≥ 3s, auch bei 'fast').",
+        "acceptanceCriteria": [
+          {
+            "given": "Slideshow-Speed 'fast' (sonst ~2s pro Foto)",
+            "when": "Foto mit Caption erscheint",
+            "then": "Foto bleibt für mindestens 3s sichtbar (oder normale fast-Dauer, falls bereits >3s)"
+          }
+        ],
+        "technicalNotes": "Stimulus liest aktuelle Slideshow-Dauer und passt minDuration für Caption-Fotos an. Falls zu invasiv: Sound-Beat-Sync bleibt unverändert, Mindestdauer wird nur als 'don't pause auf Caption-Foto' implementiert (Caption länger lesbar durch Gradient/Position auch wenn schnell).",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-005",
+        "description": "Mobile Optimierung: Auf Geräten <768px Schriftgröße kleiner, Padding angepasst.",
+        "acceptanceCriteria": [
+          {
+            "given": "iPhone (375px)",
+            "when": "Slideshow rendert Caption",
+            "then": "Schriftgröße ~18px, Padding ~1rem, kein Zeilenumbruch bei kurzen Captions"
+          }
+        ],
+        "technicalNotes": "clamp() in font-size + padding (siehe oben)",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-006",
+        "description": "Accessibility: Caption-DOM ist <figcaption> (oder role='caption') und für Screen-Reader erreichbar.",
+        "acceptanceCriteria": [
+          {
+            "given": "Foto mit Caption, Slideshow läuft",
+            "when": "VoiceOver liest die Seite",
+            "then": "Caption wird als Beschreibung zum aktuellen Foto vorgelesen"
+          }
+        ],
+        "technicalNotes": "aria-live='polite' am Caption-Container, damit Wechsel angekündigt wird",
+        "dependencies": []
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Toggle-Button 'Untertitel ein/aus' im Slideshow-Controls",
+        "acceptanceCriteria": [],
+        "technicalNotes": "data-toggle-captions, Persistierung in localStorage",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Animations-Stile (Slide-In, Type-Writer) als Galerie-Setting",
+        "rationale": "v1 fade-in/out ist klassischer und nicht ablenkend"
+      }
+    ]
+  },
+
+  "spec:viewChanges": [
+    {
+      "view": "app/views/galleries/show.html.haml (Magic-Slideshow-Markup)",
+      "change": "Slideshow-Container erhält Caption-Overlay-Element <figcaption class='mw-magic-slideshow__caption' aria-live='polite'></figcaption>"
+    },
+    {
+      "view": "app/javascript/controllers/magic_slideshow_controller.js",
+      "change": "Photos-Datenquelle wird um caption erweitert; on photo-change wird captionElement.textContent gesetzt + opacity-class getoggled"
+    },
+    {
+      "view": "app/assets/tailwind/application.css (oder mw-stylesheet)",
+      "change": "Klassen .mw-magic-slideshow__caption + responsive Sizing"
+    }
+  ],
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Slideshow-Engagement",
+        "description": "Durchschnittliche Slideshow-Verweildauer in Galerien mit ≥50% Caption-befüllten Fotos",
+        "target": "+20% vs. Galerien ohne Captions",
+        "measurementMethod": "Stimulus-Event-Logging Start/End-Time",
+        "evaluationAt": "60 Tage post-launch"
+      }
+    ],
+    "lagging": []
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Soll die Caption am unteren Drittel oder als Top-Center-Pill schwebend platziert werden? Default unten.",
+      "owner": "design",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "Captions müssen aus spec-gallery-photo-captions verfügbar sein" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Caption-Overlay mit Fade-Animation, Mobile-Responsive, ARIA-konform" }
+    ]
+  }
+}

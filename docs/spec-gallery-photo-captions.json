@@ -1,0 +1,250 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:gallery-photo-captions",
+  "name": "Galerie: Foto-Beschreibung (Caption) inline editierbar",
+  "description": "Jedes Foto in einer Galerie soll eine kurze textuelle Beschreibung tragen können (Caption, max 200 Zeichen). Betreuer editieren die Caption inline am Foto, ohne Save-Button (Auto-Save bei Blur). Captions werden später in der Magic Slideshow als Overlay angezeigt (separate Spec).",
+  "dateCreated": "2026-05-15",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Galerien sind aktuell rein visuell – ohne Kontext. Betreuer können nicht zu einem Foto notieren, was zu sehen ist, wer beteiligt war oder welcher Tag/welches Ereignis. Eltern fehlt häufig der Kontext zu den Bildern.",
+    "affectedUsers": "Betreuer (Pflege), Eltern (Konsum).",
+    "costOfInaction": "Galerien wirken wie Foto-Dumps; Story-Kontext fehlt; Mehrwert der App im Vergleich zum reinen Cloud-Foto-Ordner kleiner."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Pro Foto kurzer Beschreibungstext (Caption) bis 200 Zeichen",
+      "type": "user",
+      "target": "Inline-Eingabefeld unter jedem Foto (Show-View, Staff-only)"
+    },
+    {
+      "description": "Auto-Save ohne Save-Button",
+      "type": "user",
+      "target": "Caption wird bei Blur oder nach 600ms Debounce per Turbo PATCH gespeichert"
+    },
+    {
+      "description": "Captions sichtbar im Lightbox und in der Magic Slideshow (separate Spec)",
+      "type": "user",
+      "target": "Lightbox zeigt Caption unterhalb des Fotos; Slideshow-Overlay siehe spec-magic-slideshow-captions.json"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Rich-Text in Captions (Bold/Italic/Links)",
+      "rationale": "200 Zeichen Plain-Text reicht; Rich-Text bringt Komplexität und Lesbarkeitsprobleme"
+    },
+    {
+      "description": "Mehrsprachige Captions",
+      "rationale": "App ist monolingual de-AT; Caption-Sprache folgt"
+    },
+    {
+      "description": "Eltern dürfen Captions editieren oder kommentieren",
+      "rationale": "Editorial Control bleibt bei Staff; Kommentare wären eigenes Feature"
+    },
+    {
+      "description": "Automatisches Caption-Generieren via AI",
+      "rationale": "v1: rein manuell; AI-Vorschläge sind eigenes Folgefeature"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer im Show-View",
+      "capability": "Unter einem Foto direkt einen kurzen Beschreibungstext eingeben",
+      "benefit": "Story-Kontext bleibt direkt am Foto verankert",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer",
+      "capability": "Caption ändern oder leeren ohne extra Save-Klick",
+      "benefit": "Schneller Editier-Workflow auch unterwegs",
+      "priority": 1
+    },
+    {
+      "persona": "Eltern in der Lightbox",
+      "capability": "Caption unterhalb eines Fotos lesen",
+      "benefit": "Foto wird verständlich (wer, was, wann)",
+      "priority": 2
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Spalte caption (string, nullable, max 200 Zeichen) auf Tabelle photos (gemäß spec-gallery-photo-sortierung). Modell-Validierung: length <= 200.",
+        "acceptanceCriteria": [
+          {
+            "given": "Photo.new(caption: 'a' * 201)",
+            "when": "save",
+            "then": "validation_error :caption => 'ist zu lang'"
+          },
+          {
+            "given": "Photo.new(caption: nil)",
+            "when": "save",
+            "then": "ok (caption optional)"
+          }
+        ],
+        "technicalNotes": "validates :caption, length: { maximum: 200 }, allow_blank: true",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Im Show-View der Galerie zeigt jede Foto-Kachel (Staff) unter dem Bild ein <textarea>/<input> mit Caption-Wert. Eingabe ist inline editierbar.",
+        "acceptanceCriteria": [
+          {
+            "given": "Staff-User auf /galleries/:id",
+            "when": "Hover/Tap auf Foto",
+            "then": "Caption-Feld ist sichtbar und fokussierbar; Placeholder 'Beschreibung…' wenn leer"
+          },
+          {
+            "given": "Parent-User auf /galleries/:id",
+            "when": "Render",
+            "then": "Caption wird (falls vorhanden) als read-only Text unter Foto angezeigt; kein Edit-Feld"
+          }
+        ],
+        "technicalNotes": "Markup: form_with model: photo, url: gallery_photo_path(@gallery, photo), method: :patch, html: { data: { controller: 'auto-submit', 'auto-submit-debounce-value': 600 } }. Input: form.text_field :caption, maxlength: 200, data: { action: 'blur->auto-submit#submit' }.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Auto-Save: Bei Blur oder nach 600ms Inaktivität wird die Caption per Turbo PATCH /galleries/:gallery_id/photos/:id gespeichert.",
+        "acceptanceCriteria": [
+          {
+            "given": "Caption-Feld leer, User tippt 'Beim Sommerfest'",
+            "when": "Feld verliert Fokus",
+            "then": "PATCH wird gesendet; Photo.caption='Beim Sommerfest' in DB; subtile 'gespeichert'-Indikation"
+          },
+          {
+            "given": "User tippt schnell weiter",
+            "when": "Pause 600ms",
+            "then": "PATCH wird debounced ausgelöst"
+          },
+          {
+            "given": "Server liefert 422 (z.B. >200 Zeichen)",
+            "when": "Response",
+            "then": "Feld zeigt rote Border + Fehlertext 'max. 200 Zeichen'"
+          }
+        ],
+        "technicalNotes": "Bestehender 'auto-submit'-Controller wird wiederverwendet (analog Shopping-Items).",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Neuer Endpoint PATCH /galleries/:gallery_id/photos/:id akzeptiert photo[caption]. Authorization: Staff-only.",
+        "acceptanceCriteria": [
+          {
+            "given": "Staff-User, PATCH mit photo[caption]='Test'",
+            "when": "Request",
+            "then": "200 OK + Turbo Stream 'replace' der Caption-Zeile (oder JSON {caption: 'Test'})"
+          },
+          {
+            "given": "Parent-User",
+            "when": "PATCH",
+            "then": "403 Forbidden"
+          }
+        ],
+        "technicalNotes": "PhotosController#update – permit(:caption). Routes resources :photos, only: %i[update destroy] verschachtelt unter galleries.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-005",
+        "description": "Lightbox zeigt Caption (falls vorhanden) unter dem aktuell sichtbaren Foto.",
+        "acceptanceCriteria": [
+          {
+            "given": "Foto mit caption='Beim Sommerfest'",
+            "when": "Lightbox öffnet dieses Foto",
+            "then": "Caption 'Beim Sommerfest' ist als overlay/footer im Lightbox sichtbar; Mobile: tap-toggle ein/aus"
+          },
+          {
+            "given": "Foto ohne caption",
+            "when": "Lightbox öffnet",
+            "then": "Kein Caption-Block sichtbar; Layout bleibt symmetrisch"
+          }
+        ],
+        "technicalNotes": "Bestehender lightbox-Controller wird um Caption-Slot erweitert; CSS .mw-lightbox__caption mit dezenter Hintergrund-Vignette.",
+        "dependencies": []
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Zeichen-Zähler unterhalb des Caption-Feldes (xxx/200)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Stimulus-Helper",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Emoji-Quick-Picker am Caption-Feld",
+        "acceptanceCriteria": [],
+        "technicalNotes": "",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Caption-Vorschlag via AI (Vision-Modell auf Bild)",
+        "rationale": "Eigenes Feature, hohe Kosten, separates Konsens-Modell"
+      }
+    ]
+  },
+
+  "spec:viewChanges": [
+    {
+      "view": "app/views/galleries/show.html.haml (Staff-Block + Eltern-Block)",
+      "change": "Foto-Kachel-Markup wird erweitert um Caption-Slot. Staff: inline-form mit auto-submit; Parent: nur Text-Anzeige falls Caption vorhanden."
+    },
+    {
+      "view": "app/javascript/controllers/lightbox_controller.js (existing)",
+      "change": "Caption-Element wird beim Foto-Wechsel aktualisiert (data-caption oder data-photo-id Lookup)"
+    }
+  ],
+
+  "spec:controllerChanges": [
+    {
+      "controller": "PhotosController (neu, optional Refactor von galleries#remove_photo)",
+      "change": "actions :update, :destroy; Authorization staff_only; permit :caption"
+    }
+  ],
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Caption-Befüllungs-Rate",
+        "description": "% neuer Fotos, die innerhalb von 7 Tagen nach Upload eine Caption erhalten",
+        "target": "≥ 30%",
+        "measurementMethod": "SQL: Photos mit caption.present? / total within last 7 days",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Eltern-Lightbox-Verweildauer",
+        "description": "Durchschnittliche Zeit pro Foto in Lightbox-Session",
+        "target": "+15% vs. Baseline",
+        "measurementMethod": "Stimulus-Event-Logging",
+        "evaluationAt": "90 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "Photo-Modell muss aus spec-gallery-photo-sortierung existieren (gleiche Migration nutzen)" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Caption-Feld + Auto-Save + Lightbox-Anzeige. Slideshow-Overlay in spec-magic-slideshow-captions." }
+    ]
+  }
+}

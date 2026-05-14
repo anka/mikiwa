@@ -1,0 +1,198 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:mobile-bottom-nav-staff",
+  "name": "Mobile Bottom-Nav für Betreuer: Anwesenheit + Speiseplan statt Kinder + Kalender",
+  "description": "In der mobilen Betreuer-Ansicht wird die Bottom-Nav umgebaut: Die Punkte 'Kinder' und 'Kalender' weichen den daily-use-relevanten Punkten 'Anwesenheit' und 'Speiseplan'. Bestehende 4-Punkt-Struktur und Mitteilungen bleiben erhalten.",
+  "dateCreated": "2026-05-15",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuelle Bottom-Nav für Betreuer enthält Übersicht, Kinder, Kalender, Mitteilungen. In der Praxis sind 'Anwesenheit' (täglich, oft mehrfach) und 'Speiseplan' (täglich für Eltern-Kommunikation, Allergie-Check) die häufiger genutzten Punkte. Kinder und Kalender werden seltener mobil aufgerufen – meistens reicht der Burger-Menü-Zugriff.",
+    "affectedUsers": "Betreuer auf Mobile (Hauptnutzungs-Kontext).",
+    "costOfInaction": "Daily-Use-Funktionen brauchen mehr Taps; Bottom-Nav reflektiert nicht die echte Nutzungsfrequenz."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Mobile Bottom-Nav für Betreuer reflektiert echte Daily-Use-Reihenfolge",
+      "type": "user",
+      "target": "4 Punkte: Übersicht, Anwesenheit, Speiseplan, Mitteilungen"
+    },
+    {
+      "description": "Kinder und Kalender bleiben über Burger erreichbar",
+      "type": "user",
+      "target": "Keine Funktionsverluste, nur Umverteilung der Daily-vs.-Occasional-Aktionen"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Pro-User Customization der Bottom-Nav",
+      "rationale": "Out-of-scope; rollen-basierte Konfiguration reicht (siehe Eltern-Variante)"
+    },
+    {
+      "description": "Mehr als 4 Punkte",
+      "rationale": "UX-Empfehlung max 4-5 Punkte; Touch-Targets bleiben groß"
+    },
+    {
+      "description": "Andere Reihenfolge zwischen Eltern und Staff",
+      "rationale": "Strukturelle Konsistenz: jeweils 4 Punkte, erstes Item ist immer 'Übersicht'"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer auf Mobile",
+      "capability": "Mit einem Tap zur heutigen Anwesenheitsliste springen",
+      "benefit": "Schnellster Daily-Workflow",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer auf Mobile",
+      "capability": "Mit einem Tap zum heutigen Speiseplan",
+      "benefit": "Eltern-Fragen ('Was gibt es heute?') sofort beantworten",
+      "priority": 1
+    },
+    {
+      "persona": "Betreuer auf Mobile",
+      "capability": "Per Burger-Menü weiterhin Kinder und Kalender öffnen",
+      "benefit": "Kein Funktionsverlust",
+      "priority": 2
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Bottom-Nav für Betreuer enthält in genau dieser Reihenfolge: Übersicht (home), Anwesenheit (calendar-check), Speiseplan (utensils), Mitteilungen (send).",
+        "acceptanceCriteria": [
+          {
+            "given": "Betreuer-User auf Mobile",
+            "when": "Bottom-Nav gerendert",
+            "then": "Vier Einträge in Reihenfolge: Übersicht, Anwesenheit, Speiseplan, Mitteilungen, jeweils Lucide-Icon + Label"
+          }
+        ],
+        "technicalNotes": "Datei app/views/layouts/_mobile_nav.html.haml – im else-Zweig (current_user nicht parent) die Links umstellen. Anwesenheit: attendances_path, Icon 'calendar-check'. Speiseplan: meal_entries_path (oder /menu falls dedicated), Icon 'utensils'.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Aktive Markierung über nav_active?-Helper wird für /attendances und /meal_entries (bzw. zutreffender Pfad) korrekt gesetzt.",
+        "acceptanceCriteria": [
+          {
+            "given": "Betreuer auf /attendances",
+            "when": "Bottom-Nav rendert",
+            "then": "Anwesenheit-Tab ist optisch aktiv (Theme-Akzent, fettere Schrift)"
+          },
+          {
+            "given": "Betreuer auf Sub-Page /attendances/export",
+            "when": "Bottom-Nav rendert",
+            "then": "Anwesenheit-Tab bleibt aktiv (Match auf path-Prefix)"
+          }
+        ],
+        "technicalNotes": "nav_active?('/attendances') und nav_active?('/meal_entries') bzw. der Pfad-Helper für Speiseplan – ggf. ApplicationHelper anpassen, falls Speiseplan einen anderen Stamm-Pfad nutzt.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Burger-Menü enthält weiterhin Kinder + Kalender (für Betreuer) – verifiziert.",
+        "acceptanceCriteria": [
+          {
+            "given": "Betreuer auf Mobile, Burger geöffnet",
+            "when": "Menü gelesen",
+            "then": "'Kinder' und 'Kalender' sind erreichbar"
+          }
+        ],
+        "technicalNotes": "Burger-Menü-Inhalt vermutlich aus F30/Helper; nichts ändern, nur verifizieren",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Touch-Target ≥44×44px für jeden Bottom-Nav-Eintrag (PWA-Foundation-Standard).",
+        "acceptanceCriteria": [
+          {
+            "given": "Bottom-Nav rendert",
+            "when": "Touch-Target gemessen",
+            "then": "Jeder Eintrag hat min-width ≥44px und min-height ≥44px"
+          }
+        ],
+        "technicalNotes": "Bestehender mw-mobile-nav__item-Style erfüllt das vermutlich bereits",
+        "dependencies": []
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Badge auf Mitteilungen mit ungelesener Anzahl",
+        "acceptanceCriteria": [],
+        "technicalNotes": "ggf. bereits umgesetzt; nicht Teil dieser Spec, nur Nicht-Regression",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Daily-Dot auf Anwesenheit, wenn heute noch nichts erfasst wurde",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Folgefeature",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Konfiguration pro Kindergarten/Träger (z.B. Modul-Aktivierung)",
+        "rationale": "Aktuell sind alle Module aktiv; Multi-Tenant ist out-of-scope"
+      }
+    ]
+  },
+
+  "spec:viewChanges": [
+    {
+      "view": "app/views/layouts/_mobile_nav.html.haml",
+      "change": "Im else-Block (Betreuer) die zweiten und dritten link_to ersetzen:\n  • children_path → attendances_path, Icon 'users' → 'calendar-check', Label 'Kinder' → 'Anwesenheit'\n  • calendar_events_path → meal_entries_path (oder zutreffender Pfad), Icon 'calendar' → 'utensils', Label 'Kalender' → 'Speiseplan'"
+    }
+  ],
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Anwesenheits-Aufrufe via Bottom-Nav",
+        "description": "% Aufrufe von /attendances aus Mobile-Sessions mit Quelle Bottom-Nav",
+        "target": "≥ 60% der mobilen Aufrufe (vorher 0%, da nicht in Nav)",
+        "measurementMethod": "Server-Log-Analyse Referer oder Stimulus-Event-Logging",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Daily-Active-Use Anwesenheit",
+        "description": "% Betreuer, die täglich (Werktag) auf /attendances zugreifen",
+        "target": "+25% vs. Baseline",
+        "measurementMethod": "Server-Log-Aggregation",
+        "evaluationAt": "60 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [],
+
+  "spec:resolvedDecisions": [
+    {
+      "decision": "Speiseplan-Pfad ist meal_entries_path",
+      "rationale": "Im Code bestätigt (config/routes.rb: resources :meal_entries; _navigation.html.haml linkt bereits dorthin)",
+      "resolvedAt": "2026-05-15"
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [],
+    "phases": [
+      { "name": "v1", "scope": "Reine View-Änderung im Layout-Partial" }
+    ]
+  }
+}

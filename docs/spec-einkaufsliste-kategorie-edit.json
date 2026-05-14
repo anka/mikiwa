@@ -1,0 +1,235 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:einkaufsliste-kategorie-edit",
+  "name": "Einkaufsliste Edit: Kategorie-Select gestyled + Inline-Edit bei vorhandenen Einträgen",
+  "description": "Im Edit-View einer Einkaufsliste (/shopping_lists/:id/edit) wird die Kategorie-Auswahl an den Mikiwa-Style angeglichen. Zusätzlich ist die Kategorie auch bei bereits bestehenden Einträgen inline editierbar (Auto-Submit, kein Save-Button).",
+  "dateCreated": "2026-05-15",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Aktuell ist das Kategorie-Select im _form-Partial unstylisiert (default browser-Select), während alle anderen Felder im mw-input-Stil gerendert werden. Außerdem fehlt im _item-Edit-Partial das Kategorie-Feld komplett – nachträgliches Recategorisieren ist nur durch Löschen + Neuanlegen möglich.",
+    "affectedUsers": "Betreuer, die Einkaufslisten anlegen und pflegen.",
+    "costOfInaction": "Visueller Bruch in der UI, Inkonsistenz mit dem Mikiwa-Design-System. Pflege-Workflow ist umständlich."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Kategorie-Select im Mikiwa-Style (mw-input/mw-select)",
+      "type": "user",
+      "target": "Gleicher Look wie alle anderen Felder; konsistente Höhe, Padding, Border, Fokus-Stil"
+    },
+    {
+      "description": "Kategorie inline editierbar bei vorhandenen Einträgen",
+      "type": "user",
+      "target": "Im _item.html.haml steht ein Select unter Name/Menge/Notiz; Auto-Submit bei Change"
+    },
+    {
+      "description": "Konsistente Icon-Anzeige neben der Kategorie",
+      "type": "user",
+      "target": "Optional: Lucide-Icon der gewählten Kategorie im Select-Trigger oder daneben (z.B. apple, carrot)"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Custom-Dropdown statt nativem <select>",
+      "rationale": "Native Selects sind a11y-stark und touch-freundlich; Style reicht über CSS"
+    },
+    {
+      "description": "Kategorien neu definieren oder umsortieren",
+      "rationale": "Spec-shopping-item-categories ist Single Source of Truth"
+    },
+    {
+      "description": "Bulk-Recategorisierung mehrerer Items",
+      "rationale": "Out-of-scope; per-Item-Edit reicht"
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer beim Pflegen einer Liste",
+      "capability": "Bei einem vorhandenen Eintrag die Kategorie ohne Löschen ändern",
+      "benefit": "Korrekturen schnell möglich",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer beim Anlegen",
+      "capability": "Ein gestyltes Select gleich wie Name/Notiz benutzen",
+      "benefit": "Konsistente, schöne UI",
+      "priority": 1
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Im _form.html.haml (Neuanlage) wird das Select für :category mit den Mikiwa-Style-Klassen (mw-input mw-shopping-new__category) versehen. Die CSS-Regel mw-shopping-new__category muss den gleichen Look wie mw-input liefern (Border, Padding, Border-Radius, Focus-Ring).",
+        "acceptanceCriteria": [
+          {
+            "given": "Render _form-Partial",
+            "when": "DOM inspiziert",
+            "then": "Select hat Klassen 'mw-input mw-shopping-new__category'; visuell ident mit anderen Inputs (Höhe, Border, Fokus)"
+          }
+        ],
+        "technicalNotes": "Falls Style aktuell schon vorhanden aber broken: CSS-Datei (Tailwind-Layer oder mw-stylesheet) checken; Caret-Icon via background-image SVG; padding-right für Caret-Platz.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Im _item.html.haml (Edit eines vorhandenen ShoppingItem) wird ein Kategorie-Select hinzugefügt, das per Auto-Submit (change->auto-submit#submit) auf den PATCH-Endpoint zielt.",
+        "acceptanceCriteria": [
+          {
+            "given": "Eintrag mit category='dairy' im Edit-Modus",
+            "when": "User wechselt Kategorie auf 'fruit'",
+            "then": "Auto-Submit; ShoppingItem.category='fruit' in DB; visuell sortiert sich Item bei nächstem Show in neue Section ein"
+          },
+          {
+            "given": "Eintrag ohne category",
+            "when": "User wählt 'beverages'",
+            "then": "Speichern; Item ist jetzt kategorisiert"
+          }
+        ],
+        "technicalNotes": "Markup: f.select :category, ShoppingItem::CATEGORY_ORDER.map { |k| [shopping_item_category_label(k), k] }, { include_blank: '— ohne —' }, class: 'mw-input mw-input--inline mw-shopping-edit-item__category', data: { action: 'change->auto-submit#submit' }.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Layout des _item.html.haml: Kategorie-Select fügt sich in mw-shopping-edit-item__meta-row ein (neben Menge/Notiz) oder eigener Row, mobile-freundlich.",
+        "acceptanceCriteria": [
+          {
+            "given": "Desktop ≥768px",
+            "when": "Item rendert",
+            "then": "Kategorie liegt rechts neben Notiz oder darunter, Layout stabil"
+          },
+          {
+            "given": "Mobile <768px",
+            "when": "Item rendert",
+            "then": "Kategorie auf eigener Zeile, full-width"
+          }
+        ],
+        "technicalNotes": "CSS flex/grid mit min-width; ggf. ein .mw-shopping-edit-item__meta-row--secondary für Kategorie-Zeile",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Permitted-Params im ShoppingItemsController#update enthalten :category (sofern noch nicht).",
+        "acceptanceCriteria": [
+          {
+            "given": "PATCH mit shopping_item[category]='dairy'",
+            "when": "Update läuft",
+            "then": "Item.category='dairy' persistiert"
+          },
+          {
+            "given": "PATCH mit shopping_item[category]='UNGÜLTIG'",
+            "when": "Update läuft",
+            "then": "Item bleibt unverändert; ggf. 422 oder Modell-Fehler 'Kategorie ungültig'"
+          }
+        ],
+        "technicalNotes": "Enum-Validierung blockt ungültige Werte automatisch (ArgumentError beim Setter); im Controller fangen wir das ggf. mit rescue ArgumentError ab und liefern 422.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-005",
+        "description": "Show-View bleibt unverändert in Anzeige-Logik (gruppierte Sektionen); nach Recategorisierung erscheint Item in neuer Sektion (Reload oder Turbo Stream).",
+        "acceptanceCriteria": [
+          {
+            "given": "Item wird recategorisiert via Inline-Edit",
+            "when": "Show-View neu geladen",
+            "then": "Item erscheint in der neuen Sektion; alte Sektion ist leer oder verschwindet (sofern letztes Item)"
+          }
+        ],
+        "technicalNotes": "Für v1 reicht Full-Reload nach Edit (oder mw-page-state). Optimierung via Turbo Stream möglich, aber optional.",
+        "dependencies": []
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Kategorie-Icon im Edit-Inline-Select sichtbar (z.B. Emoji-Wahl-Picker oder Lucide-Icon vor Select)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Falls native Select genutzt: zusätzliches Icon-Element davor, kein Inhalt in Option",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Turbo-Stream-Update der Show-Sektionen nach Inline-Edit (kein Full-Reload nötig)",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Update-Response mit turbo_stream.replace shopping_list_show_partial",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Drag&Drop zwischen Kategorie-Sektionen im Show-View",
+        "rationale": "UX-Plus, aber technisch deutlich aufwendiger (siehe Photo-Sort)"
+      }
+    ]
+  },
+
+  "spec:viewChanges": [
+    {
+      "view": "app/views/shopping_items/_form.html.haml",
+      "change": "Bestehendes Select bleibt; CSS-Klassen prüfen (mw-input mw-shopping-new__category). Falls Style aktuell broken: CSS-Layer (Tailwind oder mw-stylesheet) ergänzen, sodass es wie mw-input aussieht."
+    },
+    {
+      "view": "app/views/shopping_items/_item.html.haml",
+      "change": "Neues Select für :category in der Meta-Row (oder eigener Sub-Row) mit auto-submit. Markup analog zu Notiz/Menge."
+    },
+    {
+      "view": "app/assets/tailwind/application.css oder mw-stylesheet",
+      "change": "Falls fehlend: Selector .mw-shopping-new__category + .mw-shopping-edit-item__category mit gleichem Look-Set wie mw-input (border, padding, focus-ring, caret-svg)."
+    }
+  ],
+
+  "spec:controllerChanges": [
+    {
+      "controller": "ShoppingItemsController",
+      "change": "Sofern :category nicht in update-permit list: ergänzen. rescue ArgumentError (ungültiger Enum-Wert) → render :show, status: :unprocessable_entity."
+    }
+  ],
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Recategorisierungs-Rate",
+        "description": "% Items, die nach Anlegen noch recategorisiert werden",
+        "target": "≥ 10% (Indikator, dass Funktion benutzt wird)",
+        "measurementMethod": "Log-Analyse PATCH /shopping_items/:id mit category-Param-Change",
+        "evaluationAt": "30 Tage post-launch"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "% Items mit Kategorie",
+        "description": "Anteil Shopping-Items mit category.present?",
+        "target": "≥ 80% (Inline-Edit erleichtert Nachpflege bestehender)",
+        "measurementMethod": "SQL: count(category.present?) / count(*)",
+        "evaluationAt": "90 Tage post-launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Soll der 'Automatisch'-Default (siehe Folge-Spec) hier schon Konsequenzen haben? Vermutlich nein – diese Spec behandelt nur Manual-Edit.",
+      "owner": "engineering",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [],
+    "dependencies": [
+      { "description": "spec-shopping-item-categories.json (Datenmodell category) ist umgesetzt" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "CSS-Style-Fix + Inline-Edit + Controller-Permit" }
+    ]
+  }
+}
