@@ -1,0 +1,98 @@
+wb = xlsx_package.workbook
+
+absence_codes = {
+  "sick"        => "k",
+  "vacation"    => "u",
+  "appointment" => "t",
+  "other"       => "s"
+}
+
+sheet_name = @group.name.gsub(/[\[\]\*\?\/\\]/, "").truncate(31, omission: "")
+wb.add_worksheet(name: sheet_name) do |sheet|
+  header_style  = sheet.styles.add_style(ExcelExportHelper::HEADER_STYLE)
+  sub_header    = sheet.styles.add_style(ExcelExportHelper::SUB_HEADER_STYLE)
+  weekend_style = sheet.styles.add_style(ExcelExportHelper::WEEKEND_STYLE)
+  present_style = sheet.styles.add_style(ExcelExportHelper::PRESENT_STYLE)
+  absent_style  = sheet.styles.add_style(ExcelExportHelper::ABSENT_STYLE)
+  neutral_style = sheet.styles.add_style(ExcelExportHelper::NEUTRAL_STYLE)
+  weekend_present = sheet.styles.add_style(
+    ExcelExportHelper::PRESENT_STYLE.merge(bg_color: ExcelExportHelper::WEEKEND_BG_RGB)
+  )
+
+  total_cols = @days.size + 3
+
+  # Titel
+  sheet.add_row [ "Anwesenheit – #{@group.name} – #{l(@start_date, format: :short)}–#{l(@end_date, format: :short)}" ],
+                style: sub_header
+  sheet.merge_cells("A1:#{('A'.ord + total_cols - 1).chr}1")
+  sheet.add_row []
+
+  # Header-Zeile
+  header_cells = [ "Kind" ]
+  @days.each { |d| header_cells << l(d, format: "%a %d.%m.") }
+  header_cells << "Anwesend"
+  header_cells << "Abwesend"
+  header_style_row = [ header_style ] + @days.map { |d| (d.saturday? || d.sunday?) ? weekend_style : header_style } + [ header_style, header_style ]
+  sheet.add_row header_cells, style: header_style_row
+
+  # Pro Kind eine Zeile
+  @children.each do |child|
+    row_cells = [ child.full_name ]
+    row_styles = [ nil ]
+    present_count = 0
+    absent_count  = 0
+
+    @days.each do |day|
+      weekend = day.saturday? || day.sunday?
+      attendance = @attendances_by[[ child.id, day ]]
+      if attendance.nil?
+        row_cells  << "-"
+        row_styles << (weekend ? weekend_style : neutral_style)
+      elsif attendance.present
+        row_cells  << "A"
+        row_styles << (weekend ? weekend_present : present_style)
+        present_count += 1
+      else
+        code = absence_codes[attendance.absence_reason.to_s]
+        row_cells  << (code ? "X·#{code}" : "X")
+        row_styles << absent_style
+        absent_count += 1
+      end
+    end
+
+    row_cells  << present_count
+    row_cells  << absent_count
+    row_styles << present_style
+    row_styles << absent_style
+    sheet.add_row row_cells, style: row_styles
+  end
+
+  # Footer: Tagessumme anwesend
+  footer_cells  = [ "Tagessumme anwesend" ]
+  footer_styles = [ sub_header ]
+  @days.each do |day|
+    weekend = day.saturday? || day.sunday?
+    sum = @children.count do |child|
+      a = @attendances_by[[ child.id, day ]]
+      a&.present == true
+    end
+    footer_cells  << sum
+    footer_styles << (weekend ? weekend_style : sub_header)
+  end
+  footer_cells  << @children.sum { |c| @days.count { |d| @attendances_by[[ c.id, d ]]&.present == true } }
+  footer_cells  << @children.sum { |c| @days.count { |d| a = @attendances_by[[ c.id, d ]]; a && !a.present } }
+  footer_styles << sub_header
+  footer_styles << sub_header
+  sheet.add_row footer_cells, style: footer_styles
+
+  widths = [ 25 ] + Array.new(@days.size, 6) + [ 11, 11 ]
+  sheet.column_widths(*widths)
+
+  sheet.sheet_view.pane do |pane|
+    pane.state = :frozen
+    pane.x_split = 1
+    pane.y_split = 3
+    pane.top_left_cell = "B4"
+    pane.active_pane = :bottom_right
+  end
+end
