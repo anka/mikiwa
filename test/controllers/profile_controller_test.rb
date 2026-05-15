@@ -75,4 +75,39 @@ class ProfileControllerTest < ActionDispatch::IntegrationTest
     assert_match(/name="user\[knowhow\]"/, response.body)
     assert_match(/name="user\[notes\]"/, response.body)
   end
+
+  # F77: iCal-Link als webcal:// mit https-Fallback
+  test "F77 Profil zeigt anklickbaren webcal://-Link" do
+    sign_in_as(@parent)
+    get profile_path
+    assert_response :success
+    token = @parent.reload.ical_token
+    assert_select "a[href^='webcal://'][href$='/calendar/#{token}.ics']", text: /In Kalender-App öffnen/
+  end
+
+  test "F77 Profil zeigt https-URL mit clipboard-Button" do
+    sign_in_as(@parent)
+    get profile_path
+    assert_response :success
+    token = @parent.reload.ical_token
+    https_url = "http://www.example.com/calendar/#{token}.ics"
+    assert_select "[data-controller~='clipboard'][data-clipboard-text-value='#{https_url}']"
+    assert_select "button[data-action*='clipboard#copy']", text: /Kopieren/
+  end
+
+  test "F77 Profil-Hilfetext erklärt beide Wege" do
+    sign_in_as(@parent)
+    get profile_path
+    assert_response :success
+    assert_match(/Kalender-App/i, response.body)
+    assert_match(/kopieren/i, response.body)
+  end
+
+  test "F77 iCal-Endpoint liefert Content-Type text/calendar; charset=utf-8" do
+    @parent.ensure_ical_token!
+    get "/calendar/#{@parent.reload.ical_token}.ics"
+    assert_response :success
+    assert_match "text/calendar", response.content_type
+    assert_match(/charset=utf-8/i, response.content_type)
+  end
 end

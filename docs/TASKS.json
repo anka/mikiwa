@@ -4046,7 +4046,7 @@
       "id": "F77",
       "name": "Profil: iCal-Link als anklickbarer webcal://-Link mit https-Fallback",
       "phase": 9,
-      "status": "open",
+      "status": "done",
       "short_description": "Im /profile wird der iCal-Feed als <a href='webcal://...'> Button gerendert (öffnet Kalender-App direkt); zusätzlich Copy-Button für https-URL.",
       "description": "Ziel: Eltern abonnieren den persönlichen Kalender mit einem Klick.\n\nView app/views/profile/show.html.haml (Block 'Kalender-Abonnement'):\n  • Primärer Button: link_to 'In Kalender-App öffnen', webcal_url, class: 'mw-btn mw-btn--primary mw-btn--sm', target: '_self', mit Lucide 'calendar-plus'\n  • webcal_url: String-Build 'webcal://' + request.host_with_port + '/calendar/' + current_user.ical_token + '.ics'\n  • Sekundär: bestehende Code-Anzeige der https-URL bleibt; Copy-Button daneben (Stimulus 'clipboard' mit data-clipboard-text-value)\n  • Hilfetext erweitern: 'Klicken Sie den Link, um Ihre Kalender-App zu öffnen, oder kopieren Sie die URL für Google Kalender/Outlook.'\n  • Token-Reset-Button bleibt unverändert\n\nStimulus 'clipboard'-Controller (neu sofern fehlend):\n  • navigator.clipboard.writeText mit Fallback document.execCommand('copy')\n  • Button zeigt kurz 'Kopiert' (data-feedback)\n\niCal-Endpoint /calendar/:token.ics: Verifizieren dass Content-Type text/calendar; charset=utf-8 ist (sollte über IcalFeedsController bereits funktionieren).\n\nMobile-Touch-Target ≥44px (mw-btn--sm muss das erfüllen oder mw-btn nutzen).\n\nSpec: docs/spec-profile-ical-link.json",
       "acceptance_criteria": [

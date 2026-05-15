@@ -63,11 +63,22 @@
       .mw-detail-row__icon= lucide_icon "link", size: 18
       .mw-detail-row__content
         .mw-detail-row__label Persönlicher iCal-Feed
-        .mw-detail-row__value
-          - ical_url = "#{request.base_url}/calendar/#{current_user.ical_token}.ics"
-          %code.mw-mono{ style: "font-size: 12px; word-break: break-all; color: var(--fg-2);" }= ical_url
+        .mw-detail-row__value{ data: { controller: "clipboard", "clipboard-text-value": "#{request.base_url}/calendar/#{current_user.ical_token}.ics" } }
+          -# F77: Primärer Button öffnet die Kalender-App via webcal://
+          - webcal_url = "webcal://#{request.host_with_port}/calendar/#{current_user.ical_token}.ics"
+          = link_to webcal_url, class: "mw-btn mw-btn--primary mw-btn--sm", target: "_self" do
+            = lucide_icon "calendar-plus", size: 14
+            In Kalender-App öffnen
+          .mw-ical-fallback{ style: "margin-top: 0.75rem;" }
+            %code.mw-mono{ style: "font-size: 12px; word-break: break-all; color: var(--fg-2); display: block;" }
+              = "#{request.base_url}/calendar/#{current_user.ical_token}.ics"
+            %button.mw-btn.mw-btn--ghost.mw-btn--sm{ type: "button",
+                style: "margin-top: 0.5rem;",
+                data: { action: "click->clipboard#copy", clipboard_target: "trigger" } }
+              = lucide_icon "copy", size: 14
+              %span{ data: { clipboard_target: "label" } } Kopieren
           %p.mw-field__hint{ style: "margin-top: 0.5rem;" }
-            Abonnieren Sie diesen Link in Apple Kalender, Google Kalender oder Outlook, um Ihre Ereignisse zu synchronisieren.
+            Klicken Sie den Link, um Ihre Kalender-App zu öffnen, oder kopieren Sie die URL für Google Kalender bzw. Outlook.
           = button_to rotate_ical_token_profile_path, method: :patch,
               class: "mw-btn mw-btn--ghost mw-btn--sm", style: "margin-top: 0.5rem;",
               data: { turbo_confirm: "Token zurücksetzen? Der alte Link wird danach ungültig." } do
