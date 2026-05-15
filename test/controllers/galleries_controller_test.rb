@@ -397,6 +397,17 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
     assert_select 'div[data-controller~="magic-slideshow"][data-magic-slideshow-speed-value="normal"]'
   end
 
+  test "F75 Slideshow-Source-Spans tragen data-magic-slideshow-caption" do
+    sign_in_as(@caretaker)
+    p1 = attach_photo_to(@gallery, filename: "f75_a.jpg")
+    p1.update!(caption: "Beim Sommerfest")
+    attach_photo_to(@gallery, filename: "f75_b.jpg") # ohne Caption
+    get gallery_path(@gallery)
+    assert_response :success
+    assert_select '.mw-magic-slideshow__srcs > span[data-magic-slideshow-caption="Beim Sommerfest"]', count: 1
+    assert_select '.mw-magic-slideshow__srcs > span[data-magic-slideshow-caption=""]', count: 1
+  end
+
   # F58: Audio-Upload & Slideshow-Begleitmusik
   test "F58 Edit-Form enthält Audio-Upload-Feld" do
     sign_in_as(@caretaker)

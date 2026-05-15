@@ -133,10 +133,11 @@
         %span.mw-lightbox__src{ data: { lightbox_src: url_for(photo.image.variant(:display)),
                                         lightbox_caption: photo.caption.to_s } }
 
-    -# Magic-Slideshow Source-Container
+    -# Magic-Slideshow Source-Container (F75: inkl. Captions)
     .mw-magic-slideshow__srcs{ data: { "magic-slideshow-target": "srcs" }, hidden: true }
       - @photos.each do |photo|
-        %span{ data: { "magic-slideshow-src": url_for(photo.image.variant(:display)) } }
+        %span{ data: { "magic-slideshow-src": url_for(photo.image.variant(:display)),
+                       "magic-slideshow-caption": photo.caption.to_s } }
 
     -# F58: Begleitmusik (versteckt; Stimulus steuert play/pause)
     - if @gallery.audio.attached?

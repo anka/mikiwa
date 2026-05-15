@@ -10,14 +10,18 @@ const REDUCED_MOTION_EFFECT = "fade"
 // Reduced-Motion erhöht den Delay um +50%.
 const SPEED_DELAYS = { slow: 8000, normal: 4000, fast: 2000 }
 
+// F75: Mindestanzeigedauer pro Foto, falls eine Caption gelesen werden muss.
+const CAPTION_MIN_DELAY = 3000
+
 export default class extends Controller {
   static targets = ["srcs", "audio"]
   static values = { speed: { type: String, default: "normal" } }
 
   open(event) {
     event?.preventDefault()
-    this.srcs = Array.from(this.srcsTargets[0].querySelectorAll("[data-magic-slideshow-src]"))
-                     .map(el => el.dataset.magicSlideshowSrc)
+    const items = Array.from(this.srcsTargets[0].querySelectorAll("[data-magic-slideshow-src]"))
+    this.srcs     = items.map(el => el.dataset.magicSlideshowSrc)
+    this.captions = items.map(el => el.dataset.magicSlideshowCaption || "")
     if (this.srcs.length === 0) return
 
     this.index = 0
@@ -25,7 +29,7 @@ export default class extends Controller {
     this.lastEffect = null
     this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     const baseDelay = SPEED_DELAYS[this.speedValue] ?? SPEED_DELAYS.normal
-    this.delay = this.reducedMotion ? Math.round(baseDelay * 1.5) : baseDelay
+    this.baseDelay = this.reducedMotion ? Math.round(baseDelay * 1.5) : baseDelay
 
     this.buildOverlay()
     this.bindControls()
@@ -45,6 +49,11 @@ export default class extends Controller {
     this.imgEl.className = "mw-magic-slideshow__img"
     this.imgEl.alt = ""
 
+    // F75: Caption-Overlay (ARIA-konform via aria-live)
+    this.captionEl = document.createElement("figcaption")
+    this.captionEl.className = "mw-magic-slideshow__caption"
+    this.captionEl.setAttribute("aria-live", "polite")
+
     this.toolbar = document.createElement("div")
     this.toolbar.className = "mw-magic-slideshow__toolbar"
     this.toolbar.innerHTML = `
@@ -55,6 +64,7 @@ export default class extends Controller {
     `
 
     this.overlay.appendChild(this.imgEl)
+    this.overlay.appendChild(this.captionEl)
     this.overlay.appendChild(this.toolbar)
     document.body.appendChild(this.overlay)
     document.body.classList.add("mw-no-scroll")
@@ -99,6 +109,21 @@ export default class extends Controller {
     this.imgEl.classList.add(`mw-magic-slideshow__img--${effect}`)
     this.imgEl.src = this.srcs[this.index]
     this.lastEffect = effect
+    this.renderCaption()
+  }
+
+  // F75: Caption fadet beim Foto-Wechsel mit. Bei leerer Caption Overlay komplett aus.
+  renderCaption() {
+    if (!this.captionEl) return
+    const text = this.captions[this.index] || ""
+    this.captionEl.textContent = text
+    this.captionEl.classList.toggle("is-visible", text.length > 0)
+  }
+
+  // F75: Bei Captions Mindestdauer 3s, damit der Text lesbar bleibt – auch bei fast.
+  currentDelay() {
+    const hasCaption = (this.captions[this.index] || "").length > 0
+    return hasCaption ? Math.max(this.baseDelay, CAPTION_MIN_DELAY) : this.baseDelay
   }
 
   pickEffect() {
@@ -159,13 +184,21 @@ export default class extends Controller {
     this.resumeTimer = setTimeout(() => { if (!this.paused) this.startAutoplay() }, 8000)
   }
 
+  // F75: setTimeout statt setInterval, damit Caption-Mindestdauer pro Foto wirkt.
   startAutoplay() {
     this.stopAutoplay()
-    this.autoplayTimer = setInterval(() => this.next(), this.delay)
+    this.scheduleNext()
+  }
+
+  scheduleNext() {
+    this.autoplayTimer = setTimeout(() => {
+      this.next()
+      if (!this.paused) this.scheduleNext()
+    }, this.currentDelay())
   }
 
   stopAutoplay() {
-    clearInterval(this.autoplayTimer)
+    clearTimeout(this.autoplayTimer)
   }
 
   requestFs() {

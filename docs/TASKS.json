@@ -3950,7 +3950,7 @@
       "id": "F75",
       "name": "MagicSlideshow: Foto-Captions als lesbares Overlay",
       "phase": 9,
-      "status": "open",
+      "status": "done",
       "short_description": "Captions werden während der Slideshow am unteren Bilddrittel mit dezentem Gradient + Text-Shadow als lesbares Overlay angezeigt; Fade-Synchron mit Foto-Wechsel; ARIA-konform.",
       "description": "Ziel: Slideshow erzählt eine Story (Bild + Kontext).\n\nMarkup-Erweiterung galleries/show.html.haml (Slideshow-Block):\n  • <figcaption class='mw-magic-slideshow__caption' aria-live='polite'></figcaption> als Kind des Slideshow-Containers\n\nmagic_slideshow_controller.js:\n  • Photos-Datenquelle erhält caption-Property\n  • Beim Foto-Wechsel: captionElement.textContent = current.caption || ''; toggle Klasse 'is-visible' für opacity-Transition (400ms)\n  • Bei leerem Caption: Overlay komplett ausgeblendet\n  • Minimaldauer 3s pro Caption-Foto auch bei 'fast'-Speed (oder strikt nur visueller Hinweis)\n\nCSS:\n  • .mw-magic-slideshow__caption { position:absolute; left:0; right:0; bottom:0; padding: clamp(1rem, 4vw, 2.5rem); color:#fff; font-family: var(--ff-display); font-weight: 600; font-size: clamp(18px, 2.5vw, 28px); line-height:1.3; background: linear-gradient(to top, rgba(0,0,0,.7), rgba(0,0,0,0)); text-shadow: 0 1px 2px rgba(0,0,0,.6); opacity:0; transition: opacity 400ms ease; }\n  • .mw-magic-slideshow__caption.is-visible { opacity:1; }\n  • Mobile responsive via clamp()\n\nAccessibility:\n  • aria-live='polite' am Caption-Container, sodass Screen-Reader Wechsel ankündigen\n\nSpec: docs/spec-magic-slideshow-captions.json",
       "acceptance_criteria": [
