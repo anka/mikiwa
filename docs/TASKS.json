@@ -3804,7 +3804,7 @@
       "id": "BF-009",
       "name": "Galerie: Multi-Upload reproduzieren & Bug fixen (10 Fotos auf einmal)",
       "phase": 9,
-      "status": "open",
+      "status": "done",
       "short_description": "10 Sample-JPGs generieren, Multi-Upload auf /galleries/:id reproduzieren, Ursache identifizieren und beheben; Test stellt 100% Erfolg sicher.",
       "description": "Ziel: Multi-Upload ist zuverlässig.\n\nVorgehen:\n  1. 10 Sample-JPGs als Fixtures generieren (test/fixtures/files/sample_photos/sample_01..10.jpg, 800×600).\n  2. System-Test (Capybara) oder agent-browser-Skript: leere Galerie öffnen, 10 Files droppen, prüfen Photos.count==10.\n  3. Diagnose-Kandidaten checken:\n     • gallery-upload-Stimulus: Per-File-Schleife mit try/catch, Anzahl Fetch-Calls\n     • GalleriesController#add_photo: Race-Condition auf Gallery (mehrere parallel laufende Requests mit gleichem gallery.update)?\n     • ActiveStorage Variant-Generation (Sidekiq-Job-Failures)\n     • CSRF-Token-Refresh nach erstem POST\n     • MAX_PHOTOS-Limit\n     • Server-Body-Size (Puma/Nginx)\n  4. Fix anwenden (z.B. Photo.create! statt gallery.photos.attach im add_photo, sequenzielle Verarbeitung im Stimulus, Error pro File isolieren).\n  5. Per-File-Progress zeigt Status (queued/uploading/done/error); Fehler bei einem File blockt andere nicht.\n  6. Test re-run: 10/10; Stress 20/20 ≥95%.\n\nSpec: docs/spec-galleries-multi-upload-bug.json",
       "acceptance_criteria": [

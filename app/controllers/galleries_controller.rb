@@ -98,7 +98,16 @@ class GalleriesController < ApplicationController
       return
     end
 
-    @gallery.photos.attach(photo)
+    # `attach` macht intern photos_blobs = (blobs + new) – read-modify-write
+    # auf einem Memory-Array. Bei parallelen Requests verlieren so manche
+    # Uploads. Atomarer Insert über die Attachment-Collection statt dessen.
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io: photo.tempfile,
+      filename: photo.original_filename,
+      content_type: photo.content_type
+    )
+    @gallery.photos_attachments.create!(blob: blob)
+
     render json: { ok: true, filename: photo.original_filename }
   end
 
