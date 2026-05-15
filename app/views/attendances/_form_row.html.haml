@@ -29,4 +29,4 @@
 
   .mw-attendance-row__field.mw-attendance-row__field--note
     %span.mw-attendance-row__label Notiz
-    = text_field_tag "#{field_base}[note]", attendance.note, class: "mw-input", data: note_data
+    = text_field_tag "#{field_base}[note]", attendance.note, class: "mw-input", data: note_data, placeholder: "Notiz"
