@@ -136,6 +136,8 @@ module ApplicationHelper
     "list"            => '<line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/>',
     "chevron-left"    => '<path d="m15 18-6-6 6-6"/>',
     "chevron-right"   => '<path d="m9 18 6-6-6-6"/>',
+    "chevron-down"    => '<path d="m6 9 6 6 6-6"/>',
+    "chevron-up"      => '<path d="m18 15-6-6-6 6"/>',
     "pencil"          => '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>',
     "trash-2"         => '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
     "plus"            => '<path d="M5 12h14"/><path d="M12 5v14"/>',

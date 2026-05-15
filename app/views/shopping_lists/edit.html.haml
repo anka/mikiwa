@@ -17,10 +17,17 @@
   .mw-flash.mw-flash--success= notice
 
 .mw-shopping-editor
-  %section.mw-card
-    %header.mw-shopping-editor__section-header
+  -# F82: Stammdaten-Card auf Mobile kollabierbar (Default zu), auf Desktop via CSS immer offen.
+  %section.mw-card.mw-shopping-editor__metadata{ data: { controller: "collapse" } }
+    %button.mw-shopping-editor__section-header.mw-shopping-editor__metadata-toggle{ type: "button",
+                                                                                    "aria-expanded": "false",
+                                                                                    data: { "collapse-target": "trigger",
+                                                                                            action: "click->collapse#toggle" } }
       %h2.mw-shopping-editor__section-title Stammdaten
-    = render "form", list: @list, groups: @groups, kindergarten_years: @kindergarten_years, eligible_parents: @eligible_parents
+      %span.mw-shopping-editor__metadata-chevron
+        = lucide_icon "chevron-down", size: 18
+    .mw-shopping-editor__metadata-body{ data: { "collapse-target": "body" }, hidden: true }
+      = render "form", list: @list, groups: @groups, kindergarten_years: @kindergarten_years, eligible_parents: @eligible_parents
 
   %section.mw-card{ id: "shopping_items_card" }
     %header.mw-shopping-editor__section-header
@@ -32,5 +39,4 @@
       - @items.each do |item|
         = render "shopping_items/item", item: item, mode: :edit
 
-    #new_shopping_item.mw-shopping-editor__new-item
-      = render "shopping_items/form", list: @list, item: @new_item
+    = render "shopping_items/form", list: @list, item: @new_item

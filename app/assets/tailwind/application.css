@@ -2413,6 +2413,112 @@ textarea.mw-input { resize: vertical; min-height: 96px; line-height: var(--lh-re
   .mw-shopping-edit-item__qty { width: 80px; }
 }
 
+/* F82: Quick-Add Primary-Row (Name + Submit + Toggle) */
+.mw-shopping-new__row--primary {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+.mw-shopping-new__submit { flex-shrink: 0; }
+.mw-shopping-new__more {
+  display: none; /* Default: nur Mobile zeigt den Toggle */
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--fg-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform var(--dur-micro), background var(--dur-micro);
+}
+.mw-shopping-new__more[aria-expanded="true"] { transform: rotate(180deg); }
+.mw-shopping-new__more:hover { background: var(--surface-hover); }
+.mw-shopping-new__details { display: flex; flex-direction: column; gap: var(--space-2); }
+
+/* F82: Stammdaten kollabierbar */
+.mw-shopping-editor__metadata-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.mw-shopping-editor__metadata-chevron {
+  display: inline-flex;
+  align-items: center;
+  color: var(--fg-3);
+  transition: transform var(--dur-micro);
+}
+.mw-shopping-editor__metadata-toggle[aria-expanded="true"] .mw-shopping-editor__metadata-chevron {
+  transform: rotate(180deg);
+}
+
+/* F82: Auf Desktop (≥ 768px) ist Stammdaten IMMER offen, Toggle ist als Header
+   passiver (kein Cursor, kein Chevron) und der Body bleibt sichtbar. */
+@media (min-width: 768px) {
+  .mw-shopping-editor__metadata-toggle { cursor: default; pointer-events: none; }
+  .mw-shopping-editor__metadata-chevron { display: none; }
+  .mw-shopping-editor__metadata-body[hidden] { display: block !important; }
+  /* Quick-Add Details auf Desktop immer offen */
+  .mw-shopping-new__details[hidden] { display: flex !important; }
+  /* Toggle bleibt versteckt – Felder sind direkt sichtbar */
+}
+
+/* F82: Mobile-Optimierungen (< 768px) für Edit-View. */
+@media (max-width: 767px) {
+  .mw-shopping-editor { gap: var(--space-2); margin-top: var(--space-2); }
+  .mw-shopping-editor__section-header { margin-bottom: var(--space-2); }
+  .mw-shopping-editor__list { gap: 4px; }
+
+  /* Kompakteres Item-Layout */
+  .mw-shopping-edit-item { padding: 6px; gap: var(--space-1); }
+  .mw-shopping-edit-item__thumb { width: 44px; height: 44px; }
+  .mw-shopping-edit-item__fields { gap: 0; }
+  .mw-shopping-edit-item__name { font-size: var(--fs-14); }
+  .mw-shopping-edit-item__qty { width: 56px; font-size: var(--fs-12); }
+  .mw-shopping-edit-item__note { font-size: var(--fs-12); }
+  .mw-shopping-edit-item__category { font-size: var(--fs-12); padding-top: 4px; padding-bottom: 4px; }
+  .mw-shopping-edit-item__meta-row--secondary { margin-top: 0; }
+  .mw-shopping-edit-item__icon-btn { width: 36px; height: 36px; }
+  .mw-input--inline { padding: 4px 6px; }
+
+  /* Mobile-Card-Padding kleiner */
+  .mw-card { padding: var(--space-3); }
+
+  /* Quick-Add Toggle nur auf Mobile sichtbar */
+  .mw-shopping-new__more { display: inline-flex; }
+  .mw-shopping-new__submit-label { display: none; } /* Icon-only Submit auf Mobile */
+  .mw-shopping-new__submit { width: 44px; height: 44px; padding: 0; }
+
+  /* Sticky Quick-Add über der Bottom-Nav (64px Nav + safe-area-inset). */
+  .mw-shopping-editor__new-item {
+    position: sticky;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    z-index: 15;
+    background: var(--surface);
+    padding: var(--space-2) var(--space-3);
+    margin: 0 calc(var(--space-3) * -1) calc(var(--space-3) * -1);
+    border-top: 1px solid var(--border-subtle);
+    box-shadow: 0 -4px 12px rgba(80, 60, 30, 0.06);
+  }
+  .mw-shopping-editor__new-item .mw-shopping-new__details {
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+  /* Inhalt unten Platz lassen, damit letztes Item nicht hinter Bottom-Nav scrollt. */
+  .mw-shopping-editor__list { padding-bottom: 0; }
+}
+
 /* F79: 'Wird klassifiziert …'-Sektion mit subtilem Pulse am Sparkles-Icon */
 .mw-shopping-category--pending .mw-shopping-category__header svg {
   animation: mw-pulse 1.6s ease-in-out infinite;

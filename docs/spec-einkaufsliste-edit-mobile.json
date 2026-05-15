@@ -1,0 +1,306 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:einkaufsliste-edit-mobile",
+  "name": "Einkaufsliste Edit-View: Mobile Optimierung + friktionsloses Hinzufügen",
+  "description": "Die Edit-Ansicht einer Einkaufsliste (shopping_lists/edit) wird auf Mobile dichter dargestellt und das Hinzufügen neuer Items wird drastisch beschleunigt: Quick-Add-Form (nur Name als Pflichtfeld, alles andere optional/aufklappbar), automatischer Fokus zurück auf das Name-Feld nach Submit, Enter-Taste submitted, sekundäre Felder (Menge, Notiz, Kategorie, Foto) in einem aufklappbaren Bereich oder nachträglich via Inline-Edit ergänzbar.",
+  "dateCreated": "2026-05-15",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Beim mobilen Pflegen einer Einkaufsliste ist das Hinzufügen jedes neuen Items mühsam: Das Formular zeigt Name + Menge + Notiz + Kategorie + Foto-Button + Submit-Button gleichzeitig, beansprucht 4+ Reihen, und nach jedem Submit muss man manuell zum Name-Feld zurück. In der Praxis sind Menge/Notiz/Kategorie für die meisten Items irrelevant – die Kategorie wird ohnehin via Auto-Klassifikation (F79) ermittelt. Zusätzlich kostet die globale Edit-View mit Stammdaten-Card + Items-Card + großen Paddings auf Mobile so viel Platz, dass kaum 2-3 Items gleichzeitig editierbar sind.",
+    "affectedUsers": "Betreuer*innen, die am Smartphone Listen anlegen/pflegen – Haupt-Use-Case (Quick-Erstellung beim Auftauchen eines Bedarfs).",
+    "costOfInaction": "Items werden notiert auf Zetteln statt direkt in der App; die digitale Liste wird unvollständig; Adoption sinkt. Konkret: das Anlegen einer 10-Item-Liste dauert mobil heute ~3-4 Minuten, statt ~45 Sekunden."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Hinzufügen eines Items am Smartphone in ≤ 5 Sekunden pro Item",
+      "type": "user",
+      "target": "Median 'Submit zu Submit' bei reiner Name-Eingabe ≤ 5 s; Nutzer*in kann ohne Layout-Wechsel direkt das nächste Item tippen"
+    },
+    {
+      "description": "Mehr Items pro Viewport im Edit-Modus auf Mobile",
+      "type": "user",
+      "target": "Mind. 4 Items + Quick-Add-Form gleichzeitig sichtbar auf iPhone 14 (390×844)"
+    },
+    {
+      "description": "Mobile-Add-Flow benötigt nur das Name-Feld – alle weiteren Felder optional zugänglich",
+      "type": "user",
+      "target": "Default-Sicht zeigt nur Name-Input + Submit-Button; Menge/Notiz/Kategorie/Foto hinter 'Mehr Details' aufklappbar"
+    },
+    {
+      "description": "Stammdaten-Bereich ist auf Mobile zusammenklappbar (Default: zugeklappt)",
+      "type": "user",
+      "target": "Beim Öffnen von /edit auf Mobile sind Items + Quick-Add-Form sofort sichtbar, ohne durch Stammdaten zu scrollen"
+    },
+    {
+      "description": "Desktop-Darstellung bleibt unverändert",
+      "type": "business",
+      "target": "Bestehende Edit-Erfahrung auf ≥ 768 px optisch und funktional gleich"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Auto-Vervollständigung aus früheren Listen / Item-Vorschläge",
+      "rationale": "Spannender Gedanke, aber eigenes Datenmodell-Thema (Historisierung, Häufigkeit, Suche). Separater Spec."
+    },
+    {
+      "description": "Bulk-Add (mehrere Items in einem Textarea via Newlines)",
+      "rationale": "Foto-Import (F80) ist der primäre Bulk-Path; Bulk-Text wäre redundante Eingabe-Modalität."
+    },
+    {
+      "description": "Drag&Drop-Sortierung der Items im Edit-Modus",
+      "rationale": "Items werden via Kategorie gruppiert (F79/F78); freie Sortierung würde dem widersprechen."
+    },
+    {
+      "description": "Voice-Input / Diktat-Modus für Item-Namen",
+      "rationale": "Browser-Native ist via Mobile-Keyboard ohnehin möglich; eigener UI-Layer in v1 unnötig."
+    },
+    {
+      "description": "Änderung der Felder-Semantik (Name/Menge/Notiz/Kategorie/Foto bleiben fachlich gleich)",
+      "rationale": "Reine UI-/Flow-Optimierung – kein Datenmodell-Eingriff."
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer*in (mobil, beim spontanen Bedarfs-Notieren)",
+      "capability": "ein neues Item nur durch Eingabe des Namens + Tap auf 'Hinzufügen' (oder Enter) anlegen",
+      "benefit": "ich kann in 3 Sekunden ein Item aufschreiben, ohne mich um Kategorie/Menge/Notiz kümmern zu müssen",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer*in",
+      "capability": "nach dem Hinzufügen sofort das nächste Item tippen, ohne wieder zu navigieren oder den Fokus zu setzen",
+      "benefit": "ich kann mehrere Items in schneller Folge eingeben (Schreibmaschinen-Modus)",
+      "priority": 1
+    },
+    {
+      "persona": "Betreuer*in",
+      "capability": "in Ausnahmefällen (z. B. spezifische Notiz oder Foto) sekundäre Felder per Tap aufklappen",
+      "benefit": "der seltene Fall blockiert nicht den Default-Flow",
+      "priority": 2
+    },
+    {
+      "persona": "Betreuer*in",
+      "capability": "die Stammdaten-Sektion auf Mobile zugeklappt sehen, damit ich sofort an die Items komme",
+      "benefit": "ich verliere keinen Bildschirm-Platz an Felder, die ich beim Editieren selten anfasse",
+      "priority": 3
+    },
+    {
+      "persona": "Betreuer*in",
+      "capability": "Items in der Liste auch mit weniger Spacing und Touch-friendly Delete-Button bearbeiten",
+      "benefit": "ich sehe mehr existierende Items und kann sie schnell korrigieren oder löschen",
+      "priority": 4
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Quick-Add-Form auf Mobile (< 768 px) zeigt im Default-Zustand NUR Name-Input + Submit-Button. Menge, Notiz, Kategorie, Foto sind in einem zugeklappten Bereich 'Mehr Details' (Toggle-Button mit Chevron) versteckt.",
+        "acceptanceCriteria": [
+          { "given": "Edit-View auf iPhone 14, Quick-Add-Form im Default", "when": "gerendert", "then": "Nur Name-Input + 'Hinzufügen'-Button + 'Mehr Details'-Toggle sichtbar; Menge/Notiz/Kategorie/Foto NICHT sichtbar" },
+          { "given": "Quick-Add-Form im Default", "when": "Betreuer*in tippt 'Mehr Details'", "then": "Menge, Notiz, Kategorie, Foto werden eingeblendet" }
+        ],
+        "technicalNotes": "Stimulus-Controller erweitern (shopping_new_item_controller) um ein toggle-Target. State NICHT persistieren – jedes neue Item startet im Default zugeklappt. Auf Desktop (≥ 768 px) ist alles immer sichtbar wie heute.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Nach erfolgreichem Submit fokussiert das Name-Input automatisch wieder (Schreibmaschinen-Modus). Bestehendes focus_on_connect-Pattern (siehe app/views/shopping_items/_form.html.haml:3) für mobile-relevanten Flow IMMER aktivieren.",
+        "acceptanceCriteria": [
+          { "given": "Quick-Add-Form mit Name 'Milch'", "when": "Betreuer*in submittet (Enter oder Tap)", "then": "Turbo-Stream ersetzt das Form mit frischer Instanz; Name-Input ist fokussiert; Mobile-Tastatur bleibt offen" },
+          { "given": "5 aufeinanderfolgende Submits", "when": "ohne weitere User-Aktion außer Tippen+Enter", "then": "Alle 5 Items werden erstellt; Fokus bleibt durchgängig im Name-Input" }
+        ],
+        "technicalNotes": "Bestehender focus_on_connect-Mechanismus wiederverwenden. Turbo-Stream-Response für POST-Item muss das Form (#new_shopping_item) mit focus_on_connect: true rendern. Auf iOS Safari Mobile-Tastatur ggf. via inputmode/auto-attribute stabilisieren – testen.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Enter-Taste im Name-Input submittet das Form. Bei aufgeklapptem 'Mehr Details' funktioniert Enter weiterhin als Submit – Tab/Touch wechselt zu den anderen Feldern.",
+        "acceptanceCriteria": [
+          { "given": "Name-Input mit Inhalt 'Brot', Form zugeklappt", "when": "Enter gedrückt", "then": "Item wird erstellt" },
+          { "given": "Name-Input leer", "when": "Enter gedrückt", "then": "Browser-native Required-Validation; kein Submit" }
+        ],
+        "technicalNotes": "form_with rendert Default-Submit-Verhalten auf Enter; keine zusätzliche Logik nötig. Sicherstellen, dass keine other Stimulus-Action Enter abfängt.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Stammdaten-Section auf Mobile als kollabierbarer Bereich (Default: zugeklappt). Header zeigt Titel 'Stammdaten' + Chevron; Tap klappt auf/zu.",
+        "acceptanceCriteria": [
+          { "given": "Edit-View frisch geladen auf Mobile", "when": "gerendert", "then": "Stammdaten-Card ist zugeklappt; Items + Quick-Add-Form sofort sichtbar ohne Scroll" },
+          { "given": "Stammdaten zugeklappt", "when": "Betreuer*in tippt Header", "then": "Card klappt auf und zeigt das bestehende _form.html.haml" }
+        ],
+        "technicalNotes": "Stimulus-Controller 'collapse' (neu oder generisch wiederverwendbar). Auf Desktop (≥ 768 px) bleibt die Card immer aufgeklappt (CSS-Override).",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-005",
+        "description": "Existierende Items in der Edit-Liste (.mw-shopping-edit-item) auf Mobile kompakter: Foto-Thumb + Name in einer Reihe; Menge/Notiz/Kategorie in einer zweiten dünnen Reihe; Delete-Icon-Button rechts. Touch-Targets bleiben ≥ 44 px.",
+        "acceptanceCriteria": [
+          { "given": "5 Items mit Foto und Notiz", "when": "auf iPhone 14 gerendert", "then": "mind. 4 Items + Quick-Add-Form gleichzeitig sichtbar" },
+          { "given": "Delete-Icon-Button", "when": "gemessen", "then": "Touch-Target ≥ 44×44 px" }
+        ],
+        "technicalNotes": "CSS-Anpassungen in .mw-shopping-edit-item / .mw-shopping-edit-item__fields / .mw-shopping-edit-item__meta-row. Inline-Edit (Auto-Submit) bleibt erhalten. Bei sehr schmalen Viewports (< 360 px) ggf. Kategorie-Select in eine eigene Zeile schieben.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-006",
+        "description": "Quick-Add-Form bleibt am unteren Rand fixiert (sticky) auf Mobile, damit beim Scrollen durch lange Listen jederzeit ein neues Item hinzugefügt werden kann.",
+        "acceptanceCriteria": [
+          { "given": "Liste mit 20 Items, Edit-View auf Mobile", "when": "Betreuer*in scrollt nach unten", "then": "Quick-Add-Form bleibt am unteren Viewport-Rand sichtbar; Name-Input antippbar" }
+        ],
+        "technicalNotes": "position: sticky; bottom: 0 + Safe-Area-Inset (env(safe-area-inset-bottom)) für iPhone-Notch. Z-Index ≥ Items, < Modals. Bei aufgeklappten 'Mehr Details' darf der Bereich den oberen Viewport-Teil nicht überlagern (max-height + overflow-y: auto).",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-007",
+        "description": "Spacing-Reduktion in der gesamten Edit-View auf Mobile: kleinere Card-Paddings, kleinerer Section-Header-Margin.",
+        "acceptanceCriteria": [
+          { "given": "Edit-View auf Mobile", "when": "gerendert", "then": "Section-Header-Höhe ≤ 48 px; Card-Padding seitlich ≤ 12 px" }
+        ],
+        "technicalNotes": "Media-Query-basiert (≤ 767 px). Desktop bleibt unverändert.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-008",
+        "description": "Desktop (≥ 768 px) bleibt visuell und funktional unverändert. Stammdaten ist nicht kollabiert, Quick-Add zeigt alle Felder wie heute, Sticky-Form ist deaktiviert.",
+        "acceptanceCriteria": [
+          { "given": "Edit-View auf 1280×800", "when": "vorher/nachher verglichen", "then": "kein Layout-Regress; Quick-Add-Form zeigt Name + Menge + Notiz + Kategorie + Foto + Submit wie zuvor; Stammdaten-Card immer aufgeklappt" }
+        ],
+        "technicalNotes": "Alle Mobile-spezifischen Anpassungen hinter @media (max-width: 767px).",
+        "dependencies": []
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Haptisches Feedback (vibrate(10)) auf Submit-Success – kurzer Mikro-Cue, dass das Item gespeichert ist.",
+        "acceptanceCriteria": [],
+        "technicalNotes": "navigator.vibrate(10) im Stimulus nach success-Event. Best-effort, nicht alle Browser unterstützen es.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Visuelles Bestätigungs-Cue (kurzer Fade/Slide-in des neu erstellten Items in der Liste oben), damit klar ist, dass das Item gelandet ist.",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Turbo-Stream rendert das neue Item bereits – via CSS-Animation (transition + view-transition-api falls verfügbar) augmentieren.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-003",
+        "description": "Anzeige des letzten erstellten Items als kleine Toast/Inline-Confirmation ('Milch hinzugefügt')",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Optional – möglicherweise zu viel UI-Chrome; A/B-Entscheidung im Review.",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Vorschläge auf Basis bisheriger Listen / Häufigkeit (Autocomplete im Name-Input)",
+        "rationale": "Eigenes Datenmodell-Thema (Historie, Suche), nicht Teil der reinen Mobile-Optimierung."
+      },
+      {
+        "id": "R-P2-002",
+        "description": "Reorder per Drag-Handle (Long-Press)",
+        "rationale": "Kollidiert mit Kategorisierung; Bedarf erst beweisen."
+      },
+      {
+        "id": "R-P2-003",
+        "description": "Mehrfach-Edit (mehrere Items selektieren und gemeinsam löschen/verschieben)",
+        "rationale": "Komplexer UI-Mode; Bedarf bisher nicht artikuliert."
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Zeit pro Item-Add (Mobile)",
+        "description": "Median 'Submit zu Submit' beim sequenziellen Anlegen von Items",
+        "target": "≤ 5 s pro Item",
+        "measurementMethod": "Manueller Stoppuhr-Test im Review (5 Items hintereinander); ergänzt durch internes Dogfooding",
+        "evaluationAt": "Direkt im Review der Implementierung"
+      },
+      {
+        "name": "Items pro Viewport (Edit, Mobile)",
+        "description": "Anzahl Items + Quick-Add gleichzeitig sichtbar auf iPhone 14",
+        "target": "≥ 4 Items + Quick-Add-Form",
+        "measurementMethod": "Screenshot via agent-browser",
+        "evaluationAt": "Im Review"
+      },
+      {
+        "name": "Sichtbarkeit Items im Default-Edit-State",
+        "description": "Bei frischem Page-Load: sind Items direkt sichtbar (ohne Scroll)?",
+        "target": "Ja – Stammdaten ist Default zugeklappt; Items + Quick-Add sind sofort sichtbar",
+        "measurementMethod": "Screenshot Test",
+        "evaluationAt": "Im Review"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Anzahl Items pro Liste (Mobile-Erstellung)",
+        "description": "Durchschnittliche Item-Zahl bei Listen, die über Mobile-Sessions erstellt wurden",
+        "target": "+30 % gegenüber Baseline der 30 Tage vor Launch",
+        "measurementMethod": "Aggregation in Rails-Konsole; Mobile-Session-Erkennung via UA",
+        "evaluationAt": "60 Tage nach Launch"
+      },
+      {
+        "name": "Qualitatives Feedback Betreuer-Team",
+        "description": "Subjektives Erlebnis beim mobilen Listen-Pflegen",
+        "target": "Mehrheit nennt das Add-Erlebnis als 'schnell'",
+        "measurementMethod": "Interview / Kurzumfrage",
+        "evaluationAt": "30-60 Tage nach Launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Soll der 'Mehr Details'-Toggle pro Submit zurückgesetzt werden, oder soll sein State innerhalb einer Session erhalten bleiben (z.B. via localStorage)?",
+      "owner": "design",
+      "blocking": false
+    },
+    {
+      "question": "Wie verhält sich Sticky-Quick-Add-Form, wenn die Mobile-Tastatur eingeblendet ist (visualViewport-API nutzen)? – Gefahr, dass die Form über den Tastatur-Rand rutscht.",
+      "owner": "engineering",
+      "blocking": true
+    },
+    {
+      "question": "Soll der Foto-Upload-Button im Quick-Add bleiben (außerhalb 'Mehr Details'), weil er für Mobile-Workflows besonders relevant ist, oder strikt zu den Details verschoben werden?",
+      "owner": "design",
+      "blocking": false
+    },
+    {
+      "question": "Stammdaten Default-State: Tatsächlich immer zugeklappt, oder nur bei bestehenden Listen zu (bei neuen Listen aufgeklappt)?",
+      "owner": "stakeholder",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [
+      { "description": "Keine externen Deadlines", "date": null }
+    ],
+    "dependencies": [
+      { "description": "Bestehende mw-shopping-editor / mw-shopping-edit-item Komponenten" },
+      { "description": "Bestehender shopping_new_item Stimulus-Controller (app/javascript/controllers/shopping_new_item_controller.js)" },
+      { "description": "F79 Auto-Klassifikation aktiv (Kategorie kann automatisch befüllt werden, daher in Quick-Add nicht notwendig)" },
+      { "description": "Mobile-Layout-Konventionen aus T5 (Touch-Targets ≥ 44 px, Safe-Area-Insets)" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Quick-Add-Form Name-only Default, 'Mehr Details' Toggle, Auto-Refocus + Enter-Submit, kollabierbare Stammdaten auf Mobile, kompakteres Item-Layout im Edit-Modus, Sticky Quick-Add unten, Desktop unverändert." },
+      { "name": "v1.1", "scope": "Haptisches Feedback + visuelles Confirm-Cue beim Add." },
+      { "name": "v2 (später)", "scope": "Autocomplete-Vorschläge, Drag-Reorder, Mehrfach-Edit." }
+    ]
+  }
+}
