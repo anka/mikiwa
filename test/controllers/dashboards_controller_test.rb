@@ -268,6 +268,51 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/<a class="mw-mobile-nav__item mw-nav-link--active" href="#{Regexp.escape(inbox_path)}"/, response.body)
   end
 
+  # F76: Staff Bottom-Nav – Anwesenheit + Speiseplan statt Kinder + Kalender
+  test "F76 Staff-Bottom-Nav enthält 4 Punkte: Übersicht, Anwesenheit, Speiseplan, Mitteilungen" do
+    sign_in_as(@staff)
+    get staff_dashboard_path
+    assert_response :success
+    nav = response.body[/<nav[^>]*aria-label="Mobile Navigation".*?<\/nav>/m]
+    assert_not_nil nav, "Mobile-Nav muss vorhanden sein"
+    assert_match(/Übersicht/, nav)
+    assert_match(/Anwesenheit/, nav)
+    assert_match(/Speiseplan/, nav)
+    assert_match(/Mitteilungen/, nav)
+    assert_no_match(/>\s*Kinder\s*</, nav, "Staff-Mobile-Nav soll keinen Kinder-Tab mehr haben")
+    assert_no_match(/>\s*Kalender\s*</, nav, "Staff-Mobile-Nav soll keinen Kalender-Tab mehr haben")
+  end
+
+  test "F76 Staff-Bottom-Nav: Anwesenheit verlinkt auf attendances_path" do
+    sign_in_as(@staff)
+    get staff_dashboard_path
+    assert_response :success
+    nav = response.body[/<nav[^>]*aria-label="Mobile Navigation".*?<\/nav>/m]
+    assert_match(/<a [^>]*href="#{Regexp.escape(attendances_path)}"[^>]*>.*?<span>Anwesenheit<\/span>/m, nav)
+  end
+
+  test "F76 Staff-Bottom-Nav: Speiseplan verlinkt auf meal_entries_path" do
+    sign_in_as(@staff)
+    get staff_dashboard_path
+    assert_response :success
+    nav = response.body[/<nav[^>]*aria-label="Mobile Navigation".*?<\/nav>/m]
+    assert_match(/<a [^>]*href="#{Regexp.escape(meal_entries_path)}"[^>]*>.*?<span>Speiseplan<\/span>/m, nav)
+  end
+
+  test "F76 Staff-Bottom-Nav Active-State auf /attendances" do
+    sign_in_as(@staff)
+    get attendances_path
+    assert_response :success
+    assert_match(/<a class="mw-mobile-nav__item mw-nav-link--active" href="#{Regexp.escape(attendances_path)}"/, response.body)
+  end
+
+  test "F76 Staff-Bottom-Nav Active-State auf /meal_entries" do
+    sign_in_as(@staff)
+    get meal_entries_path
+    assert_response :success
+    assert_match(/<a class="mw-mobile-nav__item mw-nav-link--active" href="#{Regexp.escape(meal_entries_path)}"/, response.body)
+  end
+
   # F30: Mobile Layout – Burger-Menü
   test "F30 Topbar enthält Burger-Button mit Drawer-Controller" do
     sign_in_as(@staff)

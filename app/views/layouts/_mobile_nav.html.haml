@@ -16,12 +16,12 @@
     = link_to staff_dashboard_path, class: "mw-mobile-nav__item #{nav_active?('/dashboard/staff')}" do
       = lucide_icon "home", size: 22
       %span Übersicht
-    = link_to children_path, class: "mw-mobile-nav__item #{nav_active?('/children')}" do
-      = lucide_icon "users", size: 22
-      %span Kinder
-    = link_to calendar_events_path, class: "mw-mobile-nav__item #{nav_active?('/calendar_events')}" do
-      = lucide_icon "calendar", size: 22
-      %span Kalender
+    = link_to attendances_path, class: "mw-mobile-nav__item #{nav_active?('/attendances')}" do
+      = lucide_icon "calendar-check", size: 22
+      %span Anwesenheit
+    = link_to meal_entries_path, class: "mw-mobile-nav__item #{nav_active?('/meal_entries')}" do
+      = lucide_icon "utensils", size: 22
+      %span Speiseplan
     = link_to messages_path, class: "mw-mobile-nav__item #{nav_active?('/messages')}" do
       = lucide_icon "send", size: 22
       %span Mitteilungen

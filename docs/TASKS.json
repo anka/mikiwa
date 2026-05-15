@@ -3997,7 +3997,7 @@
       "id": "F76",
       "name": "Mobile Bottom-Nav für Betreuer: Anwesenheit + Speiseplan",
       "phase": 9,
-      "status": "open",
+      "status": "done",
       "short_description": "In _mobile_nav.html.haml (else-Block / Staff) ersetzen: 'Kinder' (users-Icon) → 'Anwesenheit' (calendar-check), 'Kalender' (calendar-Icon) → 'Speiseplan' (utensils).",
       "description": "Ziel: Mobile Bottom-Nav reflektiert echte Daily-Use-Reihenfolge für Betreuer.\n\nÄnderung app/views/layouts/_mobile_nav.html.haml im else-Block:\n  • Item 2: children_path → attendances_path, Icon 'users' → 'calendar-check', Label 'Kinder' → 'Anwesenheit', nav_active?('/attendances')\n  • Item 3: calendar_events_path → meal_entries_path, Icon 'calendar' → 'utensils', Label 'Kalender' → 'Speiseplan', nav_active?('/meal_entries')\n  • Item 1 (Übersicht) + Item 4 (Mitteilungen) bleiben unverändert\n\nSpeiseplan-Pfad ist meal_entries_path (im Code bestätigt: routes.rb resources :meal_entries; _navigation.html.haml linkt bereits dorthin).\n\nBurger-Menü-Inhalt (F30/Helper) unverändert; Kinder + Kalender bleiben dort erreichbar.\n\nTouch-Targets ≥44px (Mikiwa-Standard); bestehende mw-mobile-nav__item-Style sollte das bereits leisten.\n\nSpec: docs/spec-mobile-bottom-nav-staff.json",
       "acceptance_criteria": [
