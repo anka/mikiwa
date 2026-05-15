@@ -34,7 +34,7 @@ class GalleryParentTest < ActionDispatch::IntegrationTest
 
   teardown do
     [ @gallery_bears, @gallery_lions ].each do |g|
-      g.photos.purge rescue nil
+      g.photos.destroy_all
       g.gallery_groups.destroy_all
       g.destroy!
     end

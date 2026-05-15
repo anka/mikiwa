@@ -61,6 +61,9 @@ Rails.application.routes.draw do
       patch  :withdraw
       delete :audio, action: :purge_audio, as: :purge_audio
     end
+    resources :photos, only: %i[destroy] do
+      collection { patch :reorder }
+    end
   end
 
   resources :polls, only: %i[index show new create edit update destroy] do

@@ -21,5 +21,15 @@ class CreateGalleries < ActiveRecord::Migration[8.1]
     end
 
     add_index :gallery_groups, %i[gallery_id group_id], unique: true
+
+    create_table :photos, id: :string, limit: 36 do |t|
+      t.references :gallery, null: false, type: :string, limit: 36,
+                             foreign_key: { to_table: :galleries, on_delete: :cascade }
+      t.integer :position, null: false, default: 0
+      t.string  :caption,  limit: 200
+      t.timestamps
+    end
+
+    add_index :photos, %i[gallery_id position]
   end
 end

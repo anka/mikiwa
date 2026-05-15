@@ -8,7 +8,7 @@ class GalleriesController < ApplicationController
 
   def show
     authorize!(@gallery, policy_class: GalleryPolicy)
-    @photos = @gallery.photos.order(:created_at)
+    @photos = @gallery.photos.in_order.with_attached_image
     @consent_warnings = @gallery.groups.flat_map { |g| @gallery.consent_warnings(g).to_a }.uniq
   end
 
@@ -98,30 +98,28 @@ class GalleriesController < ApplicationController
       return
     end
 
-    # `attach` macht intern photos_blobs = (blobs + new) – read-modify-write
-    # auf einem Memory-Array. Bei parallelen Requests verlieren so manche
-    # Uploads. Atomarer Insert über die Attachment-Collection statt dessen.
-    blob = ActiveStorage::Blob.create_and_upload!(
+    record = Photo.new(gallery: @gallery)
+    record.image.attach(
       io: photo.tempfile,
       filename: photo.original_filename,
       content_type: photo.content_type
     )
-    @gallery.photos_attachments.create!(blob: blob)
+    record.save!
 
-    render json: { ok: true, filename: photo.original_filename }
+    render json: { ok: true, filename: photo.original_filename, photo_id: record.id }
   end
 
   def remove_photo
     authorize!(@gallery, policy_class: GalleryPolicy)
-    attachment = @gallery.photos.attachments.find(params[:photo_id])
-    attachment.purge
+    photo = @gallery.photos.find(params[:photo_id])
+    photo.destroy
     redirect_to gallery_path(@gallery), notice: "Bild wurde entfernt."
   end
 
   def download
     authorize!(@gallery, policy_class: GalleryPolicy)
-    attachment = @gallery.photos.attachments.find(params[:photo_id])
-    redirect_to rails_blob_url(attachment.blob, disposition: "attachment", expires_in: 1.hour),
+    photo = @gallery.photos.find(params[:photo_id])
+    redirect_to rails_blob_url(photo.image.blob, disposition: "attachment", expires_in: 1.hour),
                 allow_other_host: true
   end
 
@@ -152,7 +150,16 @@ class GalleriesController < ApplicationController
   def handle_photo_uploads
     Array(params[:gallery][:photos]).each do |photo|
       next unless photo.respond_to?(:content_type)
-      @gallery.photos.attach(photo)
+      next unless ImageAttachable::ALLOWED_TYPES.include?(photo.content_type)
+      next if photo.size > ImageAttachable::MAX_SIZE_BYTES
+
+      record = Photo.new(gallery: @gallery)
+      record.image.attach(
+        io: photo.tempfile,
+        filename: photo.original_filename,
+        content_type: photo.content_type
+      )
+      record.save!
     end
   end
 end

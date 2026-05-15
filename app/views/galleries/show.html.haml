@@ -95,18 +95,19 @@
     %h2{ style: "font-size: var(--fs-18); font-weight: var(--fw-bold);" } Fotos
 
   - if @photos.any?
-    .mw-photo-grid
+    - grid_data = current_user.staff? ? { controller: "photo-sort", "photo-sort-reorder-url-value": reorder_gallery_photos_path(@gallery) } : {}
+    .mw-photo-grid{ data: grid_data }
       - @photos.each_with_index do |photo, idx|
-        .mw-photo-grid__item
+        .mw-photo-grid__item{ data: { photo_id: photo.id, position: photo.position } }
           %button.mw-photo-grid__thumb{ type: "button",
               data: { action: "click->lightbox#open", lightbox_index_param: idx } }
-            = image_tag photo.variant(:thumb), loading: "lazy", alt: "", class: "mw-photo-grid__img"
+            = image_tag photo.image.variant(:thumb), loading: "lazy", alt: "", class: "mw-photo-grid__img"
           .mw-photo-grid__actions
             = link_to download_gallery_path(@gallery, photo_id: photo.id),
                 class: "mw-btn mw-btn--ghost mw-btn--sm", title: "Herunterladen" do
               = lucide_icon "download", size: 14
             - if current_user.staff?
-              = button_to remove_photo_gallery_path(@gallery, photo_id: photo.id), method: :delete,
+              = button_to gallery_photo_path(@gallery, photo), method: :delete,
                   class: "mw-btn mw-btn--ghost mw-btn--sm", title: "Entfernen",
                   data: { turbo_confirm: "Bild entfernen?" } do
                 = lucide_icon "trash-2", size: 14
@@ -123,12 +124,12 @@
         = lucide_icon "chevron-right", size: 32
       -# Bild-URLs als Data-Attribute für Stimulus
       - @photos.each do |photo|
-        %span.mw-lightbox__src{ data: { lightbox_src: url_for(photo.variant(:display)) } }
+        %span.mw-lightbox__src{ data: { lightbox_src: url_for(photo.image.variant(:display)) } }
 
     -# Magic-Slideshow Source-Container
     .mw-magic-slideshow__srcs{ data: { "magic-slideshow-target": "srcs" }, hidden: true }
       - @photos.each do |photo|
-        %span{ data: { "magic-slideshow-src": url_for(photo.variant(:display)) } }
+        %span{ data: { "magic-slideshow-src": url_for(photo.image.variant(:display)) } }
 
     -# F58: Begleitmusik (versteckt; Stimulus steuert play/pause)
     - if @gallery.audio.attached?

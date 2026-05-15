@@ -18,7 +18,7 @@ print "  Bereinige bestehende Daten … "
 [
   Vote, PollOption, Poll,
   InboxEntry, MessageGroup, Message,
-  GalleryGroup, Gallery,
+  Photo, GalleryGroup, Gallery,
   CalendarEventGroup, CalendarEvent,
   AttendanceEntry, AttendanceList,
   ShoppingItem, ShoppingList,

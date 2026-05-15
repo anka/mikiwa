@@ -175,7 +175,7 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@caretaker)
     photo = fixture_file_upload(Rails.root.join("test/fixtures/files/sample_photo.jpg"), "image/jpeg")
 
-    assert_difference "@gallery.photos.attachments.count", 1 do
+    assert_difference "@gallery.photos.count", 1 do
       post add_photo_gallery_path(@gallery), params: { photo: photo }
     end
     assert_response :success
@@ -187,7 +187,7 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@caretaker)
     bogus = fixture_file_upload(Rails.root.join("test/fixtures/files/sample.txt"), "text/plain")
 
-    assert_no_difference "@gallery.photos.attachments.count" do
+    assert_no_difference "@gallery.photos.count" do
       post add_photo_gallery_path(@gallery), params: { photo: bogus }
     end
     assert_response :unprocessable_entity
@@ -323,8 +323,7 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
   # F53: Magic Slideshow
   test "F53 Show zeigt 'Magic Slideshow'-Action" do
     sign_in_as(@caretaker)
-    @gallery.photos.attach(io: StringIO.new(minimal_jpeg), filename: "f53.jpg", content_type: "image/jpeg")
-    @gallery.save!
+    attach_photo_to(@gallery, filename: "f53.jpg")
     get gallery_path(@gallery)
     assert_response :success
     assert_match(/Magic Slideshow/, response.body)
@@ -341,8 +340,7 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
   # F52: Lightbox nur über Action öffnen
   test "F52 Show zeigt 'Galerie ansehen'-Action mit data-action zum Öffnen" do
     sign_in_as(@caretaker)
-    @gallery.photos.attach(io: StringIO.new(minimal_jpeg), filename: "f52.jpg", content_type: "image/jpeg")
-    @gallery.save!
+    attach_photo_to(@gallery, filename: "f52.jpg")
     get gallery_path(@gallery)
     assert_response :success
     assert_match(/Galerie ansehen/, response.body)
@@ -385,8 +383,7 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
   test "F57 Show gibt slideshow_speed als data-Attribute am Magic-Slideshow-Container aus" do
     sign_in_as(@caretaker)
     @gallery.update!(slideshow_speed: :fast)
-    @gallery.photos.attach(io: StringIO.new(minimal_jpeg), filename: "f57.jpg", content_type: "image/jpeg")
-    @gallery.save!
+    attach_photo_to(@gallery, filename: "f57.jpg")
     get gallery_path(@gallery)
     assert_response :success
     assert_select 'div[data-controller~="magic-slideshow"][data-magic-slideshow-speed-value="fast"]'
@@ -394,8 +391,7 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
 
   test "F57 Show ohne expliziten Speed nutzt 'normal' im data-Attribute" do
     sign_in_as(@caretaker)
-    @gallery.photos.attach(io: StringIO.new(minimal_jpeg), filename: "f57b.jpg", content_type: "image/jpeg")
-    @gallery.save!
+    attach_photo_to(@gallery, filename: "f57b.jpg")
     get gallery_path(@gallery)
     assert_response :success
     assert_select 'div[data-controller~="magic-slideshow"][data-magic-slideshow-speed-value="normal"]'
@@ -446,8 +442,7 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
       filename: "song.mp3",
       content_type: "audio/mpeg"
     )
-    @gallery.photos.attach(io: StringIO.new(minimal_jpeg), filename: "f58.jpg", content_type: "image/jpeg")
-    @gallery.save!
+    attach_photo_to(@gallery, filename: "f58.jpg")
     get gallery_path(@gallery)
     assert_response :success
     assert_select 'audio[data-magic-slideshow-target="audio"]'
@@ -455,8 +450,7 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
 
   test "F58 Show ohne Audio enthält kein audio-Element" do
     sign_in_as(@caretaker)
-    @gallery.photos.attach(io: StringIO.new(minimal_jpeg), filename: "f58b.jpg", content_type: "image/jpeg")
-    @gallery.save!
+    attach_photo_to(@gallery, filename: "f58b.jpg")
     get gallery_path(@gallery)
     assert_response :success
     assert_select 'audio[data-magic-slideshow-target="audio"]', count: 0
@@ -503,8 +497,7 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
   # BF-006: CSP-Fehler auf Gallery-Detail
   test "BF-006 Show enthält keine inline style='display:none' Attribute (CSP)" do
     sign_in_as(@caretaker)
-    @gallery.photos.attach(io: StringIO.new(minimal_jpeg), filename: "csp.jpg", content_type: "image/jpeg")
-    @gallery.save!
+    attach_photo_to(@gallery, filename: "csp.jpg")
     get gallery_path(@gallery)
     assert_response :success
     # data-lightbox-src spans dürfen kein inline style="display:..." haben
@@ -519,5 +512,12 @@ class GalleriesControllerTest < ActionDispatch::IntegrationTest
     "\xFF\xD8\xFF\xE0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00" +
       SecureRandom.hex(8) +
       "\xFF\xD9"
+  end
+
+  def attach_photo_to(gallery, filename:)
+    photo = Photo.new(gallery: gallery)
+    photo.image.attach(io: StringIO.new(minimal_jpeg), filename: filename, content_type: "image/jpeg")
+    photo.save!
+    photo
   end
 end

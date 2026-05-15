@@ -18,7 +18,7 @@ class GalleriesMultiUploadTest < ActionDispatch::IntegrationTest
   end
 
   teardown do
-    @gallery.photos.purge if @gallery.photos.attached?
+    @gallery.photos.destroy_all
     @gallery.gallery_groups.destroy_all
     @gallery.destroy
     @caretaker.destroy
@@ -69,24 +69,19 @@ class GalleriesMultiUploadTest < ActionDispatch::IntegrationTest
     assert_equal 9, @gallery.photos.count
   end
 
-  test "BF-009 Concurrency: 10 parallele attach-Calls persistieren alle 10" do
+  test "BF-009 Concurrency: 10 parallele Photo.create!-Calls persistieren alle 10" do
     files = (1..10).map do |i|
       Rails.root.join("test/fixtures/files/sample_photos/sample_#{i.to_s.rjust(2, '0')}.jpg")
     end
 
-    # Echte Concurrency simulieren via Threads + direkter Active Storage attach.
-    # Das deckt Race-Conditions auf has_many_attached :photos mit dem
-    # gemeinsamen Gallery-Record auf.
+    # Echte Concurrency simulieren via Threads. Mit dem neuen Photo-Modell
+    # (F73) ist jeder Insert ein eigener INSERT INTO photos – keine
+    # geteilte Memory-Collection mehr. So fallen alle 10 Requests durch.
     threads = files.map do |path|
       Thread.new do
-        # Spiegelt den atomaren Pfad aus GalleriesController#add_photo wider:
-        # ActiveStorage::Blob + photos_attachments.create! statt .attach,
-        # damit parallele Requests sich nicht gegenseitig überschreiben.
-        blob = ActiveStorage::Blob.create_and_upload!(
-          io: File.open(path), filename: File.basename(path), content_type: "image/jpeg"
-        )
-        gallery = Gallery.find(@gallery.id)
-        gallery.photos_attachments.create!(blob: blob)
+        record = Photo.new(gallery: Gallery.find(@gallery.id))
+        record.image.attach(io: File.open(path), filename: File.basename(path), content_type: "image/jpeg")
+        record.save!
       end
     end
     threads.each(&:join)

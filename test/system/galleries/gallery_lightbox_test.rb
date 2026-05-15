@@ -29,13 +29,11 @@ class GalleryLightboxTest < ActionDispatch::IntegrationTest
     )
     @gallery.gallery_groups.build(group: @group)
     @gallery.save!
-    @gallery.photos.attach(
-      fixture_file_upload("test.jpg", "image/jpeg")
-    )
+    Photo.create!(gallery: @gallery, image: fixture_file_upload("test.jpg", "image/jpeg"))
   end
 
   teardown do
-    @gallery.photos.purge
+    @gallery.photos.destroy_all
     @gallery.gallery_groups.destroy_all
     @gallery.destroy!
     ParentChild.where(user: @parent, child: @child).destroy_all

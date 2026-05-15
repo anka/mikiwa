@@ -2415,6 +2415,14 @@ textarea.mw-input { resize: vertical; min-height: 96px; line-height: var(--lh-re
 }
 .mw-photo-grid__item:hover .mw-photo-grid__actions { opacity: 1; }
 
+/* F73: Drag&Drop-Sortierung */
+.mw-photo-grid[data-controller~="photo-sort"] .mw-photo-grid__thumb { cursor: grab; }
+.mw-photo-grid[data-controller~="photo-sort"] .mw-photo-grid__thumb:active { cursor: grabbing; }
+.mw-photo-grid__item--ghost {
+  opacity: 0.4;
+  background: var(--surface-hover);
+}
+
 /* Dropzone */
 .mw-gallery-dropzone {
   border: 2px dashed var(--border-subtle);

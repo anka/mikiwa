@@ -282,6 +282,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_14_170058) do
     t.index ["user_id", "child_id"], name: "index_parent_children_on_user_id_and_child_id", unique: true
   end
 
+  create_table "photos", id: { type: :string, limit: 36 }, force: :cascade do |t|
+    t.string "caption", limit: 200
+    t.datetime "created_at", null: false
+    t.string "gallery_id", limit: 36, null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["gallery_id", "position"], name: "index_photos_on_gallery_id_and_position"
+    t.index ["gallery_id"], name: "index_photos_on_gallery_id"
+  end
+
   create_table "poll_options", id: { type: :string, limit: 36 }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "label", null: false
@@ -403,6 +413,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_14_170058) do
   add_foreign_key "message_groups", "groups"
   add_foreign_key "message_groups", "messages"
   add_foreign_key "messages", "users", column: "sent_by_id"
+  add_foreign_key "photos", "galleries", on_delete: :cascade
   add_foreign_key "poll_options", "polls"
   add_foreign_key "polls", "groups"
   add_foreign_key "polls", "kindergarten_years"

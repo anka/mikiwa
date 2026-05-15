@@ -16,20 +16,22 @@
   .mw-gallery-grid{ style: "margin-top: 1.5rem;" }
     - @galleries.each do |gallery|
       .mw-gallery-card
+        - cover_photo = gallery.photos.in_order.with_attached_image.first
         .mw-gallery-card__cover
-          - if gallery.photos.attached?
-            = image_tag gallery.photos.first.variant(:thumb),
+          - if cover_photo&.image&.attached?
+            = image_tag cover_photo.image.variant(:thumb),
                 loading: "lazy", alt: "", class: "mw-gallery-card__img"
           - else
             .mw-gallery-card__placeholder
               = lucide_icon "image", size: 32
         .mw-gallery-card__body
           %h2.mw-gallery-card__title= link_to gallery.title, gallery_path(gallery), class: "mw-link mw-link--unstyled"
+          - photo_count = gallery.photos.size
           %p.mw-gallery-card__meta
             = gallery.groups.map(&:name).join(", ")
             ·
-            = gallery.photos.count
-            = gallery.photos.count == 1 ? "Bild" : "Bilder"
+            = photo_count
+            = photo_count == 1 ? "Bild" : "Bilder"
             - if current_user.staff?
               ·
               - if gallery.released?

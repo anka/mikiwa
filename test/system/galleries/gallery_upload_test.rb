@@ -23,7 +23,7 @@ class GalleryUploadTest < ActionDispatch::IntegrationTest
 
   teardown do
     Gallery.where(created_by: @caretaker).each do |g|
-      g.photos.purge
+      g.photos.destroy_all
       g.gallery_groups.destroy_all
       g.destroy!
     end
