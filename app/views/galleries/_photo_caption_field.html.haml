@@ -1,0 +1,24 @@
+-# F74: Inline-editierbares Caption-Feld pro Foto (Staff-Variante).
+-#   - Auto-Save per Stimulus `auto-submit` (blur / debounce 600ms)
+-#   - Server liefert Turbo-Stream-Replace dieses Partials zurück (200 oder 422)
+-#   - Bei 422 wird die Validierung sichtbar (Border + Fehlertext)
+- error = photo.errors[:caption].first
+- field_classes = [ "mw-input", "mw-input--inline", "mw-photo-grid__caption-input" ]
+- field_classes << "mw-input--error" if error.present?
+%div{ id: dom_id(photo, :caption), class: "mw-photo-grid__caption-wrap" }
+  = form_with model: photo,
+              url: gallery_photo_path(gallery, photo),
+              method: :patch,
+              html: { class: "mw-photo-grid__caption-form",
+                      data: { controller: "auto-submit",
+                              "auto-submit-debounce-value": 600 } } do |f|
+    = f.text_field :caption,
+                   value: photo.caption,
+                   maxlength: 200,
+                   placeholder: "Beschreibung…",
+                   autocomplete: "off",
+                   "aria-label": "Beschreibung des Fotos",
+                   class: field_classes.join(" "),
+                   data: { action: "blur->auto-submit#submit change->auto-submit#submit" }
+  - if error.present?
+    %p.mw-photo-grid__caption-error= error

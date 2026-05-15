@@ -101,7 +101,11 @@
         .mw-photo-grid__item{ data: { photo_id: photo.id, position: photo.position } }
           %button.mw-photo-grid__thumb{ type: "button",
               data: { action: "click->lightbox#open", lightbox_index_param: idx } }
-            = image_tag photo.image.variant(:thumb), loading: "lazy", alt: "", class: "mw-photo-grid__img"
+            = image_tag photo.image.variant(:thumb), loading: "lazy", alt: photo.caption.to_s, class: "mw-photo-grid__img"
+          - if current_user.staff?
+            = render "galleries/photo_caption_field", gallery: @gallery, photo: photo
+          - elsif photo.caption.present?
+            %p.mw-photo-grid__caption-read= photo.caption
           .mw-photo-grid__actions
             = link_to download_gallery_path(@gallery, photo_id: photo.id),
                 class: "mw-btn mw-btn--ghost mw-btn--sm", title: "Herunterladen" do
@@ -122,9 +126,12 @@
         %img.mw-lightbox__img{ src: "", alt: "", data: { lightbox_target: "image" } }/
       %button.mw-lightbox__next{ type: "button", data: { action: "click->lightbox#next" } }
         = lucide_icon "chevron-right", size: 32
-      -# Bild-URLs als Data-Attribute für Stimulus
+      -# F74: Caption-Overlay – ausgeblendet wenn leer
+      .mw-lightbox__caption{ data: { lightbox_target: "caption" }, hidden: true }
+      -# Bild-URLs + Captions als Data-Attribute für Stimulus
       - @photos.each do |photo|
-        %span.mw-lightbox__src{ data: { lightbox_src: url_for(photo.image.variant(:display)) } }
+        %span.mw-lightbox__src{ data: { lightbox_src: url_for(photo.image.variant(:display)),
+                                        lightbox_caption: photo.caption.to_s } }
 
     -# Magic-Slideshow Source-Container
     .mw-magic-slideshow__srcs{ data: { "magic-slideshow-target": "srcs" }, hidden: true }

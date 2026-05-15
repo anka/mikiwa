@@ -60,4 +60,37 @@ class PhotosControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :forbidden
   end
+
+  test "F74 update als Staff mit valider Caption speichert caption" do
+    sign_in_as(@caretaker)
+    patch gallery_photo_path(@gallery, @p1),
+          params: { photo: { caption: "Beim Sommerfest" } }
+    assert_response :success
+    assert_equal "Beim Sommerfest", @p1.reload.caption
+  end
+
+  test "F74 update als Staff: Caption darf geleert werden" do
+    @p1.update!(caption: "Alt")
+    sign_in_as(@caretaker)
+    patch gallery_photo_path(@gallery, @p1),
+          params: { photo: { caption: "" } }
+    assert_response :success
+    assert_nil @p1.reload.caption.presence
+  end
+
+  test "F74 update mit Caption > 200 Zeichen → 422" do
+    sign_in_as(@caretaker)
+    patch gallery_photo_path(@gallery, @p1),
+          params: { photo: { caption: "x" * 201 } }
+    assert_response :unprocessable_entity
+    assert_nil @p1.reload.caption
+  end
+
+  test "F74 update als Parent → 403" do
+    sign_in_as(@parent)
+    patch gallery_photo_path(@gallery, @p1),
+          params: { photo: { caption: "Hack" } }
+    assert_response :forbidden
+    assert_nil @p1.reload.caption
+  end
 end

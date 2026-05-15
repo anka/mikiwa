@@ -2423,6 +2423,29 @@ textarea.mw-input { resize: vertical; min-height: 96px; line-height: var(--lh-re
   background: var(--surface-hover);
 }
 
+/* F74: Foto-Captions */
+.mw-photo-grid__caption-wrap { margin-top: var(--space-1); }
+.mw-photo-grid__caption-form { margin: 0; }
+.mw-photo-grid__caption-input {
+  width: 100%;
+  font-size: var(--fs-12);
+  color: var(--fg-2);
+  padding: var(--space-1) var(--space-2);
+}
+.mw-photo-grid__caption-input::placeholder { color: var(--fg-3); }
+.mw-photo-grid__caption-error {
+  margin: var(--space-1) 0 0;
+  font-size: var(--fs-12);
+  color: var(--danger);
+}
+.mw-photo-grid__caption-read {
+  margin: var(--space-1) 0 0;
+  font-size: var(--fs-12);
+  color: var(--fg-2);
+  line-height: 1.35;
+  word-break: break-word;
+}
+
 /* Dropzone */
 .mw-gallery-dropzone {
   border: 2px dashed var(--border-subtle);
@@ -2561,6 +2584,22 @@ textarea.mw-input { resize: vertical; min-height: 96px; line-height: var(--lh-re
 .mw-lightbox__prev:hover,
 .mw-lightbox__next:hover,
 .mw-lightbox__close:hover { background: rgba(255,255,255,.25); }
+
+/* F74: Caption-Overlay in der Lightbox */
+.mw-lightbox__caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: var(--space-6) var(--space-6) var(--space-4);
+  color: #fff;
+  font-size: var(--fs-14);
+  line-height: 1.4;
+  text-align: center;
+  background: linear-gradient(to top, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 100%);
+  pointer-events: none;
+}
+.mw-lightbox__caption[hidden] { display: none; }
 
 /* ==========================================================================
    Dashboard (Eltern & Betreuer)

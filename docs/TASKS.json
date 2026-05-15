@@ -3903,7 +3903,7 @@
       "id": "F74",
       "name": "Galerie: Foto-Beschreibung (Caption) inline editierbar",
       "phase": 9,
-      "status": "open",
+      "status": "done",
       "short_description": "Pro Foto kurzer Beschreibungstext (max 200 Zeichen); Inline-Edit für Staff mit Auto-Submit; Lightbox zeigt Caption unter Foto.",
       "description": "Ziel: Story-Kontext direkt am Foto.\n\nDatenmodell:\n  • Spalte caption (string, nullable, max 200) auf Tabelle photos (aus F73)\n  • Validierung: length: { maximum: 200 }, allow_blank: true\n\nShow-View (Staff):\n  • Foto-Kachel-Markup um Caption-Slot ergänzen\n  • form_with model: photo, url: gallery_photo_path(@gallery, photo), method: :patch, html: { data: { controller: 'auto-submit', 'auto-submit-debounce-value': 600 } }\n  • f.text_field :caption, maxlength: 200, placeholder: 'Beschreibung…', data: { action: 'blur->auto-submit#submit change->auto-submit#submit' }\n  • Bei Auto-Submit-Response Turbo Stream mit Re-Render der Kachel (oder einfach 200)\n\nShow-View (Parent):\n  • Caption (falls present) als read-only Text unter Foto; sonst kein Element (kein Layout-Shift)\n\nController PhotosController#update:\n  • Permit photo[:caption]\n  • Authorization Staff-only\n\nLightbox-Erweiterung (lightbox_controller.js):\n  • Photo-Daten enthalten caption\n  • Beim Foto-Wechsel: Caption-Element textContent setzen; bei leerer Caption ausblenden\n  • CSS .mw-lightbox__caption mit dezenter Vignette (Bottom-Gradient)\n\nSpec: docs/spec-gallery-photo-captions.json",
       "acceptance_criteria": [
