@@ -31,8 +31,14 @@
                    autocomplete: "off",
                    class: "mw-input mw-shopping-new__note"
 
+    -# F79: 'Automatisch' ist Default für Neuanlage; OpenAI klassifiziert im Job.
+    -# 'Ohne Kategorie' bleibt als leere Option verfügbar – ältere Listen ohne
+    -# AI-Setup können weiterhin manuell mit leerer Kategorie gepflegt werden.
+    - auto_label      = t("activerecord.attributes.shopping_item.categories.auto")
+    - auto_option     = [ [ auto_label, "auto" ] ]
+    - regular_options = ShoppingItem::CATEGORY_ORDER.map { |k| [ shopping_item_category_label(k), k ] }
     = f.select :category,
-               ShoppingItem::CATEGORY_ORDER.map { |k| [ shopping_item_category_label(k), k ] },
+               options_for_select(auto_option + regular_options, (item.category.presence || "auto")),
                { include_blank: "— keine Kategorie —" },
                class: "mw-select mw-shopping-new__category"
 

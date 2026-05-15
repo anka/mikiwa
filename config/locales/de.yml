@@ -61,6 +61,7 @@ de:
           household: "Haushalt"
           craft_supplies: "Bastelbedarf"
           other: "Sonstiges"
+          auto: "Automatisch"
     errors:
       messages:
         blank: "muss ausgefüllt werden"
@@ -102,3 +103,4 @@ de:
         other: "%{count} Jahre"
   shopping_items:
     uncategorized: "Ohne Kategorie"
+    pending_classification: "Wird klassifiziert …"

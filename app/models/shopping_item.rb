@@ -14,7 +14,13 @@ class ShoppingItem < ApplicationRecord
     "household" => "home", "craft_supplies" => "image-plus", "other" => "inbox"
   }.freeze
 
-  enum :category, CATEGORY_ORDER.index_with(&:itself), prefix: true
+  # F79: 'auto' ist Sonderwert für noch-zu-klassifizierende Items. Bewusst NICHT
+  # in CATEGORY_ORDER – die Anzeige-Reihenfolge der Sektionen bleibt unverändert.
+  ENUM_VALUES = (CATEGORY_ORDER + %w[auto]).freeze
+
+  enum :category, ENUM_VALUES.index_with(&:itself), prefix: true
+
+  after_commit :enqueue_auto_classification, on: :create
 
   belongs_to :shopping_list
   belongs_to :completed_by, class_name: "User", optional: true
@@ -36,5 +42,16 @@ class ShoppingItem < ApplicationRecord
 
   def uncomplete!
     update!(done: false, completed_by: nil, completed_at: nil)
+  end
+
+  private
+
+  # F79: Frische Items mit category='auto' triggern den Klassifikations-Job.
+  # Ohne API-Key (z.B. lokal/Test) bleibt das Item auf 'auto' und kann manuell
+  # gesetzt werden – kein Job, keine Warnungen-Spam, kein Crash.
+  def enqueue_auto_classification
+    return unless category_auto?
+    return unless ShoppingItems::AutoClassifier.enabled?
+    ShoppingItems::ClassifyJob.perform_later(id)
   end
 end

@@ -2372,6 +2372,22 @@ textarea.mw-input { resize: vertical; min-height: 96px; line-height: var(--lh-re
   .mw-shopping-edit-item__qty { width: 80px; }
 }
 
+/* F79: 'Wird klassifiziert …'-Sektion mit subtilem Pulse am Sparkles-Icon */
+.mw-shopping-category--pending .mw-shopping-category__header svg {
+  animation: mw-pulse 1.6s ease-in-out infinite;
+  color: var(--accent);
+}
+@keyframes mw-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mw-shopping-category--pending .mw-shopping-category__header svg {
+    animation: none;
+    opacity: 0.85;
+  }
+}
+
 /* ==========================================================================
    GALLERIES (Bildergalerien)
    ========================================================================== */

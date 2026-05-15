@@ -317,6 +317,40 @@ class ShoppingListsControllerTest < ActionDispatch::IntegrationTest
     assert_select "##{item_form_id} select[name='shopping_item[category]'].mw-select"
   end
 
+  # F79: Auto-Default + Show-Sektion
+  test "F79 New-Form Default-Wert ist 'auto' (Automatisch)" do
+    sign_in_as(@caretaker)
+    get edit_shopping_list_path(@list)
+    assert_response :success
+    assert_select "select[name='shopping_item[category]'] option[value='auto'][selected]", text: /Automatisch/
+  end
+
+  test "F79 Show-View rendert 'Wird klassifiziert …'-Sektion bei auto-Items am Ende" do
+    sign_in_as(@caretaker)
+    @list.shopping_items.destroy_all
+    fruit_item = @list.shopping_items.create!(name: "Apfel", category: "fruit")
+    auto_item  = @list.shopping_items.create!(name: "Mehl",  category: "auto")
+    get shopping_list_path(@list)
+    assert_response :success
+    body = response.body
+    fruit_pos = body.index("Obst")
+    auto_pos  = body.index("Wird klassifiziert")
+    assert_not_nil fruit_pos, "Obst-Sektion fehlt"
+    assert_not_nil auto_pos,  "Auto-Sektion fehlt"
+    assert fruit_pos < auto_pos, "Auto-Sektion muss nach regulären Kategorien stehen"
+    assert_includes body, fruit_item.name
+    assert_includes body, auto_item.name
+  end
+
+  test "F79 Show-View ohne auto-Items rendert keine 'Wird klassifiziert'-Sektion" do
+    sign_in_as(@caretaker)
+    @list.shopping_items.destroy_all
+    @list.shopping_items.create!(name: "Apfel", category: "fruit")
+    get shopping_list_path(@list)
+    assert_response :success
+    assert_no_match(/Wird klassifiziert/, response.body)
+  end
+
   test "F51 Item ohne Kategorie wird mit category=nil gespeichert" do
     sign_in_as(@caretaker)
     post shopping_list_shopping_items_path(@list),

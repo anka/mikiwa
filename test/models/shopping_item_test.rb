@@ -1,6 +1,7 @@
 require "test_helper"
 
 class ShoppingItemTest < ActiveSupport::TestCase
+  include ActiveJob::TestHelper
   setup do
     @group = Group.create!(name: "SI-Gruppe")
     @year = KindergartenYear.create!(label: "KGJ 2025/26",
@@ -31,5 +32,41 @@ class ShoppingItemTest < ActiveSupport::TestCase
 
   test "F51 CATEGORY_ORDER definiert genau 12 Werte" do
     assert_equal 12, ShoppingItem::CATEGORY_ORDER.size
+  end
+
+  # F79: 'auto'-Enum + after_commit-Hook
+  test "F79 category 'auto' ist als Enum-Wert erlaubt" do
+    item = @list.shopping_items.create!(name: "Brot", category: "auto")
+    assert_equal "auto", item.reload.category
+    assert item.category_auto?
+  end
+
+  test "F79 CATEGORY_ORDER enthält 'auto' NICHT (Reihenfolge unverändert)" do
+    assert_not_includes ShoppingItem::CATEGORY_ORDER, "auto"
+  end
+
+  test "F79 after_commit enqueued ClassifyJob bei category=auto + enabled?" do
+    ENV["OPENAI_API_KEY"] = "sk-test"
+    assert_enqueued_with(job: ShoppingItems::ClassifyJob) do
+      @list.shopping_items.create!(name: "Brot", category: "auto")
+    end
+  ensure
+    ENV.delete("OPENAI_API_KEY")
+  end
+
+  test "F79 kein Job bei category != auto" do
+    ENV["OPENAI_API_KEY"] = "sk-test"
+    assert_no_enqueued_jobs only: ShoppingItems::ClassifyJob do
+      @list.shopping_items.create!(name: "Apfel", category: "fruit")
+    end
+  ensure
+    ENV.delete("OPENAI_API_KEY")
+  end
+
+  test "F79 kein Job wenn API-Key fehlt" do
+    ENV.delete("OPENAI_API_KEY")
+    assert_no_enqueued_jobs only: ShoppingItems::ClassifyJob do
+      @list.shopping_items.create!(name: "Brot", category: "auto")
+    end
   end
 end
