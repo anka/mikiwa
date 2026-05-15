@@ -2173,6 +2173,47 @@ textarea.mw-input { resize: vertical; min-height: 96px; line-height: var(--lh-re
 }
 .mw-shopping-item__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+/* F81: Kategorie-Header (vorher inline-style in show.html.haml). */
+.mw-shopping-category__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  margin-bottom: 4px;
+  color: var(--fg-2);
+}
+.mw-shopping-category__title { font-weight: var(--fw-semibold); }
+.mw-shopping-category__count {
+  font-weight: var(--fw-regular);
+  color: var(--fg-4);
+  font-size: var(--fs-13);
+}
+
+/* F81: Mobile-Optimierung Show-View – kompakteres Spacing < 768px.
+   Touch-Targets der Check-Buttons (44×44px) bleiben unverändert.
+   Desktop ≥ 768px unverändert. */
+@media (max-width: 767px) {
+  .mw-shopping-show { gap: var(--space-2); margin-top: var(--space-2); }
+  .mw-shopping-show__bar { padding: 4px var(--space-3); }
+  .mw-shopping-summary { font-size: var(--fs-13); }
+
+  .mw-shopping-list { gap: 2px; }
+
+  .mw-shopping-category__header {
+    margin-top: 6px;
+    margin-bottom: 2px;
+    font-size: var(--fs-13);
+  }
+
+  .mw-shopping-item {
+    padding: 2px var(--space-3);
+    gap: var(--space-2);
+  }
+  .mw-shopping-item__name { font-size: var(--fs-15); }
+  .mw-shopping-item__qty { margin-top: 0; }
+  .mw-shopping-item__meta { margin-top: 2px; }
+}
+
 /* ----- Editor (Betreuer) ----- */
 .mw-shopping-editor {
   display: flex;

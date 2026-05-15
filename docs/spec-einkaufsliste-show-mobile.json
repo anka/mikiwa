@@ -1,0 +1,215 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:einkaufsliste-show-mobile",
+  "name": "Einkaufsliste Show-View: Mobile Optimierung (kompaktere Darstellung)",
+  "description": "Die Vorschau-Ansicht einer Einkaufsliste (shopping_lists/show) wird auf Mobile dichter dargestellt: reduzierte vertikale Spacings, Notiz-Zeile entfällt wenn leer, kompaktere Kategorie-Header und Item-Reihen. Ziel: mehr Items pro Viewport ohne Lesbarkeit zu verlieren.",
+  "dateCreated": "2026-05-15",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Auf einem Smartphone (390 px) sind aktuell nur 3-4 Items gleichzeitig sichtbar, weil zwischen Items, Kategorie-Headern und Section-Bar zu viel Spacing eingerechnet ist. Zusätzlich reservieren Items für Notizen ein eigenes Margin-Slot, auch wenn keine Notiz vorhanden ist – Mehr-Items-pro-Screen-Effekt verpufft.",
+    "affectedUsers": "Alle Nutzer*innen, die die Liste im Markt am Handy abarbeiten (primär Betreuer*innen, sekundär Eltern bei mitgenommenen Listen).",
+    "costOfInaction": "Häufiges Scrollen während des Einkaufs; Wahrscheinlichkeit erhöht, Items zu übersehen; gefühlte App-Wertigkeit sinkt."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Mehr Items pro Viewport auf Mobile sichtbar",
+      "type": "user",
+      "target": "Mind. 6 Items + 1 Kategorie-Header gleichzeitig auf iPhone 14 (390×844) sichtbar (heute 3-4)"
+    },
+    {
+      "description": "Notiz-Bereich beansprucht nur Platz, wenn eine Notiz vorhanden ist",
+      "type": "user",
+      "target": "Items ohne Notiz haben KEIN zusätzliches margin-top/Slot für die Notiz-Zeile"
+    },
+    {
+      "description": "Kompaktere Kategorie-Header ohne übergroßen vertikalen Abstand",
+      "type": "user",
+      "target": "margin-top der Header auf Mobile reduziert; visuelle Trennung erfolgt durch Icon + Trennlinie statt vertikalem Whitespace"
+    },
+    {
+      "description": "Desktop-Darstellung bleibt unverändert (keine Regression bei ≥ 768 px)",
+      "type": "business",
+      "target": "Tablet- und Desktop-Layout ist optisch identisch zu vorher"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Redesign der Item-Card (Icons, Check-Button-Style, Farben)",
+      "rationale": "Spacing-Optimierung – kein Visual-Redesign. Komponenten-Look bleibt."
+    },
+    {
+      "description": "Änderungen an der Edit-Ansicht",
+      "rationale": "Eigenes Spec (F82) behandelt Edit-Optimierung getrennt."
+    },
+    {
+      "description": "Funktionale Änderungen (Sortierung, Filter, Erledigt-Toggle)",
+      "rationale": "Nur Layout-/Spacing-Anpassungen; Funktionsumfang bleibt identisch."
+    },
+    {
+      "description": "Kompaktierung der Page-Header-Sektion",
+      "rationale": "Globaler Page-Header wird projektweit konsistent verwendet; lokale Sonderlösung würde Inkonsistenz erzeugen."
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer*in beim Einkauf (Smartphone in der Hand)",
+      "capability": "möglichst viele Items gleichzeitig sehen, ohne ständig scrollen zu müssen",
+      "benefit": "ich kann schneller alle Items abhaken und übersehe nichts",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer*in",
+      "capability": "Items ohne Notiz sollen nicht den gleichen vertikalen Platz beanspruchen wie Items MIT Notiz",
+      "benefit": "der Großteil meiner Items hat keine Notiz – ich verliere keinen Platz für etwas, das nicht da ist",
+      "priority": 1
+    },
+    {
+      "persona": "Eltern beim Lesen der mitgenommenen Liste",
+      "capability": "Kategorien klar erkennen, ohne dass dazwischen leerer Raum verschwendet wird",
+      "benefit": "ich sehe sofort, was im Markt-Regal als Nächstes kommt",
+      "priority": 2
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Notiz-Block (.mw-shopping-item__note) wird im DOM nur gerendert, wenn item.note tatsächlich present? ist. Das ist heute schon der Fall (siehe app/views/shopping_items/_show_item.html.haml:27-28). Sicherstellen, dass der CSS-Block (margin-top: 2px) NICHT als feste Mindesthöhe für die Item-Card wirkt.",
+        "acceptanceCriteria": [
+          { "given": "ein Item ohne Notiz und ein Item mit Notiz untereinander", "when": "die Show-View gerendert wird", "then": "das Item ohne Notiz ist sichtbar kompakter (Höhendifferenz ≥ 14 px gegenüber dem Item mit Notiz)" }
+        ],
+        "technicalNotes": "Aktueller HAML-Code rendert .mw-shopping-item__note bedingt – keine HTML-Änderung nötig, nur CSS-Verifikation. Falls eine min-height: 1em o.ä. existiert, entfernen.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Item-Spacing auf Mobile (< 768 px) reduzieren: .mw-shopping-list gap kleiner; .mw-shopping-item Padding/Border-Spacing kleiner. Ziel: 6+ Items + 1 Header gleichzeitig auf iPhone 14.",
+        "acceptanceCriteria": [
+          { "given": "Liste mit 8 Items in 2 Kategorien", "when": "auf iPhone 14 (390×844 viewport, Safari) geöffnet", "then": "mind. 6 Items + 1 Kategorie-Header sind ohne Scroll sichtbar" }
+        ],
+        "technicalNotes": "Tailwind/CSS via @media (max-width: 767px). Variablen --space-* nutzen falls vorhanden, sonst absolute Werte halbieren. Touch-Targets der Check-Buttons bleiben ≥ 44×44 px (Konvention T5).",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Kategorie-Header (.mw-shopping-category__header) auf Mobile kompakter: margin-top und margin-bottom verkleinern; Header-Font-Size minimal absenken (z.B. fs-13 statt fs-14); Item-Count-Zahl bleibt mit dabei.",
+        "acceptanceCriteria": [
+          { "given": "Liste mit 3 Kategorien", "when": "auf Mobile gerendert", "then": "vertikaler Abstand zwischen letzter Item-Reihe einer Kategorie und Header der nächsten Kategorie ≤ 12 px (heute ≈ 24 px)" }
+        ],
+        "technicalNotes": "Header verwendet aktuell inline-style style='margin-top: 1rem; ...' – inline-styles in eine CSS-Klasse auslagern, damit Media-Query greifen kann.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Section-Bar (.mw-shopping-show__bar) auf Mobile kompakter: Summary + Filter-Button in einer Zeile, weniger Padding.",
+        "acceptanceCriteria": [
+          { "given": "Show-View auf Mobile", "when": "gerendert", "then": "Bar nimmt ≤ 56 px Höhe ein und passt visuell zur Page-Header-Bar"  }
+        ],
+        "technicalNotes": "Falls Items aktuell stack-en, ggf. Summary-Text kürzen ('5 von 12 erledigt' statt '5 erledigt von 12 Einträgen' – nur Mobile via CSS oder Helper-Param).",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-005",
+        "description": "Desktop (≥ 768 px) bleibt visuell identisch: kein Test-Regress, gleiche Spacings wie vor der Änderung.",
+        "acceptanceCriteria": [
+          { "given": "Show-View auf 1280×800 Viewport", "when": "vorher/nachher verglichen", "then": "Layout pixel-stabil (Toleranz < 2 px je Achse) – Screenshot-Vergleich ok" }
+        ],
+        "technicalNotes": "Alle neuen Spacing-Werte hinter Media-Query (max-width: 767px) schalten; oder mit Mobile-first-Pattern: kleine Werte default, Desktop ab 768px aufstocken.",
+        "dependencies": []
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Sticky Section-Bar (.mw-shopping-show__bar) auf Mobile – beim Scrollen oben sichtbar bleiben (Summary + Filter immer erreichbar).",
+        "acceptanceCriteria": [],
+        "technicalNotes": "position: sticky; top: 0; z-index in Bezug auf Page-Header beachten.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Sticky Kategorie-Header beim Scrollen, damit man immer weiß, in welcher Kategorie man gerade ist.",
+        "acceptanceCriteria": [],
+        "technicalNotes": "position: sticky; top: <Höhe der Section-Bar>; benötigt Stacking-Context-Cleanup.",
+        "dependencies": ["R-P1-001"]
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Swipe-Geste auf Item: nach rechts erledigt, nach links löschen",
+        "rationale": "Eigenes Interaktionspattern, braucht UX-Konzept + Stimulus-Controller; nicht in dieser Iteration."
+      },
+      {
+        "id": "R-P2-002",
+        "description": "Kollapsierte Kategorien (Tap auf Header faltet Items ein/aus)",
+        "rationale": "Spannend für sehr lange Listen, hier aber Scope-Creep gegenüber reiner Spacing-Optimierung."
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Items pro Viewport",
+        "description": "Anzahl Items + Header gleichzeitig sichtbar auf iPhone 14 (390×844)",
+        "target": "≥ 6 Items + 1 Header (heute 3-4)",
+        "measurementMethod": "Screenshot-Vergleich via agent-browser im mobile viewport",
+        "evaluationAt": "Direkt im Review der Implementierung"
+      },
+      {
+        "name": "Höhendifferenz Item ohne Notiz vs mit Notiz",
+        "description": "Items ohne Notiz sind kompakter als Items mit Notiz",
+        "target": "Differenz ≥ 14 px",
+        "measurementMethod": "DevTools Layout-Inspector",
+        "evaluationAt": "Im Review"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Qualitatives Feedback Küchen-Team",
+        "description": "Subjektive Lesbarkeit/Nützlichkeit beim Einkauf",
+        "target": "Positives Feedback im nächsten Onsite-Besuch",
+        "measurementMethod": "Kurzgespräch / Interview",
+        "evaluationAt": "30 Tage nach Launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Sollen wir die '— ohne Kategorie —' Sektion auf Mobile zusätzlich klein-stellen oder einklappen, da sie meist leer ist?",
+      "owner": "design",
+      "blocking": false
+    },
+    {
+      "question": "Mobile-Breakpoint: Halten wir uns an die vorhandene 768-px-Grenze, oder gibt es im Projekt einen anderen kanonischen Mobile-Breakpoint?",
+      "owner": "engineering",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [
+      { "description": "Keine externen Deadlines", "date": null }
+    ],
+    "dependencies": [
+      { "description": "Bestehende mw-shopping-* Komponenten in app/assets/tailwind/application.css" },
+      { "description": "Mobile-Layout-Konventionen aus T5 (Touch-Targets ≥ 44 px)" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Spacing-Reduktion auf Mobile, Notiz-Slot nur bei present, kompakte Kategorie-Header, kompakte Section-Bar, Desktop unverändert." },
+      { "name": "v1.1", "scope": "Sticky Section-Bar + Sticky Kategorie-Header." },
+      { "name": "v2 (später)", "scope": "Swipe-Gesten, kollapsierte Kategorien." }
+    ]
+  }
+}
