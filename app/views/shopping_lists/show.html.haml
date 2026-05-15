@@ -12,6 +12,11 @@
       %strong= @list.calendar_week_label
   .mw-page-header__actions
     - if current_user.staff?
+      = render "shopping_lists/photo_import_button",
+               url:     shopping_list_photo_imports_path(@list),
+               label:   "Items aus Foto hinzufügen",
+               icon:    "camera",
+               variant: "secondary"
       = link_to edit_shopping_list_path(@list), class: "mw-btn mw-btn--secondary mw-btn--sm" do
         = lucide_icon "pencil", size: 14
         Bearbeiten
@@ -19,6 +24,8 @@
 
 - if notice
   .mw-flash.mw-flash--success= notice
+- if alert
+  .mw-flash.mw-flash--error= alert
 
 .mw-shopping-show
   .mw-shopping-show__bar

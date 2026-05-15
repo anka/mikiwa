@@ -1,0 +1,342 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "spec": "https://mikiwa.app/spec/v1#"
+  },
+  "@type": "TechArticle",
+  "@id": "urn:spec:einkaufsliste-foto-import",
+  "name": "Einkaufsliste per Foto erstellen",
+  "description": "Betreuer*innen erstellen oder erweitern eine Einkaufsliste, indem sie eine handgeschriebene Liste abfotografieren; OpenAI Vision erkennt die Einträge und klassifiziert sie automatisch.",
+  "dateCreated": "2026-05-15",
+  "version": "1.0",
+
+  "spec:problemStatement": {
+    "description": "Betreuer*innen pflegen Einkaufslisten heute manuell ein, obwohl im Kindergarten-Alltag häufig handgeschriebene Zettel entstehen (Wochenbedarf, ad-hoc Notizen an der Küchentheke). Das Abtippen ist zeitaufwendig, fehleranfällig und passiert oft erst später am Tag, wodurch Items vergessen werden.",
+    "affectedUsers": "Alle Betreuer*innen, die Einkaufslisten pflegen — primär das Küchen- und Springer-Team. Tritt täglich bzw. mehrmals pro Woche auf.",
+    "costOfInaction": "Vergessene Items führen zu Folgekäufen, Mehrwegen und Frust; manuelles Abtippen kostet 3–8 Minuten pro Liste; Akzeptanz der digitalen Einkaufsliste sinkt, wenn der Übertragungsaufwand zu hoch ist."
+  },
+
+  "spec:goals": [
+    {
+      "description": "Erstellung einer Einkaufsliste aus einem Foto in ≤ 15 Sekunden (vom Auslösen bis sichtbar gespeicherte Items)",
+      "type": "user",
+      "target": "p75 ≤ 15s end-to-end auf einem typischen Smartphone im Kindergarten-WLAN"
+    },
+    {
+      "description": "Reduktion der Zeit zum Anlegen einer Liste mit ≥ 5 Items um mindestens 70 %",
+      "type": "user",
+      "target": "Median manuell ~4 min → Median via Foto ≤ 75 s innerhalb 30 Tagen nach Launch"
+    },
+    {
+      "description": "Hohe Trefferquote bei der automatischen Kategorisierung der erkannten Items",
+      "type": "business",
+      "target": "≥ 80 % der auto-klassifizierten Items werden vom Betreuer NICHT nachträglich umkategorisiert"
+    },
+    {
+      "description": "Adoption des Foto-Flows in der Zielgruppe",
+      "type": "business",
+      "target": "≥ 40 % aller neu erstellten Einkaufslisten innerhalb 60 Tagen werden per Foto angelegt"
+    }
+  ],
+
+  "spec:nonGoals": [
+    {
+      "description": "Mehrere Fotos pro Erkennungsvorgang (z. B. Vorder-/Rückseite, mehrseitige Listen)",
+      "rationale": "Erhöht UI-Komplexität deutlich; in v1 reicht ein Foto. Bei Bedarf später als Erweiterung."
+    },
+    {
+      "description": "Manueller Review-/Bestätigungsschritt vor dem Speichern",
+      "rationale": "Bewusste Entscheidung: Items werden direkt persistiert, Korrekturen erfolgen via bestehender Inline-Edit-Funktionalität. Reduziert UI-Aufwand und beschleunigt den Flow."
+    },
+    {
+      "description": "Speicherung/Archivierung des Originalbilds",
+      "rationale": "Datenschutz und Storage-Kosten; das Foto dient nur als Input zur Texterkennung und wird nach erfolgreicher Verarbeitung verworfen."
+    },
+    {
+      "description": "Erkennung von Mengenangaben oder Einheiten (z. B. '2 kg Äpfel')",
+      "rationale": "ShoppingItem hat aktuell keine Mengen-/Einheits-Felder; ein vollwertiges Mengen-Konzept ist ein eigenes Thema (separater Spec)."
+    },
+    {
+      "description": "Bildvorverarbeitung im Browser (Crop, Rotate, Kontrast)",
+      "rationale": "Moderne Smartphone-Kameras und gpt-4o-mini Vision liefern in Tests ausreichende Qualität; falls Trefferquote schlecht, später nachrüsten."
+    },
+    {
+      "description": "Mehrsprachige Erkennung (z. B. türkisch, kroatisch handgeschriebene Listen)",
+      "rationale": "Zielgruppe sind primär österreichische Einrichtungen mit deutschsprachigen Listen; Prompt wird auf Deutsch ausgelegt. Mehrsprachigkeit später möglich."
+    }
+  ],
+
+  "spec:userStories": [
+    {
+      "persona": "Betreuer*in (mobil, am Smartphone)",
+      "capability": "auf der Einkaufslisten-Übersicht eine neue Liste durch Abfotografieren eines handgeschriebenen Zettels anlegen",
+      "benefit": "ich erspare mir das manuelle Abtippen aller Einträge",
+      "priority": 0
+    },
+    {
+      "persona": "Betreuer*in",
+      "capability": "auf einer bereits existierenden Einkaufsliste weitere Items per Foto hinzufügen",
+      "benefit": "ich kann nachträgliche Zettel-Ergänzungen schnell übernehmen, ohne die bestehenden Items zu verlieren",
+      "priority": 1
+    },
+    {
+      "persona": "Betreuer*in",
+      "capability": "dass die erkannten Items automatisch in die richtige Kategorie eingeordnet sind",
+      "benefit": "ich muss die Items beim Einkaufen nicht selbst sortieren und finde sie in der richtigen Markt-Reihenfolge",
+      "priority": 2
+    },
+    {
+      "persona": "Betreuer*in",
+      "capability": "nach dem Foto-Import einzelne Items via Inline-Edit korrigieren (Name, Kategorie, Notiz)",
+      "benefit": "ich kann OCR-Fehler oder Fehlklassifizierungen schnell beheben, ohne die ganze Liste neu zu machen",
+      "priority": 3
+    },
+    {
+      "persona": "Betreuer*in",
+      "capability": "eine klare Fehlermeldung sehen, wenn die Erkennung fehlschlägt (z. B. unleserliches Foto, API down)",
+      "benefit": "ich weiß sofort, dass nichts gespeichert wurde, und kann es erneut versuchen oder manuell anlegen",
+      "priority": 4
+    },
+    {
+      "persona": "Betreuer*in",
+      "capability": "während der Verarbeitung einen klaren Lade-Status sehen",
+      "benefit": "ich weiß, dass etwas passiert, und drücke den Button nicht versehentlich mehrfach",
+      "priority": 5
+    }
+  ],
+
+  "spec:requirements": {
+    "mustHave": [
+      {
+        "id": "R-P0-001",
+        "description": "Neue UI-Aktion 'Aus Foto erstellen' beim Anlegen einer neuen Einkaufsliste (Index-Seite). Öffnet den nativen Kamera-/Datei-Dialog (<input type='file' accept='image/*' capture='environment'>).",
+        "acceptanceCriteria": [
+          { "given": "Betreuer*in ist eingeloggt und auf der Einkaufslisten-Übersicht", "when": "sie auf 'Aus Foto erstellen' tippt", "then": "die Smartphone-Kamera (bzw. Datei-Dialog) öffnet sich" },
+          { "given": "ein Bild wurde ausgewählt/aufgenommen", "when": "der Upload startet", "then": "eine neue ShoppingList wird angelegt und der Verarbeitungs-Status sichtbar" }
+        ],
+        "technicalNotes": "Native Browser-Capture; keine zusätzliche JS-Library nötig. Multipart-Upload via Stimulus-Controller.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-002",
+        "description": "Neue UI-Aktion 'Items aus Foto hinzufügen' auf der Detail-/Edit-Seite einer bestehenden Einkaufsliste. Bestehende Items bleiben erhalten, neue Items werden angehängt.",
+        "acceptanceCriteria": [
+          { "given": "eine ShoppingList mit 3 bestehenden Items", "when": "die Betreuer*in 4 neue Items per Foto importiert", "then": "die Liste enthält danach 7 Items, die bestehenden 3 sind unverändert (Name, Kategorie, Reihenfolge)" }
+        ],
+        "technicalNotes": "Items werden ans Ende der jeweiligen Kategorie einsortiert (analog zu manuellem Anlegen).",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-003",
+        "description": "Neuer Service ShoppingItems::ImageRecognizer analog zu ShoppingItems::AutoClassifier: kapselt den OpenAI-Vision-Aufruf, nutzt chat/completions mit response_format: { type: 'json_schema', strict: true }. Modell: gpt-4o-mini (Vision-fähig, günstig, konsistent zum bestehenden Auto-Classifier).",
+        "acceptanceCriteria": [
+          { "given": "ein gültiges Bild und gesetzter OPENAI_API_KEY", "when": "ImageRecognizer.call(image_io) aufgerufen wird", "then": "ein Array von { name:, category:, note: }-Hashes wird zurückgegeben, category ist garantiert in ShoppingItem::CATEGORY_ORDER" },
+          { "given": "das Bild enthält keine erkennbaren Items", "when": "die API ein leeres Array liefert", "then": "der Service gibt [] zurück, ohne Exception" }
+        ],
+        "technicalNotes": "Strict JSON-Schema mit Top-Level-Property 'items' (Array von Objekten). Bild als Base64-Data-URL im content-Array vom Typ image_url. TIMEOUT_SECONDS = 30 (Vision braucht länger als Text). System-Prompt analog zu AutoClassifier::SYSTEM_PROMPT aber mit Vision-Kontext (handgeschriebene deutsche Einkaufsliste, Kindergarten-Österreich).",
+        "dependencies": ["app/services/shopping_items/auto_classifier.rb"]
+      },
+      {
+        "id": "R-P0-004",
+        "description": "Die Erkennung läuft synchron im Controller-Request (Status-Quo: Betreuer*in wartet auf Ergebnis). Lange laufende Anfragen werden durch TIMEOUT_SECONDS = 30 begrenzt.",
+        "acceptanceCriteria": [
+          { "given": "ein Foto wird hochgeladen", "when": "OpenAI antwortet innerhalb 30 s", "then": "die Items sind nach Reload der Liste sichtbar" },
+          { "given": "OpenAI antwortet nicht innerhalb 30 s oder gibt 5xx zurück", "when": "die Anfrage timeout/fehlt", "then": "eine Flash-Meldung 'Erkennung fehlgeschlagen, bitte erneut versuchen' wird angezeigt; bei Use-Case 'neue Liste' bleibt die leere Liste bestehen, der Betreuer kann manuell weiterarbeiten oder erneut hochladen" }
+        ],
+        "technicalNotes": "Bewusste Entscheidung gegen ActiveJob (im Gegensatz zu ClassifyJob), weil der Betreuer aktiv auf das Ergebnis wartet und der Async-Flow zusätzlichen UX-Aufwand (Polling/Turbo Stream) erfordert. Bei zukünftigen Performance-Problemen kann auf Async migriert werden (siehe R-P2-001).",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-005",
+        "description": "Bei Fehler (HTTP-Fehler, Timeout, JSON-Parse-Fehler, leeres Ergebnis) wird die Flash-Fehlermeldung angezeigt und KEINE Items werden erstellt. Bei Use-Case 'neue Liste' bleibt die (bereits angelegte) Liste leer; bei Use-Case 'bestehende Liste ergänzen' bleiben die bestehenden Items unverändert.",
+        "acceptanceCriteria": [
+          { "given": "das hochgeladene Bild ist unleserlich/ungültig", "when": "die Erkennung fehlschlägt", "then": "Flash-Toast 'Konnte keine Items erkennen' + die Liste bleibt im Zustand vor dem Upload" },
+          { "given": "OPENAI_API_KEY ist nicht gesetzt", "when": "der Upload-Endpoint aufgerufen wird", "then": "Flash-Toast 'Foto-Erkennung ist derzeit deaktiviert' + 422-Response (analog AutoClassifier.enabled?)" }
+        ],
+        "technicalNotes": "Transaktionale Erstellung: entweder alle erkannten Items werden gespeichert, oder keines (ActiveRecord-Transaktion um Bulk-Insert).",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-006",
+        "description": "Sichtbarer Lade-Indikator (Spinner / disabled Button) zwischen Upload und Response, damit die Betreuer*in nicht mehrfach abschickt.",
+        "acceptanceCriteria": [
+          { "given": "der Upload läuft", "when": "die Betreuer*in den Button erneut antippt", "then": "kein weiterer Upload wird ausgelöst (Button ist disabled)" }
+        ],
+        "technicalNotes": "Stimulus-Controller mit disable_with / Form-Submit-State.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-007",
+        "description": "Foto-Upload und Erkennung sind nur für Rollen verfügbar, die heute schon Einkaufslisten bearbeiten dürfen (Betreuer*in, Admin).",
+        "acceptanceCriteria": [
+          { "given": "ein Eltern-Account ist eingeloggt", "when": "die Person versucht den Foto-Upload-Endpoint aufzurufen", "then": "403/redirect mit Berechtigungs-Fehler" }
+        ],
+        "technicalNotes": "Bestehende Pundit-/Authorization-Logik der ShoppingList-Controller wiederverwenden.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P0-008",
+        "description": "Erkannte Items werden in der Antwort bereits mit Kategorie zurückgegeben — KEIN separater zweiter Aufruf an AutoClassifier für Vision-erkannte Items.",
+        "acceptanceCriteria": [
+          { "given": "Vision-Aufruf liefert [{ name: 'Milch', category: 'dairy' }, ...]", "when": "Items gespeichert werden", "then": "kein zusätzlicher ShoppingItems::ClassifyJob wird für diese Items gequeued" }
+        ],
+        "technicalNotes": "Single-Call-Strategie (Vision + Klassifikation in einem Aufruf) spart Kosten/Latenz. JSON-Schema erzwingt valide Kategorien. Items aus dem Foto-Flow werden NICHT mit category='auto' angelegt, sondern direkt mit der erkannten Kategorie, damit der after_commit-Hook keinen weiteren ClassifyJob triggert.",
+        "dependencies": ["R-P0-003"]
+      }
+    ],
+    "niceToHave": [
+      {
+        "id": "R-P1-001",
+        "description": "Bildvorschau nach Auswahl, bevor der Upload startet (Betreuer*in kann 'Falsches Foto' abbrechen).",
+        "acceptanceCriteria": [
+          { "given": "ein Foto wurde ausgewählt", "when": "die Vorschau erscheint", "then": "es gibt Buttons 'Verwenden' und 'Neu wählen'" }
+        ],
+        "technicalNotes": "Pures Stimulus + FileReader.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-002",
+        "description": "Maximale Upload-Größe / clientseitige Kompression auf ≤ 1.5 MB (für mobile Datenverbindungen und Token-Kosten).",
+        "acceptanceCriteria": [
+          { "given": "ein 8 MB Foto wird ausgewählt", "when": "der Upload vorbereitet wird", "then": "das Bild wird clientseitig auf ≤ 1.5 MB skaliert/komprimiert" }
+        ],
+        "technicalNotes": "Canvas-basierte JPEG-Rekompression. Tradeoff prüfen: zu starke Kompression verschlechtert OCR.",
+        "dependencies": []
+      },
+      {
+        "id": "R-P1-003",
+        "description": "Telemetrie: Logging von Anzahl erkannter Items, Latenz und API-Cost pro Aufruf in den Rails-Logs (für späteres Tuning).",
+        "acceptanceCriteria": [],
+        "technicalNotes": "Strukturiertes Log-Event analog zu bestehender Konvention.",
+        "dependencies": []
+      }
+    ],
+    "futureConsiderations": [
+      {
+        "id": "R-P2-001",
+        "description": "Async-Verarbeitung via ActiveJob + Turbo Stream Updates, falls Latenz oder Time-outs zum Problem werden",
+        "rationale": "v1 setzt auf den simpleren synchronen Flow; falls > 5 % der Anfragen timeouten, kann später auf Async migriert werden."
+      },
+      {
+        "id": "R-P2-002",
+        "description": "Mehrere Fotos pro Vorgang (z. B. zweiseitige Liste)",
+        "rationale": "UI-Komplexität (Reihenfolge, Duplikate) rechtfertigt eigenen Spec."
+      },
+      {
+        "id": "R-P2-003",
+        "description": "Mengen-/Einheits-Erkennung (z. B. '2 kg Äpfel', '1 Pkg Butter')",
+        "rationale": "Setzt Schema-Erweiterung von ShoppingItem voraus — eigenständiges Vorhaben."
+      },
+      {
+        "id": "R-P2-004",
+        "description": "Confidence-Score pro Item + optionaler Review-Schritt nur für niedrige Confidence",
+        "rationale": "Falls die Auto-Klassifikation in der Praxis schlechter abschneidet als erhofft, lässt sich der Hybrid-Flow nachträglich ergänzen."
+      },
+      {
+        "id": "R-P2-005",
+        "description": "Bild-Archiv mit Original-Foto + erkannten Items zur Nachvollziehbarkeit",
+        "rationale": "Aktuell aus Datenschutz-/Storage-Gründen ausgeschlossen, könnte für Audit/Training künftig relevant werden."
+      }
+    ]
+  },
+
+  "spec:successMetrics": {
+    "leading": [
+      {
+        "name": "Adoption Foto-Flow",
+        "description": "Anteil neuer ShoppingLists, die per Foto angelegt wurden",
+        "target": "≥ 25 % nach 30 Tagen, ≥ 40 % nach 60 Tagen",
+        "measurementMethod": "Neues Feld creation_source (manual|photo) auf ShoppingList, ausgewertet über Rails-Konsole/Dashboard",
+        "evaluationAt": "30 und 60 Tage nach Launch"
+      },
+      {
+        "name": "Erfolgsquote der Erkennung",
+        "description": "Anteil Foto-Uploads, die mindestens ein Item erzeugen (kein Fehler, nicht leer)",
+        "target": "≥ 90 %",
+        "measurementMethod": "Counter im Log/Telemetrie (recognition_success vs recognition_failure)",
+        "evaluationAt": "14 Tage nach Launch"
+      },
+      {
+        "name": "Trefferquote Auto-Klassifikation",
+        "description": "Anteil der per Foto erstellten Items, die NICHT innerhalb 7 Tagen nach Erstellung umkategorisiert werden",
+        "target": "≥ 80 %",
+        "measurementMethod": "Vergleich category bei Erstellung vs. 7 Tage später (PaperTrail oder neues Audit-Feld)",
+        "evaluationAt": "30 Tage nach Launch"
+      },
+      {
+        "name": "End-to-End-Latenz",
+        "description": "Zeit vom Upload bis zur Anzeige der Items",
+        "target": "p75 ≤ 15 s, p95 ≤ 25 s",
+        "measurementMethod": "Server-side Timing-Log im Controller",
+        "evaluationAt": "Laufend, Reviewboard wöchentlich in den ersten 4 Wochen"
+      }
+    ],
+    "lagging": [
+      {
+        "name": "Aktive Nutzung der Einkaufsliste",
+        "description": "Anzahl ShoppingLists pro Einrichtung pro Woche",
+        "target": "+25 % gegenüber den 30 Tagen vor Launch",
+        "measurementMethod": "Aggregation der ShoppingList-Erstellungen pro Einrichtung",
+        "evaluationAt": "90 Tage nach Launch"
+      },
+      {
+        "name": "Zufriedenheit Küchen-Team",
+        "description": "Qualitatives Feedback bei den nächsten zwei Onsite-Besuchen / Feedback-Runden",
+        "target": "Mehrheit der befragten Betreuer*innen nennt Foto-Flow als hilfreich",
+        "measurementMethod": "Interview / Kurzumfrage",
+        "evaluationAt": "60–90 Tage nach Launch"
+      },
+      {
+        "name": "OpenAI-Kosten pro aktive Einrichtung",
+        "description": "Monatliche OpenAI-Ausgaben durch das Foto-Feature",
+        "target": "≤ 2 € pro aktive Einrichtung pro Monat",
+        "measurementMethod": "OpenAI-Usage-Dashboard, gewichtet nach Einrichtungs-Aktivität",
+        "evaluationAt": "Monatlich ab Launch"
+      }
+    ]
+  },
+
+  "spec:openQuestions": [
+    {
+      "question": "Welche maximale Bildgröße akzeptieren wir serverseitig (Memory/Token-Budget)? Vorschlag: 4 MB Hard-Limit, ~1.5 MB Soft-Target via Client-Kompression.",
+      "owner": "engineering",
+      "blocking": false
+    },
+    {
+      "question": "Reicht gpt-4o-mini für Handschrift-Qualität im realen Kindergarten-Setting, oder brauchen wir gpt-4o? — Sollte mit 5–10 echten Testfotos validiert werden, bevor v1 produktiv geht.",
+      "owner": "engineering",
+      "blocking": true
+    },
+    {
+      "question": "Sollen Duplikat-Items (z. B. 'Milch' steht schon auf der Liste und kommt im Foto erneut vor) beim Use-Case 'bestehende Liste ergänzen' automatisch dedupliziert werden, oder werden sie als separate Einträge gespeichert?",
+      "owner": "stakeholder",
+      "blocking": false
+    },
+    {
+      "question": "Wird ein neues Feld creation_source auf ShoppingList (oder pro Item) eingeführt, um die Erfolgsmetriken sauber messen zu können?",
+      "owner": "engineering",
+      "blocking": false
+    },
+    {
+      "question": "Wo genau soll der Einstiegspunkt in der Mobile-UI sitzen — als prominenter Primary-Button im Header der Einkaufsliste oder als sekundäre Aktion im Dropdown/Overflow?",
+      "owner": "design",
+      "blocking": false
+    }
+  ],
+
+  "spec:timeline": {
+    "hardDeadlines": [
+      { "description": "Keine externen Deadlines bekannt", "date": null }
+    ],
+    "dependencies": [
+      { "description": "OpenAI-API muss verfügbar sein (gleicher Account wie Auto-Classifier; bereits konfiguriert via OPENAI_API_KEY)" },
+      { "description": "Bestehende ShoppingList-/ShoppingItem-Models und CATEGORY_ORDER bleiben stabil" },
+      { "description": "Mobile Bottom-Nav (Commit a4c6729) als möglicher Einstiegsort vorhanden" }
+    ],
+    "phases": [
+      { "name": "v1", "scope": "Foto-Upload bei neuer Liste UND bei bestehender Liste; sync OpenAI-Vision-Call via neuem ShoppingItems::ImageRecognizer; Auto-Klassifikation inline; Fehlermeldungen + leere Liste bei Fehler; Berechtigungen wie bisher; Lade-Indikator." },
+      { "name": "v1.1 (Fast-Follow)", "scope": "Bildvorschau, Client-Kompression, Telemetrie/Logging-Events." },
+      { "name": "v2 (später)", "scope": "Async-Verarbeitung, mehrere Fotos pro Vorgang, Mengen-Erkennung, Confidence-basierter Review-Step, optionales Bild-Archiv." }
+    ]
+  }
+}

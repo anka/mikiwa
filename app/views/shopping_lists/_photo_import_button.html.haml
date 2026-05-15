@@ -1,0 +1,25 @@
+-# F80: Foto-Upload-Button für Einkaufslisten-Import.
+-# Locals:
+-#   url   – Ziel-URL (POST), entweder shopping_lists_photo_imports_path oder shopping_list_photo_imports_path(list)
+-#   label – Button-Text (z.B. "Aus Foto erstellen" / "Items aus Foto hinzufügen")
+-#   icon  – Lucide-Icon-Name (z.B. "camera")
+-#   variant – "primary" oder "secondary" (Button-Style)
+- variant ||= "secondary"
+- icon    ||= "camera"
+= form_with url: url, method: :post, multipart: true, local: true,
+            class: "mw-photo-upload",
+            data: { controller: "photo-upload",
+                    photo_upload_target: "form" } do |f|
+  = f.file_field :image, accept: "image/*", capture: "environment",
+                          class: "mw-photo-upload__input",
+                          data: { photo_upload_target: "input",
+                                  action: "change->photo-upload#fileSelected" }
+  %button{ type: "button",
+           class: "mw-btn mw-btn--#{variant} mw-btn--sm",
+           data:  { photo_upload_target: "trigger",
+                    action: "click->photo-upload#open" } }
+    = lucide_icon icon, size: 16
+    = label
+  %span.mw-photo-upload__status{ data: { photo_upload_target: "status" }, hidden: true, "aria-live": "polite" }
+    %span.mw-photo-upload__spinner{ "aria-hidden": "true" }
+    Liste wird erkannt …

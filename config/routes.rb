@@ -89,6 +89,11 @@ Rails.application.routes.draw do
   get "birthdays", to: "birthdays#index", as: :birthdays
 
   resources :calendar_events
+  # F80: Foto-Import für neue Einkaufsliste (POST /shopping_lists/photo_imports)
+  namespace :shopping_lists do
+    resource :photo_imports, only: %i[create], controller: "photo_imports"
+  end
+
   resources :shopping_lists do
     resources :shopping_items, only: %i[create update destroy] do
       member do
@@ -97,6 +102,9 @@ Rails.application.routes.draw do
         delete :photo, action: :purge_photo, as: :purge_photo
       end
     end
+    # F80: Foto-Import zum Ergänzen einer bestehenden Liste
+    resource :photo_imports, only: %i[create], module: "shopping_lists",
+                              controller: "photo_imports"
   end
   resources :attendance_lists do
     member do

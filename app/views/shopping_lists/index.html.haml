@@ -5,12 +5,19 @@
     %h1.mw-page-header__title Einkaufslisten
   - if current_user.staff?
     .mw-page-header__actions
+      = render "shopping_lists/photo_import_button",
+               url:     shopping_lists_photo_imports_path,
+               label:   "Aus Foto erstellen",
+               icon:    "camera",
+               variant: "secondary"
       = link_to new_shopping_list_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
         = lucide_icon "plus", size: 16
         Neue Liste
 
 - if notice
   .mw-flash.mw-flash--success= notice
+- if alert
+  .mw-flash.mw-flash--error= alert
 
 = render "filters"
 

@@ -154,7 +154,10 @@
         "F76",
         "F77",
         "F78",
-        "F79"
+        "F79",
+        "F80",
+        "F81",
+        "F82"
       ]
     }
   ],
@@ -4190,6 +4193,230 @@
         "F78"
       ],
       "spec_file": "docs/spec-einkaufsliste-auto-klassifikation.json"
+    },
+    {
+      "id": "F80",
+      "name": "Einkaufsliste: Aus Foto erstellen (OpenAI Vision + Auto-Klassifikation)",
+      "phase": 9,
+      "status": "done",
+      "short_description": "Betreuer*innen erstellen neue Einkaufslisten oder ergänzen bestehende durch Abfotografieren eines handgeschriebenen Zettels; OpenAI gpt-4o-mini (Vision, Structured Outputs) erkennt Einträge und liefert direkt die ShoppingItem-Kategorie mit.",
+      "description": "Ziel: Handgeschriebene Einkaufszettel sollen nicht mehr abgetippt werden müssen.\n\nUI-Einstiegspunkte (beide!):\n  • Einkaufslisten-Index (ShoppingListsController#index): neuer Button 'Aus Foto erstellen' neben dem bestehenden 'Neue Liste'-Button.\n  • Einkaufslisten-Show/Edit (ShoppingListsController#show oder Edit): neuer Button 'Items aus Foto hinzufügen' – ergänzt die bestehende Liste, ohne vorhandene Items zu verändern.\n\nNeuer Controller-Endpoint (z.B. ShoppingLists::PhotoImportsController):\n  • POST /shopping_lists/photo_imports → erzeugt eine neue ShoppingList und importiert Items.\n  • POST /shopping_lists/:id/photo_imports → ergänzt bestehende Liste.\n  • Authorization: nur Rollen mit ShoppingList-Edit-Berechtigung (bestehende Pundit-Logik wiederverwenden).\n  • Multipart-Upload: ein File-Parameter (image), accept='image/*', capture='environment' für native Kamera.\n  • Sync-Verarbeitung im Request (kein ActiveJob für v1).\n  • ActiveRecord-Transaktion um Bulk-Insert der ShoppingItems.\n\nNeuer Service ShoppingItems::ImageRecognizer (app/services/shopping_items/image_recognizer.rb):\n  • Strenger Aufbau analog zu ShoppingItems::AutoClassifier.\n  • API: POST https://api.openai.com/v1/chat/completions, Modell 'gpt-4o-mini' (Vision-fähig).\n  • Net::HTTP statt SDK, identisch zum AutoClassifier-Pattern.\n  • TIMEOUT_SECONDS = 30 (Vision braucht länger als Text-Klassifikation).\n  • response_format: { type: 'json_schema', json_schema: <strict schema> }.\n  • Schema: { items: [ { name: string, category: enum(CATEGORY_ORDER), note: string|null } ] } – strict: true, additionalProperties: false, items als Top-Level-Property erforderlich.\n  • System-Prompt (deutsch): 'Du extrahierst Artikel von einer handgeschriebenen Einkaufsliste aus einem österreichischen Kindergarten. Erkenne jeden Eintrag exakt einmal, normalisiere die Schreibweise leicht (Tippfehler/Großschreibung), klassifiziere jeden Artikel in eine der vorgegebenen Kategorien. Bei Unsicherheit oder mehrdeutigen Einträgen wähle other. Antworte ausschließlich im JSON-Schema.'\n  • User-Content: array mit { type: 'text', text: <category descriptions analog AutoClassifier> } und { type: 'image_url', image_url: { url: 'data:image/<mime>;base64,<...>' } }.\n  • .enabled? → ENV['OPENAI_API_KEY'].present? (identisch zu AutoClassifier).\n  • .call(image_io, content_type: 'image/jpeg') → Array<{ name:, category:, note: }> mit category als Symbol aus CATEGORY_ORDER. Bei leerem Array oder JSON::ParserError: gibt [] zurück. HTTP-Fehler / Timeout: raise (Controller fängt ab und rendert Flash).\n  • Methoden-Hook fetch_completion(body) analog AutoClassifier für Tests stubbar.\n\nWichtig (R-P0-008): Items aus dem Foto-Flow werden mit der erkannten Kategorie direkt persistiert – NICHT mit category='auto'. Dadurch triggert der after_commit-Hook aus F79 keinen zusätzlichen ClassifyJob, was Latenz und Kosten spart.\n\nUI/UX (mobile-first):\n  • Stimulus-Controller (photo_upload_controller.js): managed File-Input + Submit-Button-State + Spinner-Anzeige während laufendem Upload.\n  • Sichtbarer Lade-Indikator (Spinner + 'Liste wird erkannt …') zwischen Upload-Start und Response.\n  • Button wird während Upload disabled (Schutz gegen Doppelklick).\n  • Fehlerfall: Flash-Toast (mw-flash--error) 'Konnte keine Items erkennen' oder 'Foto-Erkennung ist derzeit deaktiviert' bei fehlendem API-Key.\n  • Erfolgsfall: Redirect zur Show-Seite mit erkannten Items; Flash-Toast 'X Items erkannt'.\n\nKein Review-Schritt: Items werden direkt gespeichert; nachträgliche Korrekturen via bestehender Inline-Edit-Funktion (F78).\nKeine Bild-Archivierung: das Foto wird nach erfolgreicher Verarbeitung verworfen.\n\nKonfiguration:\n  • Reuse vorhandener OPENAI_API_KEY (.env.example ist bereits gesetzt).\n  • Maximale Upload-Größe: 4 MB Rails-Side, ~1.5 MB Soft-Target via clientseitiger Kompression (siehe acceptance criteria – Nice-to-have).\n\nTests:\n  • Service-Tests: ShoppingItems::ImageRecognizer mit gestubbtem fetch_completion (mehrere Items, leeres Bild, ungültige Kategorie → :other, HTTP-Fehler → raise).\n  • Controller/Integration-Tests: Upload mit Test-Fixture-Bild (Multipart), Authorization (Eltern → 403), Fehlerfall (API-Key fehlt → Flash + 422), bestehende Liste ergänzt (Items werden angehängt, alte Items bleiben).\n  • Stub OpenAI-API komplett (kein Live-Aufruf in Tests).\n\nVerifikation via agent-browser (mobile Viewport):\n  • Auf Index-Seite: 'Aus Foto erstellen' → Foto auswählen → Spinner → Show-Seite mit Items.\n  • Auf bestehender Liste: 'Items aus Foto hinzufügen' → bestehende Items bleiben, neue werden angehängt.\n  • Fehler-Pfad: API-Key entfernt → korrekte Flash-Meldung; leere Liste / kein Datenverlust.\n\nSpec: docs/spec-einkaufsliste-foto-import.json",
+      "acceptance_criteria": [
+        "Button 'Aus Foto erstellen' auf Einkaufslisten-Index sichtbar; öffnet native Kamera/Datei-Dialog (accept='image/*' capture='environment')",
+        "Button 'Items aus Foto hinzufügen' auf bestehender ShoppingList-Show- oder Edit-Seite sichtbar",
+        "Neuer Service ShoppingItems::ImageRecognizer existiert; strukturell analog zu ShoppingItems::AutoClassifier (Net::HTTP, json_schema strict)",
+        "OpenAI-Call: Modell 'gpt-4o-mini', response_format json_schema strict, TIMEOUT_SECONDS=30",
+        "JSON-Schema garantiert: items array mit { name, category, note }; category ist enum aus CATEGORY_ORDER",
+        "Items werden direkt mit erkannter Kategorie persistiert (NICHT mit category='auto') → kein zusätzlicher ClassifyJob",
+        "Bestehende Liste ergänzen: vorhandene Items bleiben unverändert in Reihenfolge/Kategorie/Notiz; neue Items werden ans Ende der jeweiligen Kategorie angehängt",
+        "Transaktionale Speicherung: bei Fehler werden KEINE Items erstellt; bei 'neue Liste'-Use-Case bleibt die (bereits angelegte) Liste leer und der Betreuer kann erneut hochladen oder manuell anlegen",
+        "Bei fehlendem OPENAI_API_KEY: Flash 'Foto-Erkennung ist derzeit deaktiviert', 422-Response, keine Items erstellt",
+        "Bei Timeout / HTTP-Fehler / leerem Erkennungs-Ergebnis: Flash 'Konnte keine Items erkennen', keine Items erstellt",
+        "Sichtbarer Lade-Indikator + disabled-Button während laufendem Upload (Stimulus)",
+        "Authorization: nur Rollen mit bestehender ShoppingList-Edit-Berechtigung dürfen den Endpoint nutzen (Eltern → 403)",
+        "Tests: Service (Erfolg, leeres Bild, ungültige Kategorie, HTTP-Fehler), Controller (Authorization, Fehlerfälle, Ergänzen-Use-Case), alle grün",
+        "Verifikation via agent-browser (mobile Viewport): beide Einstiegspunkte funktionieren end-to-end, Fehler-Pfad zeigt korrekte Flash"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Neue Liste aus Foto",
+          "given": "Betreuer auf Index-Seite, OPENAI_API_KEY gesetzt, gestubbtes Bild liefert ['Milch'→dairy, 'Äpfel'→fruit]",
+          "when": "Upload eines Fotos via 'Aus Foto erstellen'",
+          "then": "Neue ShoppingList wird angelegt mit 2 Items in den Kategorien dairy + fruit; Redirect zur Show-Seite; Flash '2 Items erkannt'"
+        },
+        {
+          "scenario": "Bestehende Liste ergänzen",
+          "given": "ShoppingList mit 3 Items (1 fruit, 2 dairy); Foto liefert 2 weitere ['Brot'→bakery, 'Käse'→dairy]",
+          "when": "Upload via 'Items aus Foto hinzufügen'",
+          "then": "Liste enthält danach 5 Items: bestehende 3 unverändert, 1 neues bakery-Item, 1 neues dairy-Item ans Ende der jeweiligen Kategorie"
+        },
+        {
+          "scenario": "Keine Items erkannt",
+          "given": "API liefert items=[]",
+          "when": "Upload",
+          "then": "Keine Items erstellt; Flash 'Konnte keine Items erkennen'; bei 'neue Liste' bleibt die leere Liste bestehen"
+        },
+        {
+          "scenario": "Items haben gültige Kategorie",
+          "given": "API liefert { name: 'Milch', category: 'dairy' }",
+          "when": "Speicherung",
+          "then": "ShoppingItem.category='dairy' (NICHT 'auto'); kein after_commit ClassifyJob enqueued"
+        },
+        {
+          "scenario": "API-Key fehlt",
+          "given": "ENV['OPENAI_API_KEY']=nil",
+          "when": "POST auf Photo-Import-Endpoint",
+          "then": "Flash 'Foto-Erkennung ist derzeit deaktiviert'; 422-Response; keine Items erstellt"
+        },
+        {
+          "scenario": "Timeout",
+          "given": "OpenAI-Request läuft in TIMEOUT (30s)",
+          "when": "Anfrage timeout",
+          "then": "Transaktion gerollt back; keine Items erstellt; Flash 'Erkennung fehlgeschlagen, bitte erneut versuchen'"
+        },
+        {
+          "scenario": "Authorization",
+          "given": "Eltern-Account eingeloggt",
+          "when": "POST auf /shopping_lists/photo_imports",
+          "then": "403 oder Redirect mit Berechtigungs-Fehler; kein Aufruf an OpenAI"
+        },
+        {
+          "scenario": "Doppelklick-Schutz",
+          "given": "Upload läuft",
+          "when": "Betreuer tippt Submit-Button erneut",
+          "then": "Kein zweiter Request; Button ist disabled"
+        }
+      ],
+      "success_criteria": [
+        "≥90% der Foto-Uploads erzeugen mindestens ein Item (recognition_success)",
+        "≥80% Trefferquote bei automatischer Kategorisierung (keine Re-Klassifikation binnen 7 Tagen)",
+        "End-to-End-Latenz p75 ≤ 15s, p95 ≤ 25s",
+        "Adoption: ≥40% neuer ShoppingLists werden binnen 60 Tagen per Foto angelegt",
+        "OpenAI-Kosten ≤ 2€ pro aktive Einrichtung pro Monat"
+      ],
+      "dependencies": [
+        "F78",
+        "F79"
+      ],
+      "spec_file": "docs/spec-einkaufsliste-foto-import.json"
+    },
+    {
+      "id": "F81",
+      "name": "Einkaufsliste Show-View: Mobile Optimierung (kompakteres Spacing)",
+      "phase": 9,
+      "status": "open",
+      "short_description": "shopping_lists/show wird auf Mobile (<768px) dichter dargestellt: kleinere Spacings zwischen Items, Notiz-Slot nur wenn vorhanden, kompaktere Kategorie-Header und Section-Bar. Desktop bleibt unverändert.",
+      "description": "Ziel: Mehr Items pro Viewport beim Abarbeiten der Liste am Smartphone.\n\nBetroffene Dateien:\n  • app/views/shopping_lists/show.html.haml (inline styles auflösen)\n  • app/views/shopping_items/_show_item.html.haml (Notiz-Bereich ist heute bereits bedingt, CSS-Spacing prüfen)\n  • app/assets/tailwind/application.css → .mw-shopping-list, .mw-shopping-item, .mw-shopping-category, .mw-shopping-show, .mw-shopping-show__bar\n\nÄnderungen:\n  • .mw-shopping-list { gap: var(--space-1); } – auf Mobile auf gap reduzieren (z.B. 4 px).\n  • .mw-shopping-item Padding / vertikale Spacings auf Mobile reduzieren; Touch-Targets der Check-Buttons bleiben ≥ 44 px (T5).\n  • .mw-shopping-item__note hat heute margin-top: 2px und wird bedingt gerendert – sicherstellen dass kein min-height auf der Card greift.\n  • Kategorie-Header (.mw-shopping-category__header) hat aktuell inline-style style='margin-top: 1rem; margin-bottom: 0.25rem;' – in CSS-Klasse extrahieren, damit Media-Query greift. Auf Mobile margin-top ≤ 8 px, margin-bottom 2 px.\n  • .mw-shopping-show__bar auf Mobile kompakter: Summary + Filter-Button in einer Zeile; Padding reduzieren; ggf. Summary-Text kürzer auf Mobile (Helper-Param).\n  • Alle Anpassungen hinter @media (max-width: 767px) – Desktop unverändert.\n\nVerifikation via agent-browser:\n  • Mobile (390x844): mind. 6 Items + 1 Kategorie-Header gleichzeitig sichtbar.\n  • Item ohne Notiz vs. Item mit Notiz: Höhendifferenz ≥ 14 px.\n  • Desktop (1280x800): Pixel-stabiles Layout (kein Regress, Toleranz < 2 px).\n\nTests:\n  • Keine neuen Modeltests nötig (rein visuell). Falls Helper für Mobile-Summary entsteht → Helper-Test.\n  • Visueller Smoke-Test (agent-browser, mobile + desktop viewport).\n\nSpec: docs/spec-einkaufsliste-show-mobile.json",
+      "acceptance_criteria": [
+        "Auf iPhone 14 (390x844) sind mind. 6 Items + 1 Kategorie-Header gleichzeitig sichtbar (heute 3-4)",
+        "Item ohne Notiz ist deutlich kompakter als Item mit Notiz (Höhendifferenz ≥ 14 px)",
+        "Inline-styles aus show.html.haml in CSS-Klassen extrahiert, damit Media-Queries greifen",
+        "Kategorie-Header auf Mobile: margin-top ≤ 8 px, margin-bottom 2 px (heute 1rem / 0.25rem)",
+        ".mw-shopping-show__bar auf Mobile in einer Zeile, ≤ 56 px hoch",
+        "Touch-Targets der Check-Buttons bleiben ≥ 44 × 44 px",
+        "Desktop ≥ 768 px optisch unverändert (Pixel-Vergleich-Toleranz < 2 px)",
+        "Funktionalität unverändert: Filter 'Nur offene', Erledigt-Toggle, Erledigt-Meta-Zeile"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Mehr Items auf Mobile",
+          "given": "Liste mit 8 Items in 2 Kategorien, iPhone 14 Viewport",
+          "when": "Show-View geladen",
+          "then": "Mind. 6 Items + 1 Kategorie-Header sind ohne Scroll sichtbar"
+        },
+        {
+          "scenario": "Notiz-Spacing entfällt",
+          "given": "Item ohne Notiz und Item mit Notiz untereinander",
+          "when": "gerendert",
+          "then": "Höhendifferenz beträgt ≥ 14 px; Item ohne Notiz beansprucht keinen Notiz-Slot"
+        },
+        {
+          "scenario": "Desktop unverändert",
+          "given": "Show-View auf 1280x800",
+          "when": "vorher/nachher verglichen",
+          "then": "Layout pixel-stabil (Toleranz < 2 px je Achse)"
+        },
+        {
+          "scenario": "Touch-Targets",
+          "given": "Check-Buttons auf Mobile",
+          "when": "gemessen",
+          "then": "Tap-Fläche ≥ 44 × 44 px"
+        }
+      ],
+      "success_criteria": [
+        "≥ 6 Items + 1 Header gleichzeitig auf iPhone 14 sichtbar",
+        "Positives Feedback Küchen-Team beim nächsten Onsite-Besuch (Lesbarkeit beim Einkauf)",
+        "Keine Regressions im Desktop-Layout"
+      ],
+      "dependencies": [
+        "F78",
+        "F79"
+      ],
+      "spec_file": "docs/spec-einkaufsliste-show-mobile.json"
+    },
+    {
+      "id": "F82",
+      "name": "Einkaufsliste Edit-View: Mobile Optimierung + friktionsloses Hinzufügen",
+      "phase": 9,
+      "status": "open",
+      "short_description": "shopping_lists/edit auf Mobile drastisch beschleunigt: Quick-Add-Form mit Name-only Default ('Mehr Details' aufklappbar), Auto-Refocus + Enter-Submit (Schreibmaschinen-Modus), kollabierbare Stammdaten, sticky Quick-Add unten, kompakteres Item-Layout. Desktop bleibt unverändert.",
+      "description": "Ziel: Item-Hinzufügen am Smartphone ≤ 5 s pro Item, ≥ 4 Items + Quick-Add gleichzeitig sichtbar.\n\nBetroffene Dateien:\n  • app/views/shopping_lists/edit.html.haml (Stammdaten-Card kollabierbar)\n  • app/views/shopping_items/_form.html.haml (Quick-Add: 'Mehr Details' Toggle, Submit-Button bleibt sichtbar)\n  • app/views/shopping_items/_item.html.haml (kompakteres Edit-Item-Layout auf Mobile)\n  • app/javascript/controllers/shopping_new_item_controller.js (toggle-Target, Auto-Refocus)\n  • Ggf. neuer Stimulus 'collapse_controller.js' für Stammdaten\n  • app/assets/tailwind/application.css → .mw-shopping-editor, .mw-shopping-new, .mw-shopping-edit-item + neue Sticky-/Collapse-Klassen\n\nQuick-Add-Form (mobile, < 768 px):\n  • Default sichtbar: Name-Input + 'Hinzufügen'-Button + 'Mehr Details'-Toggle (Chevron). NICHT sichtbar: Menge, Notiz, Kategorie, Foto.\n  • Toggle blendet Menge/Notiz/Kategorie/Foto ein. State pro Form-Instanz, NICHT persistiert.\n  • Auf Desktop (≥ 768 px) ist alles immer sichtbar wie heute (kein 'Mehr Details'-Toggle).\n  • Sticky am unteren Viewport-Rand auf Mobile (position: sticky; bottom: 0 + env(safe-area-inset-bottom)). Z-Index ≥ Items, < Modals. Auf Desktop NICHT sticky.\n\nSchreibmaschinen-Modus:\n  • Bestehender focus_on_connect-Mechanismus immer aktivieren – nach erfolgreichem POST rendert der Turbo-Stream die frische Form-Instanz mit focus_on_connect: true; Name-Input bekommt sofort Fokus.\n  • Enter im Name-Input submittet (form_with-Default; sicherstellen dass keine Stimulus-Action Enter abfängt).\n  • Mobile-Tastatur bleibt zwischen Submits offen (auf iOS Safari testen; ggf. inputmode-Tuning).\n\nStammdaten-Sektion:\n  • Auf Mobile Default zugeklappt; Header zeigt 'Stammdaten' + Chevron; Tap toggelt.\n  • Auf Desktop immer aufgeklappt (CSS-Override).\n  • Stimulus-Controller 'collapse' (neu, generisch); Trigger über data-action.\n\nItem-Layout im Edit (mobile):\n  • Foto-Thumb + Name in einer Reihe; Menge/Notiz/Kategorie in zweiter dünner Reihe; Delete-Button rechts.\n  • Touch-Targets ≥ 44 px für Delete-Icon, Foto-Slot, Submit.\n  • Auto-Submit-Verhalten bleibt unverändert (Stimulus auto-submit).\n  • Bei < 360 px Viewport ggf. Kategorie-Select in eigene Zeile.\n\nSpacing-Reduktion:\n  • .mw-shopping-editor section-header margin/padding kleiner auf Mobile.\n  • .mw-card auf Mobile seitliches Padding ≤ 12 px.\n  • Alle Anpassungen hinter @media (max-width: 767px).\n\nNice-to-Have (v1.1):\n  • navigator.vibrate(10) auf Submit-Success.\n  • CSS-Animation (Fade/Slide-in) für neu erstelltes Item in der Liste.\n\nVerifikation via agent-browser (mobile + desktop viewports):\n  • Mobile (390x844): Items + Quick-Add nach Page-Load sichtbar OHNE Scroll (Stammdaten zugeklappt). Mind. 4 Items + Quick-Add gleichzeitig sichtbar.\n  • Mobile: 5 Items hintereinander mit nur Name + Enter anlegen; Fokus bleibt durchgängig im Name-Input.\n  • Mobile: 'Mehr Details' Toggle blendet die Felder ein/aus.\n  • Mobile: Sticky Quick-Add unten beim Scrollen durch 20+ Items.\n  • Desktop (1280x800): Quick-Add zeigt alle Felder wie heute, Stammdaten ist immer aufgeklappt, kein Sticky-Verhalten.\n\nTests:\n  • System/Integration-Tests für Quick-Add-Flow (mit Capybara / Rails system tests, falls vorhanden): Name eingeben → submit → Item erstellt → Fokus-Assert.\n  • Stimulus-Controller-Tests falls vorhanden in der Codebase.\n  • Visueller Smoke-Test via agent-browser.\n\nSpec: docs/spec-einkaufsliste-edit-mobile.json",
+      "acceptance_criteria": [
+        "Quick-Add-Form auf Mobile zeigt im Default NUR Name-Input + 'Hinzufügen'-Button + 'Mehr Details'-Toggle",
+        "Tap auf 'Mehr Details' blendet Menge, Notiz, Kategorie, Foto ein; weiterer Tap blendet wieder aus",
+        "Nach jedem erfolgreichen Submit ist der Name-Input automatisch fokussiert (Mobile-Tastatur bleibt offen)",
+        "Enter im Name-Input submittet das Form",
+        "Stammdaten-Section ist auf Mobile Default zugeklappt; Tap auf Header klappt auf/zu",
+        "Quick-Add-Form ist auf Mobile sticky am unteren Rand (mit Safe-Area-Inset für iPhone)",
+        "Bestehende Items im Edit-Modus auf Mobile kompakter (≥ 4 Items + Quick-Add gleichzeitig sichtbar auf iPhone 14)",
+        "Touch-Targets ≥ 44 × 44 px für Delete-Icon, Foto-Slot, Submit-Button",
+        "Inline-Edit (Auto-Submit der bestehenden Items) funktioniert unverändert",
+        "Desktop ≥ 768 px: Quick-Add zeigt alle Felder, Stammdaten ist immer aufgeklappt, Quick-Add ist NICHT sticky, Item-Layout unverändert",
+        "5 Items in Folge auf Mobile in ≤ 25 s anlegbar (≤ 5 s pro Item)",
+        "Verifikation via agent-browser: mobile + desktop viewports, alle Akzeptanzkriterien geprüft"
+      ],
+      "test_scenarios": [
+        {
+          "scenario": "Quick-Add Default zeigt nur Name",
+          "given": "Edit-View auf iPhone 14, Quick-Add-Form initial",
+          "when": "gerendert",
+          "then": "Sichtbar: Name-Input + 'Hinzufügen' + 'Mehr Details'. NICHT sichtbar: Menge, Notiz, Kategorie, Foto"
+        },
+        {
+          "scenario": "Mehr Details Toggle",
+          "given": "Quick-Add Default-Zustand",
+          "when": "Tap auf 'Mehr Details'",
+          "then": "Menge, Notiz, Kategorie, Foto werden eingeblendet; weiterer Tap blendet wieder aus"
+        },
+        {
+          "scenario": "Schreibmaschinen-Modus",
+          "given": "5 aufeinanderfolgende Submits mit nur Name + Enter",
+          "when": "ohne weitere User-Aktion",
+          "then": "Alle 5 Items erstellt; Fokus bleibt durchgängig im Name-Input; Mobile-Tastatur bleibt offen"
+        },
+        {
+          "scenario": "Stammdaten zugeklappt (Mobile)",
+          "given": "Edit-View frisch geladen auf Mobile",
+          "when": "gerendert",
+          "then": "Stammdaten-Card ist zugeklappt; Items + Quick-Add sofort sichtbar ohne Scroll"
+        },
+        {
+          "scenario": "Stammdaten Toggle",
+          "given": "Stammdaten zugeklappt",
+          "when": "Tap auf Stammdaten-Header",
+          "then": "Card klappt auf und zeigt das bestehende _form.html.haml"
+        },
+        {
+          "scenario": "Sticky Quick-Add",
+          "given": "Edit-View mit 20 Items auf Mobile",
+          "when": "Betreuer scrollt nach unten",
+          "then": "Quick-Add-Form bleibt am unteren Viewport-Rand sichtbar und antippbar"
+        },
+        {
+          "scenario": "Desktop unverändert",
+          "given": "Edit-View auf 1280x800",
+          "when": "geladen",
+          "then": "Stammdaten aufgeklappt; Quick-Add zeigt alle Felder in einer Reihe; kein Sticky; Item-Layout wie zuvor"
+        },
+        {
+          "scenario": "Items pro Viewport",
+          "given": "Liste mit 8 Items auf Mobile",
+          "when": "Edit-View geladen, Stammdaten zugeklappt",
+          "then": "Mind. 4 Items + Quick-Add gleichzeitig ohne Scroll sichtbar"
+        }
+      ],
+      "success_criteria": [
+        "Median Item-Add-Zeit auf Mobile ≤ 5 s",
+        "≥ 4 Items + Quick-Add gleichzeitig auf iPhone 14 sichtbar",
+        "+30 % durchschnittliche Item-Zahl pro Mobile-erstellter Liste (60 Tage nach Launch)",
+        "Positives qualitatives Feedback Betreuer-Team beim nächsten Review",
+        "Keine Regressions im Desktop-Layout"
+      ],
+      "dependencies": [
+        "F78",
+        "F79"
+      ],
+      "spec_file": "docs/spec-einkaufsliste-edit-mobile.json"
     }
   ]
 }
