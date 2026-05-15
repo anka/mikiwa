@@ -2304,6 +2304,26 @@ textarea.mw-input { resize: vertical; min-height: 96px; line-height: var(--lh-re
 .mw-shopping-new__name { flex: 1; min-width: 200px; }
 .mw-shopping-new__qty  { width: 110px; }
 .mw-shopping-new__note { flex: 1; min-width: 180px; }
+.mw-shopping-new__category { flex: 0 0 auto; min-width: 160px; max-width: 220px; }
+
+/* F78: Kategorie-Select in Edit-Items */
+.mw-shopping-edit-item__category {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-13);
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.mw-shopping-edit-item__meta-row--secondary {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: var(--space-1);
+}
+@media (max-width: 540px) {
+  .mw-shopping-new__category { width: 100%; max-width: none; }
+  .mw-shopping-edit-item__meta-row--secondary { flex-wrap: wrap; }
+}
 .mw-shopping-new__photo {
   display: inline-flex;
   align-items: center;

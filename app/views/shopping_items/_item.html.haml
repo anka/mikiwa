@@ -43,6 +43,13 @@
                         autocomplete: "off",
                         class: "mw-input mw-input--inline mw-shopping-edit-item__note",
                         data: { action: "change->auto-submit#submit blur->auto-submit#submit" }
+      -# F78: Kategorie inline editierbar mit Auto-Submit
+      .mw-shopping-edit-item__meta-row.mw-shopping-edit-item__meta-row--secondary
+        = f.select :category,
+                   ShoppingItem::CATEGORY_ORDER.map { |k| [ shopping_item_category_label(k), k ] },
+                   { include_blank: "— ohne —" },
+                   class: "mw-select mw-shopping-edit-item__category",
+                   data: { action: "change->auto-submit#submit" }
 
   - if item.errors.any?
     .mw-shopping-edit-item__errors= item.errors.full_messages.to_sentence

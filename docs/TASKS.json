@@ -4090,7 +4090,7 @@
       "id": "F78",
       "name": "Einkaufsliste Edit: Kategorie-Select gestyled + Inline-Edit bei vorhandenen Einträgen",
       "phase": 9,
-      "status": "open",
+      "status": "done",
       "short_description": "Kategorie-Select im New-Form bekommt korrekten mw-input-Style; im _item-Edit-Partial wird ein zusätzliches Kategorie-Select mit Auto-Submit ergänzt.",
       "description": "Ziel: Konsistenter Look + nachträgliches Recategorisieren.\n\nNew-Form (_form.html.haml):\n  • Select hat Klassen 'mw-input mw-shopping-new__category'\n  • CSS prüfen/ergänzen: gleicher Look wie mw-input (Border, Padding, Border-Radius, Focus-Ring, Caret-SVG)\n\nEdit-Partial (_item.html.haml):\n  • Neues f.select :category, ShoppingItem::CATEGORY_ORDER.map { |k| [shopping_item_category_label(k), k] }, { include_blank: '— ohne —' }, class: 'mw-input mw-input--inline mw-shopping-edit-item__category', data: { action: 'change->auto-submit#submit' }\n  • Platzierung in mw-shopping-edit-item__meta-row (oder eigene Sub-Row); Mobile-friendly (full-width <768px)\n\nShoppingItemsController#update:\n  • Permit :category (sofern noch nicht)\n  • rescue ArgumentError (ungültiger Enum-Wert) → render :show, status: :unprocessable_entity\n\nShow-View bleibt unverändert; nach Recategorisierung erscheint Item bei nächstem Reload in der neuen Sektion (Turbo-Stream-Optimierung als Nice-to-have).\n\nSpec: docs/spec-einkaufsliste-kategorie-edit.json",
       "acceptance_criteria": [

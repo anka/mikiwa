@@ -33,6 +33,13 @@ class ShoppingItemsController < ApplicationController
         format.html { redirect_to edit_shopping_list_path(@list), alert: @item.errors.full_messages.to_sentence }
       end
     end
+  rescue ArgumentError => e
+    # F78: Enum-Setter wirft bei ungültigem Wert (z.B. category='ungueltig')
+    @item.errors.add(:category, "ist ungültig")
+    respond_to do |format|
+      format.turbo_stream { render_item_replace(status: :unprocessable_entity) }
+      format.html { redirect_to edit_shopping_list_path(@list), alert: e.message }
+    end
   end
 
   def destroy

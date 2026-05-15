@@ -101,6 +101,27 @@ class ShoppingItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Type 405", item.note
   end
 
+  # F78: Kategorie inline editieren
+  test "F78 caretaker kann Kategorie eines bestehenden Items inline aktualisieren" do
+    item = @list.shopping_items.create!(name: "Joghurt", category: "dairy")
+    sign_in_as(@caretaker)
+    patch shopping_list_shopping_item_path(@list, item),
+          params: { shopping_item: { category: "fruit" } },
+          as: :turbo_stream
+    assert_response :success
+    assert_equal "fruit", item.reload.category
+  end
+
+  test "F78 ungültige Kategorie → 422; Item bleibt unverändert" do
+    item = @list.shopping_items.create!(name: "Joghurt", category: "dairy")
+    sign_in_as(@caretaker)
+    patch shopping_list_shopping_item_path(@list, item),
+          params: { shopping_item: { category: "ungueltig" } },
+          as: :turbo_stream
+    assert_response :unprocessable_entity
+    assert_equal "dairy", item.reload.category
+  end
+
   test "purge_photo removes the attachment" do
     item = @list.shopping_items.create!(name: "Erdbeeren")
     item.photo.attach(io: File.open(Rails.root.join("test/fixtures/files/test.jpg")),

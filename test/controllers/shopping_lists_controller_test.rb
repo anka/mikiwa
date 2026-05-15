@@ -299,6 +299,24 @@ class ShoppingListsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/— keine Kategorie —/, response.body)
   end
 
+  # F78: Kategorie-Select-Styling + Inline-Edit
+  test "F78 New-Form Kategorie-Select trägt mw-select-Klasse" do
+    sign_in_as(@caretaker)
+    get edit_shopping_list_path(@list)
+    assert_response :success
+    assert_select "select[name='shopping_item[category]'].mw-select"
+  end
+
+  test "F78 Edit-Partial vorhandener Items enthält Kategorie-Select mit auto-submit" do
+    sign_in_as(@caretaker)
+    @item.update!(category: "dairy")
+    get edit_shopping_list_path(@list)
+    assert_response :success
+    item_form_id = ActionView::RecordIdentifier.dom_id(@item)
+    assert_select "##{item_form_id} select[name='shopping_item[category]'][data-action*='auto-submit#submit']"
+    assert_select "##{item_form_id} select[name='shopping_item[category]'].mw-select"
+  end
+
   test "F51 Item ohne Kategorie wird mit category=nil gespeichert" do
     sign_in_as(@caretaker)
     post shopping_list_shopping_items_path(@list),
