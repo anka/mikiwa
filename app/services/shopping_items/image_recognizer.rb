@@ -4,7 +4,7 @@ require "json"
 require "base64"
 
 # F80: Erkennt Einträge auf einem (handgeschriebenen) Einkaufszettel via
-# OpenAI Vision (gpt-4o-mini) und liefert sie inklusive Kategorie zurück.
+# OpenAI Vision (gpt-5.4-mini) und liefert sie inklusive Kategorie zurück.
 #
 # Strukturell analog zu ShoppingItems::AutoClassifier (Net::HTTP,
 # json_schema strict). Wird synchron aus dem Controller-Request heraus
@@ -12,7 +12,7 @@ require "base64"
 module ShoppingItems
   class ImageRecognizer
     API_URL          = "https://api.openai.com/v1/chat/completions".freeze
-    MODEL            = "gpt-4o-mini".freeze
+    MODEL            = "gpt-5.4-mini".freeze
     TIMEOUT_SECONDS  = 30
     ALLOWED_CATEGORIES = ShoppingItem::CATEGORY_ORDER.freeze
 
@@ -21,10 +21,11 @@ module ShoppingItems
       einem österreichischen Kindergarten. Erkenne jeden Eintrag exakt
       einmal, normalisiere die Schreibweise leicht (Tippfehler, Großschreibung),
       und klassifiziere jeden Artikel in eine der vorgegebenen Kategorien.
-      Bei Unsicherheit oder mehrdeutigen Einträgen wähle 'other'. Liefere
-      Mengenangaben (z.B. "2 kg") als Teil des name-Feldes; falls eine
-      Notiz erkennbar ist (z.B. "bio", "fettarm"), gib sie im Feld note an.
-      Antworte ausschließlich im vorgegebenen JSON-Schema.
+      Bei Unsicherheit oder mehrdeutigen Einträgen wähle 'other'. Mengenangaben
+      (z.B. "2 kg", "3 Packungen", "1 Liter") gehören in das Feld quantity –
+      NICHT in das name-Feld. Wenn keine Mengenangabe erkennbar ist, setze
+      quantity auf null. Falls eine Notiz erkennbar ist (z.B. "bio", "fettarm"),
+      gib sie im Feld note an. Antworte ausschließlich im vorgegebenen JSON-Schema.
     PROMPT
 
     JSON_SCHEMA = {
@@ -39,11 +40,12 @@ module ShoppingItems
             type: "array",
             items: {
               type:                 "object",
-              required:             [ "name", "category", "note" ],
+              required:             [ "name", "category", "quantity", "note" ],
               additionalProperties: false,
               properties: {
                 name:     { type: "string" },
                 category: { type: "string", enum: ALLOWED_CATEGORIES },
+                quantity: { type: [ "string", "null" ] },
                 note:     { type: [ "string", "null" ] }
               }
             }
@@ -95,9 +97,10 @@ module ShoppingItems
 
       category_str = entry["category"].to_s
       category     = ALLOWED_CATEGORIES.include?(category_str) ? category_str.to_sym : :other
+      quantity     = entry["quantity"].is_a?(String) ? entry["quantity"].strip.presence : nil
       note         = entry["note"].is_a?(String) ? entry["note"].strip.presence : nil
 
-      { name: name, category: category, note: note }
+      { name: name, category: category, quantity: quantity, note: note }
     end
 
     def build_payload

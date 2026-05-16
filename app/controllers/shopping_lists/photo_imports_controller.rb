@@ -76,6 +76,7 @@ module ShoppingLists
         recognized.each_with_index do |entry, index|
           list.shopping_items.create!(
             name:     entry[:name],
+            quantity: entry[:quantity],
             note:     entry[:note],
             category: entry[:category].to_s,
             position: base_position + index

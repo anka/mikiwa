@@ -86,6 +86,19 @@ class ShoppingLists::PhotoImportsControllerTest < ActionDispatch::IntegrationTes
     end
   end
 
+  test "F80 erkannte quantity wird auf dem Item persistiert" do
+    ENV["OPENAI_API_KEY"] = "sk-test"
+    stub_recognizer([
+      { name: "Milch", category: :dairy, quantity: "2 Liter",     note: nil },
+      { name: "Brot",  category: :bakery, quantity: nil,          note: nil }
+    ]) do
+      sign_in_as(@caretaker)
+      post shopping_list_photo_imports_path(@list), params: { image: upload_fixture }
+      assert_equal "2 Liter", @list.shopping_items.find_by(name: "Milch").quantity
+      assert_nil              @list.shopping_items.find_by(name: "Brot").quantity
+    end
+  end
+
   # --- Fehlerfälle ---
 
   test "F80 Eltern bekommt 403 (Authorization)" do

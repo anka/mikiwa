@@ -22,18 +22,20 @@ class ShoppingItems::ImageRecognizerTest < ActiveSupport::TestCase
     ENV["OPENAI_API_KEY"] = "sk-test"
     recognizer = ShoppingItems::ImageRecognizer.new(@png_io)
     payload = openai_response([
-      { name: "Milch", category: "dairy", note: nil },
-      { name: "Äpfel", category: "fruit", note: "bio" }
+      { name: "Milch", category: "dairy", quantity: "2 Liter", note: nil },
+      { name: "Äpfel", category: "fruit", quantity: nil,       note: "bio" }
     ])
     with_stub(recognizer, :fetch_completion, payload) do
       result = recognizer.call
       assert_equal 2, result.size
-      assert_equal "Milch",  result[0][:name]
-      assert_equal :dairy,   result[0][:category]
+      assert_equal "Milch",   result[0][:name]
+      assert_equal :dairy,    result[0][:category]
+      assert_equal "2 Liter", result[0][:quantity]
       assert_nil   result[0][:note]
-      assert_equal "Äpfel",  result[1][:name]
-      assert_equal :fruit,   result[1][:category]
-      assert_equal "bio",    result[1][:note]
+      assert_equal "Äpfel",   result[1][:name]
+      assert_equal :fruit,    result[1][:category]
+      assert_nil   result[1][:quantity]
+      assert_equal "bio",     result[1][:note]
     end
   ensure
     ENV.delete("OPENAI_API_KEY")
@@ -42,7 +44,7 @@ class ShoppingItems::ImageRecognizerTest < ActiveSupport::TestCase
   test "F80 call mappt unbekannte Kategorie auf :other" do
     ENV["OPENAI_API_KEY"] = "sk-test"
     recognizer = ShoppingItems::ImageRecognizer.new(@png_io)
-    payload = openai_response([ { name: "Mystery", category: "random_unknown", note: nil } ])
+    payload = openai_response([ { name: "Mystery", category: "random_unknown", quantity: nil, note: nil } ])
     with_stub(recognizer, :fetch_completion, payload) do
       result = recognizer.call
       assert_equal 1, result.size
@@ -78,13 +80,25 @@ class ShoppingItems::ImageRecognizerTest < ActiveSupport::TestCase
     ENV["OPENAI_API_KEY"] = "sk-test"
     recognizer = ShoppingItems::ImageRecognizer.new(@png_io)
     payload = openai_response([
-      { name: "", category: "dairy", note: nil },
-      { name: "Brot", category: "bakery", note: nil }
+      { name: "",     category: "dairy",  quantity: nil, note: nil },
+      { name: "Brot", category: "bakery", quantity: nil, note: nil }
     ])
     with_stub(recognizer, :fetch_completion, payload) do
       result = recognizer.call
       assert_equal 1, result.size
       assert_equal "Brot", result[0][:name]
+    end
+  ensure
+    ENV.delete("OPENAI_API_KEY")
+  end
+
+  test "F80 call gibt nil für quantity zurück wenn leerer String" do
+    ENV["OPENAI_API_KEY"] = "sk-test"
+    recognizer = ShoppingItems::ImageRecognizer.new(@png_io)
+    payload = openai_response([ { name: "Brot", category: "bakery", quantity: "   ", note: nil } ])
+    with_stub(recognizer, :fetch_completion, payload) do
+      result = recognizer.call
+      assert_nil result[0][:quantity]
     end
   ensure
     ENV.delete("OPENAI_API_KEY")
