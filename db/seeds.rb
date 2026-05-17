@@ -2,8 +2,15 @@
 # Normaler Aufruf:  bin/rails db:seed
 # Demo-Datensatz:   DEMO=1 bin/rails db:seed
 #
-# DEMO=1 löscht alle bestehenden Daten und legt einen vollständigen
+# Bei jedem Aufruf wird der Admin-Account aus den ENV-Variablen
+# ADMIN_EMAIL und ADMIN_PASSWORD angelegt (idempotent).
+# DEMO=1 löscht zusätzlich alle bestehenden Daten und legt einen vollständigen
 # Muster-Kindergarten mit Betreuer:innen, Gruppen, Kindern und Eltern an.
+
+require "dotenv"
+Dotenv.load(Rails.root.join(".env"))
+
+CreateAdminService.call
 
 return unless ENV["DEMO"] == "1"
 
