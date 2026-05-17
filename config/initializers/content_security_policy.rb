@@ -12,6 +12,9 @@ Rails.application.configure do
     policy.manifest_src :self
   end
 
-  config.content_security_policy_nonce_generator = ->(request) { request.session.id.to_s }
+  # Per-request random nonce. Using request.session.id leaked the session
+  # token into HTML and emitted an empty `nonce-` for anonymous requests,
+  # which blocked all inline scripts/styles in production.
+  config.content_security_policy_nonce_generator = ->(_request) { SecureRandom.base64(16) }
   config.content_security_policy_nonce_directives = %w[script-src style-src]
 end
