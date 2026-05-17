@@ -1,0 +1,14 @@
+# Install to /etc/logrotate.d/mikiwa.
+# `copytruncate` is required: Rails holds the file handle, so a regular rotate
+# would leave it writing into the now-rotated inode. See docs/deployment.md §2.7.
+
+/home/mikiwa/logs/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    su 1000 1000
+}

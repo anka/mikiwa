@@ -136,8 +136,8 @@ Nächste freie Konventions-Ports: 8081, 8082, …
 | Service | Aufgabe | Port-Mapping | Healthcheck | Memory-Limit |
 |---|---|---|---|---|
 | `migrate` | `bin/rails db:prepare`, one-shot | — | — | 256M |
-| `web` | Puma + Thruster | `127.0.0.1:8080:80` | `wget -qO- http://localhost/up` | 1G |
-| `worker` | Solid Queue Worker | — | `pgrep -f solid_queue` | 512M |
+| `web` | Puma + Thruster | `127.0.0.1:8080:80` | `curl -fsS http://localhost/up` | 1G |
+| `worker` | Solid Queue Worker (`bin/jobs`) | — | `pgrep -f solid_queue` (benötigt `procps` im Image) | 512M |
 
 Gemeinsam:
 - `image: ghcr.io/anka/mikiwa:${MIKIWA_IMAGE_TAG:-latest}`, `pull_policy: always`
@@ -209,7 +209,8 @@ Diese sind in `config/environments/production.rb` permanent verankert:
 
 ### 2.8 Backups
 
-- Script: `/home/mikiwa/scripts/backup.sh` (chmod 750, owner root)
+- Script: `/home/mikiwa/scripts/backup.sh` (chmod 750, owner root) — Quelle: `deploy/scripts/backup.sh`
+- Voraussetzung auf dem Host: `sqlite3`-Paket installiert (`apt-get install -y sqlite3`)
 - Methode: `sqlite3 <db> ".backup '<target>'"` (online-safe, korrektes Locking)
 - Quellen: alle vier Production-DBs aus `/home/mikiwa/storage/`
 - Ziel: `/home/mikiwa/backups/<db-name>-YYYY-MM-DD.sqlite3.gz`

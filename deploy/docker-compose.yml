@@ -1,0 +1,71 @@
+# Production stack for Mikiwa on mentalflares.
+# See docs/deployment.md for the full setup and operations manual.
+#
+# Layout on host:
+#   /home/mikiwa/.env                  – secrets (RAILS_MASTER_KEY, OPENAI_API_KEY, …)
+#   /home/mikiwa/storage/              – SQLite DBs + Active Storage (uid:gid 1000:1000)
+#   /home/mikiwa/logs/                 – Rails + container stdout/stderr (uid:gid 1000:1000)
+
+x-mikiwa-base: &mikiwa-base
+  image: ghcr.io/anka/mikiwa:${MIKIWA_IMAGE_TAG:-latest}
+  pull_policy: always
+  env_file: .env
+  environment:
+    SOLID_QUEUE_IN_PUMA: "false"
+  volumes:
+    - /home/mikiwa/storage:/rails/storage
+    - /home/mikiwa/logs:/rails/log
+  networks:
+    - mikiwa
+
+services:
+  migrate:
+    <<: *mikiwa-base
+    restart: "no"
+    command: ["/bin/sh", "-c", "./bin/rails db:prepare >> /rails/log/production.log 2>&1"]
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  web:
+    <<: *mikiwa-base
+    restart: unless-stopped
+    command: ["/bin/sh", "-c", "exec ./bin/thrust ./bin/rails server >> /rails/log/production.log 2>&1"]
+    ports:
+      - "127.0.0.1:${MIKIWA_WEB_PORT:-8080}:80"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost/up >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  worker:
+    <<: *mikiwa-base
+    restart: unless-stopped
+    command: ["/bin/sh", "-c", "exec ./bin/jobs >> /rails/log/production.log 2>&1"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f solid_queue >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+networks:
+  mikiwa:
+    driver: bridge

@@ -13,32 +13,36 @@ in [`docs/deployment.md`](./deployment.md). Bei jeder Änderung dort den Stand p
 
 ## Phase 1 — Repo-Anpassungen (lokal)
 
-- [ ] **1.1** `config/environments/production.rb` patchen
-  - `config.assume_ssl = true` aktivieren (nginx terminiert SSL)
+- [x] **1.1** `config/environments/production.rb` patchen
+  - `config.assume_ssl = true` aktiviert (nginx terminiert SSL)
   - `config.hosts << "app.mikiwa.at"` (DNS-Rebinding-Schutz)
-  - Logger auf Datei umstellen: `Rails.root.join("log/production.log")`, TaggedLogging behalten
-  - `silence_healthcheck_path` und `force_ssl` unverändert lassen
-- [ ] **1.2** `bin/docker-entrypoint` anpassen — `db:prepare`-Block entfernen
-  (Migration-Service übernimmt). Entrypoint nur noch `exec "${@}"`.
-- [ ] **1.3** `.github/workflows/docker-publish.yml` erstellen
-  - Trigger: Push auf `main`
-  - Build via `docker/build-push-action`, Plattform `linux/amd64`
+  - Logger auf `Rails.root.join("log/production.log")` umgestellt, TaggedLogging behalten
+  - `silence_healthcheck_path` und `force_ssl` unverändert
+- [x] **1.2** `bin/docker-entrypoint`: `db:prepare`-Block entfernt — Entrypoint reicht
+  jetzt nur noch durch (`exec "${@}"`). Migration übernimmt der `migrate`-Service.
+- [x] **1.3** `Dockerfile`: `procps` zu den Base-Packages hinzugefügt — `pgrep` wird vom
+  Worker-Healthcheck gebraucht. (`ruby:slim` enthält es nicht standardmäßig.)
+- [x] **1.4** `.github/workflows/docker-publish.yml` angelegt
+  - Trigger: Push auf `main` + `workflow_dispatch`
+  - Build via `docker/build-push-action@v6`, Plattform `linux/amd64`
   - Push als `ghcr.io/anka/mikiwa:latest` **und** `ghcr.io/anka/mikiwa:sha-<short>`
   - Cache: GHA-Cache (`type=gha`)
-- [ ] **1.4** Compose-Dateien lokal vorbereiten (werden später auf Server kopiert)
-  - `deploy/docker-compose.yml` — Services: `migrate`, `web`, `worker`
+  - Auth: `GITHUB_TOKEN` mit `packages: write`
+- [x] **1.5** Compose-Dateien & Server-Artefakte unter `deploy/` angelegt
+  - `deploy/docker-compose.yml` — Services `migrate`, `web` (Port 8080), `worker`
   - `deploy/.env.example` — alle erforderlichen Variablen mit Kommentaren
-  - `deploy/nginx/app.mikiwa.at.conf` — vhost-Vorlage
-  - `deploy/logrotate/mikiwa` — Logrotate-Snippet
-  - `deploy/scripts/backup.sh` — SQLite-Backup mit Retention 14 Tage
-  - `deploy/cron/mikiwa-backup` — Cron-Eintrag
-- [ ] **1.5** `docs/deployment.md` mit allen Setup-Schritten + Server-Inventar pflegen
-- [ ] **1.6** `AGENTS.md` ergänzen: Verweis auf `docs/deployment.md` in passendem Abschnitt
+  - `deploy/nginx/app.mikiwa.at.conf` — vhost (HTTP-Block; certbot ergänzt SSL)
+  - `deploy/logrotate/mikiwa` — Logrotate-Snippet mit `copytruncate`
+  - `deploy/scripts/backup.sh` — SQLite-Online-Backup, 14 Tage Retention
+  - `deploy/cron/mikiwa-backup` — Cron 03:00 daily
+- [x] **1.6** `docs/deployment.md` und `AGENTS.md` gepflegt (Verweise + Inventar)
 - [ ] **1.7** Branch `feature/server-deployment` (oder vergleichbar) anlegen, Änderungen
-  committen, PR gegen `main` öffnen. **Merge erst nach Phase 2.**
+  committen, PR gegen `main` öffnen. **Merge erst nach lokaler Verifikation.**
 
-**Verifikation**: `bin/rails server -e production` lokal startet ohne Fehler;
-`docker build -t mikiwa:test .` läuft durch.
+**Verifikation**:
+- `docker build -t mikiwa:test .` läuft durch (procps wird installiert)
+- `bin/rails server -e production` startet lokal mit `RAILS_MASTER_KEY` ohne Fehler
+- `docker compose -f deploy/docker-compose.yml config` zeigt keinen Syntax-Fehler
 
 ---
 
@@ -60,8 +64,9 @@ in [`docs/deployment.md`](./deployment.md). Bei jeder Änderung dort den Stand p
 
 Alles als `root` auf `mentalflares` (`ssh root@mentalflares`).
 
-- [ ] **3.1** Verzeichnisse anlegen und Owner setzen (UID/GID 1000 = Rails-User im Container)
+- [ ] **3.1** Host-Pakete + Verzeichnisse anlegen (UID/GID 1000 = Rails-User im Container)
   ```
+  apt-get update && apt-get install -y sqlite3   # für backup.sh auf dem Host
   mkdir -p /home/mikiwa/{storage,logs,backups,scripts}
   chown -R 1000:1000 /home/mikiwa/storage /home/mikiwa/logs
   chown root:root /home/mikiwa/backups /home/mikiwa/scripts

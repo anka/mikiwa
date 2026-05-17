@@ -1,0 +1,7 @@
+# Install to /etc/cron.d/mikiwa-backup (mode 644, owner root).
+# Daily SQLite backup at 03:00 with 14-day retention.
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+0 3 * * * root /home/mikiwa/scripts/backup.sh >> /home/mikiwa/logs/backup.log 2>&1
