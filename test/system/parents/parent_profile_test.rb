@@ -7,7 +7,8 @@ class ParentProfileTest < ActionDispatch::IntegrationTest
       password: "sicherespasswort1234",
       role: "parent",
       first_name: "Eva",
-      last_name: "Alt"
+      last_name: "Alt",
+      phone: "0664 000 000"
     )
   end
 

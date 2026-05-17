@@ -22,7 +22,7 @@ class ParentOnboardingTest < ActionDispatch::IntegrationTest
     assert_difference "User.count", 1 do
       perform_enqueued_jobs do
         post parents_path, params: {
-          user: { email: "new.parent@mikiwa.at", first_name: "Eva", last_name: "Muster" }
+          user: { email: "new.parent@mikiwa.at", first_name: "Eva", last_name: "Muster", phone: "0664 000 000" }
         }
       end
     end

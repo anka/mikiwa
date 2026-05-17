@@ -12,11 +12,11 @@ class ChildParentsTest < ActionDispatch::IntegrationTest
     )
     @parent = User.create!(
       email: "elternblock_parent@mikiwa.at", password: SecureRandom.hex(20), role: "parent",
-      first_name: "Lina", last_name: "Wagner"
+      first_name: "Lina", last_name: "Wagner", phone: "0664 111 222"
     )
     @other_parent = User.create!(
       email: "elternblock_other@mikiwa.at", password: SecureRandom.hex(20), role: "parent",
-      first_name: "Tobias", last_name: "Vogel"
+      first_name: "Tobias", last_name: "Vogel", phone: "0664 333 444"
     )
     @child = Child.create!(
       first_name: "Mila", last_name: "Wagner",
@@ -77,12 +77,11 @@ class ChildParentsTest < ActionDispatch::IntegrationTest
     assert_no_match "data-test=\"attach-parent-form\"", response.body
   end
 
-  test "Edit-Formular enthält keinen Eltern-Block sondern einen Hinweis mit Link zur Show-Seite" do
+  test "Edit-Formular enthält keinen Eltern-Block und verlinkt zurück zur Show-Seite" do
     sign_in_as(@caretaker)
     get edit_child_path(@child)
     assert_response :success
     assert_no_match(/name="child\[parent_id\]"/, response.body)
-    assert_match "Eltern werden in der Detailansicht verwaltet", response.body
     assert_match child_path(@child), response.body
   end
 end

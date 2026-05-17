@@ -7,7 +7,7 @@ class PollVotingTest < ActionDispatch::IntegrationTest
     )
     @group = Group.create!(name: "Poll-Gruppe")
     @caretaker = User.create!(email: "poll_caretaker@mikiwa.at", password: "sicherespasswort1234", role: "caretaker")
-    @parent = User.create!(email: "poll_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent", first_name: "Maria", last_name: "Muster")
+    @parent = User.create!(email: "poll_parent@mikiwa.at", password: "sicherespasswort1234", role: "parent", first_name: "Maria", last_name: "Muster", phone: "0664 000 000")
     @child = Child.create!(
       first_name: "Poll-Kind", last_name: "Test",
       date_of_birth: 5.years.ago.to_date,

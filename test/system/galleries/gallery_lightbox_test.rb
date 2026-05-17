@@ -25,7 +25,8 @@ class GalleryLightboxTest < ActionDispatch::IntegrationTest
     ParentChild.create!(user: @parent, child: @child)
 
     @gallery = Gallery.new(
-      title: "Lightbox-Galerie", kindergarten_year: @year, created_by: @caretaker
+      title: "Lightbox-Galerie", kindergarten_year: @year, created_by: @caretaker,
+      visibility: :released
     )
     @gallery.gallery_groups.build(group: @group)
     @gallery.save!

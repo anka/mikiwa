@@ -20,13 +20,15 @@ class GalleryParentTest < ActionDispatch::IntegrationTest
     ParentChild.create!(user: @parent, child: @child)
 
     @gallery_bears = Gallery.new(
-      title: "Bären-Galerie", kindergarten_year: @year, created_by: @caretaker
+      title: "Bären-Galerie", kindergarten_year: @year, created_by: @caretaker,
+      visibility: :released
     )
     @gallery_bears.gallery_groups.build(group: @group_bears)
     @gallery_bears.save!
 
     @gallery_lions = Gallery.new(
-      title: "Löwen-Galerie", kindergarten_year: @year, created_by: @caretaker
+      title: "Löwen-Galerie", kindergarten_year: @year, created_by: @caretaker,
+      visibility: :released
     )
     @gallery_lions.gallery_groups.build(group: @group_lions)
     @gallery_lions.save!
