@@ -41,6 +41,8 @@ Standard Rails layout. Key entry points:
 - `.github/` — CI workflows
 - `script/`, `storage/`, `public/`, `vendor/`, `tmp/`, `log/` — standard Rails directories
 - `docs` - all product features, architechture, designs etc.
+  - `docs/deployment.md` — **authoritative reference** for production deployment on `mentalflares`: server inventory (OS, ports, nginx, certbot, existing apps), Mikiwa target setup, and the day-to-day operations cheatsheet. Update on every server/deploy change.
+  - `docs/deployment-plan.md` — actionable checklist for the initial production rollout; tick off as you go.
 
 ## Project guardrails
 
