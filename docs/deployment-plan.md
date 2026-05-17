@@ -82,17 +82,21 @@ Alles als `root` auf `mentalflares` (`ssh root@mentalflares`).
 
 ## Phase 4 — Erststart der Container
 
-- [ ] **4.1** Pull aktuelles Image: `cd /home/mikiwa && docker compose pull`
-- [ ] **4.2** Migration laufen lassen (one-shot):
-  `docker compose run --rm migrate`
-  → muss mit Exit 0 enden; SQLite-Dateien erscheinen unter `/home/mikiwa/storage/`
-- [ ] **4.3** Services starten: `docker compose up -d web worker`
-- [ ] **4.4** Health prüfen:
-  - `docker compose ps` zeigt beide `healthy`
+- [x] **4.1** `docker compose pull` — Image gezogen
+- [x] **4.2** `docker compose run --rm migrate` — alle 4 SQLite-DBs in `/home/mikiwa/storage/` angelegt
+- [x] **4.3** `docker compose up -d web worker` — beide Container laufen
+- [x] **4.4** Health verifiziert
+  - `docker compose ps` → `web` und `worker` **healthy**
   - `curl -fsS http://127.0.0.1:8080/up` → HTTP 200
-  - `tail -f /home/mikiwa/logs/production.log` zeigt Bootlog
+  - `production.log` zeigt Puma + Solid-Queue (Supervisor + Dispatcher + Worker + Scheduler) gestartet
 
-**Verifikation**: App ist lokal über loopback erreichbar; Worker läuft; keine Restart-Loops.
+**Gefundene Probleme + Fixes** (committed in `bed9a20`):
+- `config/puma.rb`: `ENV["SOLID_QUEUE_IN_PUMA"]` ist truthy für den String `"false"` →
+  cast via `ActiveModel::Type::Boolean`, sonst startet Solid Queue auch in Puma
+- `config/environments/production.rb`: `config.hosts` blockt Docker-Healthcheck
+  (Host: localhost) mit 403 → `host_authorization` für `/up` excluden
+- `RAILS_MAX_THREADS=3` reicht nicht für Solid Queues 5 DB-Connections →
+  Default auf `5` gehoben (Puma-Threads min/max=5, Pool=5)
 
 ---
 
