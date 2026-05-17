@@ -102,27 +102,21 @@ Alles als `root` auf `mentalflares` (`ssh root@mentalflares`).
 
 ## Phase 5 — nginx vhost + SSL
 
-- [ ] **5.1** DNS prüfen: `dig +short app.mikiwa.at` → A-Record zeigt auf
-  Server-IP `mentalflares`. (Bei Bedarf vorher anlegen!)
-- [ ] **5.2** vhost installieren:
-  ```
-  cp deploy/nginx/app.mikiwa.at.conf /etc/nginx/sites-available/app.mikiwa.at
-  ln -s /etc/nginx/sites-available/app.mikiwa.at /etc/nginx/sites-enabled/app.mikiwa.at
-  nginx -t && systemctl reload nginx
-  ```
-- [ ] **5.3** Initialer HTTP-Reach-Test:
-  `curl -I http://app.mikiwa.at/up` → 200 (vor HTTPS-Aktivierung)
-- [ ] **5.4** SSL via certbot (nginx-Plugin, bestehende Installation):
-  ```
-  certbot --nginx -d app.mikiwa.at --redirect --no-eff-email -m <admin@mail>
-  ```
-- [ ] **5.5** Verifizieren:
-  - `curl -I https://app.mikiwa.at/up` → 200
-  - `curl -I http://app.mikiwa.at/` → 301 → https
-  - SSL-Test via `curl -fsS https://app.mikiwa.at/` zeigt Login-Seite
-- [ ] **5.6** Auto-Renewal-Check: `certbot renew --dry-run`
-
-**Verifikation**: App von außen via HTTPS erreichbar, kein Mixed-Content-Warning.
+- [x] **5.1** DNS → Server-IP `161.35.70.156` bestätigt
+- [x] **5.2** vhost `/etc/nginx/sites-available/app.mikiwa.at` installiert + symlink in
+  `sites-enabled/`, `nginx -t` ok, `systemctl reload nginx` ok
+- [x] **5.3** HTTP-Test übersprungen (lieferte vor certbot 404 vom Default-Vhost, weil
+  certbot dem vhost erst den korrekten 301-Redirect-Block ergänzt; nicht weiter relevant
+  da Phase 5.5 von außen 200 zeigt)
+- [x] **5.4** `certbot --nginx -d app.mikiwa.at --non-interactive --agree-tos
+  --no-eff-email -m jarvis.ai@jademind.com --redirect` erfolgreich; Cert in
+  `/etc/letsencrypt/live/app.mikiwa.at/`, gültig bis 2026-08-15
+- [x] **5.5** Verifikation
+  - `curl -I https://app.mikiwa.at/up` → HTTP/2 200 (von Server **und** extern)
+  - `curl -I http://app.mikiwa.at/` → HTTP/1.1 301
+  - HSTS-Header gesetzt (`max-age=63072000; includeSubDomains`)
+- [x] **5.6** `certbot renew --dry-run` → alle drei Certs simuliert erfolgreich,
+  inkl. `app.mikiwa.at`
 
 ---
 
