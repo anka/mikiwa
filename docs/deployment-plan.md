@@ -64,37 +64,19 @@ in [`docs/deployment.md`](./deployment.md). Bei jeder Änderung dort den Stand p
 
 Alles als `root` auf `mentalflares` (`ssh root@mentalflares`).
 
-- [ ] **3.1** Host-Pakete + Verzeichnisse anlegen (UID/GID 1000 = Rails-User im Container)
-  ```
-  apt-get update && apt-get install -y sqlite3   # für backup.sh auf dem Host
-  mkdir -p /home/mikiwa/{storage,logs,backups,scripts}
-  chown -R 1000:1000 /home/mikiwa/storage /home/mikiwa/logs
-  chown root:root /home/mikiwa/backups /home/mikiwa/scripts
-  chmod 750 /home/mikiwa/backups /home/mikiwa/scripts
-  ```
-- [ ] **3.2** GHCR-Login (Token aus 2.4)
-  ```
-  echo "<GHCR_PAT>" | docker login ghcr.io -u <github-username> --password-stdin
-  ```
-  → schreibt nach `/root/.docker/config.json`
-- [ ] **3.3** `.env` unter `/home/mikiwa/.env` anlegen (Mode 600, owner root)
-  - `RAILS_MASTER_KEY=` (Inhalt von lokal `config/master.key`)
-  - `OPENAI_API_KEY=` (Dev-Key)
-  - `MIKIWA_WEB_PORT=8080`
-  - `WEB_CONCURRENCY=2`
-  - `RAILS_MAX_THREADS=3`
-  - `JOB_CONCURRENCY=1`
-  - `MIKIWA_IMAGE_TAG=latest`
-- [ ] **3.4** `docker-compose.yml` nach `/home/mikiwa/docker-compose.yml` kopieren
-  (aus `deploy/docker-compose.yml` im Repo)
-- [ ] **3.5** Backup-Script nach `/home/mikiwa/scripts/backup.sh` kopieren, `chmod 750`
-- [ ] **3.6** Cron-Eintrag `/etc/cron.d/mikiwa-backup` installieren
-- [ ] **3.7** Logrotate-Config `/etc/logrotate.d/mikiwa` installieren
+- [x] **3.1** Host-Pakete + Verzeichnisse angelegt (`sqlite3` 3.37.2 installiert, Verzeichnisse mit UID/GID 1000 für `storage`+`logs`, root für `backups`+`scripts`). Hinweis: UID 1000 entspricht auf dem Host dem User `ghost-mgr` — numerisch identisch zum `rails`-User im Container, daher unkritisch.
+- [x] **3.2** GHCR-Login mit PAT (User `anka`) erfolgreich, Credentials in `/root/.docker/config.json`
+- [x] **3.3** `.env` unter `/home/mikiwa/.env` angelegt (Mode 600, owner root) mit allen Variablen aus `deploy/.env.example`
+- [x] **3.4** `docker-compose.yml` nach `/home/mikiwa/docker-compose.yml` (root:root, 644)
+- [x] **3.5** Backup-Script unter `/home/mikiwa/scripts/backup.sh` (root:root, 750)
+- [x] **3.6** Cron-Eintrag `/etc/cron.d/mikiwa-backup` installiert (root:root, 644)
+- [x] **3.7** Logrotate-Config `/etc/logrotate.d/mikiwa` installiert (root:root, 644)
 
 **Verifikation**:
-- `ls -la /home/mikiwa/` zeigt korrekte Owner/Permissions
-- `docker pull ghcr.io/anka/mikiwa:latest` erfolgreich
-- `logrotate -d /etc/logrotate.d/mikiwa` zeigt erwartete Rotation
+- `ls -la /home/mikiwa/` → Owner/Permissions korrekt
+- `docker pull ghcr.io/anka/mikiwa:latest` erfolgreich (Digest `sha256:0ec37697…`)
+- `logrotate -d /etc/logrotate.d/mikiwa` → Pattern wird korrekt erkannt, switched zu uid/gid 1000 für Rotation
+- `docker compose config --quiet` → kein Syntax-Fehler
 
 ---
 
