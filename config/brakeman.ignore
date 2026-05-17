@@ -1,0 +1,40 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 2,
+      "fingerprint": "dd56101b89c6652d4d0074eb74d01ff0478184723444e84b8f897cf88f8a9be1",
+      "check_name": "CrossSiteScripting",
+      "message": "Unescaped model attribute",
+      "file": "app/views/children/show.html.haml",
+      "line": 139,
+      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
+      "code": "::Haml::AttributeBuilder.build_class(true, \"mw-badge\", \"mw-badge--#{badge_tone_for((Unresolved Model).new.note_type)}\")",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "ChildrenController",
+          "method": "show",
+          "line": 32,
+          "file": "app/controllers/children_controller.rb",
+          "rendered": {
+            "name": "children/show",
+            "file": "app/views/children/show.html.haml"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "children/show"
+      },
+      "user_input": "(Unresolved Model).new.note_type",
+      "confidence": "Weak",
+      "cwe_id": [
+        79
+      ],
+      "note": "False positive: badge_tone_for (app/helpers/application_helper.rb) returns only values from the whitelist NOTE_TYPE_BADGE_TONES ('danger', 'warning', 'info') or the default 'neutral'. The interpolated value can never contain user input or unsafe characters."
+    }
+  ],
+  "updated": "2026-05-17 23:56:07 +0200",
+  "brakeman_version": "8.0.4"
+}

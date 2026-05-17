@@ -1,4 +1,6 @@
 class Admin::UsersController < Admin::BaseController
+  ALLOWED_ROLES = %w[caretaker admin].freeze
+
   before_action :set_user, only: %i[destroy lock unlock]
 
   def index
@@ -53,6 +55,13 @@ class Admin::UsersController < Admin::BaseController
   end
 
   def user_params
-    params.require(:user).permit(:email, :first_name, :last_name, :role)
+    params.require(:user)
+          .permit(:email, :first_name, :last_name)
+          .merge(role: permitted_role)
+  end
+
+  def permitted_role
+    submitted = params.dig(:user, :role)
+    ALLOWED_ROLES.include?(submitted) ? submitted : "caretaker"
   end
 end
