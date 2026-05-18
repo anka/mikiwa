@@ -8,26 +8,80 @@
       Notfallkontakte und medizinische Hinweise werden automatisch mitübertragen.
   - if @children.any?
     .mw-page-header__actions
-      = link_to "Abbrechen", kindergarten_years_path, class: "mw-page-action"
+      = link_to kindergarten_years_path, class: "mw-page-action" do
+        Abbrechen
       %button.mw-btn.mw-btn--primary.mw-btn--sm{ type: "submit", form: "kindergarten_year_rollover_form" }
         = lucide_icon "check", size: 14
         Übergang durchführen
 
-.mw-card{ style: "margin-top: 1.5rem;" }
-  - if @children.any?
-    = form_with url: execute_rollover_kindergarten_year_path(@kindergarten_year), method: :post, class: "mw-form", html: { id: "kindergarten_year_rollover_form" } do |form|
-      %p.mw-text-muted{ style: "margin-bottom: 1rem;" }
-        Kinder des aktuell aktiven Jahres:
+- if @children.any?
+  .mw-rollover-shell{ data: { controller: "rollover-selection" } }
+    .mw-card.mw-children-facts{ style: "margin-top: 1.5rem;" }
+      .mw-children-facts__row
+        %span.mw-children-facts__label Aktive Kinder
+        .mw-children-facts__pills
+          %span.mw-badge.mw-badge--accent= pluralize(@children.size, "Kind", "Kinder")
+          %span.mw-badge.mw-badge--neutral{ data: { "rollover-selection-target": "summaryCount" } }= "#{@children.size} von #{@children.size} ausgewählt"
 
-      .mw-kind-liste
-        - @children.each do |child|
-          %label.mw-kind-check
-            %input{ type: "checkbox", name: "child_ids[]", value: child.id, checked: true }
-            %span.mw-kind-check__name= child.display_name
+    .mw-card{ style: "margin-top: 1rem;" }
+      = form_with url: execute_rollover_kindergarten_year_path(@kindergarten_year), method: :post,
+          html: { id: "kindergarten_year_rollover_form" } do |form|
+        %table.mw-table.mw-table--cards{ style: "width: 100%;" }
+          %thead
+            %tr
+              %th{ style: "width: 36px;" }
+                %input{ type: "checkbox",
+                        checked: true,
+                        "aria-label": "Alle auswählen",
+                        data: { "rollover-selection-target": "selectAll",
+                                action: "change->rollover-selection#toggleAll" } }
+              %th Name
+              %th Geburtsdatum
+              %th Alter
+              %th Gruppe
+              %th Foto-Einw.
+          %tbody
+            - @children.each do |child|
+              %tr
+                %td{ "data-label": "Auswahl" }
+                  = check_box_tag "child_ids[]", child.id, true,
+                      id: "rollover_child_#{child.id}",
+                      "aria-label": "#{child.full_name} übernehmen",
+                      data: { "rollover-selection-target": "checkbox",
+                              action: "change->rollover-selection#onChange" }
+                %td{ "data-label": "Name" }
+                  %label.mw-child-name-cell{ for: "rollover_child_#{child.id}", style: "cursor: pointer;" }
+                    - if child.profile_photo.attached?
+                      = image_tag child.profile_photo.variant(**ImageAttachable::VARIANT_CONFIGS[:thumb]),
+                          class: "mw-child-avatar mw-child-avatar--sm", alt: ""
+                    - else
+                      .mw-child-avatar.mw-child-avatar--sm.mw-child-avatar--placeholder
+                        = child.first_name[0].upcase
+                    .mw-child-name-cell__text
+                      %strong= child.full_name
+                      - if child.nickname.present?
+                        %span.mw-text-muted{ style: "font-size: var(--fs-12); margin-left: 4px;" }= "(#{child.nickname})"
+                %td{ "data-label": "Geburtsdatum" }= I18n.l(child.date_of_birth, format: :short)
+                %td{ "data-label": "Alter" }= child_age_label(child)
+                %td{ "data-label": "Gruppe" }
+                  - if child.group&.color.present?
+                    %span{ style: "display:inline-flex;align-items:center;gap:6px;" }
+                      %span{ style: "width:10px;height:10px;border-radius:50%;background:#{child.group.color};flex-shrink:0;" }
+                      = child.group.name
+                  - else
+                    = child.group&.name || "–"
+                %td{ "data-label": "Foto-Einw." }
+                  - if child.photo_consent
+                    %span.mw-badge.mw-badge--success Ja
+                  - else
+                    %span.mw-badge.mw-badge--neutral Nein
 
-  - else
+- else
+  .mw-card{ style: "margin-top: 1.5rem;" }
     .mw-empty-state
       %p.mw-text-muted
         Im aktuell aktiven Kindergartenjahr sind noch keine Kinder eingetragen.
         Legen Sie zuerst Kinder im aktiven Jahr an.
-      = link_to "Zur Kinderverwaltung", children_path, class: "mw-btn mw-btn--secondary mw-btn--sm"
+      = link_to children_path, class: "mw-btn mw-btn--secondary mw-btn--sm" do
+        = lucide_icon "users", size: 14
+        Zur Kinderverwaltung
