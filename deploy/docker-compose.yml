@@ -2,7 +2,7 @@
 # See docs/deployment.md for the full setup and operations manual.
 #
 # Layout on host:
-#   /home/mikiwa/.env                  – secrets (RAILS_MASTER_KEY, OPENAI_API_KEY, …)
+#   /home/mikiwa/.env                  – secrets (RAILS_MASTER_KEY, …)
 #   /home/mikiwa/storage/              – SQLite DBs + Active Storage (uid:gid 1000:1000)
 #   /home/mikiwa/logs/                 – Rails + container stdout/stderr (uid:gid 1000:1000)
 

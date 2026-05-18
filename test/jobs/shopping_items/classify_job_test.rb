@@ -15,37 +15,33 @@ class ShoppingItems::ClassifyJobTest < ActiveJob::TestCase
   end
 
   test "F79 perform aktualisiert Item.category mit Classifier-Resultat" do
-    ENV["OPENAI_API_KEY"] = "sk-test"
-    item = @list.shopping_items.create!(name: "Äpfel", category: "auto")
-    with_stub(ShoppingItems::AutoClassifier, :call, :fruit) do
-      ShoppingItems::ClassifyJob.perform_now(item.id)
+    with_stub(ShoppingItems::AutoClassifier, :api_key, "sk-test") do
+      item = @list.shopping_items.create!(name: "Äpfel", category: "auto")
+      with_stub(ShoppingItems::AutoClassifier, :call, :fruit) do
+        ShoppingItems::ClassifyJob.perform_now(item.id)
+      end
+      assert_equal "fruit", item.reload.category
     end
-    assert_equal "fruit", item.reload.category
-  ensure
-    ENV.delete("OPENAI_API_KEY")
   end
 
   test "F79 perform ist no-op wenn Item bereits manuell überschrieben wurde" do
-    ENV["OPENAI_API_KEY"] = "sk-test"
-    item = @list.shopping_items.create!(name: "Äpfel", category: "auto")
-    item.update!(category: "vegetable")
-    with_stub(ShoppingItems::AutoClassifier, :call, :fruit) do
-      ShoppingItems::ClassifyJob.perform_now(item.id)
+    with_stub(ShoppingItems::AutoClassifier, :api_key, "sk-test") do
+      item = @list.shopping_items.create!(name: "Äpfel", category: "auto")
+      item.update!(category: "vegetable")
+      with_stub(ShoppingItems::AutoClassifier, :call, :fruit) do
+        ShoppingItems::ClassifyJob.perform_now(item.id)
+      end
+      assert_equal "vegetable", item.reload.category
     end
-    assert_equal "vegetable", item.reload.category
-  ensure
-    ENV.delete("OPENAI_API_KEY")
   end
 
   test "F79 perform ist no-op wenn Item nicht mehr existiert" do
-    ENV["OPENAI_API_KEY"] = "sk-test"
-    assert_nothing_raised { ShoppingItems::ClassifyJob.perform_now("nicht_existent") }
-  ensure
-    ENV.delete("OPENAI_API_KEY")
+    with_stub(ShoppingItems::AutoClassifier, :api_key, "sk-test") do
+      assert_nothing_raised { ShoppingItems::ClassifyJob.perform_now("nicht_existent") }
+    end
   end
 
   test "F79 perform ist no-op wenn API-Key fehlt" do
-    ENV.delete("OPENAI_API_KEY")
     item = @list.shopping_items.create!(name: "Äpfel", category: "auto")
     with_stub(ShoppingItems::AutoClassifier, :call, :fruit) do
       ShoppingItems::ClassifyJob.perform_now(item.id)

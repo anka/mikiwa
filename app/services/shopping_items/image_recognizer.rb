@@ -55,8 +55,12 @@ module ShoppingItems
     }.freeze
 
     class << self
+      def api_key
+        Rails.application.credentials.dig(:openai, :api_key).to_s.strip.presence
+      end
+
       def enabled?
-        ENV["OPENAI_API_KEY"].to_s.strip.present?
+        api_key.present?
       end
 
       def call(image_io, content_type: "image/jpeg")
@@ -70,7 +74,7 @@ module ShoppingItems
     end
 
     def call
-      raise "OPENAI_API_KEY missing" unless self.class.enabled?
+      raise "OpenAI API-Key fehlt (credentials.openai.api_key)" unless self.class.enabled?
 
       response = fetch_completion(build_payload)
       content  = response.dig("choices", 0, "message", "content")
@@ -150,7 +154,7 @@ module ShoppingItems
 
       request = Net::HTTP::Post.new(uri.path,
                                      "Content-Type"  => "application/json",
-                                     "Authorization" => "Bearer #{ENV['OPENAI_API_KEY']}")
+                                     "Authorization" => "Bearer #{self.class.api_key}")
       request.body = body.to_json
 
       response = http.request(request)

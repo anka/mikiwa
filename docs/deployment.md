@@ -154,16 +154,16 @@ Gemeinsam:
 
 | Variable | Pflicht | Quelle | Notiz |
 |---|---|---|---|
-| `RAILS_MASTER_KEY` | ✔ | lokal `config/master.key` | entschlüsselt `credentials.yml.enc` (Mailjet-Keys etc.) |
-| `OPENAI_API_KEY` | ✔ | Dev-Key (vorerst) | für Vision-Klassifikation von Einkaufslisten-Fotos |
+| `RAILS_MASTER_KEY` | ✔ | lokal `config/master.key` | entschlüsselt `credentials.yml.enc` (Mailjet-Keys, OpenAI-Key etc.) |
 | `MIKIWA_WEB_PORT` | ✔ | `8080` | Host-Port für Loopback-Binding |
 | `MIKIWA_IMAGE_TAG` | optional | `latest` | für Rollback auf `sha-…` |
 | `WEB_CONCURRENCY` | optional | `2` | Puma-Worker (Memory-bewusst auf 4 GiB Box) |
 | `RAILS_MAX_THREADS` | **muss ≥ 5 sein** | `5` | Puma-Threads pro Worker **und** SQLite-Connection-Pool. Solid Queue braucht ≥ 5 Connections (3 worker threads + 1 dispatcher + 1 supervisor), sonst crasht der Worker-Container beim Boot. |
 | `JOB_CONCURRENCY` | optional | `1` | Solid-Queue-Worker-Prozesse |
 
-Mailjet-Credentials liegen **nicht** in `.env`, sondern in `credentials.yml.enc`
-(entschlüsselt mit `RAILS_MASTER_KEY`).
+Mailjet-Credentials und der OpenAI-Key liegen **nicht** in `.env`, sondern
+in `credentials.yml.enc` (entschlüsselt mit `RAILS_MASTER_KEY`). OpenAI wird
+unter dem Pfad `openai.api_key` gepflegt (siehe `bin/rails credentials:edit`).
 
 ### 2.5 nginx vhost (`/etc/nginx/sites-available/app.mikiwa.at`)
 

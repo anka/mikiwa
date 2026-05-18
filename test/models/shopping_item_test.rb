@@ -46,25 +46,22 @@ class ShoppingItemTest < ActiveSupport::TestCase
   end
 
   test "F79 after_commit enqueued ClassifyJob bei category=auto + enabled?" do
-    ENV["OPENAI_API_KEY"] = "sk-test"
-    assert_enqueued_with(job: ShoppingItems::ClassifyJob) do
-      @list.shopping_items.create!(name: "Brot", category: "auto")
+    with_stub(ShoppingItems::AutoClassifier, :api_key, "sk-test") do
+      assert_enqueued_with(job: ShoppingItems::ClassifyJob) do
+        @list.shopping_items.create!(name: "Brot", category: "auto")
+      end
     end
-  ensure
-    ENV.delete("OPENAI_API_KEY")
   end
 
   test "F79 kein Job bei category != auto" do
-    ENV["OPENAI_API_KEY"] = "sk-test"
-    assert_no_enqueued_jobs only: ShoppingItems::ClassifyJob do
-      @list.shopping_items.create!(name: "Apfel", category: "fruit")
+    with_stub(ShoppingItems::AutoClassifier, :api_key, "sk-test") do
+      assert_no_enqueued_jobs only: ShoppingItems::ClassifyJob do
+        @list.shopping_items.create!(name: "Apfel", category: "fruit")
+      end
     end
-  ensure
-    ENV.delete("OPENAI_API_KEY")
   end
 
   test "F79 kein Job wenn API-Key fehlt" do
-    ENV.delete("OPENAI_API_KEY")
     assert_no_enqueued_jobs only: ShoppingItems::ClassifyJob do
       @list.shopping_items.create!(name: "Brot", category: "auto")
     end
