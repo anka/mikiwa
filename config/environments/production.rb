@@ -55,7 +55,7 @@ Rails.application.configure do
 
   config.action_mailer.raise_delivery_errors = true
   config.action_mailer.delivery_method = :smtp
-  config.action_mailer.default_url_options = { host: Rails.application.credentials.dig(:app, :host) || "mikiwa.at" }
+  config.action_mailer.default_url_options = { host: Rails.application.credentials.dig(:app, :host) || "app.mikiwa.at" }
   config.action_mailer.smtp_settings = {
     user_name: Rails.application.credentials.dig(:mailjet, :api_key),
     password:  Rails.application.credentials.dig(:mailjet, :secret_key),
