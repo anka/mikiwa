@@ -2,14 +2,10 @@ class BirthdaysController < ApplicationController
   HERO_DAYS_AHEAD = 7
 
   def index
-    base = Child.active.includes(:group)
+    raise ApplicationPolicy::NotAuthorizedError unless current_user.staff?
 
-    @children = if current_user.staff?
-      base.order(:last_name, :first_name)
-    else
-      group_ids = current_user.children.active.pluck(:group_id).uniq
-      base.where(group_id: group_ids).order(:last_name, :first_name)
-    end
+    base = Child.active.includes(:group)
+    @children = base.order(:last_name, :first_name)
 
     today = Date.current
     @children = @children.sort_by { |c| next_birthday(c.date_of_birth, today) }

@@ -50,14 +50,20 @@
           placeholder: "z. B. Tischler, kann Bastel-AGs unterstützen"
       %p.mw-field__hint Optional, hilft Betreuer:innen bei der Planung gemeinsamer Aktivitäten.
 
-    .mw-field
-      = form.label :notes, "Anmerkung", class: "mw-field__label"
-      = form.text_area :notes, class: "mw-input", rows: 3,
-          placeholder: "Persönliche Notizen"
+    - unless current_user.parent?
+      .mw-field
+        = form.label :notes, "Anmerkung", class: "mw-field__label"
+        = form.text_area :notes, class: "mw-input", rows: 3,
+            placeholder: "Persönliche Notizen"
 
 
 .mw-card{ style: "margin-top: 1.5rem; max-width: 480px;" }
   %h2.mw-section-title{ style: "padding: 1rem 1.25rem 0; font-size: var(--fs-14); font-weight: var(--fw-bold); color: var(--fg-2);" } Kalender-Abonnement
+  %p.mw-card__lede{ style: "padding: 0 1.25rem; margin: 0.25rem 0 0.5rem; color: var(--fg-2); font-size: var(--fs-14);" }
+    Abonnieren Sie alle für Sie relevanten Termine direkt in Ihrer gewohnten Kalender-App
+    (z.&nbsp;B. Apple Kalender, Google Kalender oder Outlook).
+    Der Feed enthält Veranstaltungen, Kalendereinträge sowie Geburtstage Ihrer Kinder und
+    aktualisiert sich automatisch – Sie müssen nichts manuell pflegen.
   .mw-detail-list
     .mw-detail-row
       .mw-detail-row__icon= lucide_icon "link", size: 18

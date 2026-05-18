@@ -62,18 +62,19 @@ class ProfileControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to profile_path
   end
 
-  test "F43 Elternteil kann notes ändern" do
+  test "F43 Elternteil kann notes nicht ändern (intern sichtbares Feld)" do
     sign_in_as(@parent)
-    patch profile_path, params: { user: { notes: "Kind hat Pollenallergie" } }
-    assert_equal "Kind hat Pollenallergie", @parent.reload.notes
+    @parent.update_column(:notes, "interne Notiz")
+    patch profile_path, params: { user: { notes: "von Eltern überschrieben" } }
+    assert_equal "interne Notiz", @parent.reload.notes
   end
 
-  test "F43 Profilformular zeigt knowhow- und notes-Felder" do
+  test "F43 Profilformular zeigt knowhow-Feld, aber kein notes-Feld für Eltern" do
     sign_in_as(@parent)
     get profile_path
     assert_response :success
     assert_match(/name="user\[knowhow\]"/, response.body)
-    assert_match(/name="user\[notes\]"/, response.body)
+    assert_no_match(/name="user\[notes\]"/, response.body)
   end
 
   # F77: iCal-Link als webcal:// mit https-Fallback

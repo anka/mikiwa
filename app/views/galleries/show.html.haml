@@ -59,8 +59,8 @@
   - if notice
     .mw-flash.mw-flash--success= notice
 
-  -# Einwilligungs-Hinweis
-  - if @consent_warnings.any?
+  -# Einwilligungs-Hinweis (nur intern für Betreuer:innen)
+  - if current_user.staff? && @consent_warnings.any?
     .mw-flash.mw-flash--warning{ style: "margin-top: 1rem;" }
       %strong Kein Einverständnis zur Foto-Verwendung für:
       = @consent_warnings.map(&:full_name).join(", ")

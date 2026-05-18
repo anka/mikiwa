@@ -49,15 +49,13 @@ class BirthdayOverviewTest < ActionDispatch::IntegrationTest
     end
   end
 
-  # TS-050-S02: Elternteil sieht nur Kinder der eigenen Gruppe
-  test "TS-050 Elternteil sieht nur Kinder der eigenen Gruppe" do
+  # TS-050-S02: Elternteile haben keinen Zugriff auf die Geburtstagsübersicht
+  test "TS-050 Elternteil ist von der Geburtstagsübersicht ausgeschlossen" do
     travel_to Date.new(2026, 5, 3) do
       sign_in_as(@parent)
       get birthdays_path
 
-      assert_response :success
-      assert_match "BaldGeburtstag", response.body
-      assert_no_match "SpätGeburtstag", response.body
+      assert_response :forbidden
     end
   end
 end

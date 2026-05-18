@@ -91,10 +91,6 @@
                 - bday = bday.change(year: today.year + 1) if bday < today
                 = l(bday, format: :long)
                 · #{child.group.name}
-        = link_to birthdays_path, class: "mw-dashboard-section__more" do
-          = lucide_icon "arrow-right", size: 14
-          Alle Geburtstage
-
   - if @meal_entries.any?
     .mw-dashboard-section.mw-dashboard-section--meals
       .mw-dashboard-section__header

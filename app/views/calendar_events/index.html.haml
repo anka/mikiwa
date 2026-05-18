@@ -5,8 +5,13 @@
     %h1.mw-page-header__title Kalender
     - if @filter_year
       %p.mw-page-header__lede= @filter_year.label
-  - if current_user.staff?
-    .mw-page-header__actions
+  .mw-page-header__actions
+    - webcal_url = "webcal://#{request.host_with_port}/calendar/#{current_user.ical_token}.ics"
+    = link_to webcal_url, class: "mw-btn mw-btn--secondary mw-btn--sm", target: "_self",
+        title: "Diesen Kalender in der Kalender-App Ihres Geräts abonnieren" do
+      = lucide_icon "calendar-plus", size: 16
+      Persönlicher iCal-Feed
+    - if current_user.staff?
       = link_to new_calendar_event_path, class: "mw-btn mw-btn--primary mw-btn--sm" do
         = lucide_icon "plus", size: 16
         Neues Ereignis

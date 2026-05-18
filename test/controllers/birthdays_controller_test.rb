@@ -41,10 +41,10 @@ class BirthdaysControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "parent can access birthday overview" do
+  test "parent is forbidden from birthday overview" do
     sign_in_as(@parent)
     get birthdays_path
-    assert_response :success
+    assert_response :forbidden
   end
 
   test "unauthenticated user is redirected" do
@@ -57,13 +57,6 @@ class BirthdaysControllerTest < ActionDispatch::IntegrationTest
     get birthdays_path
     assert_response :success
     assert_match @child_other_group.first_name, response.body
-  end
-
-  test "parent sees only their children's groups" do
-    sign_in_as(@parent)
-    get birthdays_path
-    assert_response :success
-    assert_no_match @child_other_group.first_name, response.body
   end
 
   test "response highlights upcoming birthdays" do

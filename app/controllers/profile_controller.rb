@@ -24,6 +24,8 @@ class ProfileController < ApplicationController
   end
 
   def profile_params
-    params.require(:user).permit(:email, :first_name, :last_name, :phone, :knowhow, :notes)
+    permitted = [ :email, :first_name, :last_name, :phone, :knowhow ]
+    permitted << :notes unless current_user.parent?
+    params.require(:user).permit(*permitted)
   end
 end

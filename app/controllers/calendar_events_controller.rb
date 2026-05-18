@@ -1,6 +1,7 @@
 class CalendarEventsController < ApplicationController
   before_action :set_event, only: %i[show edit update destroy]
   before_action :require_staff_for_mutations!, only: %i[new create edit update destroy]
+  before_action :ensure_ical_token, only: :index
 
   def index
     @view = params[:view] == "list" ? "list" : "month"
@@ -103,6 +104,10 @@ class CalendarEventsController < ApplicationController
   def require_staff_for_mutations!
     return if current_user&.staff?
     render plain: "Zugriff verweigert", status: :forbidden
+  end
+
+  def ensure_ical_token
+    current_user&.ensure_ical_token!
   end
 
   def parse_month(month_param)
