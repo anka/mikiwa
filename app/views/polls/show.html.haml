@@ -1,5 +1,9 @@
 - content_for :title, "#{@poll.title} · Abstimmung · Mikiwa"
 
+- total_voters = @results.values.flatten.uniq.size
+- max_option_voters = @results.values.map(&:size).max || 0
+- has_any_votes = total_voters.positive?
+
 .mw-page-header
   .mw-page-header__text
     %h1.mw-page-header__title= @poll.title
@@ -48,41 +52,76 @@
 
 - if current_user.parent?
   - if @poll.open?
-    .mw-card{ style: "margin-top: 1.5rem;" }
-      %h2{ style: "padding: 1rem 1.25rem 0; font-size: var(--fs-14); font-weight: var(--fw-bold); color: var(--fg-2);" }
-        Ihre Stimme
-      = form_with url: vote_poll_path(@poll), method: :post, style: "padding: 1rem 1.25rem;" do |f|
-        - @poll.poll_options.each do |opt|
-          .mw-checkbox-row{ style: "padding: 0.5rem 0;" }
+    .mw-card.mw-poll-section{ style: "padding: 0;" }
+      .mw-poll-section__header
+        %h2.mw-poll-section__title Ihre Stimme
+        %span.mw-poll-section__hint.mw-poll-section__hint--inline
+          - if @poll.poll_type == "multiple"
+            = lucide_icon "list-checks", size: 14
+            Mehrfachauswahl möglich
+          - else
+            = lucide_icon "circle-dot", size: 14
+            Eine Auswahl
+      - if @user_options.any?
+        .mw-poll-voted-note
+          = lucide_icon "check-circle-2", size: 14
+          Ihre Stimme wurde gespeichert. Sie können Ihre Auswahl jederzeit anpassen.
+      = form_with url: vote_poll_path(@poll), method: :post do |f|
+        .mw-poll-choice
+          - @poll.poll_options.each do |opt|
             - checked = @user_options.include?(opt.id)
-            - if @poll.poll_type == "multiple"
-              = check_box_tag "option_ids[]", opt.id, checked,
-                  id: "opt_#{opt.id}", class: "mw-checkbox"
-            - else
-              = radio_button_tag "option_ids[]", opt.id, checked,
-                  id: "opt_#{opt.id}", class: "mw-radio"
-            = label_tag "opt_#{opt.id}", opt.label, class: "mw-field__label mw-field__label--inline"
-        .mw-form__actions{ style: "margin-top: 0.75rem;" }
-          = f.submit "Stimme abgeben", class: "mw-btn mw-btn--primary"
+            %label.mw-poll-choice__option{ for: "opt_#{opt.id}" }
+              - if @poll.poll_type == "multiple"
+                = check_box_tag "option_ids[]", opt.id, checked,
+                    id: "opt_#{opt.id}", class: "mw-poll-choice__input"
+              - else
+                = radio_button_tag "option_ids[]", opt.id, checked,
+                    id: "opt_#{opt.id}", class: "mw-poll-choice__input"
+              %span.mw-poll-choice__label= opt.label
+              %span.mw-poll-choice__check
+                = lucide_icon "check", size: 18
+        .mw-poll-choice__actions
+          = f.submit (@user_options.any? ? "Stimme aktualisieren" : "Stimme abgeben"),
+              class: "mw-btn mw-btn--primary"
   - else
     .mw-flash.mw-flash--warning{ style: "margin-top: 1rem;" }
       Abstimmung ist geschlossen. Keine neuen Stimmen möglich.
 
-.mw-card{ style: "margin-top: 1.5rem;" }
-  %h2{ style: "padding: 1rem 1.25rem 0; font-size: var(--fs-14); font-weight: var(--fw-bold); color: var(--fg-2);" }
-    Ergebnis
-    %span.mw-text-muted{ style: "font-weight: normal; margin-left: 0.5rem;" }
-      = "(#{@poll.votes.count} Stimme#{@poll.votes.count == 1 ? '' : 'n'})"
-  - if @results.any? { |_, voters| voters.any? }
-    - @results.each do |option, voters|
-      .mw-detail-list-row{ style: "padding: 0.75rem 1.25rem; border-top: 1px solid var(--border-subtle);" }
-        .mw-detail-list-row__label
-          = option.label
-          %span.mw-badge.mw-badge--neutral{ style: "margin-left: 0.5rem;" }= voters.size
-        .mw-detail-list-row__value
-          - if voters.any?
-            = voters.map { |u| u.full_name.presence || u.email }.join(", ")
-          - else
-            %span.mw-text-muted –
+.mw-card.mw-poll-section{ style: "padding: 0;" }
+  .mw-poll-section__header
+    %h2.mw-poll-section__title Ergebnis
+    %span.mw-poll-section__hint
+      = total_voters
+      = total_voters == 1 ? "Teilnehmer:in" : "Teilnehmer:innen"
+  - if has_any_votes
+    .mw-poll-results
+      - @results.each do |option, voters|
+        - count        = voters.size
+        - pct          = total_voters.positive? ? (count.to_f / total_voters * 100).round : 0
+        - is_leading   = count.positive? && count == max_option_voters
+        - is_mine      = current_user.parent? && @user_options.include?(option.id)
+        - modifiers    = []
+        - modifiers << "mw-poll-result--leading" if is_leading
+        - modifiers << "mw-poll-result--mine"    if is_mine
+        .mw-poll-result{ class: modifiers.join(" ") }
+          .mw-poll-result__header
+            .mw-poll-result__label
+              - if is_mine
+                %span.mw-poll-result__mine-dot{ "aria-hidden": "true" }
+              = option.label
+            .mw-poll-result__stats
+              %span.mw-poll-result__percent= "#{pct} %"
+              %span.mw-poll-result__count
+                = "(#{count} Stimme#{count == 1 ? '' : 'n'})"
+          .mw-poll-result__bar-track{ role: "progressbar",
+                                      "aria-valuenow": pct,
+                                      "aria-valuemin": 0,
+                                      "aria-valuemax": 100,
+                                      "aria-label": option.label }
+            .mw-poll-result__bar-fill{ data: { controller: "poll-bar",
+                                               "poll-bar-pct-value": pct } }
+          - if current_user.staff? && voters.any?
+            .mw-poll-result__voters
+              = voters.map { |u| u.full_name.presence || u.email }.join(", ")
   - else
-    %p.mw-text-muted{ style: "padding: 1rem 1.25rem;" } Noch keine Stimmen abgegeben.
+    .mw-poll-results__empty Noch keine Stimmen abgegeben.
