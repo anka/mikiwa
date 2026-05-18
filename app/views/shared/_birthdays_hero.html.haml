@@ -3,16 +3,10 @@
 -#   upcoming      – Array<Child> mit Geburtstag im Zeitfenster
 -#   next_upcoming – Child? mit nächstem Geburtstag (für Empty-State)
 -#   days_ahead    – Integer, Größe des Zeitfensters (z.B. 7)
--#   confetti      – Boolean, optional, blendet Confetti-Akzent ein (F24)
 
 - days_ahead ||= 7
-- confetti ||= false
 
-%section.mw-birthdays-hero{ class: confetti ? "mw-birthdays-hero--confetti" : nil }
-  - if confetti && upcoming.present? && upcoming.any?
-    .mw-confetti{ "aria-hidden": "true" }
-      - 24.times do |i|
-        %span.mw-confetti__piece{ class: "mw-confetti__piece--c#{i % 5}", style: "left: #{(i * 4.17).round(2)}%; animation-delay: #{(i * 60)}ms;" }
+%section.mw-birthdays-hero
   .mw-birthdays-hero__header
     = lucide_icon "cake", size: 24, class: "mw-birthdays-hero__icon"
     %h2.mw-birthdays-hero__title

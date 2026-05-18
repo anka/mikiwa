@@ -3209,39 +3209,6 @@ textarea.mw-input { resize: vertical; min-height: 96px; line-height: var(--lh-re
   .mw-birthdays-hero__grid { grid-template-columns: 1fr; }
 }
 
-/* ----- Confetti animation (F24) ----- */
-.mw-confetti {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 1;
-}
-.mw-confetti__piece {
-  position: absolute;
-  top: -16px;
-  width: 8px;
-  height: 14px;
-  border-radius: 2px;
-  opacity: 0;
-  animation: mw-confetti-fall 2400ms ease-out forwards;
-}
-.mw-confetti__piece--c0 { background: oklch(80% 0.16 85); }
-.mw-confetti__piece--c1 { background: oklch(76% 0.13 145); }
-.mw-confetti__piece--c2 { background: oklch(78% 0.12 232); }
-.mw-confetti__piece--c3 { background: oklch(78% 0.16 30); }
-.mw-confetti__piece--c4 { background: oklch(80% 0.10 320); }
-
-@keyframes mw-confetti-fall {
-  0%   { transform: translateY(-20px) rotate(0deg);   opacity: 0; }
-  10%  { opacity: 1; }
-  100% { transform: translateY(220px) rotate(540deg); opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mw-confetti { display: none; }
-}
-
 /* ----- Theme toggle (F28) ----- */
 .mw-theme-toggle {
   background: transparent;
