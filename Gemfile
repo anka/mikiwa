@@ -82,5 +82,5 @@ gem "rails-i18n", "~> 8.0"
 gem "rack-attack"
 
 # Excel-Export-Infrastruktur (F59)
-gem "caxlsx", "~> 4.1"
+gem "caxlsx", "~> 4.5"
 gem "caxlsx_rails", "~> 0.6"
